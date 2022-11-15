@@ -1,7 +1,4 @@
--- This file can be loaded by calling `lua require('plugins')` from your init.vim
-
 return require('packer').startup(function(use)
-  -- Packer can manage itself
   use 'wbthomason/packer.nvim'
 
   use 'nvim-lua/plenary.nvim'
@@ -11,9 +8,10 @@ return require('packer').startup(function(use)
   use 'ThePrimeagen/harpoon'
 
   use("nvim-treesitter/nvim-treesitter", {
-      run = ":TSUpdate"
+    run = ":TSUpdate"
   })
   use 'nvim-treesitter/nvim-treesitter-context'
+  use 'editorconfig/editorconfig-vim'
 
   use 'projekt0n/github-nvim-theme'
   use 'lewis6991/gitsigns.nvim'
@@ -49,4 +47,3 @@ return require('packer').startup(function(use)
 
   use 'nyngwang/NeoZoom.lua'
 end)
-

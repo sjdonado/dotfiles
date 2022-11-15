@@ -11,4 +11,3 @@ npm install -g typescript typescript-language-server
 
 # lspconfig eslint
 npm i -g vscode-langservers-extracted
-
