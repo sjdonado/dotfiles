@@ -1,0 +1,32 @@
+--[[ local dap = require("dap")
+local dapui = require("dapui")
+
+local Remap = require("sjdonado.keymap")
+local nnoremap = Remap.nnoremap
+
+nnoremap("<leader>dt", function()
+    dapui.toggle()
+end)
+nnoremap("<Up>", function()
+    dap.continue()
+end)
+nnoremap("<Down>", function()
+    dap.step_over()
+end)
+nnoremap("<Right>", function()
+    dap.step_into()
+end)
+nnoremap("<Left>", function()
+    dap.step_out()
+end)
+
+nnoremap("<Leader>b", function()
+    dap.toggle_breakpoint()
+end)
+nnoremap("<Leader>B", function()
+    dap.set_breakpoint(vim.fn.input('Breakpoint condition: '))
+end)
+nnoremap("<leader>rc", function()
+    dap.run_to_cursor()
+end)
+]]
