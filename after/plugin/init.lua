@@ -1,1 +1,1 @@
-vim.cmd(":TSInstall all");
+vim.cmd(":TSInstall all")

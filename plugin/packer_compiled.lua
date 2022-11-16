@@ -125,10 +125,10 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/harpoon",
     url = "https://github.com/ThePrimeagen/harpoon"
   },
-  ["jest.nvim"] = {
+  jester = {
     loaded = true,
-    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/jest.nvim",
-    url = "https://github.com/mattkubej/jest.nvim"
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/jester",
+    url = "https://github.com/David-Kunz/jester"
   },
   ["lspkind.nvim"] = {
     loaded = true,

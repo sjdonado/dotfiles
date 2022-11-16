@@ -32,6 +32,7 @@ local one_monokai = {
   orange = "#d19a66",
   red = "#e06c75",
   aqua = "#61afef",
+  darkblue = "#282c34",
   dark_red = "#f75f5f",
 }
 
@@ -45,6 +46,7 @@ local github_light = {
   orange = "#d18616",
   red = "#d73a49",
   aqua = "#0598bc",
+  darkblue = "#e8e9eb",
   dark_red = "#f75f5f",
 }
 
@@ -71,7 +73,7 @@ local c = {
     hl = function()
       return {
         fg = require("feline.providers.vi_mode").get_mode_color(),
-        bg = "bg",
+        bg = "darkblue",
         style = "bold",
         name = "NeovimModeHLColor",
       }
@@ -82,8 +84,8 @@ local c = {
   gitBranch = {
     provider = "git_branch",
     hl = {
-      fg = "fg",
-      bg = "bg",
+      fg = "peanut",
+      bg = "darkblue",
       style = "bold",
     },
     left_sep = "block",
@@ -93,7 +95,7 @@ local c = {
     provider = "git_diff_added",
     hl = {
       fg = "green",
-      bg = "bg",
+      bg = "darkblue",
     },
     left_sep = "block",
     right_sep = "block",
@@ -102,7 +104,7 @@ local c = {
     provider = "git_diff_removed",
     hl = {
       fg = "red",
-      bg = "bg",
+      bg = "darkblue",
     },
     left_sep = "block",
     right_sep = "block",
@@ -111,7 +113,7 @@ local c = {
     provider = "git_diff_changed",
     hl = {
       fg = "fg",
-      bg = "bg",
+      bg = "darkblue",
     },
     left_sep = "block",
     right_sep = "right_filled",
@@ -123,8 +125,8 @@ local c = {
     provider = {
       name = "file_info",
       opts = {
-        type = 'relative'
-      }
+        type = "relative",
+      },
     },
     hl = {
       style = "bold",
@@ -157,34 +159,28 @@ local c = {
     provider = "lsp_client_names",
     hl = {
       fg = "purple",
-      bg = "bg",
+      bg = "darkblue",
       style = "bold",
     },
     left_sep = "left_filled",
-    right_sep = "block",
-  },
-  file_type = {
-    provider = {
-      name = "file_type",
-      opts = {
-        filetype_icon = true,
-        case = "titlecase",
-      },
-    },
-    hl = {
-      fg = "red",
-      bg = "bg",
-      style = "bold",
-    },
-    left_sep = "block",
     right_sep = "block",
   },
   file_encoding = {
     provider = "file_encoding",
     hl = {
       fg = "orange",
-      bg = "bg",
+      bg = "darkblue",
       style = "italic",
+    },
+    left_sep = "block",
+    right_sep = "block",
+  },
+  position = {
+    provider = "position",
+    hl = {
+      fg = "green",
+      bg = "darkblue",
+      style = "bold",
     },
     left_sep = "block",
     right_sep = "block",
@@ -193,11 +189,18 @@ local c = {
     provider = "line_percentage",
     hl = {
       fg = "aqua",
-      bg = "bg",
+      bg = "darkblue",
       style = "bold",
     },
     left_sep = "block",
     right_sep = "block",
+  },
+  scroll_bar = {
+    provider = "scroll_bar",
+    hl = {
+      fg = "yellow",
+      style = "bold",
+    },
   },
 }
 
@@ -207,28 +210,34 @@ local left = {
   c.gitDiffAdded,
   c.gitDiffRemoved,
   c.gitDiffChanged,
-  c.fileinfo,
   c.separator,
 }
 
-local right = {
+local middle = {
+  c.fileinfo,
   c.diagnostic_errors,
   c.diagnostic_warnings,
   c.diagnostic_info,
   c.diagnostic_hints,
+}
+
+local right = {
   c.lsp_client_names,
-  c.file_type,
   c.file_encoding,
+  c.position,
   c.line_percentage,
+  c.scroll_bar,
 }
 
 local components = {
   active = {
     left,
+    middle,
     right,
   },
   inactive = {
     left,
+    middle,
     right,
   },
 }

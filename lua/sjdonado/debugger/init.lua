@@ -5,7 +5,8 @@ dapui.setup({
   layouts = {
     {
       elements = {
-        "breakpoints",
+        { id = "breakpoints", size = 0.15 },
+        "stacks",
         "scopes",
         "watches",
       },
@@ -29,12 +30,12 @@ dapui.setup({
 dap.listeners.after.event_initialized["dapui_config"] = function()
   dapui.open()
 end
-dap.listeners.before.event_terminated["dapui_config"] = function()
+--[[ dap.listeners.before.event_terminated["dapui_config"] = function()
   dapui.close()
 end
 dap.listeners.before.event_exited["dapui_config"] = function()
   dapui.close()
-end
+end ]]
 
 require("sjdonado.debugger.node")
 

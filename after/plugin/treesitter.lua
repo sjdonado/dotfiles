@@ -1,11 +1,12 @@
 require'nvim-treesitter.configs'.setup {
   ensure_installed = { 'javascript', 'html', 'toml', 'yaml', 'dockerfile' },
-    sync_install = false,
+  ignore_install = { 'rust', 'markdown' },
 
-    highlight = {
-      disable = { "lua", "rust" },
-      enable = true,
-      additional_vim_regex_highlighting = false,
-    },
+  sync_install = false,
+
+  highlight = {
+    enable = true,
+    disable = { 'lua', 'help' },
+    additional_vim_regex_highlighting = false,
+  },
 }
-

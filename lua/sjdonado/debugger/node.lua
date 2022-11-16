@@ -16,6 +16,10 @@ dap.configurations.javascript = {
     skipFiles = {
       "<node_internals>/**",
     },
+    resolveSourceMapLocations = {
+      "${workspaceFolder}/**",
+      "!**/node_modules/**",
+    }
   },
   {
     type = "pwa-node",
@@ -24,20 +28,4 @@ dap.configurations.javascript = {
     processId = require'dap.utils'.pick_process,
     cwd = "${workspaceFolder}",
   },
-  {
-    type = "pwa-node",
-    request = "launch",
-    name = "Debug Jest Tests",
-    -- trace = true, -- include debugger info
-    runtimeExecutable = "node",
-    runtimeArgs = {
-      "./node_modules/jest/bin/jest.js",
-      "--runInBand",
-    },
-    rootPath = "${workspaceFolder}",
-    cwd = "${workspaceFolder}",
-    console = "integratedTerminal",
-    internalConsoleOptions = "neverOpen",
-  }
 }
-
