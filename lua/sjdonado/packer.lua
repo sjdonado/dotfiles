@@ -14,19 +14,15 @@ return require('packer').startup(function(use)
   use 'editorconfig/editorconfig-vim'
 
   use 'projekt0n/github-nvim-theme'
-  use 'lewis6991/gitsigns.nvim'
-  use 'David-Kunz/jester'
+  use 'nvim-tree/nvim-tree.lua'
 
-  use {
-    'numToStr/Comment.nvim',
-    config = function()
-      require('Comment').setup()
-    end
-  }
+  use 'feline-nvim/feline.nvim'
+  use 'nvim-tree/nvim-web-devicons'
+
+  use 'lewis6991/gitsigns.nvim'
 
   use 'neovim/nvim-lspconfig'
   use 'onsails/lspkind.nvim'
-  use 'simrat39/symbols-outline.nvim'
 
   use 'hrsh7th/nvim-cmp'
   use 'hrsh7th/cmp-nvim-lsp'
@@ -41,9 +37,21 @@ return require('packer').startup(function(use)
     opt = true,
     run = "npm install --legacy-peer-deps && npm run compile"
   }
-
-  use 'feline-nvim/feline.nvim'
-  use 'nvim-tree/nvim-web-devicons'
+  use 'David-Kunz/jester'
 
   use 'nyngwang/NeoZoom.lua'
+
+  use {
+    "windwp/nvim-autopairs",
+    config = function()
+      require("nvim-autopairs").setup()
+    end
+  }
+
+  use {
+    'numToStr/Comment.nvim',
+    config = function()
+      require('Comment').setup()
+    end
+  }
 end)

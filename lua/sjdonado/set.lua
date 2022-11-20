@@ -24,3 +24,8 @@ vim.opt.splitright = true
 
 -- macos fix
 vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
+
+-- nvim tree config
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+

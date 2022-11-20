@@ -195,13 +195,6 @@ local c = {
     left_sep = "block",
     right_sep = "block",
   },
-  scroll_bar = {
-    provider = "scroll_bar",
-    hl = {
-      fg = "yellow",
-      style = "bold",
-    },
-  },
 }
 
 local left = {
@@ -226,7 +219,6 @@ local right = {
   c.file_encoding,
   c.position,
   c.line_percentage,
-  c.scroll_bar,
 }
 
 local components = {

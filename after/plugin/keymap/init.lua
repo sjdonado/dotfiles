@@ -4,8 +4,6 @@ local vnoremap = Remap.vnoremap
 local inoremap = Remap.inoremap
 local xnoremap = Remap.xnoremap
 
-nnoremap("<leader>pv", ":Ex<CR>")
-
 -- Copy to clipboard
 nnoremap("<leader>y", "\"+y")
 vnoremap("<leader>y", "\"+y")
