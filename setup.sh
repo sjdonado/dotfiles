@@ -15,3 +15,5 @@ npm i -g vscode-langservers-extracted
 # git-delta setup
 git config --global core.pager "delta --light"
 git config --global delta.side-by-side true
+
+ln -s .tmux.conf ~/.tmux.conf

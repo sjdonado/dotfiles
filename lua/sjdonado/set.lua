@@ -1,6 +1,8 @@
 vim.opt.guicursor = ""
-vim.g.mapleader = " "
+vim.opt.mouse = ""
 vim.opt.termguicolors = true
+
+vim.g.mapleader = " "
 
 vim.opt.nu = true
 vim.opt.relativenumber = true
