@@ -32,8 +32,12 @@ nnoremap("<leader>k", "<cmd>lnext<CR>zz")
 nnoremap("<leader>j", "<cmd>lprev<CR>zz")
 
 -- Navigate between blank lines centered
-nnoremap("{", "{zz")
-nnoremap("}", "}zz")
+nnoremap("(", "(zz")
+nnoremap(")", ")zz")
+
+-- Navigate smothly
+nnoremap("{", "5kzz")
+nnoremap("}", "5jzz")
 
 -- Insert an empty new line without entering insert mode
 nnoremap("<Leader>o", 'o<Esc>0"_D')

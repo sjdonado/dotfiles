@@ -10,7 +10,7 @@ require("jester").setup({
       '-t', '$result',
       '--', '$file'
     },
-    args = {},
+    args = { '--no-cache' },
     rootPath = "${workspaceFolder}",
     cwd = "${workspaceFolder}",
     console = "integratedTerminal",
