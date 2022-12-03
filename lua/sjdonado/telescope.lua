@@ -76,21 +76,6 @@ local function select_background(prompt_bufnr, map)
 	end)
 end
 
-M.refactors = function()
-	require("telescope.pickers").new({}, {
-		prompt_title = "refactors",
-		finder = require("telescope.finders").new_table({
-			results = require("refactoring").get_refactors(),
-		}),
-		sorter = require("telescope.config").values.generic_sorter({}),
-		attach_mappings = function(_, map)
-			map("i", "<CR>", refactor)
-			map("n", "<CR>", refactor)
-			return true
-		end,
-	}):find()
-end
-
 M.git_branches = function()
 	require("telescope.builtin").git_branches({
 		attach_mappings = function(_, map)

@@ -20,8 +20,10 @@ return require('packer').startup(function(use)
   use 'lewis6991/gitsigns.nvim'
 
   -- apparence
+  use 'f-person/auto-dark-mode.nvim'
   use 'projekt0n/github-nvim-theme'
   use 'nvim-tree/nvim-web-devicons'
+
   use 'feline-nvim/feline.nvim'
 
   -- navigation
@@ -30,6 +32,7 @@ return require('packer').startup(function(use)
 
   use { "akinsho/toggleterm.nvim", tag = '*' }
   use 'nyngwang/NeoZoom.lua'
+  use 'wsdjeg/vim-fetch'
 
   -- lsp
   use 'neovim/nvim-lspconfig'
@@ -44,6 +47,7 @@ return require('packer').startup(function(use)
   use 'mfussenegger/nvim-dap'
   use 'rcarriga/nvim-dap-ui'
 
+  -- dap typescript
   use 'mxsdev/nvim-dap-vscode-js'
   use {
     "microsoft/vscode-js-debug",
@@ -68,6 +72,9 @@ return require('packer').startup(function(use)
   }
 
   use 'editorconfig/editorconfig-vim'
+
+  -- utils
+  use 'rest-nvim/rest.nvim'
 
   -- js
   use 'David-Kunz/jester'

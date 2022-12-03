@@ -1,5 +1,5 @@
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = { 'javascript', 'html', 'toml', 'yaml', 'dockerfile' },
+  ensure_installed = { 'javascript', 'html', 'toml', 'yaml', 'dockerfile', 'http', 'json' },
   ignore_install = { 'rust', 'markdown' },
 
   sync_install = false,

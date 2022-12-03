@@ -234,8 +234,22 @@ local components = {
   },
 }
 
-feline.setup({
-  components = components,
-  theme = github_light,
-  vi_mode_colors = vi_mode_colors,
-})
+local M = {}
+
+M.dark_setup = function()
+  feline.setup({
+    components = components,
+    theme = one_monokai,
+    vi_mode_colors = vi_mode_colors,
+  })
+end
+
+M.light_setup = function()
+  feline.setup({
+    components = components,
+    theme = github_light,
+    vi_mode_colors = vi_mode_colors,
+  })
+end
+
+return M
