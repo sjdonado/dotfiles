@@ -7,7 +7,6 @@ local cmp = require("cmp")
 local source_mapping = {
 	buffer = "[Buffer]",
 	nvim_lsp = "[LSP]",
-	nvim_lua = "[Lua]",
 	path = "[Path]",
 }
 local lspkind = require("lspkind")
@@ -62,6 +61,18 @@ require("lspconfig").zls.setup(config())
 
 require("lspconfig").tsserver.setup(config())
 
+require("lspconfig").gopls.setup(config({
+  cmd = { "gopls", "serve" },
+  settings = {
+    gopls = {
+      analyses = {
+        unusedparams = true,
+      },
+      staticcheck = true,
+    },
+  },
+}))
+
 require("lspconfig").eslint.setup(config({
   on_attach = function(client)
     lsp_keymap()
@@ -81,15 +92,3 @@ require("lspconfig").eslint.setup(config({
 require("lspconfig").ccls.setup(config())
 
 require("lspconfig").cssls.setup(config())
-
-require("lspconfig").gopls.setup(config({
-	cmd = { "gopls", "serve" },
-	settings = {
-		gopls = {
-			analyses = {
-				unusedparams = true,
-			},
-			staticcheck = true,
-		},
-	},
-}))
