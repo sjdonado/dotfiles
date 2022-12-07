@@ -32,6 +32,13 @@ nnoremap("<leader>vh", function()
   require('telescope.builtin').help_tags()
 end)
 
+nnoremap("<leader>dr", function()
+  require('telescope').extensions.dap.configurations()
+end)
+nnoremap("<leader>dc", function()
+  require('telescope').extensions.dap.commands()
+end)
+
 nnoremap("<leader>gf", function()
   require('telescope.builtin').git_files()
 end)

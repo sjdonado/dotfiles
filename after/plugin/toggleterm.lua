@@ -1,10 +1,14 @@
-local nnoremap = require("sjdonado.keymap").nnoremap
+local nnoremap = require('sjdonado.keymap').nnoremap
+local dapui = require('sjdonado.debugger').dapui
 
-require("toggleterm").setup({
+require('toggleterm').setup({
   size = 25,
 })
 
-nnoremap('<leader>;', ':ToggleTerm<CR>')
+nnoremap('<leader>;', function()
+  dapui.close()
+  vim.cmd(':ToggleTerm<CR>')
+end)
 
 function _G.set_terminal_keymaps()
   local opts = {buffer = 0}

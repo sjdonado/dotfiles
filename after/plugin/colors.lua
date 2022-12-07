@@ -1,10 +1,13 @@
 local auto_dark_mode = require('auto-dark-mode')
 local github_theme = require('github-theme')
+
 local statusline = require('sjdonado.feline')
+local treesitter_context = require('sjdonado.treesitter-context')
 
 github_theme.setup({
-  theme_style = 'light',
-  colors = { line_nr = '#898a8c' },
+  colors = {
+    line_nr = '#898a8c',
+  },
 })
 
 auto_dark_mode.setup({
@@ -21,3 +24,5 @@ auto_dark_mode.setup({
 })
 
 auto_dark_mode.init()
+
+treesitter_context.setup(true)

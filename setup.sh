@@ -1,6 +1,6 @@
 #!/bin/bash
 
-brew install tmux tree tzf nvm lua tree-sitter ripgrep fd
+brew install tmux tree tzf nvm lua tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
 $(brew --prefix)/opt/fzf/install
 
 brew tap homebrew/cask-fonts
@@ -11,6 +11,9 @@ git config --global user.name 'Juan Rodriguez'
 git config --global user.email sjdonado@uninorte.edu.co
 git config --global core.editor vim
 git config --global --add --bool push.autoSetupRemote true
+
+# lsp utils setup
+npm i -g vscode-langservers-extracted yaml-language-server
 
 # typescript setup
 npm i -g typescript typescript-language-server

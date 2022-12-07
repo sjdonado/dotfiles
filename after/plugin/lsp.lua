@@ -1,15 +1,18 @@
+local lspconfig = require("lspconfig")
+
 local Remap = require("sjdonado.keymap")
 local nnoremap = Remap.nnoremap
 local inoremap = Remap.inoremap
 
--- Setup nvim-cmp.
 local cmp = require("cmp")
+local lspkind = require("lspkind")
+
+-- Setup nvim-cmp.
 local source_mapping = {
 	buffer = "[Buffer]",
 	nvim_lsp = "[LSP]",
 	path = "[Path]",
 }
-local lspkind = require("lspkind")
 
 cmp.setup({
 	mapping = cmp.mapping.preset.insert({
@@ -34,6 +37,8 @@ cmp.setup({
 	},
 })
 
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local function lsp_keymap()
   nnoremap("gd", function() vim.lsp.buf.definition() end)
@@ -57,11 +62,11 @@ local function config(_config)
 	}, _config or {})
 end
 
-require("lspconfig").zls.setup(config())
+lspconfig.zls.setup(config())
 
-require("lspconfig").tsserver.setup(config())
+lspconfig.tsserver.setup(config())
 
-require("lspconfig").gopls.setup(config({
+lspconfig.gopls.setup(config({
   cmd = { "gopls", "serve" },
   settings = {
     gopls = {
@@ -73,7 +78,7 @@ require("lspconfig").gopls.setup(config({
   },
 }))
 
-require("lspconfig").eslint.setup(config({
+lspconfig.eslint.setup(config({
   on_attach = function(client)
     lsp_keymap()
 
@@ -89,6 +94,8 @@ require("lspconfig").eslint.setup(config({
   end
 }))
 
-require("lspconfig").ccls.setup(config())
+lspconfig.jsonls.setup(config())
+lspconfig.yamlls.setup(config())
 
-require("lspconfig").cssls.setup(config())
+lspconfig.ccls.setup(config())
+lspconfig.cssls.setup(config())
