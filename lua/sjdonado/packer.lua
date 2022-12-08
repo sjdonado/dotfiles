@@ -8,8 +8,8 @@ return require('packer').startup(function(use)
   use 'nvim-telescope/telescope-dap.nvim'
 
   -- treesitter
-  use("nvim-treesitter/nvim-treesitter", {
-    run = ":TSUpdate"
+  use('nvim-treesitter/nvim-treesitter', {
+    run = ':TSUpdate'
   })
   use 'nvim-treesitter/nvim-treesitter-context'
 
@@ -26,10 +26,10 @@ return require('packer').startup(function(use)
   use 'feline-nvim/feline.nvim'
 
   -- navigation
-  use 'ThePrimeagen/harpoon'
+  use {'akinsho/bufferline.nvim', tag = 'v3.*'}
   use 'nvim-tree/nvim-tree.lua'
 
-  use { "akinsho/toggleterm.nvim", tag = '*' }
+  use { 'akinsho/toggleterm.nvim', tag = '*' }
   use 'nyngwang/NeoZoom.lua'
   use 'wsdjeg/vim-fetch'
 
@@ -49,27 +49,30 @@ return require('packer').startup(function(use)
   -- dap typescript
   use 'mxsdev/nvim-dap-vscode-js'
   use {
-    "microsoft/vscode-js-debug",
+    'microsoft/vscode-js-debug',
     opt = true,
-    run = "npm install --legacy-peer-deps && npm run compile"
+    run = 'npm install --legacy-peer-deps && npm run compile'
   }
 
   -- editor
-  use 'justinmk/vim-sneak'
   use {
-    "windwp/nvim-autopairs",
+    'folke/persistence.nvim',
+    event = 'BufReadPre',
+    module = 'persistence',
+  }
+  use {
+    'windwp/nvim-autopairs',
     config = function()
-      require("nvim-autopairs").setup()
+      require('nvim-autopairs').setup()
     end
   }
-
   use {
     'numToStr/Comment.nvim',
     config = function()
       require('Comment').setup()
     end
   }
-
+  use 'justinmk/vim-sneak'
   use 'editorconfig/editorconfig-vim'
 
   -- utils

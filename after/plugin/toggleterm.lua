@@ -10,6 +10,16 @@ nnoremap('<leader>;', function()
   vim.cmd(':ToggleTerm<CR>')
 end)
 
+nnoremap('<leader>2;', function()
+  vim.cmd(':2ToggleTerm<CR>')
+end)
+
+nnoremap('<leader>1;', function()
+  dapui.close()
+  vim.cmd('ToggleTermToggleAll')
+end)
+
+
 function _G.set_terminal_keymaps()
   local opts = {buffer = 0}
   vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)

@@ -4,6 +4,9 @@ require("nvim-tree").setup({
       quit_on_open = true
     }
   },
+  --[[ hijack_directories = {
+    auto_open = false
+  }, ]]
   view = {
     mappings = {
       custom_only = true,
