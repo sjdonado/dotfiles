@@ -20,7 +20,7 @@ return require('packer').startup(function(use)
 
   -- apparence
   use 'f-person/auto-dark-mode.nvim'
-  use 'projekt0n/github-nvim-theme'
+  use { 'projekt0n/github-nvim-theme', tag = 'v0.0.5' }
   use 'nvim-tree/nvim-web-devicons'
 
   use 'feline-nvim/feline.nvim'
@@ -44,7 +44,7 @@ return require('packer').startup(function(use)
 
   -- dap
   use 'mfussenegger/nvim-dap'
-  use 'rcarriga/nvim-dap-ui'
+  use { 'rcarriga/nvim-dap-ui', tag = '*' }
 
   -- dap typescript
   use 'mxsdev/nvim-dap-vscode-js'
@@ -55,11 +55,7 @@ return require('packer').startup(function(use)
   }
 
   -- editor
-  use {
-    'folke/persistence.nvim',
-    event = 'BufReadPre',
-    module = 'persistence',
-  }
+  use { 'Shatur/neovim-session-manager'}
   use {
     'windwp/nvim-autopairs',
     config = function()
@@ -76,7 +72,7 @@ return require('packer').startup(function(use)
   use 'editorconfig/editorconfig-vim'
 
   -- utils
-  use 'rest-nvim/rest.nvim'
+  use { 'rest-nvim/rest.nvim', tag = '*' }
 
   -- js
   use 'David-Kunz/jester'

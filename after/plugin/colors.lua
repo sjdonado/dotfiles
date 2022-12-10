@@ -5,9 +5,10 @@ local statusline = require('sjdonado.feline')
 local treesitter_context = require('sjdonado.treesitter-context')
 
 github_theme.setup({
+  dark_float = true,
   colors = {
     line_nr = '#898a8c',
-  },
+  }
 })
 
 auto_dark_mode.setup({
