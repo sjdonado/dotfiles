@@ -1,5 +1,6 @@
 vim.opt.guicursor = ""
 vim.opt.mouse = ""
+
 vim.opt.termguicolors = true
 
 vim.g.mapleader = " "
@@ -31,4 +32,3 @@ vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.r
 -- nvim tree config
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
-

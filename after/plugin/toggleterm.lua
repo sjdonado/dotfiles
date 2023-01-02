@@ -10,11 +10,15 @@ nnoremap('<leader>;', function()
   vim.cmd(':ToggleTerm<CR>')
 end)
 
+nnoremap('<leader>1;', function()
+  vim.cmd(':1ToggleTerm<CR>')
+end)
+
 nnoremap('<leader>2;', function()
   vim.cmd(':2ToggleTerm<CR>')
 end)
 
-nnoremap('<leader>1;', function()
+nnoremap('<leader>3;', function()
   dapui.close()
   vim.cmd('ToggleTermToggleAll')
 end)

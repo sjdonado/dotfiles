@@ -12,7 +12,7 @@ git config --global user.email sjdonado@uninorte.edu.co
 git config --global core.editor vim
 git config --global --add --bool push.autoSetupRemote true
 
-# lsp utils setup
+# lsp most used setup
 npm i -g vscode-langservers-extracted yaml-language-server
 
 # typescript setup
@@ -20,7 +20,11 @@ npm i -g typescript typescript-language-server
 npm i -g vscode-langservers-extracted
 
 # go setup
+brew install staticcheck
 go install golang.org/x/tools/gopls@latest
 go install github.com/go-delve/delve/cmd/dlv@latest
+
+# npm utils
+npm i -g nosync-icloud
 
 ln -s $PWD/.tmux.conf ~/.tmux.conf

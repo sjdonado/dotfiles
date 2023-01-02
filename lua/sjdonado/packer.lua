@@ -76,4 +76,7 @@ return require('packer').startup(function(use)
 
   -- js
   use 'David-Kunz/jester'
+
+  -- go
+  use 'fatih/vim-go'
 end)
