@@ -1,5 +1,5 @@
 local nnoremap = require('sjdonado.keymap').nnoremap
-local dapui = require('sjdonado.debugger').dapui
+local dapui = require('sjdonado.dap').dapui
 
 require('toggleterm').setup({
   size = 25,

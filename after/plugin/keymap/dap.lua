@@ -1,5 +1,5 @@
-local dap = require('sjdonado.debugger').dap
-local dapui = require('sjdonado.debugger').dapui
+local dap = require('sjdonado.dap').dap
+local dapui = require('sjdonado.dap').dapui
 
 local Remap = require('sjdonado.keymap')
 local nnoremap = Remap.nnoremap

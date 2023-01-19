@@ -31,8 +31,8 @@ dap.listeners.after.event_initialized['dapui_config'] = function()
   dapui.open()
 end
 
-require('sjdonado.debugger.node')
-require('sjdonado.debugger.go')
+require('sjdonado.dap.node')
+require('sjdonado.dap.go')
 
 local M = {}
 
