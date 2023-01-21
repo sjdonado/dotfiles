@@ -22,6 +22,12 @@ return require('packer').startup(function(use)
   use 'f-person/auto-dark-mode.nvim'
   use { 'projekt0n/github-nvim-theme', tag = 'v0.0.5' }
   use 'nvim-tree/nvim-web-devicons'
+  use {
+    'lukas-reineke/indent-blankline.nvim',
+    config = function()
+      require('indent_blankline').setup()
+    end
+  }
 
   use 'feline-nvim/feline.nvim'
 
@@ -52,7 +58,7 @@ return require('packer').startup(function(use)
     'microsoft/vscode-js-debug',
     opt = true,
     run = 'npm install --legacy-peer-deps && npm run compile',
-    tag = 'v1.74.1'
+    tag = '*'
   }
 
   -- editor
