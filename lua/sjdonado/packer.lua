@@ -4,7 +4,7 @@ return require('packer').startup(function(use)
   use 'nvim-lua/plenary.nvim'
 
   -- telescope
-  use 'nvim-telescope/telescope.nvim'
+  use { 'nvim-telescope/telescope.nvim', tag = '*' }
   use 'nvim-telescope/telescope-dap.nvim'
 
   -- treesitter
@@ -20,7 +20,8 @@ return require('packer').startup(function(use)
 
   -- apparence
   use 'f-person/auto-dark-mode.nvim'
-  use { 'projekt0n/github-nvim-theme', tag = 'v0.0.5' }
+  use 'catppuccin/nvim'
+  -- use { 'projekt0n/github-nvim-theme', tag = 'v0.0.5' }
   use 'nvim-tree/nvim-web-devicons'
   use {
     'lukas-reineke/indent-blankline.nvim',

@@ -44,3 +44,6 @@ nnoremap('N', 'Nzzzv')
 -- Insert an empty new line without entering insert mode
 nnoremap('<Leader>o', 'o<Esc>0"_D')
 nnoremap('<Leader>O', 'O<Esc>0"_D')
+
+-- Save changes
+nnoremap('<C-s>', ':w<CR>')

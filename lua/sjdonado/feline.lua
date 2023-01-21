@@ -1,6 +1,8 @@
 local feline = require('feline')
+local nvimwebdevicons = require('nvim-web-devicons')
+local U = require('catppuccin.utils.colors')
 
-require'nvim-web-devicons'.setup {
+nvimwebdevicons.setup({
   override = {
     zsh = {
       icon = '',
@@ -10,45 +12,7 @@ require'nvim-web-devicons'.setup {
     }
   },
   color_icons = true
-}
-
-local one_monokai = {
-  fg = '#abb2bf',
-  bg = '#1e2024',
-  green = '#98c379',
-  yellow = '#e5c07b',
-  purple = '#c678dd',
-  orange = '#d19a66',
-  red = '#e06c75',
-  aqua = '#61afef',
-  darkblue = '#282c34',
-  dark_red = '#f75f5f',
-}
-
-
-local github_light = {
-  fg = '#586069',
-  bg = '#f6f8fa',
-  green = '#28a745',
-  yellow = '#dbab09',
-  purple = '#5a32a3',
-  orange = '#d18616',
-  red = '#d73a49',
-  aqua = '#0598bc',
-  darkblue = '#e8e9eb',
-  dark_red = '#f75f5f',
-}
-
-local vi_mode_colors = {
-  NORMAL = 'green',
-  OP = 'green',
-  INSERT = 'yellow',
-  VISUAL = 'purple',
-  LINES = 'orange',
-  BLOCK = 'dark_red',
-  REPLACE = 'red',
-  COMMAND = 'aqua',
-}
+})
 
 local c = {
   vim_mode = {
@@ -62,7 +26,7 @@ local c = {
     hl = function()
       return {
         fg = require('feline.providers.vi_mode').get_mode_color(),
-        bg = 'darkblue',
+        bg = 'dark_bg',
         style = 'bold',
         name = 'NeovimModeHLColor',
       }
@@ -74,7 +38,7 @@ local c = {
     provider = 'git_branch',
     hl = {
       fg = 'peanut',
-      bg = 'darkblue',
+      bg = 'dark_bg',
       style = 'bold',
     },
     left_sep = 'block',
@@ -133,7 +97,7 @@ local c = {
     provider = 'lsp_client_names',
     hl = {
       fg = 'purple',
-      bg = 'darkblue',
+      bg = 'dark_bg',
       style = 'bold',
     },
     left_sep = 'block',
@@ -143,7 +107,7 @@ local c = {
     provider = 'file_encoding',
     hl = {
       fg = 'orange',
-      bg = 'darkblue',
+      bg = 'dark_bg',
       style = 'italic',
     },
     left_sep = 'block',
@@ -153,7 +117,7 @@ local c = {
     provider = 'position',
     hl = {
       fg = 'green',
-      bg = 'darkblue',
+      bg = 'dark_bg',
       style = 'bold',
     },
     left_sep = 'block',
@@ -163,7 +127,7 @@ local c = {
     provider = 'line_percentage',
     hl = {
       fg = 'aqua',
-      bg = 'darkblue',
+      bg = 'dark_bg',
       style = 'bold',
     },
     left_sep = 'block',
@@ -205,19 +169,34 @@ local components = {
 
 local M = {}
 
-M.dark_setup = function()
-  feline.setup({
-    components = components,
-    theme = one_monokai,
-    vi_mode_colors = vi_mode_colors,
-  })
-end
+M.setup = function(clrs)
+  local theme = {
+    fg = clrs.text,
+    bg = U.darken(clrs.base, 0.6, clrs.mantle),
+    dark_bg = U.lighten(clrs.mantle, 0.8, clrs.base),
+    green = clrs.green,
+    yellow = clrs.yellow,
+    red = clrs.red,
+    purple = clrs.mauve,
+    aqua = clrs.sky,
+    orange = clrs.peach,
+  }
 
-M.light_setup = function()
+  local vi_mode_colors = {
+    NORMAL = 'green',
+    OP = 'green',
+    INSERT = 'yellow',
+    VISUAL = 'purple',
+    LINES = 'orange',
+    BLOCK = 'red',
+    REPLACE = 'red',
+    COMMAND = 'aqua',
+  }
+
   feline.setup({
     components = components,
-    theme = github_light,
-    vi_mode_colors = vi_mode_colors,
+    theme = theme,
+    vi_mode_colors = vi_mode_colors
   })
 end
 

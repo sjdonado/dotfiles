@@ -1,29 +1,35 @@
 local auto_dark_mode = require('auto-dark-mode')
-local github_theme = require('github-theme')
+local catppuccin = require('catppuccin')
+local feline = require('sjdonado.feline')
 
-local statusline = require('sjdonado.feline')
-local treesitter_context = require('sjdonado.treesitter-context')
-
-github_theme.setup({
-  dark_float = true,
-  colors = {
-    line_nr = '#898a8c',
-  }
+catppuccin.setup({
+  background = {
+    light = 'latte',
+    dark = 'mocha',
+  },
+  color_overrides = {
+    latte = {
+      base = '#ffffff',
+    },
+  },
+  custom_highlights = function(colors)
+    return {
+      LineNr = { fg = '#898a8c' },
+    }
+  end
 })
 
 auto_dark_mode.setup({
-	set_dark_mode = function()
-		vim.api.nvim_set_option('background', 'dark')
-		vim.cmd('colorscheme github_dark')
-    statusline.dark_setup()
-	end,
-	set_light_mode = function()
-		vim.api.nvim_set_option('background', 'light')
-		vim.cmd('colorscheme github_light')
-    statusline.light_setup()
-	end,
+  set_dark_mode = function()
+    vim.api.nvim_set_option('background', 'dark')
+    feline.setup(require('catppuccin.palettes').get_palette())
+  end,
+  set_light_mode = function()
+    vim.api.nvim_set_option('background', 'light')
+    feline.setup(require('catppuccin.palettes').get_palette())
+  end,
 })
 
-auto_dark_mode.init()
+vim.cmd.colorscheme 'catppuccin'
 
-treesitter_context.setup(true)
+auto_dark_mode.init()
