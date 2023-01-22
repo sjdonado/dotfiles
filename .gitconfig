@@ -1,0 +1,19 @@
+[user]
+	email = sjdonado@uninorte.edu.co
+	name = Juan Rodriguez
+
+[pull]
+	rebase = false
+
+[core]
+	editor = vim
+
+[init]
+	defaultBranch = master
+
+[credential]
+	helper = store
+
+[push]
+	autoSetupRemote = true
+
