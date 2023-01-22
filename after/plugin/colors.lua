@@ -1,5 +1,8 @@
 local auto_dark_mode = require('auto-dark-mode')
+
 local catppuccin = require('catppuccin')
+local U = require('catppuccin.utils.colors')
+
 local feline = require('sjdonado.feline')
 
 catppuccin.setup({
@@ -12,11 +15,19 @@ catppuccin.setup({
       base = '#ffffff',
     },
   },
-  custom_highlights = function(colors)
+  custom_highlights = function(clrs)
     return {
-      LineNr = { fg = '#898a8c' },
+      LineNr = { fg = clrs.overlay1 },
     }
-  end
+  end,
+  highlight_overrides = {
+    latte = function(clrs)
+      return {
+        NvimTreeNormal = { bg = clrs.base },
+        NvimTreeWinSeparator = { fg = clrs.crust },
+      }
+    end,
+  }
 })
 
 auto_dark_mode.setup({

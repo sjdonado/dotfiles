@@ -20,9 +20,8 @@ return require('packer').startup(function(use)
 
   -- apparence
   use 'f-person/auto-dark-mode.nvim'
-  use 'catppuccin/nvim'
-  -- use { 'projekt0n/github-nvim-theme', tag = 'v0.0.5' }
   use 'nvim-tree/nvim-web-devicons'
+  use 'catppuccin/nvim'
   use {
     'lukas-reineke/indent-blankline.nvim',
     config = function()
@@ -78,9 +77,12 @@ return require('packer').startup(function(use)
   }
   use 'justinmk/vim-sneak'
   use 'editorconfig/editorconfig-vim'
-
-  -- utils
-  use { 'rest-nvim/rest.nvim', tag = '*' }
+  use {
+    'norcalli/nvim-colorizer.lua',
+    config = function()
+      require('colorizer').setup()
+    end
+  }
 
   -- js
   use 'David-Kunz/jester'
