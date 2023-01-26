@@ -24,7 +24,9 @@ catppuccin.setup({
     latte = function(clrs)
       return {
         NvimTreeNormal = { bg = clrs.base },
+        NormalFloat = { bg = clrs. base },
         NvimTreeWinSeparator = { fg = clrs.crust },
+        TreesitterContext = { bg = clrs.mantle },
       }
     end,
   }

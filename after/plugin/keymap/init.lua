@@ -47,3 +47,5 @@ nnoremap('<Leader>O', 'O<Esc>0"_D')
 
 -- Save changes
 nnoremap('<C-s>', ':w<CR>')
+inoremap('<C-s>', '<Esc>:w<CR>')
+
