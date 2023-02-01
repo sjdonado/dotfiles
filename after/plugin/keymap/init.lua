@@ -49,3 +49,6 @@ nnoremap('<Leader>O', 'O<Esc>0"_D')
 nnoremap('<C-s>', ':w<CR>')
 inoremap('<C-s>', '<Esc>:w<CR>')
 
+-- Buffers navigation
+nnoremap('<C-w>d', ':bd!<CR>', silent)
+nnoremap('<C-w>x', ':bufdo bd<CR> set noim<CR>', silent)

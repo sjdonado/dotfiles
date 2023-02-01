@@ -16,8 +16,12 @@ catppuccin.setup({
     },
   },
   custom_highlights = function(clrs)
+    local darkestsurface = U.darken(clrs.surface0, 0.6, clrs.text)
+
     return {
       LineNr = { fg = clrs.overlay1 },
+      Comment = { fg = darkestsurface },
+      ['@comment'] = { fg = darkestsurface },
     }
   end,
   highlight_overrides = {

@@ -1,31 +1,34 @@
 local dap = require('dap')
 
-require("dap-vscode-js").setup({
+require('dap-vscode-js').setup({
+  debugger_path = vim.fn.stdpath('data') .. '/mason/packages/js-debug-adapter',
+  debugger_cmd = { 'js-debug-adapter' },
   adapters = { 'pwa-node' },
 })
 
 dap.configurations.javascript = {
   {
-    type = "pwa-node",
-    request = "launch",
-    name = "Launch (getir)",
-    program = "${workspaceFolder}/bin",
-    rootPath = "${workspaceFolder}",
-    cwd = "${workspaceFolder}",
-    console = "integratedTerminal",
+    name = 'Launch (getir)',
+    type = 'pwa-node',
+    request = 'launch',
+    program = '${workspaceFolder}/bin',
+    rootPath = '${workspaceFolder}',
+    cwd = '${workspaceFolder}',
     skipFiles = {
-      "<node_internals>/**",
+      '<node_internals>/**',
     },
     resolveSourceMapLocations = {
-      "${workspaceFolder}/**",
-      "!**/node_modules/**",
-    }
+      '${workspaceFolder}/**',
+      '!**/node_modules/**',
+    },
+    protocol = 'inspector',
+    console = 'integratedTerminal',
   },
   {
-    type = "pwa-node",
-    request = "attach",
-    name = "Attach",
-    processId = require'dap.utils'.pick_process,
-    cwd = "${workspaceFolder}",
+    name = 'Attach to node process',
+    type = 'pwa-node',
+    request = 'attach',
+    cwd = '${workspaceFolder}',
+    processId = require('dap.utils').pick_process,
   },
 }

@@ -68,6 +68,18 @@ local c = {
   separator = {
     provider = '',
   },
+  fileinfo = {
+    provider = {
+      name = 'file_info',
+      opts = {
+        type = 'relative',
+      },
+    },
+    hl = {
+      style = 'bold',
+    },
+    right_sep = ' ',
+  },
   diagnostic_errors = {
     provider = 'diagnostic_errors',
     hl = {
@@ -144,11 +156,15 @@ local left = {
   c.separator,
 }
 
-local right = {
+local middle = {
+  c.fileinfo,
   c.diagnostic_errors,
   c.diagnostic_warnings,
   c.diagnostic_info,
   c.diagnostic_hints,
+}
+
+local right = {
   c.separator,
   c.lsp_client_names,
   c.file_encoding,
@@ -159,10 +175,12 @@ local right = {
 local components = {
   active = {
     left,
+    middle,
     right,
   },
   inactive = {
     left,
+    middle,
     right,
   },
 }

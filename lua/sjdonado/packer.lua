@@ -32,12 +32,15 @@ return require('packer').startup(function(use)
   use 'feline-nvim/feline.nvim'
 
   -- navigation
-  use {'akinsho/bufferline.nvim', tag = 'v3.*'}
   use 'nvim-tree/nvim-tree.lua'
 
   use { 'akinsho/toggleterm.nvim', tag = '*' }
   use 'nyngwang/NeoZoom.lua'
   use 'wsdjeg/vim-fetch'
+
+  -- lsp + dap + linter package manager
+  use 'williamboman/mason.nvim'
+  use 'WhoIsSethDaniel/mason-tool-installer.nvim'
 
   -- lsp
   use 'neovim/nvim-lspconfig'
@@ -46,20 +49,12 @@ return require('packer').startup(function(use)
   use 'hrsh7th/nvim-cmp'
   use 'hrsh7th/cmp-nvim-lsp'
   use 'hrsh7th/cmp-buffer'
-  use 'saadparwaiz1/cmp_luasnip'
 
   -- dap
-  use 'mfussenegger/nvim-dap'
+  use { 'mfussenegger/nvim-dap', tag = '*' }
   use { 'rcarriga/nvim-dap-ui', tag = '*' }
 
-  -- dap typescript
-  use 'mxsdev/nvim-dap-vscode-js'
-  use {
-    'microsoft/vscode-js-debug',
-    opt = true,
-    run = 'npm install --legacy-peer-deps && npm run compile',
-    tag = '*'
-  }
+  use { 'mxsdev/nvim-dap-vscode-js', tag = '*' }
 
   -- editor
   use { 'Shatur/neovim-session-manager'}

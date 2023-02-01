@@ -1,17 +1,17 @@
-local lspconfig = require("lspconfig")
+local lspconfig = require('lspconfig')
 
-local Remap = require("sjdonado.keymap")
+local Remap = require('sjdonado.keymap')
 local nnoremap = Remap.nnoremap
 local inoremap = Remap.inoremap
 
-local cmp = require("cmp")
-local lspkind = require("lspkind")
+local cmp = require('cmp')
+local lspkind = require('lspkind')
 
 -- Setup nvim-cmp.
 local source_mapping = {
-	buffer = "[Buffer]",
-	nvim_lsp = "[LSP]",
-	path = "[Path]",
+	buffer = '[Buffer]',
+	nvim_lsp = '[LSP]',
+	path = '[Path]',
 }
 
 cmp.setup({
@@ -32,8 +32,8 @@ cmp.setup({
 	},
 
 	sources = {
-		{ name = "nvim_lsp" },
-		{ name = "buffer" },
+		{ name = 'nvim_lsp' },
+		{ name = 'buffer' },
 	},
 })
 
@@ -41,21 +41,21 @@ local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local function lsp_keymap()
-  nnoremap("gd", function() vim.lsp.buf.definition() end)
-  nnoremap("K", function() vim.lsp.buf.hover() end)
-  nnoremap("<leader>vws", function() vim.lsp.buf.workspace_symbol() end)
-  nnoremap("<leader>vd", function() vim.diagnostic.open_float() end)
-  nnoremap("[d", function() vim.diagnostic.goto_next() end)
-  nnoremap("]d", function() vim.diagnostic.goto_prev() end)
-  nnoremap("<leader>vca", function() vim.lsp.buf.code_action() end)
-  nnoremap("<leader>vrr", function() vim.lsp.buf.references() end)
-  nnoremap("<leader>vrn", function() vim.lsp.buf.rename() end)
-  inoremap("<C-h>", function() vim.lsp.buf.signature_help() end)
+  nnoremap('gd', function() vim.lsp.buf.definition() end)
+  nnoremap('K', function() vim.lsp.buf.hover() end)
+  nnoremap('<leader>vws', function() vim.lsp.buf.workspace_symbol() end)
+  nnoremap('<leader>vd', function() vim.diagnostic.open_float() end)
+  nnoremap('[d', function() vim.diagnostic.goto_next() end)
+  nnoremap(']d', function() vim.diagnostic.goto_prev() end)
+  nnoremap('<leader>vca', function() vim.lsp.buf.code_action() end)
+  nnoremap('<leader>vrr', function() vim.lsp.buf.references() end)
+  nnoremap('<leader>vrn', function() vim.lsp.buf.rename() end)
+  inoremap('<C-h>', function() vim.lsp.buf.signature_help() end)
 end
 
 local function config(_config)
-	return vim.tbl_deep_extend("force", {
-		capabilities = require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities()),
+	return vim.tbl_deep_extend('force', {
+		capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities()),
 		on_attach = function()
       lsp_keymap()
 		end,
@@ -67,7 +67,7 @@ lspconfig.zls.setup(config())
 lspconfig.tsserver.setup(config())
 
 lspconfig.gopls.setup(config({
-  cmd = { "gopls", "serve" },
+  cmd = { 'gopls', 'serve' },
   settings = {
     gopls = {
       analyses = {
@@ -84,11 +84,11 @@ lspconfig.eslint.setup(config({
 
     client.server_capabilities.document_formatting = true
 
-    local autogroup_eslint_lsp = vim.api.nvim_create_augroup("eslint_lsp", { clear = true })
+    local autogroup_eslint_lsp = vim.api.nvim_create_augroup('eslint_lsp', { clear = true })
 
-    vim.api.nvim_create_autocmd("BufWritePre", {
+    vim.api.nvim_create_autocmd('BufWritePre', {
       pattern = { '*.tsx', '*.ts', '*.jsx', '*.js' },
-      command = "EslintFixAll",
+      command = 'EslintFixAll',
       group = autogroup_eslint_lsp,
     })
   end

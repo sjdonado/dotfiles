@@ -24,7 +24,7 @@ dapui.setup({
   },
   controls = {
     enabled = false
-  }
+  },
 })
 
 dap.listeners.after.event_initialized['dapui_config'] = function()

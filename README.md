@@ -2,7 +2,13 @@
 
 Clone into `~/.config/nivm`
 
-## Install
+## Install dependencies
 ```bash
 ./setup.sh
+```
+
+## Setup
+```vim
+:PackerSync
+:MasonToolsInstall
 ```
