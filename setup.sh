@@ -18,5 +18,5 @@ brew install --cask font-hack-nerd-font
 # npm utils
 npm i -g nosync-icloud
 
-ln -s $PWD/.gitconfig ~/.gitconfig
-ln -s $PWD/.tmux.conf ~/.tmux.conf
+ln -s $PWD/config/.gitconfig ~/.gitconfig
+ln -s $PWD/config/.tmux.conf ~/.tmux.conf

@@ -200,21 +200,9 @@ M.setup = function(clrs)
     orange = clrs.peach,
   }
 
-  local vi_mode_colors = {
-    NORMAL = 'green',
-    OP = 'green',
-    INSERT = 'yellow',
-    VISUAL = 'purple',
-    LINES = 'orange',
-    BLOCK = 'red',
-    REPLACE = 'red',
-    COMMAND = 'aqua',
-  }
-
   feline.setup({
     components = components,
     theme = theme,
-    vi_mode_colors = vi_mode_colors
   })
 end
 

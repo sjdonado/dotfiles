@@ -36,6 +36,11 @@ nnoremap('#', '#zz')
 
 nnoremap('<C-y>', '6kzz')
 nnoremap('<C-e>', '6jzz')
+vnoremap('<C-y>', '6kzz')
+vnoremap('<C-e>', '6jzz')
+
+nnoremap('<C-o>', '<C-o>zz')
+nnoremap('<C-i>', '<C-i>zz')
 
 -- Keep it centered when searching
 nnoremap('n', 'nzzzv')
