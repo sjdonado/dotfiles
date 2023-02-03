@@ -21,7 +21,7 @@ return require('packer').startup(function(use)
   -- apparence
   use 'f-person/auto-dark-mode.nvim'
   use 'nvim-tree/nvim-web-devicons'
-  use 'catppuccin/nvim'
+  use 'projekt0n/github-nvim-theme'
   use {
     'lukas-reineke/indent-blankline.nvim',
     config = function()
@@ -52,7 +52,7 @@ return require('packer').startup(function(use)
 
   -- dap
   use { 'mfussenegger/nvim-dap', tag = '*' }
-  use { 'rcarriga/nvim-dap-ui', tag = '*' }
+  use { 'rcarriga/nvim-dap-ui', tag = 'v2*' }
 
   use { 'mxsdev/nvim-dap-vscode-js', tag = '*' }
 

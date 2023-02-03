@@ -1,6 +1,5 @@
 local feline = require('feline')
 local nvimwebdevicons = require('nvim-web-devicons')
-local U = require('catppuccin.utils.colors')
 
 nvimwebdevicons.setup({
   override = {
@@ -189,15 +188,15 @@ local M = {}
 
 M.setup = function(clrs)
   local theme = {
-    fg = clrs.text,
-    bg = U.darken(clrs.base, 0.6, clrs.mantle),
-    dark_bg = U.lighten(clrs.mantle, 0.8, clrs.base),
+    fg = clrs.fg,
+    bg = clrs.bg2,
+    dark_bg = clrs.bg_visual,
     green = clrs.green,
     yellow = clrs.yellow,
     red = clrs.red,
-    purple = clrs.mauve,
-    aqua = clrs.sky,
-    orange = clrs.peach,
+    purple = clrs.magenta,
+    aqua = clrs.cyan,
+    orange = clrs.orange,
   }
 
   feline.setup({
