@@ -36,13 +36,14 @@ gitsigns.setup {
   end
 }
 
-nnoremap("<leader>gs", ':tab G<CR>')
-nnoremap("<leader>gm", ':G mergetool<CR>')
-nnoremap("<leader>gms", ':GitConflictNextConflict<CR><cmd>vs<CR><cmd>wincmd h<CR>/=======<CR>ms')
+nnoremap('<leader>gs', ':tab G<CR>')
+nnoremap('<leader>gc', ':G commit<CR><cmd>NeoZoomToggle<CR>')
+nnoremap('<leader>gm', ':G mergetool<CR>')
+nnoremap('<leader>gms', ':GitConflictNextConflict<CR><cmd>vs<CR><cmd>wincmd h<CR>/=======<CR>ms')
 
-nnoremap("<leader>co", ':GitConflictChooseOurs<CR>')
-nnoremap("<leader>ct", ':GitConflictChooseTheirs<CR>')
-nnoremap("<leader>cb", ':GitConflictChooseBoth<CR>')
-nnoremap("<leader>c0", ':GitConflictChooseNone<CR>')
-nnoremap("<leader>]x", ':GitConflictNextConflict<CR>')
-nnoremap("<leader>[x", ':GitConflictPrevConflict<CR>')
+nnoremap('<leader>co', ':GitConflictChooseOurs<CR>')
+nnoremap('<leader>ct', ':GitConflictChooseTheirs<CR>')
+nnoremap('<leader>cb', ':GitConflictChooseBoth<CR>')
+nnoremap('<leader>c0', ':GitConflictChooseNone<CR>')
+nnoremap('<leader>]x', ':GitConflictNextConflict<CR>')
+nnoremap('<leader>[x', ':GitConflictPrevConflict<CR>')

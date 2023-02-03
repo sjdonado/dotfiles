@@ -57,7 +57,7 @@ return require('packer').startup(function(use)
   use { 'mxsdev/nvim-dap-vscode-js', tag = '*' }
 
   -- editor
-  use { 'Shatur/neovim-session-manager'}
+  use 'Shatur/neovim-session-manager'
   use {
     'windwp/nvim-autopairs',
     config = function()
