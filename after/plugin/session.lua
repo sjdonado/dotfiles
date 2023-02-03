@@ -10,6 +10,7 @@ local custom_session_manager_group = vim.api.nvim_create_augroup('CustomSessionM
 
 vim.api.nvim_create_autocmd('BufWritePost', {
   pattern = 'global',
+  group = custom_session_manager_group,
   callback = function ()
     if vim.bo.filetype ~= 'git'
       and not vim.bo.filetype ~= 'gitcommit'
@@ -19,6 +20,7 @@ vim.api.nvim_create_autocmd('BufWritePost', {
 
 vim.api.nvim_create_autocmd('DirChangedPre', {
   pattern = 'global',
+  group = custom_session_manager_group,
   callback = function ()
     if vim.fn.argc() == 0 -- not git
       and not vim.v.event.changed_window -- it's cd
@@ -28,6 +30,7 @@ vim.api.nvim_create_autocmd('DirChangedPre', {
 
 vim.api.nvim_create_autocmd('DirChanged', {
   pattern = 'global',
+  group = custom_session_manager_group,
   callback = function ()
     if vim.fn.argc() == 0 -- not git
       and not vim.v.event.changed_window -- it's cd
