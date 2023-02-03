@@ -32,7 +32,6 @@ local c = {
       }
     end,
     left_sep = 'block',
-    right_sep = 'block',
   },
   gitBranch = {
     provider = 'git_branch',
@@ -41,29 +40,31 @@ local c = {
       bg = 'dark_bg',
       style = 'bold',
     },
-    left_sep = 'block',
     right_sep = 'block',
   },
   gitDiffAdded = {
     provider = 'git_diff_added',
     hl = {
       fg = 'green',
+      bg = 'dark_bg',
     },
-    left_sep = 'block',
+    right_sep = 'block',
   },
   gitDiffRemoved = {
     provider = 'git_diff_removed',
     hl = {
       fg = 'red',
+      bg = 'dark_bg',
     },
-    left_sep = 'block',
+    right_sep = 'block',
   },
   gitDiffChanged = {
     provider = 'git_diff_changed',
     hl = {
       fg = 'fg',
+      bg = 'dark_bg',
     },
-    left_sep = 'block',
+    right_sep = 'block',
   },
   separator = {
     provider = '',
@@ -78,7 +79,7 @@ local c = {
     hl = {
       style = 'bold',
     },
-    right_sep = ' ',
+    right_sep = 'block',
   },
   diagnostic_errors = {
     provider = 'diagnostic_errors',
@@ -113,7 +114,6 @@ local c = {
       style = 'bold',
     },
     left_sep = 'block',
-    right_sep = 'block',
   },
   file_encoding = {
     provider = 'file_encoding',
