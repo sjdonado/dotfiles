@@ -1,7 +1,11 @@
 local mason = require('mason')
 local masontoolinstaller = require('mason-tool-installer')
 
-mason.setup()
+mason.setup({
+  ui = {
+    border = 'double',
+  }
+})
 
 masontoolinstaller.setup({
   ensure_installed = {

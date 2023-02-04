@@ -6,6 +6,7 @@ return require('packer').startup(function(use)
   -- telescope
   use { 'nvim-telescope/telescope.nvim', tag = '*' }
   use 'nvim-telescope/telescope-dap.nvim'
+  use 'stevearc/dressing.nvim'
 
   -- treesitter
   use('nvim-treesitter/nvim-treesitter', {
@@ -29,6 +30,7 @@ return require('packer').startup(function(use)
     end
   }
 
+  -- statusline
   use 'feline-nvim/feline.nvim'
 
   -- navigation

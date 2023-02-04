@@ -37,7 +37,9 @@ gitsigns.setup {
 }
 
 nnoremap('<leader>gs', ':tab G<CR>')
-nnoremap('<leader>gc', ':G commit<CR><cmd>NeoZoomToggle<CR>')
+nnoremap('<leader>gcc', ':vert G commit<CR>')
+nnoremap('<leader>gca', ':vert G commit --amend<CR>')
+
 nnoremap('<leader>gm', ':G mergetool<CR>')
 nnoremap('<leader>gms', ':GitConflictNextConflict<CR><cmd>vs<CR><cmd>wincmd h<CR>/=======<CR>ms')
 
