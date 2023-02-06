@@ -35,8 +35,7 @@ return require('packer').startup(function(use)
   use 'nvim-tree/nvim-tree.lua'
 
   use { 'akinsho/toggleterm.nvim', tag = '*' }
-  use 'sjdonado/NeoZoom.lua'
-  -- use 'nyngwang/NeoZoom.lua'
+  use 'nyngwang/NeoZoom.lua'
   use 'wsdjeg/vim-fetch'
 
   -- lsp + dap + linter package manager
