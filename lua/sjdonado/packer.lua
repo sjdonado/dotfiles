@@ -25,9 +25,7 @@ return require('packer').startup(function(use)
   use 'projekt0n/github-nvim-theme'
   use {
     'lukas-reineke/indent-blankline.nvim',
-    config = function()
-      require('indent_blankline').setup()
-    end
+    config = function() require('indent_blankline').setup() end
   }
 
   -- statusline
@@ -37,7 +35,8 @@ return require('packer').startup(function(use)
   use 'nvim-tree/nvim-tree.lua'
 
   use { 'akinsho/toggleterm.nvim', tag = '*' }
-  use 'nyngwang/NeoZoom.lua'
+  use 'sjdonado/NeoZoom.lua'
+  -- use 'nyngwang/NeoZoom.lua'
   use 'wsdjeg/vim-fetch'
 
   -- lsp + dap + linter package manager
@@ -62,23 +61,17 @@ return require('packer').startup(function(use)
   use 'Shatur/neovim-session-manager'
   use {
     'windwp/nvim-autopairs',
-    config = function()
-      require('nvim-autopairs').setup()
-    end
+    config = function() require('nvim-autopairs').setup() end
   }
   use {
     'numToStr/Comment.nvim',
-    config = function()
-      require('Comment').setup()
-    end
+    config = function() require('Comment').setup() end
   }
   use 'justinmk/vim-sneak'
   use 'editorconfig/editorconfig-vim'
   use {
     'norcalli/nvim-colorizer.lua',
-    config = function()
-      require('colorizer').setup()
-    end
+    config = function() require('colorizer').setup() end
   }
 
   -- js
