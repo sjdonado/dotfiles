@@ -10,10 +10,11 @@ mason.setup({
 masontoolinstaller.setup({
 	ensure_installed = {
 		"delve",
-		"eslint-lsp",
+		"eslint_d",
 		"gopls",
 		"js-debug-adapter",
 		"lua-language-server",
+		"prettierd",
 		"staticcheck",
 		"stylua",
 		"typescript-language-server",

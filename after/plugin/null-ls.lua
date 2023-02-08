@@ -7,16 +7,28 @@ local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false 
 
 null_ls.setup({
 	sources = {
+		null_ls.builtins.diagnostics.eslint_d,
+		null_ls.builtins.formatting.eslint_d,
 		null_ls.builtins.formatting.stylua,
-		null_ls.builtins.diagnostics.eslint,
+		null_ls.builtins.formatting.prettierd.with({
+			filetypes = {
+				"css",
+				"scss",
+				"less",
+				"html",
+				"json",
+				"yaml",
+				"markdown",
+				"graphql",
+			},
+		}),
 	},
 	on_attach = function(client, bufnr)
 		if client.supports_method("textDocument/formatting") then
 			nnoremap("<leader>f", function()
 				vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
-			end, { buffer = bufnr, desc = "[LSP] Linter format" })
+			end, { buffer = bufnr, desc = "[LSP] Format" })
 
-			-- format on save
 			vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				buffer = bufnr,
@@ -24,7 +36,7 @@ null_ls.setup({
 				callback = function()
 					vim.lsp.buf.format({ bufnr = bufnr, async = false })
 				end,
-				desc = "[LSP] format on save",
+				desc = "[LSP] Format on save",
 			})
 		end
 
@@ -34,22 +46,4 @@ null_ls.setup({
 			end, { buffer = bufnr, desc = "[LSP] Linter format" })
 		end
 	end,
-})
-
-require("prettier").setup({
-	bin = "prettier",
-	filetypes = {
-		"css",
-		"graphql",
-		"html",
-		"javascript",
-		"javascriptreact",
-		"json",
-		"less",
-		"markdown",
-		"scss",
-		"typescript",
-		"typescriptreact",
-		"yaml",
-	},
 })
