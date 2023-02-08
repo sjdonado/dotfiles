@@ -78,22 +78,6 @@ lspconfig.gopls.setup(config({
   },
 }))
 
-lspconfig.eslint.setup(config({
-  on_attach = function(client)
-    lsp_keymap()
-
-    client.server_capabilities.document_formatting = true
-
-    local autogroup_eslint_lsp = vim.api.nvim_create_augroup('eslint_lsp', { clear = true })
-
-    vim.api.nvim_create_autocmd('BufWritePre', {
-      pattern = { '*.tsx', '*.ts', '*.jsx', '*.js' },
-      command = 'EslintFixAll',
-      group = autogroup_eslint_lsp,
-    })
-  end
-}))
-
 lspconfig.jsonls.setup(config())
 lspconfig.yamlls.setup(config())
 

@@ -18,9 +18,6 @@ nnoremap('J', 'mzJ`z')
 vnoremap('J', ":m '>+1<CR>gv=gv")
 vnoremap('K', ":m '<-2<CR>gv=gv")
 
--- Search word under cursor
-nnoremap('<leader>f', '/<C-r><C-w><CR>')
-
 -- Search and replace word under cursor
 nnoremap('<leader>sr', ':%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>')
 

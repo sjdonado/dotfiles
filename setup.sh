@@ -7,16 +7,17 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim\
  ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
-# Download dependencies
-brew install tmux nvim tree fzf nvm lua tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
+# Setup dependencies
+brew install tmux nvim tree fzf lua tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
 $(brew --prefix)/opt/fzf/install
+
+# Setup package managers
+# run after rustup-init, nvm install --lts
+brew install nvm rustup
 
 # iTerm2 font
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
-
-# npm utils
-npm i -g nosync-icloud
 
 ln -s $PWD/config/.gitconfig ~/.gitconfig
 ln -s $PWD/config/.tmux.conf ~/.tmux.conf

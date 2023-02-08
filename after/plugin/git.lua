@@ -37,8 +37,8 @@ gitsigns.setup {
 }
 
 nnoremap('<leader>gs', ':tab G<CR>')
-nnoremap('<leader>gcc', ':vert G commit<CR>')
-nnoremap('<leader>gca', ':vert G commit --amend<CR>')
+nnoremap('<leader>cc', ':vert Git commit<CR>')
+nnoremap('<leader>ca', ':vert <C-U>Git commit --amend<CR>', { silent = true })
 
 nnoremap('<leader>gm', ':G mergetool<CR>')
 nnoremap('<leader>gms', ':GitConflictNextConflict<CR><cmd>vs<CR><cmd>wincmd h<CR>/=======<CR>ms')

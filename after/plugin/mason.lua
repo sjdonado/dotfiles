@@ -1,22 +1,23 @@
-local mason = require('mason')
-local masontoolinstaller = require('mason-tool-installer')
+local mason = require("mason")
+local masontoolinstaller = require("mason-tool-installer")
 
 mason.setup({
-  ui = {
-    border = 'double',
-  }
+	ui = {
+		border = "double",
+	},
 })
 
 masontoolinstaller.setup({
-  ensure_installed = {
-    'typescript-language-server',
-    'eslint-lsp',
-    'js-debug-adapter',
-    'yaml-language-server',
-    'gopls',
-    'staticcheck',
-    'delve',
-  },
-  run_on_start = false,
+	ensure_installed = {
+		"delve",
+		"eslint-lsp",
+		"gopls",
+		"js-debug-adapter",
+		"lua-language-server",
+		"staticcheck",
+		"stylua",
+		"typescript-language-server",
+		"yaml-language-server",
+	},
+	run_on_start = false,
 })
-

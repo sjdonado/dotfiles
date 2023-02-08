@@ -45,10 +45,13 @@ return require('packer').startup(function(use)
   -- lsp
   use 'neovim/nvim-lspconfig'
   use 'onsails/lspkind.nvim'
+  use 'jose-elias-alvarez/null-ls.nvim'
 
   use 'hrsh7th/nvim-cmp'
   use 'hrsh7th/cmp-nvim-lsp'
   use 'hrsh7th/cmp-buffer'
+
+  use 'MunifTanjim/prettier.nvim'
 
   -- dap
   use { 'mfussenegger/nvim-dap', tag = '*' }
