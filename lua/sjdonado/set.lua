@@ -1,4 +1,4 @@
-vim.api.nvim_exec('language en_US', true)
+vim.api.nvim_exec("language en_US", true)
 
 vim.opt.guicursor = ""
 vim.opt.mouse = ""
@@ -32,8 +32,8 @@ vim.opt.splitright = true
 -- hide tabline
 vim.opt.showtabline = 0
 
--- macos fix
-vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
+-- runtime path macos fix
+vim.o.runtimepath = vim.fn.stdpath("data") .. "/site/pack/*/start/*," .. vim.o.runtimepath
 
 -- nvim tree config
 vim.g.loaded_netrw = 1

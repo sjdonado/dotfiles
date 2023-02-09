@@ -1,9 +1,7 @@
 local gitsigns = require("gitsigns")
 local gitconflict = require("git-conflict")
 
-local nmap = require("sjdonado.keymap").nmap
 local nnoremap = require("sjdonado.keymap").nnoremap
-local vnoremap = require("sjdonado.keymap").vnoremap
 
 gitconflict.setup({
 	default_mappings = false,

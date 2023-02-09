@@ -1,7 +1,6 @@
 local null_ls = require("null-ls")
 
-local Remap = require("sjdonado.keymap")
-local nnoremap = Remap.nnoremap
+local nnoremap = require("sjdonado.keymap").nnoremap
 
 local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false })
 
