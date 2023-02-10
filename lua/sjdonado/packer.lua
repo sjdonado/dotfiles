@@ -37,7 +37,6 @@ return require("packer").startup(function(use)
 	use("nvim-tree/nvim-tree.lua")
 
 	use({ "akinsho/toggleterm.nvim", tag = "*" })
-	use("nyngwang/NeoZoom.lua")
 	use("wsdjeg/vim-fetch")
 
 	-- lsp + dap + linter package manager
@@ -79,10 +78,27 @@ return require("packer").startup(function(use)
 			require("colorizer").setup()
 		end,
 	})
+	use({ "folke/zen-mode.nvim" })
 
 	-- copilot
-	use("hrsh7th/cmp-copilot")
-	use("github/copilot.vim")
+	use({
+		"zbirenbaum/copilot.lua",
+		cmd = "Copilot",
+		event = "InsertEnter",
+		config = function()
+			require("copilot").setup({
+				suggestion = { enabled = false },
+				panel = { enabled = false },
+			})
+		end,
+	})
+	use({
+		"zbirenbaum/copilot-cmp",
+		after = { "copilot.lua" },
+		config = function()
+			require("copilot_cmp").setup()
+		end,
+	})
 
 	-- js
 	use("David-Kunz/jester")
