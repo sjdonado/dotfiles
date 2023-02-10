@@ -23,6 +23,11 @@ vim.opt.incsearch = true
 vim.opt.smartindent = true
 vim.opt.wrap = false
 
+-- Treesitter fold config
+vim.opt.foldlevel = 20
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+
 -- a single statusline at the bottom
 vim.opt.laststatus = 3
 
@@ -34,7 +39,3 @@ vim.opt.showtabline = 0
 
 -- runtime path macos fix
 vim.o.runtimepath = vim.fn.stdpath("data") .. "/site/pack/*/start/*," .. vim.o.runtimepath
-
--- nvim tree config
-vim.g.loaded_netrw = 1
-vim.g.loaded_netrwPlugin = 1
