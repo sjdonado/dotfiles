@@ -16,6 +16,8 @@ require("nvim-treesitter.configs").setup({
 	highlight = {
 		enable = true,
 		disable = { "help", "markdown" },
-		additional_vim_regex_highlighting = false,
+	},
+	autopairs = {
+		enable = true,
 	},
 })

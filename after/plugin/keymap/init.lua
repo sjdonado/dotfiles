@@ -2,7 +2,6 @@ local Remap = require("sjdonado.keymap")
 local nnoremap = Remap.nnoremap
 local vnoremap = Remap.vnoremap
 local inoremap = Remap.inoremap
-local xnoremap = Remap.xnoremap
 
 -- Copy to clipboard
 nnoremap("<leader>y", '"+y')
@@ -31,13 +30,14 @@ nnoremap("<leader>j", "<cmd>lprev<CR>zz")
 nnoremap("*", "*zz")
 nnoremap("#", "#zz")
 
-nnoremap("<C-y>", "6kzz")
-nnoremap("<C-e>", "6jzz")
-vnoremap("<C-y>", "6kzz")
-vnoremap("<C-e>", "6jzz")
-
 nnoremap("<C-o>", "<C-o>zz")
 nnoremap("<C-i>", "<C-i>zz")
+
+-- Scrolling
+nnoremap("<C-y>", "6<C-y>")
+nnoremap("<C-e>", "6<C-e>")
+vnoremap("<C-y>", "6<C-y>")
+vnoremap("<C-e>", "6<C-e>")
 
 -- Keep it centered when searching
 nnoremap("n", "nzzzv")

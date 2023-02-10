@@ -9,6 +9,7 @@ null_ls.setup({
 		null_ls.builtins.diagnostics.eslint_d,
 		null_ls.builtins.formatting.eslint_d,
 		null_ls.builtins.formatting.stylua,
+		null_ls.builtins.formatting.prettier_eslint,
 		null_ls.builtins.formatting.prettierd.with({
 			filetypes = {
 				"css",
@@ -23,7 +24,10 @@ null_ls.setup({
 		}),
 	},
 	on_attach = function(client, bufnr)
-		if client.supports_method("textDocument/formatting") then
+		if
+			client.supports_method("textDocument/formatting")
+			or client.supports_method("textDocument/rangeFormatting")
+		then
 			nnoremap("<leader>f", function()
 				vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
 			end, { buffer = bufnr, desc = "[LSP] Format" })
@@ -37,12 +41,6 @@ null_ls.setup({
 				end,
 				desc = "[LSP] Format on save",
 			})
-		end
-
-		if client.supports_method("textDocument/rangeFormatting") then
-			nnoremap("<leader>f", function()
-				vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
-			end, { buffer = bufnr, desc = "[LSP] Linter format" })
 		end
 	end,
 })

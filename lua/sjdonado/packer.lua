@@ -52,6 +52,8 @@ return require("packer").startup(function(use)
 	use("hrsh7th/nvim-cmp")
 	use("hrsh7th/cmp-nvim-lsp")
 	use("hrsh7th/cmp-buffer")
+	use("hrsh7th/cmp-nvim-lsp-signature-help")
+	use("hrsh7th/cmp-path")
 
 	use({
 		"L3MON4D3/LuaSnip",
@@ -68,12 +70,6 @@ return require("packer").startup(function(use)
 
 	-- editor
 	use("Shatur/neovim-session-manager")
-	use({
-		"windwp/nvim-autopairs",
-		config = function()
-			require("nvim-autopairs").setup()
-		end,
-	})
 	use("numToStr/Comment.nvim")
 	use("justinmk/vim-sneak")
 	use("editorconfig/editorconfig-vim")
@@ -84,9 +80,10 @@ return require("packer").startup(function(use)
 		end,
 	})
 
+	-- copilot
+	use("hrsh7th/cmp-copilot")
+	use("github/copilot.vim")
+
 	-- js
 	use("David-Kunz/jester")
-
-	-- go
-	use("fatih/vim-go")
 end)
