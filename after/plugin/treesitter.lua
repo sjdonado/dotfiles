@@ -11,11 +11,9 @@ require("nvim-treesitter.configs").setup({
 		"rust",
 		"go",
 	},
-	ignore_install = { "markdown" },
 	sync_install = false,
 	highlight = {
 		enable = true,
-		disable = { "help", "markdown" },
 	},
 	autopairs = {
 		enable = true,
