@@ -8,15 +8,14 @@ require("dap-vscode-js").setup({
 
 dap.configurations.javascript = {
 	{
-		name = "Launch (getir)",
+		name = "Launch",
 		type = "pwa-node",
 		request = "launch",
+		-- trace = true,
 		program = "${workspaceFolder}/bin",
-		rootPath = "${workspaceFolder}",
 		cwd = "${workspaceFolder}",
-		skipFiles = {
-			"<node_internals>/**",
-		},
+		rootPath = "${workspaceFolder}",
+		skipFiles = { "<node_internals>/**/*.js" },
 		resolveSourceMapLocations = {
 			"${workspaceFolder}/**",
 			"!**/node_modules/**",
@@ -25,7 +24,7 @@ dap.configurations.javascript = {
 		console = "integratedTerminal",
 	},
 	{
-		name = "Attach to node process",
+		name = "Attach to process",
 		type = "pwa-node",
 		request = "attach",
 		cwd = "${workspaceFolder}",
