@@ -1,20 +1,26 @@
-# sjdonado.nvim
+> Bye bye vscode 👋🏽
 
-Clone into `~/.config/nivm`
+<img width="1470" alt="image" src="https://user-images.githubusercontent.com/27580836/218240526-aee7690a-d209-4dc8-8736-636f8e332112.png">
 
-## Install dependencies
+# Setup
+**Temp:** Clone into `~/.config/nivm`
+
+## iTerm2 color schemes
+- Double click in `themes/*.itermcolor`
+- Go to Settings > Profile > Colors > Colors Presets > Import
+- Custom settings: Scroll wheel sends arrow keys when in alternate `screen mode: true`
+
+## Install system dependencies
 ```bash
 ./setup.sh
 ```
 
-## Setup
+## Config plugins
 ```vim
 :PackerSync
 :MasonToolsInstall
 :Copilot auth
 ```
 
-## Import iTerm2
-- Double click in `themes/*.itermcolor`
-- Go to Settings > Profile > Colors > Colors Presets > Import
-- Custom settings: Scroll wheel sends arrow keys when in alternate `screen mode: true`
+### Happy Hacking!
+<img width="200" alt="image" src="https://media.tenor.com/y2JXkY1pXkwAAAAM/cat-computer.gif">

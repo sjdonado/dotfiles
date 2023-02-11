@@ -26,22 +26,11 @@ nnoremap("<C-j>", "<cmd>cprev<CR>zz")
 nnoremap("<leader>k", "<cmd>lnext<CR>zz")
 nnoremap("<leader>j", "<cmd>lprev<CR>zz")
 
--- Keep it centered when navigate
-nnoremap("*", "*zz")
-nnoremap("#", "#zz")
-
-nnoremap("<C-o>", "<C-o>zz")
-nnoremap("<C-i>", "<C-i>zz")
-
--- Scrolling
+-- Navigate in buffer
 nnoremap("<C-y>", "6<C-y>")
 nnoremap("<C-e>", "6<C-e>")
 vnoremap("<C-y>", "6<C-y>")
 vnoremap("<C-e>", "6<C-e>")
-
--- Keep it centered when searching
-nnoremap("n", "nzzzv")
-nnoremap("N", "Nzzzv")
 
 -- Insert an empty new line without entering insert mode
 nnoremap("<Leader>o", 'o<Esc>0"_D')

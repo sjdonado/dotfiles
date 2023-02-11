@@ -23,6 +23,9 @@ vim.opt.incsearch = true
 vim.opt.smartindent = true
 vim.opt.wrap = false
 
+-- Keep cursorline vertically centered
+vim.opt.scrolloff = 999
+
 -- Treesitter fold config
 vim.opt.foldlevel = 20
 vim.opt.foldmethod = "expr"
