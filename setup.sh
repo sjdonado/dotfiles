@@ -13,7 +13,7 @@ $(brew --prefix)/opt/fzf/install
 
 # Setup package managers
 # run after rustup-init, nvm install --lts
-brew install nvm rustup
+brew install nvm rustup luarocks
 
 # iTerm2 font
 brew tap homebrew/cask-fonts

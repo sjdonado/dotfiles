@@ -5,20 +5,11 @@ dapui.setup({
 	layouts = {
 		{
 			elements = {
-				{ id = "breakpoints", size = 0.15 },
-				"stacks",
-				"scopes",
-				"watches",
+				{ id = "scopes", size = 0.2 },
+				{ id = "repl", size = 0.4 },
+				{ id = "console", size = 0.4 },
 			},
-			size = 40, -- 40 columns
-			position = "left",
-		},
-		{
-			elements = {
-				"console",
-				"repl",
-			},
-			size = 0.25, -- 25% of total lines
+			size = 0.25,
 			position = "bottom",
 		},
 	},
@@ -26,6 +17,8 @@ dapui.setup({
 		enabled = false,
 	},
 })
+
+require("nvim-dap-virtual-text").setup()
 
 dap.listeners.after.event_initialized["dapui_config"] = function()
 	dapui.open()

@@ -1,3 +1,6 @@
+local NODE_BIN_PATH =
+	string.match(vim.fn.system("source $(brew --prefix nvm)/nvm.sh && nvm which stable"), "^%s*(.-)%s*$")
+
 return require("packer").startup(function(use)
 	-- core
 	use("wbthomason/packer.nvim")
@@ -62,8 +65,9 @@ return require("packer").startup(function(use)
 	use("saadparwaiz1/cmp_luasnip")
 
 	-- dap
-	use({ "mfussenegger/nvim-dap" })
-	use({ "rcarriga/nvim-dap-ui", tag = "v3.4.0" })
+	use({ lazy = true, "mfussenegger/nvim-dap" })
+	use({ lazy = true, "rcarriga/nvim-dap-ui", tag = "v2*" })
+	use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 
 	use({ "mxsdev/nvim-dap-vscode-js", tag = "*" })
 
@@ -89,7 +93,7 @@ return require("packer").startup(function(use)
 			require("copilot").setup({
 				suggestion = { enabled = false },
 				panel = { enabled = false },
-				copilot_node_command = vim.fn.expand("$HOME") .. "/.nvm/versions/node/v18.*/bin/node",
+				copilot_node_command = NODE_BIN_PATH,
 			})
 		end,
 	})
