@@ -32,4 +32,8 @@ auto_dark_mode.setup({
 	end,
 })
 
+-- Hide CursorLine on leave window (ignore Floating windows)
+vim.cmd("autocmd WinEnter *.*,*.git/* setlocal cursorline")
+vim.cmd("autocmd WinLeave *.*,*.git/* setlocal nocursorline")
+
 auto_dark_mode.init()

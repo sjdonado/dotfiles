@@ -31,7 +31,7 @@ vim.opt.foldlevel = 20
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 
--- a single statusline at the bottom
+-- only one shared statusline at the bottom
 vim.opt.laststatus = 3
 
 -- open new splits on the right
