@@ -99,11 +99,6 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/cmp-nvim-lsp",
     url = "https://github.com/hrsh7th/cmp-nvim-lsp"
   },
-  ["cmp-nvim-lsp-signature-help"] = {
-    loaded = true,
-    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/cmp-nvim-lsp-signature-help",
-    url = "https://github.com/hrsh7th/cmp-nvim-lsp-signature-help"
-  },
   ["cmp-path"] = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/cmp-path",
@@ -174,6 +169,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/jester",
     url = "https://github.com/David-Kunz/jester"
+  },
+  ["lsp_signature.nvim"] = {
+    loaded = true,
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/lsp_signature.nvim",
+    url = "https://github.com/ray-x/lsp_signature.nvim"
   },
   ["lspkind.nvim"] = {
     loaded = true,

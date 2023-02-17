@@ -48,13 +48,14 @@ return require("packer").startup(function(use)
 
 	-- lsp
 	use("neovim/nvim-lspconfig")
-	use("onsails/lspkind.nvim")
 	use("jose-elias-alvarez/null-ls.nvim")
+
+	use("onsails/lspkind.nvim")
+	use("ray-x/lsp_signature.nvim")
 
 	use("hrsh7th/nvim-cmp")
 	use("hrsh7th/cmp-nvim-lsp")
 	use("hrsh7th/cmp-buffer")
-	use("hrsh7th/cmp-nvim-lsp-signature-help")
 	use("hrsh7th/cmp-path")
 
 	use({
@@ -82,7 +83,7 @@ return require("packer").startup(function(use)
 			require("colorizer").setup()
 		end,
 	})
-	use({ "folke/zen-mode.nvim" })
+	use("folke/zen-mode.nvim")
 
 	-- copilot
 	use({

@@ -6,6 +6,7 @@ local inoremap = Remap.inoremap
 
 local cmp = require("cmp")
 local lspkind = require("lspkind")
+local lsp_signature = require("lsp_signature")
 
 -- Setup nvim-cmp.
 local source_mapping = {
@@ -44,18 +45,26 @@ cmp.setup({
 		{ name = "nvim_lsp" },
 		{ name = "buffer" },
 		{ name = "luasnip" },
-		{ name = "nvim_lsp_signature_help" },
 		{ name = "path" },
 		{ name = "copilot" },
 	},
 })
 
+local lsp_signature_cfg = {
+	hint_prefix = "",
+}
+
 local function config(_config)
 	return vim.tbl_deep_extend("force", {
 		capabilities = require("cmp_nvim_lsp").default_capabilities(vim.lsp.protocol.make_client_capabilities()),
-		on_attach = function()
+		on_attach = function(client, bufnr)
+			lsp_signature.setup(lsp_signature_cfg, bufnr)
+
 			nnoremap("K", function()
 				vim.lsp.buf.hover()
+			end)
+			nnoremap("J", function()
+				vim.lsp.buf.signature_help()
 			end)
 			nnoremap("gd", function()
 				vim.lsp.buf.definition()
@@ -80,9 +89,6 @@ local function config(_config)
 			end)
 			nnoremap("<leader>vrn", function()
 				vim.lsp.buf.rename()
-			end)
-			inoremap("<C-h>", function()
-				vim.lsp.buf.signature_help()
 			end)
 		end,
 	}, _config or {})
