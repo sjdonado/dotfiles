@@ -51,7 +51,7 @@ cmp.setup({
 })
 
 local lsp_signature_cfg = {
-	hint_prefix = "",
+	hint_enable = false,
 }
 
 local function config(_config)
@@ -63,7 +63,7 @@ local function config(_config)
 			nnoremap("K", function()
 				vim.lsp.buf.hover()
 			end)
-			nnoremap("J", function()
+			nnoremap("L", function()
 				vim.lsp.buf.signature_help()
 			end)
 			nnoremap("gd", function()
