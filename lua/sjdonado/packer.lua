@@ -106,6 +106,6 @@ return require("packer").startup(function(use)
 		end,
 	})
 
-	-- js
+	-- testing
 	use("David-Kunz/jester")
 end)
