@@ -1,10 +1,9 @@
 local auto_dark_mode = require("auto-dark-mode")
 
 local githubtheme = require("github-theme")
-local C = require("github-theme.colors")
 local U = require("github-theme.util")
 
-local feline = require("sjdonado.feline")
+local lualine = require("sjdonado.lualine")
 
 githubtheme.setup({
 	dark_float = true,
@@ -16,19 +15,16 @@ githubtheme.setup({
 	end,
 })
 
-local statusline_dark = C.setup({ theme_style = "dark" })
-local statusline_light = C.setup({ theme_style = "light" })
-
 auto_dark_mode.setup({
 	set_dark_mode = function()
 		vim.api.nvim_set_option("background", "dark")
 		vim.cmd("colorscheme github_dark")
-		feline.setup(statusline_dark)
+		lualine.load()
 	end,
 	set_light_mode = function()
 		vim.api.nvim_set_option("background", "light")
 		vim.cmd("colorscheme github_light")
-		feline.setup(statusline_light)
+		lualine.load()
 	end,
 })
 

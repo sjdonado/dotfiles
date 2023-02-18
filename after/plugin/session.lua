@@ -44,4 +44,5 @@ vim.api.nvim_create_autocmd("DirChanged", {
 	end,
 })
 
-nnoremap("<leader>ls", session_manager.load_current_dir_session, { silent = true })
+nnoremap("<leader>sl", session_manager.load_session, { silent = true })
+nnoremap("<leader>sd", session_manager.delete_session, { silent = true })

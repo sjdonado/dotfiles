@@ -34,12 +34,12 @@ return require("packer").startup(function(use)
 	})
 
 	-- statusline
-	use("feline-nvim/feline.nvim")
+	use("nvim-lualine/lualine.nvim")
 
 	-- navigation
 	use("nvim-tree/nvim-tree.lua")
 
-	use({ "akinsho/toggleterm.nvim", tag = "*" })
+	use({ "akinsho/toggleterm.nvim" })
 	use("wsdjeg/vim-fetch")
 
 	-- lsp + dap + linter package manager

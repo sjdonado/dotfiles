@@ -139,11 +139,6 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/editorconfig-vim",
     url = "https://github.com/editorconfig/editorconfig-vim"
   },
-  ["feline.nvim"] = {
-    loaded = true,
-    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/feline.nvim",
-    url = "https://github.com/feline-nvim/feline.nvim"
-  },
   ["git-conflict.nvim"] = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/git-conflict.nvim",
@@ -179,6 +174,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/lspkind.nvim",
     url = "https://github.com/onsails/lspkind.nvim"
+  },
+  ["lualine.nvim"] = {
+    loaded = true,
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/lualine.nvim",
+    url = "https://github.com/nvim-lualine/lualine.nvim"
   },
   ["mason-tool-installer.nvim"] = {
     loaded = true,

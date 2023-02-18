@@ -9,12 +9,14 @@ mason.setup({
 
 masontoolinstaller.setup({
 	ensure_installed = {
+		"astro-language-server",
 		"delve",
 		"eslint_d",
 		"gopls",
 		"js-debug-adapter",
 		"lua-language-server",
 		"prettierd",
+		"shfmt",
 		"staticcheck",
 		"stylua",
 		"typescript-language-server",
