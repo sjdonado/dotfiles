@@ -39,10 +39,11 @@ null_ls.setup({
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = "*",
 	callback = function()
-		if not file_helper.root_has_file(".prettierrc*") then
+		if not file_helper.root_has_file(".prettier*") and not file_helper.root_has_file("*prettier*") then
 			null_ls.disable({ "prettierd" })
 		end
-		if not file_helper.root_has_file(".eslintrc*") then
+
+		if not file_helper.root_has_file(".eslint*") and not file_helper.root_has_file("*eslint*") then
 			null_ls.disable({ "eslint_d" })
 		end
 	end,

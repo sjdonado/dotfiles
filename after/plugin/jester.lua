@@ -1,6 +1,7 @@
 local Path = require("plenary.path")
 
 local jester = require("jester")
+local file_helper = require("sjdonado.helpers.file")
 
 local default = {
 	identifiers = { "test", "it" }, -- used to identify tests
@@ -65,10 +66,10 @@ end
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
 	callback = function()
-		if vim.fn.search("vitest", "nw") ~= 0 then
+      if file_helper.root_has_file("*vitest*") or vim.fn.search("vitest", "nw") ~= 0 then
 			load_vitest()
 		end
-		if vim.fn.search("jest", "nw") ~= 0 then
+		if file_helper.root_has_file("*jest*") or vim.fn.search("jest", "nw") ~= 0 then
 			load_jest()
 		end
 	end,

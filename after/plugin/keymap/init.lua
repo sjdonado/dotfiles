@@ -32,6 +32,10 @@ nnoremap("<C-e>", "6<C-e>")
 vnoremap("<C-y>", "6<C-y>")
 vnoremap("<C-e>", "6<C-e>")
 
+-- Move between buffers
+nnoremap("<leader>b", ":b<space>")
+vnoremap("<leader>b", ":b<space>")
+
 -- Insert an empty new line without entering insert mode
 nnoremap("<Leader>o", 'o<Esc>0"_D')
 nnoremap("<Leader>O", 'O<Esc>0"_D')
