@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Install iTerm2
+brew install --cask iterm2-beta
 
 # Install TPM
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -7,15 +10,15 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
 # Dependencies
-brew install tmux nvim tree fzf lua tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
+brew install tmux nvim tree fzf lua nvm tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
 $(brew --prefix)/opt/fzf/install
 
 # Package managers
 # run after rustup-init, nvm install --lts
-brew install nvm rustup luarocks yarn
+brew install npm yarn rustup luarocks
 
 # Awesome tools
-brew install python3 mitmproxy && brew install --cask insomnia
+brew install mitmproxy ngrok && brew install --cask insomnia raycast
 
 # iTerm2 font
 brew tap homebrew/cask-fonts

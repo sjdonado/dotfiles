@@ -7,13 +7,12 @@ local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false 
 
 null_ls.setup({
 	sources = {
-		null_ls.builtins.formatting.stylua,
-		null_ls.builtins.formatting.fixjson,
 		null_ls.builtins.diagnostics.shellcheck,
-		null_ls.builtins.formatting.shfmt,
 		null_ls.builtins.diagnostics.eslint_d,
 		null_ls.builtins.formatting.eslint_d,
 		null_ls.builtins.formatting.prettierd,
+		null_ls.builtins.formatting.stylua,
+		null_ls.builtins.formatting.fixjson,
 	},
 	on_attach = function(client, bufnr)
 		if
@@ -39,12 +38,12 @@ null_ls.setup({
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = "*",
 	callback = function()
-		if not file_helper.root_has_file(".prettier*") and not file_helper.root_has_file("*prettier*") then
-			null_ls.disable({ "prettierd" })
+		if not file_helper.root_has_file("{.prettier*,*prettier*}") then
+			null_ls.disable({ name = "prettierd" })
 		end
 
-		if not file_helper.root_has_file(".eslint*") and not file_helper.root_has_file("*eslint*") then
-			null_ls.disable({ "eslint_d" })
+		if not file_helper.root_has_file("{.eslint*,*eslint*}") then
+			null_ls.disable({ name = "eslint_d" })
 		end
 	end,
 })
