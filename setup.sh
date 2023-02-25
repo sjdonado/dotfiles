@@ -18,7 +18,7 @@ $(brew --prefix)/opt/fzf/install
 brew install npm yarn rustup luarocks
 
 # Awesome tools
-brew install mitmproxy ngrok && brew install --cask insomnia raycast
+brew install mitmproxy ngrok colima docker docker-compose && brew install --cask insomnia raycast
 
 # iTerm2 font
 brew tap homebrew/cask-fonts

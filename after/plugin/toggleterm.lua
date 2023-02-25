@@ -32,14 +32,6 @@ nnoremap("<leader>;", function()
 	toggle()
 end)
 
-nnoremap("<leader>1;", function()
-	vim.cmd(":1ToggleTerm<CR>")
-end)
-
-nnoremap("<leader>2;", function()
-	vim.cmd(":2ToggleTerm<CR>")
-end)
-
 function _G.set_terminal_keymaps()
 	local opts = { buffer = 0 }
 	vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], opts)
