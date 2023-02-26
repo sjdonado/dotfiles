@@ -2,10 +2,10 @@ local lspconfig = require("lspconfig")
 
 local Remap = require("sjdonado.keymap")
 local nnoremap = Remap.nnoremap
-local inoremap = Remap.inoremap
 
 local cmp = require("cmp")
 local lspkind = require("lspkind")
+local lsp_signature = require("lsp_signature")
 local lsp_signature = require("lsp_signature")
 
 -- Setup nvim-cmp.
@@ -69,9 +69,9 @@ local function config(_config)
 			nnoremap("vd", function()
 				vim.diagnostic.open_float()
 			end)
-      nnoremap("gd", function()
-        vim.lsp.buf.definition()
-      end)
+			nnoremap("gd", function()
+				vim.lsp.buf.definition()
+			end)
 			nnoremap("[d", function()
 				vim.diagnostic.goto_next()
 			end)

@@ -24,5 +24,9 @@ brew install mitmproxy ngrok colima docker docker-compose && brew install --cask
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
 
-ln -s $PWD/config/.gitconfig ~/.gitconfig
-ln -s $PWD/config/.tmux.conf ~/.tmux.conf
+# Link config files
+ln -s $PWD/git/.gitconfig ~/.gitconfig
+ln -s $PWD/tmux/.tmux.conf ~/.tmux.conf
+
+ln -s $PWD/nvim ~/.config/nvim
+ln -s $PWD/.ssh/config ~/.ssh/config

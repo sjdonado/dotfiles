@@ -1,21 +1,17 @@
 > Bye bye vscode 👋🏽
 
-<img width="1470" alt="image" src="https://user-images.githubusercontent.com/27580836/218240526-aee7690a-d209-4dc8-8736-636f8e332112.png">
+<img width="1470" alt="image" src="https://user-images.githubusercontent.com/27580836/221401908-9789a250-d7c8-4a2c-b63e-37f77861cb0e.png">
 
 # Setup
-**Temp:** Clone into `~/.config/nivm`
+Clone into `~/.config/dotfiles`
+Run `./setup.sh`
 
 ## iTerm2 color schemes
-- Double click in `themes/*.itermcolor`
+- Double click in `iTerm2/*.itermcolor`
 - Go to Settings > Profile > Colors > Colors Presets > Import
 - Custom settings: Scroll wheel sends arrow keys when in alternate `screen mode: true`
 
-## Install system dependencies
-```bash
-./setup.sh
-```
-
-## Config plugins
+## Config nvim plugins
 ```vim
 :PackerSync
 :MasonToolsInstall
