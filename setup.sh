@@ -10,7 +10,7 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
 # Dependencies
-brew install tmux nvim tree fzf lua nvm tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load
+brew install tmux nvim tree fzf lua nvm tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load shellcheck
 $(brew --prefix)/opt/fzf/install
 
 # Package managers
@@ -25,8 +25,8 @@ brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
 
 # Link config files
-ln -s $PWD/git/.gitconfig ~/.gitconfig
-ln -s $PWD/tmux/.tmux.conf ~/.tmux.conf
+ln -s "$PWD/git/.gitconfig" ~/.gitconfig
+ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
-ln -s $PWD/nvim ~/.config/nvim
-ln -s $PWD/.ssh/config ~/.ssh/config
+ln -s "$PWD/nvim" ~/.config/nvim
+ln -s "$PWD/.ssh/config" ~/.ssh/config

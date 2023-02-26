@@ -6,7 +6,6 @@ local nnoremap = Remap.nnoremap
 local cmp = require("cmp")
 local lspkind = require("lspkind")
 local lsp_signature = require("lsp_signature")
-local lsp_signature = require("lsp_signature")
 
 -- Setup nvim-cmp.
 local source_mapping = {
