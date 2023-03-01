@@ -1,6 +1,3 @@
-local NODE_BIN_PATH =
-	string.match(vim.fn.system("source $(brew --prefix nvm)/nvm.sh && nvm which stable"), "^%s*(.-)%s*$")
-
 return require("packer").startup(function(use)
 	-- core
 	use("wbthomason/packer.nvim")
@@ -92,20 +89,12 @@ return require("packer").startup(function(use)
 		event = "InsertEnter",
 		config = function()
 			require("copilot").setup({
-				suggestion = { enabled = false },
 				panel = { enabled = false },
-				copilot_node_command = NODE_BIN_PATH,
+				suggestion = { auto_trigger = true },
+				copilot_node_command = "/opt/homebrew/bin/node",
 			})
 		end,
 	})
-	use({
-		"zbirenbaum/copilot-cmp",
-		after = { "copilot.lua" },
-		config = function()
-			require("copilot_cmp").setup()
-		end,
-	})
-
 	-- testing
 	use("David-Kunz/jester")
 end)
