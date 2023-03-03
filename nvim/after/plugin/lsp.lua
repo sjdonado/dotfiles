@@ -90,8 +90,6 @@ local function config(_config)
 	}, _config or {})
 end
 
-lspconfig.zls.setup(config())
-
 lspconfig.tsserver.setup(config())
 
 lspconfig.jsonls.setup(config())
@@ -130,3 +128,5 @@ lspconfig.lua_ls.setup(config({
 		},
 	},
 }))
+
+lspconfig.astro.setup(config())
