@@ -5,25 +5,26 @@ local file_helper = require("sjdonado.helpers.file")
 
 local group = vim.api.nvim_create_augroup("lsp_format_on_save", { clear = false })
 
-local js_filetypes = {
+local eslint_filetypes = {
 	"javascript",
 	"javascriptreact",
 	"typescript",
 	"typescriptreact",
 	"vue",
 	"astro",
-	"html",
 }
 
 null_ls.setup({
 	sources = {
-		null_ls.builtins.diagnostics.eslint_d.with({ filetypes = js_filetypes }),
-		null_ls.builtins.formatting.eslint_d.with({ filetypes = js_filetypes }),
-		null_ls.builtins.formatting.prettierd.with({ filetypes = js_filetypes }),
+		null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
+		null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),
+		null_ls.builtins.formatting.prettierd,
 		null_ls.builtins.diagnostics.shellcheck,
 		null_ls.builtins.formatting.stylua,
 		null_ls.builtins.formatting.fixjson,
 		null_ls.builtins.diagnostics.cpplint,
+		null_ls.builtins.formatting.rustfmt,
+		null_ls.builtins.formatting.taplo,
 	},
 	on_attach = function(client, bufnr)
 		if

@@ -129,4 +129,6 @@ lspconfig.lua_ls.setup(config({
 	},
 }))
 
+lspconfig.rust_analyzer.setup(config())
+
 lspconfig.astro.setup(config())
