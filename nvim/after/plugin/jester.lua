@@ -31,6 +31,8 @@ local function load_jest()
 		path_to_jest_run = "jest",
 		path_to_jest_debug = "./node_modules/.bin/jest",
 		cmd = 'npm run test -- --watch=false --no-coverage -t "$result" -- $file',
+		escapeRegex = true,
+		regexStartEnd = true,
 		dap = vim.tbl_extend("force", default.dap, {
 			args = {
 				"--watch",
@@ -66,7 +68,7 @@ end
 vim.api.nvim_create_autocmd("BufReadPost", {
 	pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
 	callback = function()
-      if file_helper.root_has_file("*vitest*") or vim.fn.search("vitest", "nw") ~= 0 then
+		if file_helper.root_has_file("*vitest*") or vim.fn.search("vitest", "nw") ~= 0 then
 			load_vitest()
 		end
 		if file_helper.root_has_file("*jest*") or vim.fn.search("jest", "nw") ~= 0 then
