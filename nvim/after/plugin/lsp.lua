@@ -56,7 +56,7 @@ local function config(_config)
       vim.lsp.protocol.make_client_capabilities()
     ),
     on_attach = function(client, bufnr)
-      lsp_signature.setup(lsp_signature_cfg, bufnr)
+      lsp_signature.setup(lsp_signature_cfg)
 
       nnoremap("vh", function()
         vim.lsp.buf.hover()

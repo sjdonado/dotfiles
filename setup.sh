@@ -18,7 +18,7 @@ $(brew --prefix)/opt/fzf/install
 brew install npm yarn rustup luarocks
 
 # Awesome tools
-brew install mitmproxy ngrok colima docker docker-compose && brew install --cask insomnia raycast
+brew install lazygit mitmproxy ngrok colima docker docker-compose && brew install --cask insomnia raycast
 
 # iTerm2 font
 brew tap homebrew/cask-fonts
@@ -30,3 +30,5 @@ ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 ln -s "$PWD/nvim" ~/.config/nvim
 ln -s "$PWD/.ssh/config" ~/.ssh/config
+
+ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml

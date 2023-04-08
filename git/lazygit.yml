@@ -1,0 +1,8 @@
+gui:
+  windowSize: 'normal' # one of 'normal' | 'half' | 'full' default is 'normal'
+  scrollHeight: 4 # how many lines you scroll by
+  theme:
+    selectedLineBgColor:
+      - default # set to `default` to have no background colour
+  showIcons: true
+  border: 'double'
