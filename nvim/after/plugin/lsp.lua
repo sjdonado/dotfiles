@@ -29,6 +29,8 @@ cmp.setup({
   mapping = cmp.mapping.preset.insert({
     ["<C-Space>"] = cmp.mapping.complete(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }),
+    ["<PageUp>"] = cmp.mapping.scroll_docs(-4),
+    ["<PageDown>"] = cmp.mapping.scroll_docs(4),
   }),
   formatting = {
     format = function(entry, vim_item)

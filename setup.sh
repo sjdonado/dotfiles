@@ -24,6 +24,9 @@ brew install lazygit mitmproxy ngrok colima docker docker-compose && brew instal
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
 
+# nvim processes from the shell
+pip3 install neovim-remote
+
 # Link config files
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
