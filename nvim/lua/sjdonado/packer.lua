@@ -19,7 +19,6 @@ return require("packer").startup(function(use)
   use("lewis6991/gitsigns.nvim")
 
   -- apparence
-  use("f-person/auto-dark-mode.nvim")
   use("nvim-tree/nvim-web-devicons")
   use("projekt0n/github-nvim-theme")
   use({
