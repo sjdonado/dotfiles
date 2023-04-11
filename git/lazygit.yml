@@ -15,3 +15,7 @@ gui:
       - bold
   showIcons: true
   border: 'double'
+git:
+  paging:
+    colorArg: always
+    pager: diff-so-fancy
