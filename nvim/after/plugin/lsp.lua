@@ -50,6 +50,10 @@ cmp.setup({
 
 local lsp_signature_cfg = {
   hint_enable = false,
+  bind = true, -- This is mandatory, otherwise border config won't get registered.
+  handler_opts = {
+    border = "rounded",
+  },
 }
 
 local function config(_config)
@@ -58,7 +62,7 @@ local function config(_config)
       vim.lsp.protocol.make_client_capabilities()
     ),
     on_attach = function(client, bufnr)
-      lsp_signature.setup(lsp_signature_cfg)
+      lsp_signature.on_attach(lsp_signature_cfg, bufnr)
 
       nnoremap("vh", function()
         vim.lsp.buf.hover()
