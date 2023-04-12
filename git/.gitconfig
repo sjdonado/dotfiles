@@ -1,22 +1,22 @@
 [user]
-	email = sjdonado@uninorte.edu.co
-	name = Juan Rodriguez
+  email = sjdonado@uninorte.edu.co
+  name = Juan Rodriguez
 
 [pull]
-	rebase = false
+  rebase = false
 
 [core]
-	editor = vim
-  pager = diff-so-fancy | less --tabs=4 -RFX
+  editor = vim
+  pager = diff-so-fancy | less --tabs=2 -RFX
 
 [init]
-	defaultBranch = master
+  defaultBranch = master
 
 [credential]
-	helper = store
+  helper = store
 
 [push]
-	autoSetupRemote = true
+  autoSetupRemote = true
 
 [interactive]
   diffFilter = diff-so-fancy --patch
