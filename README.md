@@ -6,9 +6,8 @@
 Clone into `~/.config/dotfiles`
 Run `./setup.sh`
 
-## iTerm2 color schemes
-- Double click in `iTerm2/*.itermcolor`
-- Go to Settings > Profile > Colors > Colors Presets > Import
+## iTerm2 profile
+- Import `iterm2/sjdonado_iterm2_profile.json`
 - Custom settings: Scroll wheel sends arrow keys when in alternate `screen mode: true`
 
 ## Config nvim plugins

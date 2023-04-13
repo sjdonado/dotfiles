@@ -13,6 +13,9 @@ nvimwebdevicons.setup({
       name = "Zsh",
     },
   },
+  options = {
+    theme = "vscode",
+  },
   color_icons = true,
 })
 

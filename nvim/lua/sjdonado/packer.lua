@@ -20,7 +20,7 @@ return require("packer").startup(function(use)
 
   -- apparence
   use("nvim-tree/nvim-web-devicons")
-  use("projekt0n/github-nvim-theme")
+  use("Mofiqul/vscode.nvim")
   use({
     "lukas-reineke/indent-blankline.nvim",
     config = function()
@@ -62,7 +62,7 @@ return require("packer").startup(function(use)
 
   -- dap
   use({ lazy = true, "mfussenegger/nvim-dap" })
-  use({ lazy = true, "rcarriga/nvim-dap-ui", tag = "v2*" })
+  use({ lazy = true, "rcarriga/nvim-dap-ui", tag = "*" })
   use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 
   use({ "mxsdev/nvim-dap-vscode-js", tag = "*" })
