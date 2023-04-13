@@ -15,6 +15,7 @@ end
 local function set_terminal_keymaps()
   local opts = { buffer = 0, silent = true }
   tnoremap("<leader>;", "<C-\\><C-n><cmd>lua toggle_toggleterm()<CR>", opts)
+  nnoremap("<leader>;", "<cmd>lua toggle_toggleterm()<CR><cmd>stopinsert<CR>", opts)
 end
 
 vim.api.nvim_create_autocmd("TermOpen", {
@@ -24,4 +25,4 @@ vim.api.nvim_create_autocmd("TermOpen", {
   end,
 })
 
-nnoremap("<leader>;", "<cmd>lua toggle_toggleterm()<CR><cmd>startinsert!<CR>")
+nnoremap("<leader>;", "<cmd>lua toggle_toggleterm()<CR><cmd>startinsert<CR>")

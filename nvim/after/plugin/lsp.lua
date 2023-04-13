@@ -48,13 +48,13 @@ cmp.setup({
   },
 })
 
-local lsp_signature_cfg = {
-  hint_enable = false,
-  bind = true, -- This is mandatory, otherwise border config won't get registered.
+lsp_signature.setup({
+  bind = true,
   handler_opts = {
-    border = "rounded",
+    border = "single",
   },
-}
+  hint_enable = false,
+})
 
 local function config(_config)
   return vim.tbl_deep_extend("force", {
@@ -62,8 +62,6 @@ local function config(_config)
       vim.lsp.protocol.make_client_capabilities()
     ),
     on_attach = function(client, bufnr)
-      lsp_signature.on_attach(lsp_signature_cfg, bufnr)
-
       nnoremap("vh", function()
         vim.lsp.buf.hover()
       end)
