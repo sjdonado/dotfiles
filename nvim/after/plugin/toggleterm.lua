@@ -1,41 +1,27 @@
 local nnoremap = require("sjdonado.keymap").nnoremap
+local tnoremap = require("sjdonado.keymap").tnoremap
 
 require("toggleterm").setup({
   size = 25,
 })
 
-local function has_term_buffer()
-  local bufs = vim.api.nvim_list_bufs()
-  for _, buf in ipairs(bufs) do
-    if vim.api.nvim_buf_get_option(buf, "bufhidden") == "terminal" then
-      return true
-    end
-  end
-  return false
-end
-
-local function toggle()
+function _G.toggle_toggleterm()
   require("dapui").close({ "all" })
+  exit_zenmode_if_needed()
 
-  if require("zen-mode.view").is_open() then
-    require("zen-mode").close()
-  end
-
-  if has_term_buffer() then
-    vim.cmd(":ToggleTermToggleAll<CR>")
-  else
-    vim.cmd(":ToggleTerm<CR>")
-  end
+  vim.cmd(":ToggleTerm<CR>")
 end
 
-nnoremap("<leader>;", function()
-  toggle()
-end)
-
-function _G.set_terminal_keymaps()
-  local opts = { buffer = 0 }
-  vim.keymap.set("t", "<esc>", [[<C-\><C-n>]], opts)
-  vim.keymap.set("t", "jk", [[<C-\><C-n>]], opts)
+local function set_terminal_keymaps()
+  local opts = { buffer = 0, silent = true }
+  tnoremap("<leader>;", "<C-\\><C-n><cmd>lua toggle_toggleterm()<CR>", opts)
 end
 
-vim.cmd("autocmd! TermOpen term://*toggleterm#* lua set_terminal_keymaps()")
+vim.api.nvim_create_autocmd("TermOpen", {
+  pattern = "term://*toggleterm#*",
+  callback = function()
+    set_terminal_keymaps()
+  end,
+})
+
+nnoremap("<leader>;", "<cmd>lua toggle_toggleterm()<CR><cmd>startinsert!<CR>")

@@ -4,12 +4,15 @@ local dapui = require("sjdonado.dap").dapui
 local nnoremap = require("sjdonado.keymap").nnoremap
 
 nnoremap("<leader>dt", function()
+  exit_zenmode_if_needed()
   dapui.toggle({})
 end)
+
 nnoremap("<leader>dx", function()
   dap.clear_breakpoints()
   dapui.close({})
 end)
+
 nnoremap("<F8>", function()
   dap.continue()
 end)

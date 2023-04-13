@@ -1,7 +1,9 @@
 local Remap = require("sjdonado.keymap")
+
 local nnoremap = Remap.nnoremap
 local vnoremap = Remap.vnoremap
 local inoremap = Remap.inoremap
+local tnoremap = Remap.tnoremap
 
 -- Copy to clipboard
 nnoremap("<leader>y", '"+y')
@@ -37,8 +39,8 @@ nnoremap("<leader>b", ":b<space>")
 vnoremap("<leader>b", ":b<space>")
 
 -- Insert an empty new line without entering insert mode
-nnoremap("<Leader>o", 'o<Esc>0"_D')
-nnoremap("<Leader>O", 'O<Esc>0"_D')
+nnoremap("<leader>o", 'o<Esc>0"_D')
+nnoremap("<leader>O", 'O<Esc>0"_D')
 
 -- Save changes
 nnoremap("<C-s>", ":w<CR>")
@@ -46,4 +48,9 @@ inoremap("<C-s>", "<Esc>:w<CR>")
 
 -- Buffers navigation
 nnoremap("<C-w>d", ":bd!<CR>", { silent = true })
+tnoremap("<C-w>d", ":bd!<CR>", { silent = true })
 nnoremap("<C-w>x", ":bufdo bd<CR><cmd>NvimTreeFindFileToggle<CR>", { silent = true })
+
+-- Terminal navigation
+-- TODO: conflict with lazygit
+-- tnoremap("<esc>", "<C-\\><C-n>", { silent = true })
