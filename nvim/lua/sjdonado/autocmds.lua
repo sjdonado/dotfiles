@@ -31,3 +31,15 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.spell = true
   end,
 })
+
+-- hide CursorLine on leave window (ignore Floating windows)
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = custom_autocmds_group,
+  pattern = { "*", "*.git/*" },
+  command = "setlocal cursorline",
+})
+vim.api.nvim_create_autocmd("WinLeave", {
+  group = custom_autocmds_group,
+  pattern = { "*", "*.git/*" },
+  command = "setlocal nocursorline",
+})
