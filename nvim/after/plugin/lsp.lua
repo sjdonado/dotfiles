@@ -6,6 +6,7 @@ local nnoremap = Remap.nnoremap
 local cmp = require("cmp")
 local lspkind = require("lspkind")
 local lsp_signature = require("lsp_signature")
+local neodev = require("neodev")
 
 -- Setup nvim-cmp.
 local source_mapping = {
@@ -55,6 +56,8 @@ lsp_signature.setup({
   },
   hint_enable = false,
 })
+
+neodev.setup()
 
 local function config(_config)
   return vim.tbl_deep_extend("force", {
@@ -130,6 +133,9 @@ lspconfig.lua_ls.setup(config({
       },
       telemetry = {
         enable = false,
+      },
+      completion = {
+        callSnippet = "Replace",
       },
     },
   },
