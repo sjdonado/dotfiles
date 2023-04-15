@@ -9,7 +9,6 @@ mason.setup({
 
 masontoolinstaller.setup({
   ensure_installed = {
-    "astro-language-server",
     "cpplint",
     "css-lsp",
     "delve",
@@ -19,7 +18,9 @@ masontoolinstaller.setup({
     "js-debug-adapter",
     "lua-language-server",
     "prettierd",
+    "python-lsp-server",
     "rust-analyzer",
+    "ruff",
     "staticcheck",
     "stylua",
     "taplo",

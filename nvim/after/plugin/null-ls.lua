@@ -11,20 +11,20 @@ local eslint_filetypes = {
   "typescript",
   "typescriptreact",
   "vue",
-  "astro",
 }
 
 null_ls.setup({
   sources = {
+    null_ls.builtins.diagnostics.shellcheck,
+    null_ls.builtins.diagnostics.cpplint,
     null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.prettierd,
-    null_ls.builtins.diagnostics.shellcheck,
     null_ls.builtins.formatting.stylua,
     null_ls.builtins.formatting.fixjson,
-    null_ls.builtins.diagnostics.cpplint,
     null_ls.builtins.formatting.rustfmt,
     null_ls.builtins.formatting.taplo,
+    null_ls.builtins.formatting.ruff,
   },
   on_attach = function(client, bufnr)
     if

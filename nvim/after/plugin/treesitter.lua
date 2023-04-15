@@ -10,6 +10,7 @@ require("nvim-treesitter.configs").setup({
     "lua",
     "rust",
     "go",
+    "python",
   },
   sync_install = false,
   highlight = {
