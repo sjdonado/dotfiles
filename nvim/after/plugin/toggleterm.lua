@@ -1,5 +1,4 @@
 local nnoremap = require("sjdonado.keymap").nnoremap
-local tnoremap = require("sjdonado.keymap").tnoremap
 
 require("toggleterm").setup({
   size = 25,
@@ -14,7 +13,6 @@ end
 
 local function set_terminal_keymaps()
   local opts = { buffer = 0, silent = true }
-  tnoremap("<leader>;", "<C-\\><C-n><cmd>lua toggle_toggleterm()<CR>", opts)
   nnoremap("<leader>;", "<cmd>lua toggle_toggleterm()<CR><cmd>stopinsert<CR>", opts)
 end
 
