@@ -80,6 +80,7 @@ return require("packer").startup(function(use)
     end,
   })
   use("folke/zen-mode.nvim")
+  use("AndrewRadev/splitjoin.vim")
 
   -- copilot
   use({
