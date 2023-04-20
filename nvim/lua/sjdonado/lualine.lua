@@ -54,7 +54,6 @@ local buffers = {
   {
     "buffers",
     show_filename_only = false,
-    mode = 4, -- Shows buffer name + buffer number
   },
 }
 

@@ -5,9 +5,32 @@
 [pull]
   rebase = false
 
+[delta]
+  features = sjdonado-theme
+
+[delta "sjdonado-theme"]
+  dark = true
+  line-numbers = true
+  syntax-theme = Visual Studio Dark+
+  file-decoration-style = none
+  file-style = omit
+  hunk-header-style = file line-number syntax
+  hunk-header-decoration-style = omit
+  commit-style = raw
+  keep-plus-minus-markers = true
+
 [core]
   editor = vim
-  pager = diff-so-fancy | less --tabs=2 -RFX
+  pager = delta
+
+[interactive]
+  diffFilter = delta --color-only
+
+[merge]
+  conflictstyle = diff3
+
+[diff]
+  colorMoved = default
 
 [init]
   defaultBranch = master
@@ -17,6 +40,3 @@
 
 [push]
   autoSetupRemote = true
-
-[interactive]
-  diffFilter = diff-so-fancy --patch

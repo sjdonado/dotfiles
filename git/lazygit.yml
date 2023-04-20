@@ -18,7 +18,8 @@ gui:
 git:
   paging:
     colorArg: always
-    pager: diff-so-fancy
+    pager: delta --paging=never
+  diffContextSize: 6
 keybinding:
   universal:
     quit: '<c-c>'
