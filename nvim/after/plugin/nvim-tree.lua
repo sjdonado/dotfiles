@@ -25,7 +25,7 @@ require("nvim-tree").setup({
         { key = "gy", action = "copy_absolute_path" },
         { key = "W", action = "collapse_all" },
         { key = "E", action = "expand_all" },
-        { key = "<C-c>", action = "close" },
+        { key = "q", action = "close" },
         { key = "g?", action = "toggle_help" },
       },
     },

@@ -15,7 +15,6 @@ return require("packer").startup(function(use)
   use("nvim-treesitter/nvim-treesitter-context")
 
   -- git
-  use("kdheepak/lazygit.nvim")
   use("lewis6991/gitsigns.nvim")
   use("almo7aya/openingh.nvim")
 

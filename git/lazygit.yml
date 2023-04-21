@@ -21,9 +21,8 @@ git:
     pager: delta --paging=never
   diffContextSize: 6
 os:
-  edit: 'nvr --remote -O {{filename}}'
-  openCommand: 'nvr --remote -O {{filename}}'
-  editInTerminal: true
+  openCommand: nvr -O {{filename}}
+  editCommand: nvr -O {{filename}}
 keybinding:
   universal:
-    quit: '<c-c>'
+    return: '<c-c>'

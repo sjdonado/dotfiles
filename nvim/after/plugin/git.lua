@@ -27,12 +27,6 @@ gitsigns.setup({
   end,
 })
 
--- lazygit config
-vim.g.lazygit_floating_window_scaling_factor = 1.0
-vim.g.lazygit_use_neovim_remote = 1
-
-nnoremap("<leader>gs", "gg :LazyGit<CR>")
-
 -- openingh config
 nnoremap("<leader>hor", ":OpenInGHRepo<CR>")
 nnoremap("<leader>hof", ":OpenInGHFile<CR>")

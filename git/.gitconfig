@@ -20,7 +20,7 @@
   keep-plus-minus-markers = true
 
 [core]
-  editor = editor
+  editor = nvr
   pager = delta
 
 [interactive]
