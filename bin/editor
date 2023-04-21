@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ -n "$NVIM_LISTEN_ADDRESS" ] ; then
+  nvr --remote-tab "$@"
+else
+  exec nvim "$@"
+fi

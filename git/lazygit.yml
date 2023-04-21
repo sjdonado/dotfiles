@@ -20,6 +20,10 @@ git:
     colorArg: always
     pager: delta --paging=never
   diffContextSize: 6
+os:
+  edit: 'nvr --remote -O {{filename}}'
+  openCommand: 'nvr --remote -O {{filename}}'
+  editInTerminal: true
 keybinding:
   universal:
     quit: '<c-c>'

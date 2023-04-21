@@ -25,12 +25,16 @@ brew install --cask raycast table-tool
 brew tap homebrew/cask-fonts
 brew install --cask font-hack-nerd-font
 
+# zsh theme
+brew install romkatv/powerlevel10k/powerlevel10k
+
 # nvim processes from the shell
 pip3 install neovim-remote
 
 # Link config files
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
+ln -s "$PWD/zsh/.zshrc" ~/.zshrc
 
 ln -s "$PWD/nvim" ~/.config/nvim
 ln -s "$PWD/.ssh/config" ~/.ssh/config

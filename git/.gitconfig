@@ -20,7 +20,7 @@
   keep-plus-minus-markers = true
 
 [core]
-  editor = vim
+  editor = editor
   pager = delta
 
 [interactive]
