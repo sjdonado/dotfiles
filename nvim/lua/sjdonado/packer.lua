@@ -17,6 +17,7 @@ return require("packer").startup(function(use)
   -- git
   use("kdheepak/lazygit.nvim")
   use("lewis6991/gitsigns.nvim")
+  use("almo7aya/openingh.nvim")
 
   -- apparence
   use("nvim-tree/nvim-web-devicons")

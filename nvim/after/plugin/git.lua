@@ -1,6 +1,7 @@
 local gitsigns = require("gitsigns")
 
 local nnoremap = require("sjdonado.keymap").nnoremap
+local vnoremap = require("sjdonado.keymap").vnoremap
 
 gitsigns.setup({
   current_line_blame = false,
@@ -31,3 +32,8 @@ vim.g.lazygit_floating_window_scaling_factor = 1.0
 vim.g.lazygit_use_neovim_remote = 1
 
 nnoremap("<leader>gs", "gg :LazyGit<CR>")
+
+-- openingh config
+nnoremap("<leader>hor", ":OpenInGHRepo<CR>")
+nnoremap("<leader>hof", ":OpenInGHFile<CR>")
+vnoremap("<leader>hof", ":OpenInGHFile<CR>")
