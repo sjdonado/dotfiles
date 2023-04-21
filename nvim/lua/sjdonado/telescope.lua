@@ -1,28 +1,57 @@
 local actions = require("telescope.actions")
 
 require("telescope").setup({
-  defaults = {
-    color_devicons = true,
-    file_sorter = require("telescope.sorters").get_fzy_sorter,
-    mappings = {
-      i = {
-        ["<C-n>"] = actions.cycle_previewers_next,
-        ["<C-p>"] = actions.cycle_previewers_prev,
-      },
+  pickers = {
+    find_files = {
+      theme = "dropdown",
+    },
+    grep_string = {
+      theme = "dropdown",
+    },
+    live_grep = {
+      theme = "dropdown",
+    },
+    buffers = {
+      theme = "dropdown",
+    },
+    command_history = {
+      theme = "dropdown",
+    },
+    search_history = {
+      theme = "dropdown",
     },
   },
 })
 
 require("telescope").load_extension("dap")
 
+local find_command = {
+  "rg",
+  "--hidden",
+  "--files",
+  "--glob",
+  "!.git/",
+}
+
 -- Custom pickers
 local Pickers = {}
 
-Pickers.search_dotfiles = function()
+Pickers.find_files = function()
   require("telescope.builtin").find_files({
-    prompt_title = "< VimRC >",
-    cwd = vim.env.DOTFILES,
-    hidden = true,
+    find_command = find_command,
+  })
+end
+
+Pickers.live_grep = function()
+  require("telescope.builtin").live_grep({
+    find_command = find_command,
+  })
+end
+
+Pickers.grep_string = function(opts)
+  require("telescope.builtin").grep_string({
+    search = opts.search,
+    find_command = find_command,
   })
 end
 

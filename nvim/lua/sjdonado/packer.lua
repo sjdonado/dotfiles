@@ -4,7 +4,7 @@ return require("packer").startup(function(use)
   use("nvim-lua/plenary.nvim")
 
   -- telescope
-  use({ "nvim-telescope/telescope.nvim", tag = "*" })
+  use({ "nvim-telescope/telescope.nvim" })
   use("nvim-telescope/telescope-dap.nvim")
   use("stevearc/dressing.nvim")
 
