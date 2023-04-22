@@ -17,6 +17,7 @@ null_ls.setup({
   sources = {
     null_ls.builtins.diagnostics.shellcheck,
     null_ls.builtins.diagnostics.cpplint,
+    null_ls.builtins.diagnostics.staticcheck,
     null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.prettierd,

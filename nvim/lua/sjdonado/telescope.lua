@@ -55,6 +55,20 @@ Pickers.grep_string = function(opts)
   })
 end
 
+Pickers.find_all = function()
+  require("telescope.builtin").find_files({
+    prompt_title = "All Files",
+    find_command = {
+      "rg",
+      "--hidden",
+      "--files",
+      "--glob",
+      "!.git/",
+      "-u",
+    },
+  })
+end
+
 Pickers.buffers = function()
   require("telescope.builtin").buffers({
     attach_mappings = function(_, map)
