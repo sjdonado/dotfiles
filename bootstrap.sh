@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# dependencies
-brew install --cask iterm2
+# setup alacritty
+brew install alacritty
+# https://github.com/alacritty/alacritty/commit/2a676dfad837d1784ed0911d314bc263804ef4ef
+defaults write org.alacritty AppleFontSmoothing -int 0
 
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
@@ -20,9 +22,9 @@ brew install colima docker docker-compose
 brew install git-delta lazygit lazydocker mitmproxy ngrok
 brew install --cask raycast table-tool
 
-# iTerm2 font
+# the best font ever
 brew tap homebrew/cask-fonts
-brew install --cask font-hack-nerd-font
+brew install font-hack-nerd-font
 
 # zsh theme
 brew install romkatv/powerlevel10k/powerlevel10k
@@ -31,6 +33,8 @@ brew install romkatv/powerlevel10k/powerlevel10k
 pip3 install neovim-remote
 
 # config files symlinks
+ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
+
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 ln -s "$PWD/zsh/.zshrc" ~/.zshrc
