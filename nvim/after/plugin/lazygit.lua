@@ -11,8 +11,6 @@ local lazygit = Terminal:new({
   end,
 })
 
-function _G.lazygit_toggle()
+nnoremap("<leader>g", function()
   lazygit:toggle()
-end
-
-nnoremap("<leader>g", "<cmd>lua lazygit_toggle()<CR>")
+end)
