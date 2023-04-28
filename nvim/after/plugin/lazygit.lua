@@ -1,4 +1,3 @@
-local terms = require("toggleterm.terminal")
 local Terminal = require("toggleterm.terminal").Terminal
 
 local nnoremap = require("sjdonado.keymap").nnoremap
