@@ -24,10 +24,14 @@ dap.configurations.javascript = {
     console = "integratedTerminal",
   },
   {
-    name = "Attach to process",
+    name = "Attach To Process",
     type = "pwa-node",
     request = "attach",
     cwd = "${workspaceFolder}",
+    resolveSourceMapLocations = {
+      "${workspaceFolder}/**",
+      "!**/node_modules/**",
+    },
     processId = require("dap.utils").pick_process,
   },
 }
