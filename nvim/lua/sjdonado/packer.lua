@@ -83,7 +83,7 @@ return require("packer").startup(function(use)
   use("AndrewRadev/splitjoin.vim")
 
   -- copilot
-  use({
+  --[[ use({
     "zbirenbaum/copilot.lua",
     cmd = "Copilot",
     event = "InsertEnter",
@@ -94,8 +94,7 @@ return require("packer").startup(function(use)
         copilot_node_command = "/opt/homebrew/bin/node",
       })
     end,
-  })
-
+  }) ]]
   -- testing
   use("David-Kunz/jester")
 end)
