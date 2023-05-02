@@ -14,7 +14,6 @@ local source_mapping = {
   nvim_lsp = "[LSP]",
   luasnip = "[Snippet]",
   path = "[Path]",
-  copilot = "[Copilot]",
 }
 
 cmp.setup({
