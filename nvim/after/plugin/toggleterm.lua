@@ -13,29 +13,29 @@ require("toggleterm").setup({
   end,
 })
 
+local function toggle(term)
+  return function()
+    require("sjdonado.dap.init").dapui.close({ "all" })
+    exit_zenmode_if_needed()
+
+    term:toggle()
+  end
+end
+
 local function create_terminal(opts)
   local term = Terminal:new({
     cmd = "zsh",
     count = opts.count,
     direction = opts.direction,
     on_open = function(term)
-      local toggle = function()
-        require("dapui").close({ "all" })
-        exit_zenmode_if_needed()
-
-        term:toggle()
-      end
-
-      nnoremap(opts.keymap, toggle, { buffer = term.bufnr, silent = true })
+      nnoremap(opts.keymap, toggle(term), { buffer = term.bufnr, silent = true })
     end,
     on_close = function(term)
       vim.cmd("stopinsert")
     end,
   })
 
-  nnoremap(opts.keymap, function()
-    term:toggle()
-  end)
+  nnoremap(opts.keymap, toggle(term))
 
   return term
 end
