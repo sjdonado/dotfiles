@@ -1,6 +1,21 @@
 local actions = require("telescope.actions")
 
 require("telescope").setup({
+  defaults = {
+    mappings = {
+      i = {
+        ["<C-t>"] = require("telescope.actions.layout").toggle_preview,
+        ["<C-y>"] = require("telescope.actions").preview_scrolling_up,
+        ["<C-e>"] = require("telescope.actions").preview_scrolling_down,
+      },
+    },
+    preview = {
+      hide_on_startup = true,
+    },
+    layout_config = {
+      scroll_speed = 3,
+    },
+  },
   pickers = {
     find_files = {
       theme = "dropdown",
