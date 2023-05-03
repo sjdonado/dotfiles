@@ -8,7 +8,12 @@ defaults write org.alacritty AppleFontSmoothing -int 0
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
-brew install tmux nvim tree fzf lua nvm tree-sitter ripgrep fd gawk coreutils tmux-mem-cpu-load shellcheck ccls
+brew install \
+  tmux coreutils tmux-mem-cpu-load \
+  tree bat fd gawk ripgrep fzf \
+  nvim lua tree-sitter shellcheck ccls \
+  nvm
+
 $(brew --prefix)/opt/fzf/install
 
 # package managers

@@ -1,10 +1,10 @@
 > Bye bye vscode 👋🏽
 
-<img width="1400" alt="nvim setup screenshot" src="https://user-images.githubusercontent.com/27580836/235738484-d57b9e9d-8d7e-42e1-aa05-a5865a70d7ec.png">
+<img width="1400" alt="nvim running screenshot" src="https://user-images.githubusercontent.com/27580836/235738484-d57b9e9d-8d7e-42e1-aa05-a5865a70d7ec.png">
 
 # Setup
-Clone into `~/.config/dotfiles`
-Run `./setup.sh`
+1. Clone into `~/.config/dotfiles`
+2. Run `./bootstrap.sh`
 
 ## Config nvim plugins
 ```vim
