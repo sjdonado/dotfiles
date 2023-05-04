@@ -82,19 +82,9 @@ return require("packer").startup(function(use)
   use("folke/zen-mode.nvim")
   use("AndrewRadev/splitjoin.vim")
 
-  -- copilot
-  --[[ use({
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = function()
-      require("copilot").setup({
-        panel = { enabled = false },
-        suggestion = { auto_trigger = true },
-        copilot_node_command = "/opt/homebrew/bin/node",
-      })
-    end,
-  }) ]]
+  -- AI Code Assistant
+  use("Exafunction/codeium.vim")
+
   -- testing
   use("David-Kunz/jester")
 end)

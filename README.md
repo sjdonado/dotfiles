@@ -10,6 +10,7 @@
 ```vim
 :PackerSync
 :MasonToolsInstall
+:Codeium Auth
 ```
 
 ### Happy Hacking!
