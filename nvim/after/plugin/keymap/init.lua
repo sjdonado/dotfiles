@@ -9,8 +9,8 @@ local tnoremap = Remap.tnoremap
 nnoremap("<leader>y", '"+y')
 vnoremap("<leader>y", '"+y')
 
--- Copy text from current line to the end of the line
-nnoremap("Y", "yg$")
+-- Copy text from the first character to the last character of the line
+nnoremap("Y", '^"+yg_')
 
 -- Join multiple lines
 nnoremap("J", "mzJ`z")
