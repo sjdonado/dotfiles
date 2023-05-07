@@ -25,7 +25,7 @@ brew install colima docker docker-compose
 
 # awesome tools
 brew install git-delta lazygit lazydocker mitmproxy ngrok
-brew install --cask raycast table-tool
+brew install --cask raycast table-tool ukelele
 
 # the best font ever
 brew tap homebrew/cask-fonts
@@ -48,3 +48,6 @@ ln -s "$PWD/nvim" ~/.config/nvim
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
+
+cp "$PWD/ukelele/ABC - Custom.keylayout" ~/ABC\ -\ Custom.keylayout
+echo "$HOME/ABC - Custom.keylayout has been copied, open and install with Ukelele Organiser. (logout required)"
