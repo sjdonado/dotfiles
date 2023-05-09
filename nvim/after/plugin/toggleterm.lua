@@ -18,6 +18,13 @@ local function toggle(term)
     require("sjdonado.dap.init").dapui.close({ "all" })
     exit_zenmode_if_needed()
 
+    local terms = require("toggleterm.terminal").get_all()
+    for _, otherterm in pairs(terms) do
+      if otherterm:is_open() and otherterm ~= term then
+        otherterm:close()
+      end
+    end
+
     term:toggle()
   end
 end
