@@ -11,11 +11,13 @@ fi
 source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
 
 export PATH="$(yarn global bin 2> >(grep -v warning 1>&2)):$PATH"
-# export PATH="~/.config/dotfiles/bin:$PATH"
 
 # Custom keymaps
 alias vim=nvim
 alias python=/usr/bin/python3
+
+# Custom config
+export HISTSIZE=20000
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

@@ -4,8 +4,8 @@ local jester = require("jester")
 local file_helper = require("sjdonado.helpers.file")
 
 local default = {
-  identifiers = { "test", "it" }, -- used to identify tests
-  prepend = { "describe" }, -- prepend describe blocks
+  identifiers = { "test", "it" },      -- used to identify tests
+  prepend = { "describe" },            -- prepend describe blocks
   expressions = { "call_expression" }, -- tree-sitter object used to scan for tests/describe blocks
   escapeRegex = false,
   regexStartEnd = false,
@@ -30,7 +30,8 @@ local function load_jest()
   jester.setup(vim.tbl_extend("force", default, {
     path_to_jest_run = "jest",
     path_to_jest_debug = "./node_modules/.bin/jest",
-    cmd = 'npm run test -- --watch=false --no-coverage -t "$result" -- $file',
+    cmd =
+    'export HISTFILE=/dev/null && npm run test -- --watch=false --no-coverage -t "$result" -- $file',
     escapeRegex = true,
     regexStartEnd = true,
     dap = vim.tbl_extend("force", default.dap, {
@@ -52,7 +53,8 @@ local function load_vitest()
   jester.setup(vim.tbl_extend("force", default, {
     path_to_jest_run = "vitest",
     path_to_jest_debug = "./node_modules/.bin/vitest",
-    cmd = "npm run test -- --watch=false --no-coverage -t $result " .. relative_path,
+    cmd = "export HISTFILE=/dev/null && npm run test -- --watch=false --no-coverage -t $result "
+        .. relative_path,
     dap = vim.tbl_extend("force", default.dap, {
       args = {
         "--watch",
