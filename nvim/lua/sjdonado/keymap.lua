@@ -1,10 +1,14 @@
 local M = {}
 
+M.map = function(mode, lhs, rhs, opts)
+  opts = vim.tbl_extend("force", { noremap = false }, opts or {})
+  vim.keymap.set(mode, lhs, rhs, opts)
+end
+
 local function bind(op, outer_opts)
   outer_opts = outer_opts or { noremap = true }
-  return function(lhs, rhs, opts)
-    opts = vim.tbl_extend("force", outer_opts, opts or {})
-    vim.keymap.set(op, lhs, rhs, opts)
+  return function (lhs, rhs, opts)
+    M.map(op, lhs, rhs, opts)
   end
 end
 
