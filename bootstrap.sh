@@ -49,5 +49,4 @@ ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
-cp "$PWD/ukelele/ABC - Custom.keylayout" ~/ABC\ -\ Custom.keylayout
-echo "$HOME/ABC - Custom.keylayout has been copied, open and install with Ukelele Organiser. (logout required)"
+cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
