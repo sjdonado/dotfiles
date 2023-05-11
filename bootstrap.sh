@@ -25,7 +25,7 @@ brew install colima docker docker-compose
 
 # awesome tools
 brew install git-delta lazygit lazydocker mitmproxy ngrok
-brew install --cask raycast table-tool ukelele
+brew install --cask raycast table-tool ukelele obsidian
 
 # the best font ever
 brew tap homebrew/cask-fonts
@@ -37,7 +37,7 @@ brew install romkatv/powerlevel10k/powerlevel10k
 # nvim processes from the shell
 pip3 install neovim-remote
 
-# config files symlinks
+# symlinks dotfiles
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
@@ -49,4 +49,10 @@ ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
+# keyboard layouts
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
+
+# obsidian
+if [ ! -d "$HOME/Library/Mobile Documents/iCloud~md~obsidian" ]; then
+ cp -R "$PWD/.obsidian" "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/$(id -un)"
+fi

@@ -1,0 +1,8 @@
+{
+  "showFrontmatter": true,
+  "spellcheck": true,
+  "tabSize": 2,
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "_assets/attachments",
+  "showLineNumber": false
+}
