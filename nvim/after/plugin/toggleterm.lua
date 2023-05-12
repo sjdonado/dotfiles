@@ -48,4 +48,4 @@ local function create_terminal(opts)
 end
 
 create_terminal({ direction = "horizontal", keymap = "<leader>;", count = 1 })
-create_terminal({ direction = "vertical", keymap = "<leader>'", count = 2 })
+create_terminal({ direction = "vertical", keymap = "<leader>]", count = 2 })
