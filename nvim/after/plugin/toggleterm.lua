@@ -3,7 +3,6 @@ local Terminal = require("toggleterm.terminal").Terminal
 local nnoremap = require("sjdonado.keymap").nnoremap
 
 require("toggleterm").setup({
-  start_in_insert = true,
   size = function(term)
     if term.direction == "horizontal" then
       return 25
@@ -35,6 +34,7 @@ local function create_terminal(opts)
     count = opts.count,
     direction = opts.direction,
     on_open = function(term)
+      vim.cmd("startinsert")
       nnoremap(opts.keymap, toggle(term), { buffer = term.bufnr, silent = true })
     end,
     on_close = function(term)

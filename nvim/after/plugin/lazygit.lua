@@ -5,9 +5,9 @@ local nnoremap = require("sjdonado.keymap").nnoremap
 local lazygit = Terminal:new({
   cmd = "lazygit",
   count = 5,
-  direction = "tab",
+  direction = "float",
   on_open = function(term)
-    vim.cmd("startinsert!")
+    vim.cmd("startinsert")
   end,
 })
 

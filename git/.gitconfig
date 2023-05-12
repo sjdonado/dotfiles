@@ -20,7 +20,7 @@
   keep-plus-minus-markers = true
 
 [core]
-  editor = nvr
+  editor = nvr -cc vsplit --remote-wait
   pager = delta
 
 [interactive]

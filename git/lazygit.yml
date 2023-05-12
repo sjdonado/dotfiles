@@ -21,8 +21,8 @@ git:
     pager: delta --paging=never
   diffContextSize: 6
 os:
-  openCommand: nvr -O {{filename}}
-  editCommand: nvr -O {{filename}}
+  openCommand: nvr -l {{filename}}
+  editCommand: nvr -l {{filename}}
 keybinding:
   universal:
     return: '<c-c>'
