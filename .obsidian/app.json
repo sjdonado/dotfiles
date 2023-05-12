@@ -4,5 +4,6 @@
   "tabSize": 2,
   "alwaysUpdateLinks": true,
   "attachmentFolderPath": "_assets/attachments",
-  "showLineNumber": false
+  "showLineNumber": false,
+  "mobileQuickRibbonItem": "switcher:Open quick switcher"
 }
