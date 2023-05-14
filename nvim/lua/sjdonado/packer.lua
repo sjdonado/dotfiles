@@ -83,7 +83,7 @@ return require("packer").startup(function(use)
   use("AndrewRadev/splitjoin.vim")
 
   -- AI Code Assistant
-  use("Exafunction/codeium.vim")
+  -- use("Exafunction/codeium.vim")
 
   -- testing
   use("David-Kunz/jester")
