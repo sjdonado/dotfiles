@@ -25,7 +25,10 @@ brew install colima docker docker-compose
 
 # awesome tools
 brew install git-delta lazygit lazydocker mitmproxy ngrok
-brew install --cask raycast table-tool ukelele obsidian
+brew install --cask raycast spacelauncher ukelele
+
+# essentials
+brew install --cask table-tool obsidian
 brew install --cask --no-quarantine chromium
 
 # best font ever
