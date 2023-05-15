@@ -1,9 +1,9 @@
 local gitsigns = require("gitsigns")
 
-local nnoremap = require("sjdonado.keymap").nnoremap
-local vnoremap = require("sjdonado.keymap").vnoremap
 local map = require("sjdonado.keymap").map
 local nmap = require("sjdonado.keymap").nmap
+local nnoremap = require("sjdonado.keymap").nnoremap
+local vnoremap = require("sjdonado.keymap").vnoremap
 
 gitsigns.setup({
   current_line_blame = false,

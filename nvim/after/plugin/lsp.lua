@@ -1,7 +1,6 @@
 local lspconfig = require("lspconfig")
 
-local Remap = require("sjdonado.keymap")
-local nnoremap = Remap.nnoremap
+local nnoremap = require("sjdonado.keymap").nnoremap
 
 local cmp = require("cmp")
 local lspkind = require("lspkind")
@@ -27,10 +26,9 @@ cmp.setup({
     documentation = cmp.config.window.bordered(),
   },
   mapping = cmp.mapping.preset.insert({
-    ["<C-Space>"] = cmp.mapping.complete(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }),
-    ["<PageUp>"] = cmp.mapping.scroll_docs(-4),
-    ["<PageDown>"] = cmp.mapping.scroll_docs(4),
+    ["<C-y>"] = cmp.mapping.scroll_docs(4),
+    ["<C-e>"] = cmp.mapping.scroll_docs(-4),
   }),
   formatting = {
     format = function(entry, vim_item)
@@ -55,8 +53,6 @@ lsp_signature.setup({
   },
   hint_enable = false,
 })
-
-neodev.setup()
 
 local function config(_config)
   return vim.tbl_deep_extend("force", {
@@ -143,3 +139,5 @@ lspconfig.lua_ls.setup(config({
 lspconfig.rust_analyzer.setup(config())
 
 lspconfig.pylsp.setup(config())
+
+neodev.setup()
