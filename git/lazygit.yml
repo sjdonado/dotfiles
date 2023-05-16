@@ -13,8 +13,7 @@ gui:
     selectedRangeBgColor:
       - default
       - bold
-  showIcons: true
-  border: 'double'
+  showIcons: false
 git:
   paging:
     colorArg: always
@@ -25,4 +24,12 @@ os:
   editCommand: nvr -l {{filename}}
 keybinding:
   universal:
-    return: '<c-c>'
+    quit-alt1: ''
+    scrollUpMain: '<c-y>'
+    scrollDownMain: '<c-e>'
+    scrollLeft: '<c-h>'
+    scrollRight: '<c-l>'
+  branches:
+    copyPullRequestURL: 'Y'
+  commits:
+    copyCommitMessageToClipboard: 'Y'

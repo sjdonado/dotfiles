@@ -1,6 +1,7 @@
 local Terminal = require("toggleterm.terminal").Terminal
 
 local nnoremap = require("sjdonado.keymap").nnoremap
+local tnoremap = require("sjdonado.keymap").tnoremap
 
 require("toggleterm").setup({
   size = function(term)
@@ -36,6 +37,7 @@ local function create_terminal(opts)
     on_open = function(term)
       vim.cmd("startinsert")
       nnoremap(opts.keymap, toggle(term), { buffer = term.bufnr, silent = true })
+      tnoremap("<esc>", "<C-\\><C-n>", { buffer = term.bufnr, silent = true })
     end,
     on_close = function(term)
       vim.cmd("stopinsert")

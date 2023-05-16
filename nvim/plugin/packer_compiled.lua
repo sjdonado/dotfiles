@@ -104,6 +104,11 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/cmp_luasnip",
     url = "https://github.com/saadparwaiz1/cmp_luasnip"
   },
+  ["committia.vim"] = {
+    loaded = true,
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/committia.vim",
+    url = "https://github.com/rhysd/committia.vim"
+  },
   ["dressing.nvim"] = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/dressing.nvim",

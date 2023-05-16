@@ -47,11 +47,3 @@ inoremap("<C-s>", "<Esc>:w<CR>")
 -- Close buffers
 map({ "n", "v" }, "<C-w>d", ":bd!<CR>", { silent = true })
 nnoremap("<C-w>x", ":bufdo bd<CR><cmd>NvimTreeFindFileToggle<CR>", { silent = true })
-
--- Terminal navigation
--- Map <esc> to exit terminal mode, except in lazygit.nvim buffer
-tnoremap(
-  "<esc>",
-  [[&buftype ==# 'terminal' && &filetype !=# 'lazygit' ? '<C-\><C-n>:stopinsert<CR>' : '<esc>']],
-  { expr = true, noremap = true }
-)
