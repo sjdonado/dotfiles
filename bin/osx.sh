@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/sh
 
 echo "[Finder] show all filename extensions"
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # setup alacritty
 brew install alacritty
@@ -19,6 +19,10 @@ $(brew --prefix)/opt/fzf/install
 # package managers
 # run after rustup-init, nvm install --lts
 brew install npm yarn rustup luarocks
+
+# window manager
+brew tap koekeishiya/formulae
+brew install yabai skhd
 
 # docker
 brew install colima docker docker-compose lazydocker
@@ -43,6 +47,11 @@ pip3 install neovim-remote
 # keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
+# obsidian
+if [ ! -d "$HOME/Library/Mobile Documents/iCloud~md~obsidian" ]; then
+ cp -R "$PWD/.obsidian" "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/$(id -un)"
+fi
+
 # symlinks
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 
@@ -55,7 +64,5 @@ ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
-# obsidian
-if [ ! -d "$HOME/Library/Mobile Documents/iCloud~md~obsidian" ]; then
- cp -R "$PWD/.obsidian" "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/$(id -un)"
-fi
+ln -s "$PWD/yabai/.yabairc" ~/.yabairc
+ln -s "$PWD/yabai/.skhdrc" ~/.skhdrc
