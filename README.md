@@ -5,6 +5,7 @@
 # Setup
 1. Clone into `~/.config/dotfiles`
 2. Run `./bootstrap.sh`
+3. Run `./bin/osx.sh`
 
 ## Config nvim plugins
 ```vim

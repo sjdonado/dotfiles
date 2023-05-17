@@ -2,17 +2,17 @@
 
 # setup alacritty
 brew install alacritty
-# https://github.com/alacritty/alacritty/commit/2a676dfad837d1784ed0911d314bc263804ef4ef
-defaults write org.alacritty AppleFontSmoothing -int 0
 
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
+# essentials
 brew install \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
-  nvim lua tree-sitter shellcheck ccls \
-  nvm
+  git-delta lazygit \
+  nvim lua nvm tree-sitter shellcheck ccls \
+  mitmproxy ngrok \
 
 $(brew --prefix)/opt/fzf/install
 
@@ -21,14 +21,13 @@ $(brew --prefix)/opt/fzf/install
 brew install npm yarn rustup luarocks
 
 # docker
-brew install colima docker docker-compose
+brew install colima docker docker-compose lazydocker
 
 # awesome tools
-brew install git-delta lazygit lazydocker mitmproxy ngrok
-brew install --cask raycast spacelauncher ukelele
+brew install --cask \
+  raycast spacelauncher ukelele \
+  table-tool obsidian
 
-# essentials
-brew install --cask table-tool obsidian
 brew install --cask --no-quarantine chromium
 
 # best font ever
@@ -41,7 +40,10 @@ brew install romkatv/powerlevel10k/powerlevel10k
 # nvim processes from the shell
 pip3 install neovim-remote
 
-# symlinks dotfiles
+# keyboard layouts setup
+cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
+
+# symlinks
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
@@ -52,9 +54,6 @@ ln -s "$PWD/nvim" ~/.config/nvim
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
-
-# keyboard layouts
-cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # obsidian
 if [ ! -d "$HOME/Library/Mobile Documents/iCloud~md~obsidian" ]; then
