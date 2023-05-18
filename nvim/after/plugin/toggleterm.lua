@@ -31,7 +31,6 @@ end
 
 local function create_terminal(opts)
   local term = Terminal:new({
-    cmd = "zsh",
     count = opts.count,
     direction = opts.direction,
     on_open = function(term)

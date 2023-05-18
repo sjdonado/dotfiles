@@ -5,8 +5,9 @@
 # Setup
 1. Clone into `~/.config/dotfiles`
 2. Run `./bootstrap.sh`
-3. Run `./bin/osx.sh`
-4. Run `./yabai/setup.sh`
+3. Run `./shell/fish/setup.sh`
+4. Run `./bin/osx.sh`
+5. Run `./yabai/setup.sh`
 
 ## Config nvim plugins
 ```vim

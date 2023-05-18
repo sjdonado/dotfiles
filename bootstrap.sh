@@ -1,59 +1,64 @@
 #!/bin/sh
 
-# setup alacritty
+# Setup alacritty
 brew install alacritty
 
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 
-# essentials
+# Essentials
 brew install \
+  fish \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
   git-delta lazygit \
-  nvim lua nvm tree-sitter shellcheck ccls \
+  nvim lua tree-sitter shellcheck ccls \
   mitmproxy ngrok \
 
 $(brew --prefix)/opt/fzf/install
 
-# package managers
-# run after rustup-init, nvm install --lts
-brew install npm yarn rustup luarocks
+# Package managers
+# Run after rustup-init, nvm install --lts
+brew install npm n yarn rustup luarocks
 
-# window manager
+# Window manager
 brew tap koekeishiya/formulae
 brew install yabai skhd
 
-# docker
+# Docker
 brew install colima docker docker-compose lazydocker
 
-# awesome tools
+# Awesome tools
 brew install --cask \
   raycast spacelauncher ukelele \
   table-tool obsidian
 
 brew install --cask --no-quarantine chromium
 
-# best font ever
+# Best font ever
 brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
 
-# zsh theme
-brew install romkatv/powerlevel10k/powerlevel10k
+# Zsh theme
+# brew install romkatv/powerlevel10k/powerlevel10k
 
-# nvim processes from the shell
+# Nvim processes from the shell
 pip3 install neovim-remote
 
-# keyboard layouts setup
+# Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
-# symlinks
+# Symlinks
+ln -sf "$PWD/shell/fish/config.fish" ~/.config/fish/config.fish
+ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
+
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
-ln -s "$PWD/zsh/.zshrc" ~/.zshrc
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
-ln -s "$PWD/bat/config" "$(bat --config-file)"
+bat --generate-config-file
+ln -sf "$PWD/bat/config" "$(bat --config-file)"
+
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
