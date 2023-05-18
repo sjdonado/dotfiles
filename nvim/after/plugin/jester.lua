@@ -31,7 +31,7 @@ local function load_jest()
     path_to_jest_run = "jest",
     path_to_jest_debug = "./node_modules/.bin/jest",
     cmd =
-    'export HISTFILE=/dev/null && npm run test -- --watch=false --no-coverage -t "$result" -- $file',
+    "export HISTFILE=/dev/null; npm run test -- --watch=false --no-coverage -t '$result' -- $file",
     escapeRegex = true,
     regexStartEnd = true,
     dap = vim.tbl_extend("force", default.dap, {
@@ -53,7 +53,7 @@ local function load_vitest()
   jester.setup(vim.tbl_extend("force", default, {
     path_to_jest_run = "vitest",
     path_to_jest_debug = "./node_modules/.bin/vitest",
-    cmd = "export HISTFILE=/dev/null && npm run test -- --watch=false --no-coverage -t $result "
+    cmd = "export HISTFILE=/dev/null; npm run test -- --watch=false --no-coverage -t $result "
         .. relative_path,
     dap = vim.tbl_extend("force", default.dap, {
       args = {

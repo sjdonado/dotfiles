@@ -15,11 +15,9 @@ brew install \
   nvim lua tree-sitter shellcheck ccls \
   mitmproxy ngrok \
 
-$(brew --prefix)/opt/fzf/install
-
 # Package managers
-# Run after rustup-init, nvm install --lts
-brew install npm n yarn rustup luarocks
+# Run after rustup-init
+brew install fnm rustup luarocks
 
 # Window manager
 brew tap koekeishiya/formulae
@@ -31,7 +29,7 @@ brew install colima docker docker-compose lazydocker
 # Awesome tools
 brew install --cask \
   raycast spacelauncher ukelele \
-  table-tool obsidian
+  table-tool discord obsidian
 
 brew install --cask --no-quarantine chromium
 
@@ -41,6 +39,7 @@ brew install font-hack-nerd-font
 
 # Zsh theme
 # brew install romkatv/powerlevel10k/powerlevel10k
+# $(brew --prefix)/opt/fzf/install
 
 # Nvim processes from the shell
 pip3 install neovim-remote
@@ -50,6 +49,7 @@ cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # Symlinks
 ln -sf "$PWD/shell/fish/config.fish" ~/.config/fish/config.fish
+ln -sf "$PWD/shell/fish/conf.d" ~/.config/fish
 ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
 
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml

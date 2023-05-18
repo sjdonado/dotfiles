@@ -1,4 +1,5 @@
 local null_ls = require("null-ls")
+local lspconfig = require("lspconfig")
 
 local nnoremap = require("sjdonado.keymap").nnoremap
 local file_helper = require("sjdonado.helpers.file")
@@ -52,11 +53,11 @@ null_ls.setup({
 vim.api.nvim_create_autocmd("BufReadPost", {
   pattern = "*",
   callback = function()
-    if not file_helper.root_has_file("{.prettier*,*prettier*}") then
+    if not file_helper.root_has_file(".prettier*") then
       null_ls.disable({ name = "prettierd" })
     end
 
-    if not file_helper.root_has_file("{.eslint*,*eslint*}") then
+    if not file_helper.root_has_file(".eslint*") then
       null_ls.disable({ name = "eslint_d" })
     end
   end,

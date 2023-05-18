@@ -8,7 +8,7 @@
 # Focus window that your mouse hovers
 yabai -m config focus_follows_mouse          off
 # Move mouse to focused window
-yabai -m config mouse_follows_focus          on
+yabai -m config mouse_follows_focus          off
 yabai -m config window_placement             second_child
 # Floating windows always stay on top
 yabai -m config window_topmost               off
@@ -31,6 +31,7 @@ yabai -m config mouse_drop_action            swap
 
 # General space config
 yabai -m config layout stack
+
 yabai -m config top_padding 5
 yabai -m config bottom_padding 5
 yabai -m config left_padding 5
@@ -57,11 +58,13 @@ yabai -m config --space 4 layout bsp
 # Apps to not manage (ignore)
 yabai -m rule --add app="^App Store$" manage=off
 yabai -m rule --add app="^Archive Utility$" manage=off
+yabai -m rule --add app="^Calendar$" manage=off
 yabai -m rule --add app="^Contacts$" manage=off
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^FaceTime$" manage=off
 yabai -m rule --add app="^Find My$" manage=off
 yabai -m rule --add app="^Finder$" manage=off
+yabai -m rule --add app="^Mail$" manage=off
 yabai -m rule --add app="^Maps$" manage=off
 yabai -m rule --add app="^Messages$" manage=off
 yabai -m rule --add app="^Notes$" manage=off
