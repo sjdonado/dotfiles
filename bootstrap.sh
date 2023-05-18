@@ -49,15 +49,15 @@ cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # symlinks
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
-
-ln -s "$PWD/git/.gitconfig" ~/.gitconfig
-ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 ln -s "$PWD/zsh/.zshrc" ~/.zshrc
-
-ln -s "$PWD/nvim" ~/.config/nvim
+ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
+ln -s "$PWD/bat/config" "$(bat --config-file)"
+ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
+
+ln -s "$PWD/nvim" ~/.config/nvim
 
 ln -s "$PWD/yabai/.yabairc" ~/.yabairc
 ln -s "$PWD/yabai/.skhdrc" ~/.skhdrc
