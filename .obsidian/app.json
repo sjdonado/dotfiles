@@ -1,9 +1,12 @@
 {
   "showFrontmatter": true,
   "spellcheck": true,
-  "tabSize": 2,
+  "tabSize": 4,
   "alwaysUpdateLinks": true,
   "attachmentFolderPath": "_assets/attachments",
   "showLineNumber": false,
-  "mobileQuickRibbonItem": "switcher:Open quick switcher"
+  "mobileQuickRibbonItem": "",
+  "useTab": false,
+  "promptDelete": false,
+  "showIndentGuide": false
 }

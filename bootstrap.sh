@@ -47,11 +47,6 @@ pip3 install neovim-remote
 # keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
-# obsidian
-if [ ! -d "$HOME/Library/Mobile Documents/iCloud~md~obsidian" ]; then
- cp -R "$PWD/.obsidian" "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/$(id -un)"
-fi
-
 # symlinks
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 
