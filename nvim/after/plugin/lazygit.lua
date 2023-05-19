@@ -5,7 +5,7 @@ local tnoremap = require("sjdonado.keymap").tnoremap
 
 local lazygit = Terminal:new({
   cmd = "lazygit",
-  count = 5,
+  count = 100,
   direction = "tab",
   on_open = function(term)
     vim.cmd("startinsert")

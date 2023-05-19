@@ -8,10 +8,4 @@ zenmode.setup({
   },
 })
 
-function _G.exit_zenmode_if_needed()
-  if require("zen-mode.view").is_open() then
-    zenmode.close()
-  end
-end
-
 nnoremap("<leader>z", ":ZenMode<CR>", { silent = true })

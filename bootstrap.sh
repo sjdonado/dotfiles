@@ -19,7 +19,7 @@ brew install \
 # Run after rustup-init
 brew install fnm rustup luarocks
 
-# Window manager
+# Tiling Window manager
 brew tap koekeishiya/formulae
 brew install yabai skhd
 

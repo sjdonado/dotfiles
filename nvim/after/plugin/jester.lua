@@ -3,10 +3,22 @@ local Path = require("plenary.path")
 local jester = require("jester")
 local file_helper = require("sjdonado.helpers.file")
 
+function _G.create_jester_terminal()
+  local jester_terminal = require("sjdonado.toggleterm").create_terminal({
+    direction = "horizontal",
+    keymap = "<leader>jt",
+    count = 99,
+    start_in_insert = false,
+  })
+
+  jester_terminal:toggle()
+end
+
 local default = {
-  identifiers = { "test", "it" },      -- used to identify tests
-  prepend = { "describe" },            -- prepend describe blocks
+  identifiers = { "test", "it" }, -- used to identify tests
+  prepend = { "describe" }, -- prepend describe blocks
   expressions = { "call_expression" }, -- tree-sitter object used to scan for tests/describe blocks
+  terminal_cmd = "lua create_jester_terminal()",
   escapeRegex = false,
   regexStartEnd = false,
   dap = {
@@ -28,10 +40,8 @@ local default = {
 
 local function load_jest()
   jester.setup(vim.tbl_extend("force", default, {
-    path_to_jest_run = "jest",
+    path_to_jest_run = " npm run test -- --watch=false --no-coverage", -- space at the beginning == private command
     path_to_jest_debug = "./node_modules/.bin/jest",
-    cmd =
-    "export HISTFILE=/dev/null; npm run test -- --watch=false --no-coverage -t '$result' -- $file",
     escapeRegex = true,
     regexStartEnd = true,
     dap = vim.tbl_extend("force", default.dap, {
@@ -53,8 +63,7 @@ local function load_vitest()
   jester.setup(vim.tbl_extend("force", default, {
     path_to_jest_run = "vitest",
     path_to_jest_debug = "./node_modules/.bin/vitest",
-    cmd = "export HISTFILE=/dev/null; npm run test -- --watch=false --no-coverage -t $result "
-        .. relative_path,
+    cmd = " npm run test -- --watch=false --no-coverage -t '$result' " .. relative_path,
     dap = vim.tbl_extend("force", default.dap, {
       args = {
         "--watch",
