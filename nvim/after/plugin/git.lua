@@ -27,6 +27,5 @@ gitsigns.setup({
 vim.g.committia_use_singlecolumn = "always"
 
 -- openingh config
+map({ "n", "v" }, "<leader>hof", ":OpenInGHFile<CR>")
 nnoremap("<leader>hor", ":OpenInGHRepo<CR>")
-nnoremap("<leader>hof", ":OpenInGHFile<CR>")
-vnoremap("<leader>hof", ":OpenInGHFile<CR>")
