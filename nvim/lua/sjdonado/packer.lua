@@ -64,10 +64,8 @@ return require("packer").startup(function(use)
 
   -- dap
   use({ lazy = true, "mfussenegger/nvim-dap" })
-  use({ lazy = true, "rcarriga/nvim-dap-ui", tag = "*" })
-  use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
-
-  use({ "mxsdev/nvim-dap-vscode-js", tag = "*" })
+  use({ lazy = true, "rcarriga/nvim-dap-ui" })
+  -- use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 
   -- editor
   use("Shatur/neovim-session-manager")

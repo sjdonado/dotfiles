@@ -7,12 +7,11 @@ local nnoremap = require("sjdonado.keymap").nnoremap
 
 nnoremap("<leader>dt", function()
   sjdonado_zenmode.exit_zenmode_if_needed()
-  dapui.toggle({})
+  dapui.toggle()
 end)
 
 nnoremap("<leader>dx", function()
-  dap.clear_breakpoints()
-  dapui.close({})
+  dapui.close()
 end)
 
 nnoremap("<F8>", function()

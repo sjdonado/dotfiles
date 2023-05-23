@@ -5,9 +5,9 @@ dapui.setup({
   layouts = {
     {
       elements = {
-        { id = "stacks", size = 0.12 },
-        { id = "scopes", size = 0.16 },
-        { id = "repl", size = 0.32 },
+        -- { id = "stacks", size = 0.12 },
+        { id = "scopes", size = 0.3 },
+        { id = "repl", size = 0.3 },
         { id = "console", size = 0.4 },
       },
       size = 0.25,
@@ -19,7 +19,7 @@ dapui.setup({
   },
 })
 
-require("nvim-dap-virtual-text").setup()
+-- require("nvim-dap-virtual-text").setup()
 
 dap.listeners.after.event_initialized["dapui_config"] = function()
   dapui.open()

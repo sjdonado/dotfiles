@@ -1,10 +1,14 @@
 local dap = require("dap")
 
-require("dap-vscode-js").setup({
-  debugger_path = vim.fn.stdpath("data") .. "/mason/packages/js-debug-adapter",
-  debugger_cmd = { "js-debug-adapter" },
-  adapters = { "pwa-node" },
-})
+require("dap").adapters["pwa-node"] = {
+  type = "server",
+  host = "localhost",
+  port = "${port}",
+  executable = {
+    command = vim.fn.stdpath("data") .. "/mason/bin/js-debug-adapter",
+    args = { "${port}" },
+  }
+}
 
 dap.configurations.javascript = {
   {
