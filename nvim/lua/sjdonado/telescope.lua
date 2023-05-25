@@ -9,9 +9,9 @@ require("telescope").setup({
         ["<C-e>"] = require("telescope.actions").preview_scrolling_down,
       },
     },
-    preview = {
-      hide_on_startup = true,
-    },
+    -- preview = {
+    --   hide_on_startup = true,
+    -- },
     layout_config = {
       scroll_speed = 3,
     },

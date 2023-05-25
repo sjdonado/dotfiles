@@ -13,7 +13,7 @@ brew install \
   tree bat fd gawk ripgrep fzf \
   git-delta lazygit \
   nvim lua tree-sitter shellcheck ccls \
-  mitmproxy ngrok \
+  tor mitmproxy ngrok \
 
 # Package managers
 # Run after rustup-init
@@ -28,10 +28,10 @@ brew install colima docker docker-compose lazydocker
 
 # Awesome tools
 brew install --cask \
+  firefox google-chrome \
   raycast spacelauncher ukelele \
-  table-tool discord obsidian
-
-brew install --cask --no-quarantine chromium
+  table-tool discord obsidian \
+  qbittorrent
 
 # Best font ever
 brew tap homebrew/cask-fonts
@@ -49,7 +49,7 @@ cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # Symlinks
 ln -sf "$PWD/shell/fish/config.fish" ~/.config/fish/config.fish
-ln -sf "$PWD/shell/fish/conf.d" ~/.config/fish
+ln -sf "$PWD/shell/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
 ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
 
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml

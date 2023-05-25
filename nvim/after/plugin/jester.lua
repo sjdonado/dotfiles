@@ -15,8 +15,8 @@ function _G.create_jester_terminal()
 end
 
 local default = {
-  identifiers = { "test", "it" },      -- used to identify tests
-  prepend = { "describe" },            -- prepend describe blocks
+  identifiers = { "test", "it" }, -- used to identify tests
+  prepend = { "describe" }, -- prepend describe blocks
   expressions = { "call_expression" }, -- tree-sitter object used to scan for tests/describe blocks
   terminal_cmd = "lua create_jester_terminal()",
   escapeRegex = false,
