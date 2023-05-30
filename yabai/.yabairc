@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-## SIP required
+## SIP unblocked required
 # sudo yabai --load-sa
 # yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
 
@@ -46,7 +46,7 @@ yabai -m config --space 1 right_padding 0
 
 yabai -m config --space 4 layout bsp
 
-## SIP required
+## SIP unblocked required
 ## prevent border from being under the active window
 # yabai -m config active_window_border_topmost on
 # yabai -m config window_shadow                on

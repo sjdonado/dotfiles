@@ -13,6 +13,7 @@ brew install \
   tree bat fd gawk ripgrep fzf \
   git-delta lazygit \
   nvim lua tree-sitter shellcheck ccls \
+  mackup \
   tor mitmproxy ngrok \
 
 # Package managers
@@ -20,8 +21,9 @@ brew install \
 brew install fnm rustup luarocks
 
 # Tiling Window manager
-brew tap koekeishiya/formulae
-brew install yabai skhd
+# brew tap koekeishiya/formulae
+# brew install yabai skhd
+brew install --cask amethyst # SIP unblocked not required
 
 # Docker
 brew install colima docker docker-compose lazydocker
@@ -47,10 +49,10 @@ pip3 install neovim-remote
 # Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
-# Symlinks
+# Dotfiles
 ln -sf "$PWD/shell/fish/config.fish" ~/.config/fish/config.fish
 ln -sf "$PWD/shell/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
-ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
+# ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
 
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
@@ -64,5 +66,5 @@ ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
 ln -s "$PWD/nvim" ~/.config/nvim
 
-ln -s "$PWD/yabai/.yabairc" ~/.yabairc
-ln -s "$PWD/yabai/.skhdrc" ~/.skhdrc
+# ln -s "$PWD/yabai/.yabairc" ~/.yabairc
+# ln -s "$PWD/yabai/.skhdrc" ~/.skhdrc
