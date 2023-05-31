@@ -7,14 +7,15 @@
 2. Run `./bootstrap.sh`
 3. Run `./shell/fish/setup.sh`
 4. Run `./bin/osx.sh`
+5. Run `mackup restore`
 
-## Config nvim plugins
+## Config Neovim Plugins
 ```vim
 :PackerSync
 :MasonToolsInstall
 ```
 
-## Tor proxy
+## Tor Proxy
 1. Enable tor service `brew services start tor`
 2. In Firefox, go to `Network Settings > Manual proxy configuration > SOCKS Host > SOCKS v5` and set `localhost:9050`
 3. Toggle on `Proxy DNS when using SOCKS v5`

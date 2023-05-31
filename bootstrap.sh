@@ -17,12 +17,9 @@ brew install \
   tor mitmproxy ngrok \
 
 # Package managers
-# Run after rustup-init
 brew install fnm rustup luarocks
 
 # Tiling Window manager
-# brew tap koekeishiya/formulae
-# brew install yabai skhd
 brew install --cask amethyst # SIP unblocked not required
 
 # Docker
@@ -39,32 +36,26 @@ brew install --cask \
 brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
 
-# Zsh theme
-# brew install romkatv/powerlevel10k/powerlevel10k
-# $(brew --prefix)/opt/fzf/install
-
 # Nvim processes from the shell
 pip3 install neovim-remote
 
 # Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
-# Dotfiles
-ln -sf "$PWD/shell/fish/config.fish" ~/.config/fish/config.fish
-ln -sf "$PWD/shell/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
-# ln -s "$PWD/shell/zsh/.zshrc" ~/.zshrc
+# Dotfiles symlinks
+ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
+ln -sf "$PWD/fish/conf.d" ~/.config/fish
+
+ln -sf "$PWD/bat/config" ~/.config/bat/config
 
 ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
-ln -s "$PWD/.ssh/config" ~/.ssh/config
-
-bat --generate-config-file
-ln -sf "$PWD/bat/config" "$(bat --config-file)"
-
-ln -s "$PWD/git/.gitconfig" ~/.gitconfig
-ln -s "$PWD/git/lazygit.yml" ~/Library/Application\ Support/lazygit/config.yml
 
 ln -s "$PWD/nvim" ~/.config/nvim
 
-# ln -s "$PWD/yabai/.yabairc" ~/.yabairc
-# ln -s "$PWD/yabai/.skhdrc" ~/.skhdrc
+ln -s "$PWD/git/.gitconfig" ~/.gitconfig
+ln -s "$PWD/lazygit/config.yml" ~/Library/Application\ Support/lazygit/config.yml
+
+ln -s "$PWD/.ssh/config" ~/.ssh/config
+
+ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
