@@ -27,7 +27,7 @@ brew install colima docker docker-compose lazydocker
 
 # Awesome tools
 brew install --cask \
-  firefox google-chrome \
+  firefox arc \
   raycast spacelauncher ukelele \
   table-tool discord obsidian \
   qbittorrent
