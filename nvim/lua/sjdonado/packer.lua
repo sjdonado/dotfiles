@@ -4,9 +4,13 @@ return require("packer").startup(function(use)
   use("nvim-lua/plenary.nvim")
 
   -- telescope
-  use({ "nvim-telescope/telescope.nvim" })
-  use("nvim-telescope/telescope-dap.nvim")
-  use("stevearc/dressing.nvim")
+  use({
+    "nvim-telescope/telescope.nvim",
+    requires = {
+      "nvim-telescope/telescope-dap.nvim",
+      "stevearc/dressing.nvim",
+    },
+  })
 
   -- treesitter
   use("nvim-treesitter/nvim-treesitter", {
@@ -60,15 +64,15 @@ return require("packer").startup(function(use)
 
   use({
     "L3MON4D3/LuaSnip",
-    tag = "v<CurrentMajor>.*",
+    tag = "*",
     run = "make install_jsregexp",
+    requires = { "saadparwaiz1/cmp_luasnip" },
   })
-  use("saadparwaiz1/cmp_luasnip")
 
   -- dap
   use({ lazy = true, "mfussenegger/nvim-dap" })
   use({ lazy = true, "rcarriga/nvim-dap-ui" })
-  -- use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
+  use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 
   -- editor
   use("Shatur/neovim-session-manager")

@@ -4,14 +4,14 @@ local jester = require("jester")
 local file_helper = require("sjdonado.helpers.file")
 
 function _G.create_jester_terminal()
-  local jester_terminal = require("sjdonado.toggleterm").create_terminal({
+  local jester_term_actions = require("sjdonado.toggleterm").create_terminal({
     direction = "horizontal",
     keymap = "<leader>jt",
     count = 99,
     start_in_insert = false,
   })
 
-  jester_terminal:toggle()
+  jester_term_actions.toggle()
 end
 
 local default = {

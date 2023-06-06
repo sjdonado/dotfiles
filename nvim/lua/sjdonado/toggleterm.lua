@@ -50,7 +50,11 @@ function M.create_terminal(opts)
 
   nnoremap(opts.keymap, toggle(term))
 
-  return term
+  local actions = {}
+
+  actions.toggle = toggle(term)
+
+  return actions
 end
 
 return M
