@@ -21,6 +21,13 @@ local function toggle(term)
   end
 end
 
+local function close_all()
+  require("sjdonado.dap.init").dapui.close({ "all" })
+  sjdonado_zenmode.exit_zenmode_if_needed()
+
+  require("toggleterm").toggle_all()
+end
+
 local M = {}
 
 function M.create_terminal(opts)
@@ -56,5 +63,7 @@ function M.create_terminal(opts)
 
   return actions
 end
+
+nnoremap("<leader>tt", close_all, { silent = true })
 
 return M

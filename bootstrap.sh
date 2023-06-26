@@ -29,8 +29,10 @@ brew install colima docker docker-compose lazydocker
 brew install --cask \
   firefox arc \
   raycast spacelauncher ukelele \
-  table-tool discord obsidian \
+  cron table-tool discord obsidian \
   qbittorrent
+
+brew install --cask --no-quarantine chromium
 
 # Best font ever
 brew tap homebrew/cask-fonts
