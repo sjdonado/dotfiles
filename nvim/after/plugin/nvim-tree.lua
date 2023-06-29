@@ -5,6 +5,7 @@ require("nvim-tree").setup({
     },
   },
   view = {
+    width = 60,
     mappings = {
       custom_only = true,
       list = {

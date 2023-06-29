@@ -32,7 +32,7 @@ brew install --cask \
   cron table-tool discord obsidian \
   qbittorrent
 
-brew install --cask --no-quarantine chromium
+brew install google-chrome
 
 # Best font ever
 brew tap homebrew/cask-fonts
