@@ -1,7 +1,7 @@
 local actions = require("telescope.actions")
 
 require("telescope").setup({
-  defaults = {
+  defaults = vim.tbl_extend("force", require("telescope.themes").get_dropdown(), {
     mappings = {
       i = {
         ["<C-t>"] = require("telescope.actions.layout").toggle_preview,
@@ -9,38 +9,18 @@ require("telescope").setup({
         ["<C-e>"] = require("telescope.actions").preview_scrolling_down,
       },
     },
-    -- preview = {
-    --   hide_on_startup = true,
-    -- },
     layout_config = {
-      scroll_speed = 3,
+      height = 0.2,
+      width = function(_, max_columns, _)
+        return math.min(max_columns, 110)
+      end,
     },
-  },
-  pickers = {
-    find_files = {
-      theme = "dropdown",
-    },
-    grep_string = {
-      theme = "dropdown",
-    },
-    live_grep = {
-      theme = "dropdown",
-    },
-    buffers = {
-      theme = "dropdown",
-    },
-    command_history = {
-      theme = "dropdown",
-    },
-    search_history = {
-      theme = "dropdown",
-    },
-  },
+  }),
 })
 
 require("telescope").load_extension("dap")
 
-local find_command = {
+local find_files_command = {
   "rg",
   "--hidden",
   "--files",
@@ -48,39 +28,48 @@ local find_command = {
   "!.git/",
 }
 
+local find_all_command = {
+  "rg",
+  "--hidden",
+  "--files",
+  "--glob",
+  "!.git/",
+  "-u",
+}
+
 -- Custom pickers
 local Pickers = {}
 
 Pickers.find_files = function()
   require("telescope.builtin").find_files({
-    find_command = find_command,
+    find_command = find_files_command,
   })
 end
 
 Pickers.live_grep = function()
   require("telescope.builtin").live_grep({
-    find_command = find_command,
+    find_command = find_files_command,
+  })
+end
+
+Pickers.live_grep_all_files = function()
+  require("telescope.builtin").live_grep({
+    prompt_title = "All Files",
+    find_command = find_all_command,
   })
 end
 
 Pickers.grep_string = function(opts)
   require("telescope.builtin").grep_string({
     search = opts.search,
-    find_command = find_command,
+    find_command = find_files_command,
   })
 end
 
 Pickers.find_all = function()
   require("telescope.builtin").find_files({
     prompt_title = "All Files",
-    find_command = {
-      "rg",
-      "--hidden",
-      "--files",
-      "--glob",
-      "!.git/",
-      "-u",
-    },
+    find_command = find_all_command,
   })
 end
 

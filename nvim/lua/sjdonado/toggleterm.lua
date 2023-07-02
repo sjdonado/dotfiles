@@ -22,10 +22,9 @@ local function toggle(term)
 end
 
 local function close_all()
-  require("sjdonado.dap.init").dapui.close({ "all" })
-  sjdonado_zenmode.exit_zenmode_if_needed()
-
-  require("toggleterm").toggle_all()
+  for _, term in pairs(require("toggleterm.terminal").get_all()) do
+    term:close()
+  end
 end
 
 local M = {}
