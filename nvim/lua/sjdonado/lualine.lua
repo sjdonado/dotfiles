@@ -50,19 +50,20 @@ local function lsp_clients(msg)
   return table.concat(table_helper.remove_duplicates(buf_client_names), " ")
 end
 
-local buffers = {
-  {
-    "buffers",
-    show_filename_only = false,
-  },
-}
-
 local sections = {
   lualine_a = { "mode" },
   lualine_b = { "branch", "diff" },
-  lualine_c = buffers,
+  lualine_c = {
+    { "%=", separator = "" },
+    { "filetype", icon_only = true, separator = "", padding = { right = 0, left = 1 } },
+    {
+      "filename",
+      path = 1,
+      symbols = { modified = "●", readonly = "", unnamed = "[No Name]", newfile = "[New]" },
+    },
+  },
   lualine_x = {
-    { "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = " " } },
+    { "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = " " } },
     {
       lsp_clients,
       icon = " ",
@@ -73,13 +74,9 @@ local sections = {
   lualine_y = { "progress" },
   lualine_z = { "location" },
 }
+
 local inactive_sections = {
-  lualine_a = {},
-  lualine_b = {},
-  lualine_c = buffers,
   lualine_x = { "location" },
-  lualine_y = {},
-  lualine_z = {},
 }
 
 local M = {}
