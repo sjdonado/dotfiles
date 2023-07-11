@@ -42,6 +42,8 @@ return require("packer").startup(function(use)
   use("akinsho/toggleterm.nvim")
   use("wsdjeg/vim-fetch")
 
+  use("ThePrimeagen/harpoon")
+
   -- lsp + dap + linter package manager
   use({ "williamboman/mason.nvim", tag = "*" })
   use("WhoIsSethDaniel/mason-tool-installer.nvim")
