@@ -39,11 +39,11 @@ return require("packer").startup(function(use)
   -- navigation
   use("nvim-tree/nvim-tree.lua")
 
-  use({ "akinsho/toggleterm.nvim" })
+  use("akinsho/toggleterm.nvim")
   use("wsdjeg/vim-fetch")
 
   -- lsp + dap + linter package manager
-  use("williamboman/mason.nvim")
+  use({ "williamboman/mason.nvim", tag = "*" })
   use("WhoIsSethDaniel/mason-tool-installer.nvim")
 
   -- lsp
