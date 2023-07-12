@@ -63,7 +63,7 @@ local sections = {
     },
   },
   lualine_x = {
-    { "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = " " } },
+    { "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = " " } },
     {
       lsp_clients,
       icon = " ",
