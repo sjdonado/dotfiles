@@ -3,6 +3,7 @@ local gitsigns = require("gitsigns")
 local map = require("sjdonado.keymap").map
 local nmap = require("sjdonado.keymap").nmap
 local nnoremap = require("sjdonado.keymap").nnoremap
+local vnoremap = require("sjdonado.keymap").vnoremap
 
 gitsigns.setup({
   current_line_blame = false,
@@ -47,6 +48,6 @@ vim.g.codeium_filetypes = {
 vim.g.committia_use_singlecolumn = "always"
 
 -- openingh config
-map({ "n", "v" }, "<leader>hof", ":OpenInGHFile<CR>")
-nnoremap("<leader>hor", ":OpenInGHRepo<CR>")
-nnoremap("<leader>hor", ":OpenInGHRepo<CR>")
+nnoremap("<leader>gr", ":OpenInGHRepo<CR>", { silent = true })
+nnoremap("<leader>gf", ":OpenInGHFile<CR>", { silent = true })
+vnoremap("<leader>gf", ":OpenInGHFileLines<CR>", { silent = true })
