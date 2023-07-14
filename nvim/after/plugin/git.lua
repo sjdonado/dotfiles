@@ -22,31 +22,6 @@ gitsigns.setup({
   end,
 })
 
--- codeium
-vim.g.codeium_filetypes = {
-  TelescopePrompt = false,
-  TelescopeResults = false,
-  toggleterm = false,
-  lua = true,
-  go = true,
-  rust = true,
-  javascript = true,
-  typescript = true,
-  typescriptreact = true,
-  javascriptreact = true,
-  html = true,
-  css = true,
-  scss = true,
-  json = true,
-  yaml = true,
-  markdown = true,
-  vue = true,
-  python = true,
-}
-
--- committia
-vim.g.committia_use_singlecolumn = "always"
-
 -- openingh config
 nnoremap("<leader>gr", ":OpenInGHRepo<CR>", { silent = true })
 nnoremap("<leader>gf", ":OpenInGHFile<CR>", { silent = true })

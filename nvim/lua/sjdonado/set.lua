@@ -42,3 +42,6 @@ vim.opt.showtabline = 0
 
 -- runtime path macos fix
 vim.o.runtimepath = vim.fn.stdpath("data") .. "/site/pack/*/start/*," .. vim.o.runtimepath
+
+-- codeium config
+require("sjdonado.codeium")
