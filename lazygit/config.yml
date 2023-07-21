@@ -3,6 +3,7 @@ gui:
   scrollHeight: 4 # how many lines you scroll by
   expandFocusedSidePanel: true
   mainPanelSplitMode: 'vertical'
+  nerdFontsVersion: "3"
   theme:
     optionsTextColor:
       - default
@@ -13,7 +14,6 @@ gui:
     selectedRangeBgColor:
       - default
       - bold
-  showIcons: false
 git:
   paging:
     colorArg: always
@@ -27,8 +27,8 @@ keybinding:
     quit-alt1: ''
     scrollUpMain: '<c-y>'
     scrollDownMain: '<c-e>'
-    scrollLeft: '<c-h>'
-    scrollRight: '<c-l>'
+    # scrollLeft: '<c-h>'
+    # scrollRight: '<c-l>'
   branches:
     copyPullRequestURL: 'Y'
   commits:

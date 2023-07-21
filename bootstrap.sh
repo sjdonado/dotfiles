@@ -30,7 +30,8 @@ brew install --cask \
   firefox arc \
   raycast spacelauncher ukelele \
   cron table-tool discord obsidian \
-  qbittorrent
+  qbittorrent \
+  reverso
 
 brew install google-chrome
 

@@ -7,6 +7,7 @@ require("telescope").setup({
         ["<C-t>"] = require("telescope.actions.layout").toggle_preview,
         ["<C-y>"] = require("telescope.actions").preview_scrolling_up,
         ["<C-e>"] = require("telescope.actions").preview_scrolling_down,
+        ["<esc>"] = require("telescope.actions").close,
       },
     },
     layout_config = {
