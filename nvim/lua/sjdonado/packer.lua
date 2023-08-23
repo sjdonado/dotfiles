@@ -24,13 +24,14 @@ return require("packer").startup(function(use)
 
   -- apparence
   use("nvim-tree/nvim-web-devicons")
-  use("Mofiqul/vscode.nvim")
+  use("projekt0n/github-nvim-theme")
   use({
     "lukas-reineke/indent-blankline.nvim",
     config = function()
       require("indent_blankline").setup()
     end,
   })
+  use("nikvdp/ejs-syntax")
 
   -- statusline
   use("nvim-lualine/lualine.nvim")

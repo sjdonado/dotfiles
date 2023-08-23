@@ -5,23 +5,12 @@ local null_ls_helper = require("sjdonado.helpers.null-ls")
 local table_helper = require("sjdonado.helpers.table")
 
 nvimwebdevicons.setup({
-  override = {
-    zsh = {
-      icon = "",
-      color = "#428850",
-      cterm_color = "65",
-      name = "Zsh",
-    },
-  },
-  options = {
-    theme = "vscode",
-  },
   color_icons = true,
 })
 
 local function lsp_clients(msg)
   msg = msg or ""
-  local buf_clients = vim.lsp.buf_get_clients()
+  local buf_clients = vim.lsp.get_active_clients()
   if next(buf_clients) == nil then
     if type(msg) == "boolean" or #msg == 0 then
       return ""

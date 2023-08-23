@@ -17,7 +17,7 @@ brew install \
   tor mitmproxy ngrok \
 
 # Package managers
-brew install fnm rustup luarocks
+brew install fnm rustup luarocks yarn
 
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required
@@ -27,13 +27,11 @@ brew install colima docker docker-compose lazydocker
 
 # Awesome tools
 brew install --cask \
-  firefox arc \
+  arc firefox \
   raycast spacelauncher ukelele \
   cron table-tool discord obsidian \
   qbittorrent \
   reverso
-
-brew install google-chrome
 
 # Best font ever
 brew tap homebrew/cask-fonts
