@@ -286,6 +286,11 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/vim-fetch",
     url = "https://github.com/wsdjeg/vim-fetch"
   },
+  ["vim-liquid"] = {
+    loaded = true,
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/vim-liquid",
+    url = "https://github.com/tpope/vim-liquid"
+  },
   ["vim-sneak"] = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/vim-sneak",

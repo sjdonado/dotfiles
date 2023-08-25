@@ -134,4 +134,6 @@ lspconfig.rust_analyzer.setup(config())
 
 lspconfig.pylsp.setup(config())
 
+lspconfig.theme_check.setup(config())
+
 neodev.setup()

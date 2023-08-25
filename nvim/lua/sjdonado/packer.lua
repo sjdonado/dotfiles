@@ -32,6 +32,7 @@ return require("packer").startup(function(use)
     end,
   })
   use("nikvdp/ejs-syntax")
+  use("tpope/vim-liquid")
 
   -- statusline
   use("nvim-lualine/lualine.nvim")

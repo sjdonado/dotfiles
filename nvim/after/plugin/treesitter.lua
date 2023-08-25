@@ -9,10 +9,11 @@ parser_config.ejs = {
   filetype = "ejs",
 }
 
-parser_config.html_eex = {
+parser_config.liquid = {
   install_info = {
-    url = "https://github.com/rockerBOO/tree-sitter-html-eex",
-    files = { "src/parser.c", "src/scanner.cc" },
+    url = "https://github.com/Shopify/tree-sitter-liquid",
+    branch = "main",
+    files = { "src/parser.c" },
   },
 }
 
@@ -30,7 +31,7 @@ require("nvim-treesitter.configs").setup({
     "go",
     "python",
     "ejs",
-    "html_eex",
+    "liquid",
   },
   sync_install = false,
   highlight = {

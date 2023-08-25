@@ -33,6 +33,10 @@ brew install --cask \
   qbittorrent \
   reverso
 
+# Shopify baby
+brew tap shopify/shopify
+brew install shopify-cli
+
 # Best font ever
 brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
