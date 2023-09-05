@@ -36,9 +36,13 @@ map({ "n", "v" }, "<C-e>", "6<C-e>")
 map({ "n", "v" }, "<C-l>", "12zl")
 map({ "n", "v" }, "<C-h>", "12zh")
 
--- Move between buffers
+-- Move to buffer
 nnoremap("<leader>b", ":b<space>")
 vnoremap("<leader>b", ":b<space>")
+
+-- Navigate between windows
+nnoremap("<leader>tp", ":tabp<CR>", { silent = true })
+nnoremap("<leader>tn", ":tabn<CR>", { silent = true })
 
 -- Save changes
 nnoremap("<C-s>", ":w<CR>")
