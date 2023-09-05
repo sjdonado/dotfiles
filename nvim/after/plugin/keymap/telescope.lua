@@ -47,6 +47,15 @@ nnoremap("<leader>ph", function()
   require("telescope.builtin").search_history()
 end)
 
+-- git
+nnoremap("<leader>gc", function()
+  require("telescope.builtin").git_commits()
+end)
+nnoremap("<leader>gb", function()
+  require("telescope.builtin").git_branches()
+end)
+
+-- dap
 nnoremap("<leader>dr", function()
   require("telescope").extensions.dap.configurations()
 end)

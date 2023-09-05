@@ -22,20 +22,27 @@ require("telescope").setup({
 require("telescope").load_extension("dap")
 
 local find_files_command = {
-  "rg",
+  "fd",
   "--hidden",
-  "--files",
   "--glob",
-  "!.git/",
+  "--exclude",
+  ".git",
 }
 
-local find_all_command = {
-  "rg",
+local find_all_files_command = {
+  "fd",
   "--hidden",
+  "--no-ignore",
+  "--glob",
+}
+
+local grep_all_command = {
+  "rg",
+  "--no-ignore",
+  "--unrestricted",
   "--files",
   "--glob",
   "!.git/",
-  "-u",
 }
 
 -- Custom pickers
@@ -56,7 +63,7 @@ end
 Pickers.live_grep_all_files = function()
   require("telescope.builtin").live_grep({
     prompt_title = "All Files",
-    find_command = find_all_command,
+    find_command = grep_all_command,
   })
 end
 
@@ -70,7 +77,7 @@ end
 Pickers.find_all = function()
   require("telescope.builtin").find_files({
     prompt_title = "All Files",
-    find_command = find_all_command,
+    find_command = find_all_files_command,
   })
 end
 
