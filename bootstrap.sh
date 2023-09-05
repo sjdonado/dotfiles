@@ -11,7 +11,7 @@ brew install \
   fish \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
-  git-delta lazygit \
+  git-delta \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
   tor mitmproxy ngrok \
@@ -59,7 +59,6 @@ ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 ln -s "$PWD/nvim" ~/.config/nvim
 
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
-ln -s "$PWD/lazygit/config.yml" ~/Library/Application\ Support/lazygit/config.yml
 
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 

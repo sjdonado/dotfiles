@@ -19,6 +19,7 @@ return require("packer").startup(function(use)
   use("nvim-treesitter/nvim-treesitter-context")
 
   -- git
+  use("tpope/vim-fugitive")
   use("lewis6991/gitsigns.nvim")
   use("almo7aya/openingh.nvim")
 
