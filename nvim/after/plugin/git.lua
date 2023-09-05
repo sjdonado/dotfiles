@@ -53,10 +53,13 @@ gitsigns.setup({
   end,
 })
 
+-- vim fugitive
+nmap("<C-g>", fugitive.create_or_switch_to_git_tab)
+nmap("<leader>gf", ":Git fetch<CR>", { silent = true })
+nmap("<leader>gp", ":Git pull<CR>", { silent = true })
+nmap("<leader>gP", ":Git push<CR>", { silent = true })
+
 -- openingh config
 nnoremap("<leader>gr", ":OpenInGHRepo<CR>", { silent = true })
-nnoremap("<leader>gf", ":OpenInGHFile<CR>", { silent = true })
-vnoremap("<leader>gf", ":OpenInGHFileLines<CR>", { silent = true })
-
--- vim fugitive
-map({ "n", "v" }, "<C-g>", fugitive.create_or_switch_to_git_tab)
+nnoremap("<leader>gF", ":OpenInGHFile<CR>", { silent = true })
+vnoremap("<leader>gF", ":OpenInGHFileLines<CR>", { silent = true })
