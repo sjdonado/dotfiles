@@ -11,6 +11,7 @@ brew install \
   fish \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
+  blueutil \
   git-delta \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
