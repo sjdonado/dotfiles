@@ -1,6 +1,6 @@
 > Bye bye vscode 👋🏽
 
-<img width="1400" alt="nvim screenshot" src="https://user-images.githubusercontent.com/27580836/235738484-d57b9e9d-8d7e-42e1-aa05-a5865a70d7ec.png">
+<img width="1470" alt="image" src="https://github.com/sjdonado/dotfiles/assets/27580836/0a2abe2c-5f06-4ab8-9536-9b2c6d275db0">
 
 # Setup
 1. Clone into `~/.config/dotfiles`
