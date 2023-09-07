@@ -26,12 +26,7 @@ return require("packer").startup(function(use)
   -- apparence
   use("nvim-tree/nvim-web-devicons")
   use("projekt0n/github-nvim-theme")
-  use({
-    "lukas-reineke/indent-blankline.nvim",
-    config = function()
-      require("indent_blankline").setup()
-    end,
-  })
+  use("lukas-reineke/indent-blankline.nvim")
   use("nikvdp/ejs-syntax")
   use("tpope/vim-liquid")
 
