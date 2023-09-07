@@ -92,4 +92,7 @@ return require("packer").startup(function(use)
 
   -- testing
   use("David-Kunz/jester")
+
+  -- utilities
+  use("Dhanus3133/LeetBuddy.nvim")
 end)

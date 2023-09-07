@@ -79,6 +79,11 @@ _G.packer_plugins = {
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/Comment.nvim",
     url = "https://github.com/numToStr/Comment.nvim"
   },
+  ["LeetBuddy.nvim"] = {
+    loaded = true,
+    path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/LeetBuddy.nvim",
+    url = "https://github.com/Dhanus3133/LeetBuddy.nvim"
+  },
   LuaSnip = {
     loaded = true,
     path = "/Users/sjdonado/.local/share/nvim/site/pack/packer/start/LuaSnip",
