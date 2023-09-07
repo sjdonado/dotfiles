@@ -7,11 +7,11 @@ inoremap("<C-e>", function()
   return vim.fn["codeium#Accept"]()
 end, opts)
 
-inoremap("<C-u>n", function()
+inoremap("<C-u>;", function()
   return vim.fn["codeium#CycleCompletions"](1)
 end, opts)
 
-inoremap("<C-u>p", function()
+inoremap("<C-u>,", function()
   return vim.fn["codeium#CycleCompletions"](-1)
 end, opts)
 
@@ -20,7 +20,6 @@ inoremap("<C-u>x", function()
 end, opts)
 
 map({ "n", "v" }, "<C-u>t", function()
-  local current_value = vim.g.codeium_manual
-  vim.g.codeium_manual = not current_value
-  vim.notify("Codeium toggle: " .. tostring(vim.g.codeium_manual))
+  local current_value = vim.g.codeium_enabled
+  vim.g.codeium_enabled = not current_value
 end)

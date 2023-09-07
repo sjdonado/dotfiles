@@ -58,6 +58,11 @@ local sections = {
       icon = " ",
       color = { gui = "bold" },
     },
+    {
+      "codeium#GetStatusString",
+      icon = "🤖",
+      color = { gui = "bold" },
+    },
     { "encoding" },
   },
   lualine_y = { "progress" },
