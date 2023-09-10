@@ -24,7 +24,7 @@ brew install fnm rustup luarocks yarn
 brew install --cask amethyst # SIP unblocked not required
 
 # Docker
-brew install colima docker docker-compose lazydocker
+brew install colima docker docker-compose docker-buildx
 
 # Awesome tools
 brew install --cask \
@@ -34,7 +34,7 @@ brew install --cask \
   qbittorrent \
   reverso
 
-# Tooling
+# Toolkit
 brew tap shopify/shopify
 brew install shopify-cli
 

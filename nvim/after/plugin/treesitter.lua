@@ -19,7 +19,9 @@ parser_config.liquid = {
 
 require("nvim-treesitter.configs").setup({
   ensure_installed = {
+    "typescript",
     "javascript",
+    "tsx",
     "html",
     "toml",
     "yaml",
