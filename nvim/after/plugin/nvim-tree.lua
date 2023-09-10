@@ -1,3 +1,5 @@
+local nnoremap = require("sjdonado.keymap").nnoremap
+
 require("nvim-tree").setup({
   actions = {
     open_file = {
@@ -20,27 +22,27 @@ require("nvim-tree").setup({
       }
     end
 
-    vim.keymap.set("n", "<CR>", api.node.open.edit, opts("Open"))
-    vim.keymap.set("n", "o", api.node.open.edit, opts("Open"))
-    vim.keymap.set("n", "<2-LeftMouse>", api.node.open.edit, opts("Open"))
-    vim.keymap.set("n", "I", api.tree.toggle_gitignore_filter, opts("Toggle Git Ignore"))
-    vim.keymap.set("n", "H", api.tree.toggle_hidden_filter, opts("Toggle Dotfiles"))
-    vim.keymap.set("n", "U", api.tree.toggle_custom_filter, opts("Toggle Hidden"))
-    vim.keymap.set("n", "R", api.tree.reload, opts("Refresh"))
-    vim.keymap.set("n", "a", api.fs.create, opts("Create"))
-    vim.keymap.set("n", "d", api.fs.remove, opts("Delete"))
-    vim.keymap.set("n", "D", api.fs.trash, opts("Trash"))
-    vim.keymap.set("n", "r", api.fs.rename, opts("Rename"))
-    vim.keymap.set("n", "x", api.fs.cut, opts("Cut"))
-    vim.keymap.set("n", "c", api.fs.copy.node, opts("Copy"))
-    vim.keymap.set("n", "p", api.fs.paste, opts("Paste"))
-    vim.keymap.set("n", "y", api.fs.copy.filename, opts("Copy Name"))
-    vim.keymap.set("n", "Y", api.fs.copy.relative_path, opts("Copy Relative Path"))
-    vim.keymap.set("n", "gy", api.fs.copy.absolute_path, opts("Copy Absolute Path"))
-    vim.keymap.set("n", "W", api.tree.collapse_all, opts("Collapse"))
-    vim.keymap.set("n", "E", api.tree.expand_all, opts("Expand All"))
-    vim.keymap.set("n", "q", api.tree.close, opts("Close"))
-    vim.keymap.set("n", "g?", api.tree.toggle_help, opts("Help"))
+    nnoremap("<CR>", api.node.open.edit, opts("Open"))
+    nnoremap("o", api.node.open.edit, opts("Open"))
+    nnoremap("<2-LeftMouse>", api.node.open.edit, opts("Open"))
+    nnoremap("I", api.tree.toggle_gitignore_filter, opts("Toggle Git Ignore"))
+    nnoremap("H", api.tree.toggle_hidden_filter, opts("Toggle Dotfiles"))
+    nnoremap("U", api.tree.toggle_custom_filter, opts("Toggle Hidden"))
+    nnoremap("R", api.tree.reload, opts("Refresh"))
+    nnoremap("a", api.fs.create, opts("Create"))
+    nnoremap("d", api.fs.remove, opts("Delete"))
+    nnoremap("D", api.fs.trash, opts("Trash"))
+    nnoremap("r", api.fs.rename, opts("Rename"))
+    nnoremap("x", api.fs.cut, opts("Cut"))
+    nnoremap("c", api.fs.copy.node, opts("Copy"))
+    nnoremap("p", api.fs.paste, opts("Paste"))
+    nnoremap("y", api.fs.copy.filename, opts("Copy Name"))
+    nnoremap("Y", api.fs.copy.relative_path, opts("Copy Relative Path"))
+    nnoremap("gy", api.fs.copy.absolute_path, opts("Copy Absolute Path"))
+    nnoremap("W", api.tree.collapse_all, opts("Collapse"))
+    nnoremap("E", api.tree.expand_all, opts("Expand All"))
+    nnoremap("q", api.tree.close, opts("Close"))
+    nnoremap("g?", api.tree.toggle_help, opts("Help"))
   end,
 })
 

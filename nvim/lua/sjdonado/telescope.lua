@@ -24,6 +24,7 @@ require("telescope").load_extension("dap")
 local find_files_command = {
   "fd",
   "--hidden",
+  "--type=file",
   "--glob",
   "--exclude",
   ".git",
