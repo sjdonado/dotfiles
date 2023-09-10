@@ -1,5 +1,4 @@
 local null_ls = require("null-ls")
-local lspconfig = require("lspconfig")
 
 local nnoremap = require("sjdonado.keymap").nnoremap
 local file_helper = require("sjdonado.helpers.file")
@@ -17,7 +16,8 @@ local eslint_filetypes = {
 null_ls.setup({
   sources = {
     null_ls.builtins.diagnostics.shellcheck,
-    null_ls.builtins.diagnostics.cpplint,
+    -- null_ls.builtins.diagnostics.cpplint,
+    null_ls.builtins.formatting.clang_format,
     null_ls.builtins.diagnostics.staticcheck,
     null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),

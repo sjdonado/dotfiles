@@ -88,6 +88,8 @@ local function config(_config)
   }, _config or {})
 end
 
+lspconfig.clangd.setup(config())
+
 lspconfig.tsserver.setup(config())
 
 lspconfig.jsonls.setup(config())

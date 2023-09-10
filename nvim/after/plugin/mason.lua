@@ -10,6 +10,8 @@ mason.setup({
 masontoolinstaller.setup({
   ensure_installed = {
     "cpplint",
+    "clangd",
+    "clang_format",
     "css-lsp",
     "delve",
     "eslint_d",

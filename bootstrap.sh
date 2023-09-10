@@ -34,9 +34,12 @@ brew install --cask \
   qbittorrent \
   reverso
 
-# Shopify baby
+# Tooling
 brew tap shopify/shopify
 brew install shopify-cli
+
+brew tap oven-sh/bun
+brew install bun
 
 # Best font ever
 brew tap homebrew/cask-fonts

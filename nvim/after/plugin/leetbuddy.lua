@@ -1,7 +1,7 @@
 local nnoremap = require("sjdonado.keymap").nnoremap
 
 require("leetbuddy").setup({
-  language = "ts",
+  language = "cpp",
 })
 
 nnoremap("<leader>lq", ":LBQuestions<CR>", { silent = true, desc = "List Questions" })

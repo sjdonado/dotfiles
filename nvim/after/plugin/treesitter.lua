@@ -33,6 +33,7 @@ require("nvim-treesitter.configs").setup({
     "ejs",
     "liquid",
   },
+  auto_install = true,
   sync_install = false,
   highlight = {
     enable = true,
