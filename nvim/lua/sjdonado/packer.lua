@@ -25,6 +25,7 @@ return require("packer").startup(function(use)
   })
   use("folke/zen-mode.nvim")
   use("AndrewRadev/splitjoin.vim")
+  use("moll/vim-bbye")
 
   -- navigation
   use("nvim-tree/nvim-tree.lua")
