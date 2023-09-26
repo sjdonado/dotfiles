@@ -7,7 +7,6 @@ set -gx fish_greeting ''
 
 # Add binaries to PATH
 set -g -x PATH /usr/local/bin $PATH
-set -g -x PATH /opt/homebrew/bin $PATH
 set -x PATH (python3 -m site --user-base)/bin $PATH
 
 # Cargo env

@@ -12,7 +12,7 @@ brew install \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
   blueutil \
-  git-delta \
+  git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
   tor mitmproxy ngrok \
@@ -30,7 +30,7 @@ brew install colima docker docker-compose docker-buildx
 brew install --cask \
   arc firefox \
   raycast spacelauncher ukelele \
-  cron table-tool discord obsidian \
+  meetingbar table-tool discord obsidian \
   qbittorrent \
   reverso
 
