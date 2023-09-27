@@ -3,15 +3,15 @@ local map = require("sjdonado.keymap").map
 
 local opts = { expr = true }
 
-inoremap("<C-e>", function()
+inoremap("<tab>", function()
   return vim.fn["codeium#Accept"]()
 end, opts)
 
-inoremap("<C-u>;", function()
+inoremap("<C-u>,", function()
   return vim.fn["codeium#CycleCompletions"](1)
 end, opts)
 
-inoremap("<C-u>,", function()
+inoremap("<C-u>.", function()
   return vim.fn["codeium#CycleCompletions"](-1)
 end, opts)
 

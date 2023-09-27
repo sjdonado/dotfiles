@@ -39,6 +39,10 @@ local function lsp_clients(msg)
   return table.concat(table_helper.remove_duplicates(buf_client_names), " ")
 end
 
+local function zen_mode_status()
+  return vim.g.zen_mode and "🔎 zen_mode ON" or ""
+end
+
 local sections = {
   lualine_a = { "mode" },
   lualine_b = { "branch", "diff" },
@@ -52,6 +56,7 @@ local sections = {
     },
   },
   lualine_x = {
+    { "searchCount" },
     { "diagnostics", symbols = { error = " ", warn = " ", info = " ", hint = " " } },
     {
       lsp_clients,
@@ -63,6 +68,7 @@ local sections = {
       icon = "🤖",
       color = { gui = "bold" },
     },
+    { zen_mode_status, color = { gui = "bold" } },
     { "encoding" },
   },
   lualine_y = { "progress" },

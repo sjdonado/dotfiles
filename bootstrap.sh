@@ -15,7 +15,10 @@ brew install \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
-  tor mitmproxy ngrok \
+  tor mitmproxy ngrok
+
+# Docker
+brew install colima docker docker-compose docker-buildx
 
 # Package managers
 brew install fnm rustup luarocks yarn
@@ -23,16 +26,13 @@ brew install fnm rustup luarocks yarn
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required
 
-# Docker
-brew install colima docker docker-compose docker-buildx
-
-# Awesome tools
+# Casks
 brew install --cask \
-  arc firefox \
-  raycast spacelauncher ukelele \
-  meetingbar table-tool discord obsidian \
+  firefox orion \
+  raycast ukelele \
+  meetingbar table-tool \
   qbittorrent \
-  reverso
+  reverso spotify
 
 # Toolkit
 brew tap shopify/shopify

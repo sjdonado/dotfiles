@@ -24,6 +24,9 @@ nnoremap("<leader>O", 'O<Esc>0"_D')
 -- Search and replace word under cursor
 nnoremap("<leader>sr", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>")
 
+-- Toggle search and highlight word under cursor
+nnoremap("<leader>sh", ":set hlsearch!<CR>:let @/='\\<<C-r><C-w>\\>'<CR>", { silent = true })
+
 -- Navigate in quickfix window
 nnoremap("<C-k>", "<cmd>cnext<CR>zz")
 nnoremap("<C-j>", "<cmd>cprev<CR>zz")
