@@ -11,11 +11,12 @@ brew install \
   fish \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
-  blueutil \
+  blueutil spotifyd \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
-  tor mitmproxy ngrok
+  tor mitmproxy ngrok \
+  marp-cli
 
 # Docker
 brew install colima docker docker-compose docker-buildx
@@ -28,11 +29,12 @@ brew install --cask amethyst # SIP unblocked not required
 
 # Casks
 brew install --cask \
-  firefox orion \
+  firefox \
   raycast ukelele \
-  meetingbar table-tool \
-  qbittorrent \
-  reverso spotify
+  qbittorrent table-tool \
+  reverso
+
+brew install --cask --no-quarantine chromium
 
 # Toolkit
 brew tap shopify/shopify
@@ -67,3 +69,5 @@ ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
+
+ln -s "$PWD/spotifyd/spotifyd.conf" ~/.config/spotifyd/spotifyd.conf
