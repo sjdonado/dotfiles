@@ -1,3 +1,4 @@
 .DS_Store
 sessions
 .luarc.json
+.env

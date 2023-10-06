@@ -16,6 +16,7 @@ set -Ua fish_user_paths $HOME/.cargo/bin
 alias vim nvim
 alias python python3
 alias pip pip3
+alias spotify="bash ~/.config/dotfiles/spotify-player/run.sh"
 
 # Custom config
 set -x HISTSIZE 20000

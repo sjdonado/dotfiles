@@ -11,7 +11,7 @@ brew install \
   fish \
   tmux coreutils tmux-mem-cpu-load \
   tree bat fd gawk ripgrep fzf \
-  blueutil spotifyd \
+  blueutil \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
@@ -53,6 +53,9 @@ pip3 install neovim-remote
 # Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
+# Spotify player
+cargo install spotify_player --features lyric-finder,image,media-control
+
 # Dotfiles symlinks
 ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
 ln -sf "$PWD/fish/conf.d" ~/.config/fish
@@ -70,4 +73,4 @@ ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
 
-ln -s "$PWD/spotifyd/spotifyd.conf" ~/.config/spotifyd/spotifyd.conf
+ln -s "$PWD/spotify-player/app.toml" ~/.config/spotify-player/app.toml
