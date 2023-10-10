@@ -55,6 +55,7 @@ cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # Spotify player
 cargo install spotify_player --features lyric-finder,image,media-control
+~/.config/dotfiles/spotify-player/setup.sh
 
 # Dotfiles symlinks
 ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
@@ -73,5 +74,4 @@ ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
 
-ln -s "$PWD/spotify-player/app.toml" ~/.config/spotify-player/app.toml
 ln -s "$PWD/spotify-player/keymap.toml" ~/.config/spotify-player/keymap.toml
