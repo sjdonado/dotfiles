@@ -54,4 +54,4 @@ inoremap("<C-s>", "<Esc>:w<CR>")
 -- Close buffers
 map({ "n", "v" }, "<C-w>d", ":bd!<CR>", { silent = true })
 map({ "n", "v" }, "<C-w>xx", ":Bdelete<CR>", { silent = true })
-nnoremap("<C-w>xa", ":bufdo :Bdelete<CR>", { silent = true })
+nnoremap("<C-w>xa", ":bufdo :Bdelete<CR>:qa<CR>", { silent = true })

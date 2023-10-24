@@ -15,8 +15,8 @@ function _G.create_jester_terminal()
 end
 
 local default = {
-  identifiers = { "test", "it" },      -- used to identify tests
-  prepend = { "describe" },            -- prepend describe blocks
+  identifiers = { "test", "it" }, -- used to identify tests
+  prepend = { "describe" }, -- prepend describe blocks
   expressions = { "call_expression" }, -- tree-sitter object used to scan for tests/describe blocks
   terminal_cmd = "lua create_jester_terminal()",
   escapeRegex = false,
@@ -57,6 +57,24 @@ local function load_jest()
   }))
 end
 
+local function load_bun_test()
+  jester.setup(vim.tbl_extend("force", default, {
+    path_to_jest_run = "bun test",
+    cmd = " REDIS_URL=redis://null:6379 bun test -t '$result$' $file",
+    path_to_jest_debug = "bun test",
+    escapeRegex = false,
+    regexStartEnd = false,
+    dap = vim.tbl_extend("force", default.dap, {
+      args = {
+        "--watch",
+        "false",
+        "--testNamePattern",
+        "${jest.testNamePattern}",
+      },
+    }),
+  }))
+end
+
 local function load_vitest()
   local relative_path = Path:new(vim.api.nvim_buf_get_name(0)):make_relative(vim.loop.cwd())
 
@@ -84,6 +102,9 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
     if file_helper.root_has_file("*jest*") or vim.fn.search("jest", "nw") ~= 0 then
       load_jest()
+    end
+    if file_helper.root_has_file("bun.lockb") or vim.fn.search("jest", "nw") ~= 0 then
+      load_bun_test()
     end
   end,
 })
