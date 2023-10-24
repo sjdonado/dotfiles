@@ -9,9 +9,9 @@ git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvi
 # Essentials
 brew install \
   fish \
-  tmux coreutils tmux-mem-cpu-load \
+  tmux coreutils \
   tree bat fd gawk ripgrep fzf \
-  blueutil \
+  blueutil stats\
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
