@@ -94,5 +94,5 @@ return require("packer").startup(function(use)
   use({ lazy = true, "Exafunction/codeium.vim" })
 
   -- utilities
-  use({ lazy = true, "Dhanus3133/LeetBuddy.nvim" })
+  -- use({ lazy = true, "Dhanus3133/LeetBuddy.nvim" })
 end)
