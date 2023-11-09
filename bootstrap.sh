@@ -15,7 +15,7 @@ brew install \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
-  tor mitmproxy ngrok \
+  tor mitmproxy ngrok redis \
   marp-cli
 
 # Docker
@@ -31,7 +31,7 @@ brew install --cask amethyst # SIP unblocked not required
 brew install --cask \
   firefox \
   raycast ukelele \
-  qbittorrent table-tool \
+  qbittorrent table-tool db-browser-for-sqlite \
   reverso
 
 brew install --cask --no-quarantine chromium

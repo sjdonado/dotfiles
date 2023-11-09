@@ -15,8 +15,8 @@ function _G.create_jester_terminal()
 end
 
 local default = {
-  identifiers = { "test", "it" }, -- used to identify tests
-  prepend = { "describe" }, -- prepend describe blocks
+  identifiers = { "test", "it" },      -- used to identify tests
+  prepend = { "describe" },            -- prepend describe blocks
   expressions = { "call_expression" }, -- tree-sitter object used to scan for tests/describe blocks
   terminal_cmd = "lua create_jester_terminal()",
   escapeRegex = false,
@@ -60,7 +60,7 @@ end
 local function load_bun_test()
   jester.setup(vim.tbl_extend("force", default, {
     path_to_jest_run = "bun test",
-    cmd = " REDIS_URL=redis://null:6379 bun test -t '$result$' $file",
+    cmd = " bun test -t '$result$' $file",
     path_to_jest_debug = "bun test",
     escapeRegex = false,
     regexStartEnd = false,

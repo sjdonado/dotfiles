@@ -52,6 +52,16 @@ nnoremap("<C-s>", ":w<CR>")
 inoremap("<C-s>", "<Esc>:w<CR>")
 
 -- Close buffers
-map({ "n", "v" }, "<C-w>d", ":bd!<CR>", { silent = true })
-map({ "n", "v" }, "<C-w>xx", ":Bdelete<CR>", { silent = true })
-nnoremap("<C-w>xa", ":bufdo :Bdelete<CR>:qa<CR>", { silent = true })
+map(
+  { "n", "v" },
+  "<leader>q",
+  ":Bdelete!<CR>",
+  { silent = true, desc = "Force delete buffer without changing window layout" }
+)
+map(
+  { "n", "v" },
+  "<leader>Q",
+  ":bd!<CR>",
+  { silent = true, desc = "Delete buffer regardless of window layout" }
+)
+nnoremap("<C-w>a", ":%bd<CR><C-O>:bd!<CR>", { silent = true, desc = "Delete all buffers and exit" })
