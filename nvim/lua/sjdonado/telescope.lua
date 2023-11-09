@@ -17,6 +17,23 @@ require("telescope").setup({
       end,
     },
   }),
+  pickers = {
+    buffers = {
+      show_all_buffers = true,
+      sort_lastused = true,
+      previewer = false,
+      mappings = {
+        i = {
+          ["<leader>dd"] = "delete_buffer",
+        },
+      },
+      layout_config = {
+        height = function(_, _, max_lines)
+          return math.max(math.floor(max_lines * 0.3), 12)
+        end,
+      },
+    },
+  },
 })
 
 require("telescope").load_extension("dap")
@@ -79,16 +96,6 @@ Pickers.find_all = function()
   require("telescope.builtin").find_files({
     prompt_title = "All Files",
     find_command = find_all_files_command,
-  })
-end
-
-Pickers.buffers = function()
-  require("telescope.builtin").buffers({
-    attach_mappings = function(_, map)
-      map("i", "<leader>dd", actions.delete_buffer)
-      map("n", "<leader>dd", actions.delete_buffer)
-      return true
-    end,
   })
 end
 
