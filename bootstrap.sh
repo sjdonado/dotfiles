@@ -11,11 +11,11 @@ brew install \
   fish \
   tmux coreutils \
   tree bat fd gawk ripgrep fzf \
-  blueutil stats\
+  blueutil \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   mackup \
-  tor mitmproxy ngrok redis \
+  tor mitmproxy redis \
   marp-cli
 
 # Docker

@@ -48,6 +48,8 @@ function M.create_terminal(opts)
       end
       nnoremap(keymap, toggle(term), { buffer = term.bufnr, silent = true })
       tnoremap("<esc>", "<C-\\><C-n>", { buffer = term.bufnr, silent = true })
+
+      vim.api.nvim_command("wincmd =")
     end,
     on_close = function(term)
       vim.cmd("stopinsert")
