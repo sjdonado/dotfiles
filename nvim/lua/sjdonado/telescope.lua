@@ -20,8 +20,8 @@ require("telescope").setup({
   pickers = {
     buffers = {
       show_all_buffers = true,
+      ignore_current_buffer = true,
       sort_lastused = true,
-      previewer = false,
       mappings = {
         i = {
           ["<leader>dd"] = "delete_buffer",

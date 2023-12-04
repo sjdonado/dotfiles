@@ -55,6 +55,7 @@ gitsigns.setup({
 
 -- vim fugitive
 nmap("<C-g>", fugitive.create_or_switch_to_git_tab)
+nmap("<leader>gc", ":vert G commit<CR>", { silent = true })
 nmap("<leader>gf", ":Git fetch<CR>", { silent = true })
 nmap("<leader>gp", ":Git pull<CR>", { silent = true })
 nmap("<leader>gP", ":Git push<CR>", { silent = true })

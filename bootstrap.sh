@@ -11,15 +11,15 @@ brew install \
   fish \
   tmux coreutils \
   tree bat fd gawk ripgrep fzf \
-  blueutil \
+  blueutil mackup \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
-  mackup \
-  tor mitmproxy redis \
-  marp-cli
+  tor mitmproxy nmap \
+  marp-cli redis
 
 # Docker
 brew install colima docker docker-compose docker-buildx
+colima start --vm-type vz
 
 # Package managers
 brew install fnm rustup luarocks yarn
@@ -32,7 +32,7 @@ brew install --cask \
   firefox \
   raycast ukelele \
   qbittorrent table-tool db-browser-for-sqlite \
-  reverso
+  reverso utm
 
 brew install --cask --no-quarantine chromium
 
