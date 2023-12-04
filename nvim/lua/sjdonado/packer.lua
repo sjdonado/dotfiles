@@ -92,7 +92,8 @@ return require("packer").startup(function(use)
   use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 
   -- testing
-  use({ lazy = true, "David-Kunz/jester" })
+  use({ lazy = true, "sjdonado/jester" })
+  use({ lazy = true, "klen/nvim-test" })
 
   -- AI Code Assistant
   use({ lazy = true, "Exafunction/codeium.vim" })
