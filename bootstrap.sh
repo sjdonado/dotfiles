@@ -32,7 +32,7 @@ brew install --cask \
   firefox \
   raycast ukelele \
   qbittorrent table-tool db-browser-for-sqlite \
-  reverso utm
+  reverso utm browserosaurus
 
 brew install --cask --no-quarantine chromium
 

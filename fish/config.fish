@@ -20,8 +20,3 @@ alias spotify spotify_player
 
 # Custom config
 set -x HISTSIZE 20000
-
-function handle_interrupt
-  kill -INT $fish_pid
-end
-trap handle_interrupt SIGINT
