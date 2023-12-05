@@ -22,6 +22,7 @@ null_ls.setup({
     null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.prettierd,
+    -- null_ls.builtins.diagnostics.editorconfig_checker,
     null_ls.builtins.formatting.stylua,
     null_ls.builtins.formatting.fixjson,
     null_ls.builtins.formatting.rustfmt,

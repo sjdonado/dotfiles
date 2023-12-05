@@ -11,9 +11,10 @@ masontoolinstaller.setup({
   ensure_installed = {
     "cpplint",
     "clangd",
-    "clang_format",
+    "clang-format",
     "css-lsp",
     "delve",
+    "editorconfig-checker",
     "eslint_d",
     "fixjson",
     "gopls",
