@@ -1,14 +1,15 @@
 local Terminal = require("toggleterm.terminal").Terminal
 
 local sjdonado_zenmode = require("sjdonado.zen-mode")
+local sjdonado_dap = require("sjdonado.dap.init")
 
 local nnoremap = require("sjdonado.keymap").nnoremap
 local tnoremap = require("sjdonado.keymap").tnoremap
 
 local function toggle(term)
   return function()
-    require("sjdonado.dap.init").dapui.close({ "all" })
-    sjdonado_zenmode.exit_zenmode_if_needed()
+    sjdonado_dap.exit_dapui_if_open()
+    sjdonado_zenmode.exit_zenmode_if_open()
 
     local terms = require("toggleterm.terminal").get_all()
     for _, otherterm in pairs(terms) do

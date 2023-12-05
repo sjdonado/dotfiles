@@ -1,5 +1,7 @@
 local nnoremap = require("sjdonado.keymap").nnoremap
 
+local sjdonado_dap = require("sjdonado.dap.init")
+
 require("nvim-tree").setup({
   actions = {
     open_file = {
@@ -14,6 +16,8 @@ require("nvim-tree").setup({
   },
   on_attach = function(bufnr)
     local api = require("nvim-tree.api")
+
+    sjdonado_dap.exit_dapui_if_open()
 
     local function opts(desc)
       return {

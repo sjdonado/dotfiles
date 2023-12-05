@@ -19,7 +19,7 @@ dapui.setup({
   },
 })
 
--- require("nvim-dap-virtual-text").setup()
+require("nvim-dap-virtual-text").setup()
 
 dap.listeners.after.event_initialized["dapui_config"] = function()
   dapui.open()
@@ -32,5 +32,9 @@ local M = {}
 
 M.dap = dap
 M.dapui = dapui
+
+M.exit_dapui_if_open = function()
+  dapui.close({ "all" })
+end
 
 return M

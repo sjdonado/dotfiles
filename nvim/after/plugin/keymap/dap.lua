@@ -6,7 +6,7 @@ local sjdonado_zenmode = require("sjdonado.zen-mode")
 local nnoremap = require("sjdonado.keymap").nnoremap
 
 nnoremap("<leader>dt", function()
-  sjdonado_zenmode.exit_zenmode_if_needed()
+  sjdonado_zenmode.exit_zenmode_if_open()
   dapui.toggle()
 end)
 
