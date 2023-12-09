@@ -15,7 +15,8 @@ brew install \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
   tor mitmproxy nmap \
-  marp-cli redis
+  cloudflare/cloudflare/cloudflared \
+  marp-cli redis \
 
 # Docker
 brew install colima docker docker-compose docker-buildx

@@ -3,3 +3,5 @@ sessions
 
 .luarc.json
 .env
+
+memtime*
