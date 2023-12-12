@@ -54,10 +54,6 @@ pip3 install neovim-remote
 # Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
-# Spotify player
-cargo install spotify_player --features lyric-finder,image,media-control
-~/.config/dotfiles/spotify-player/setup.sh
-
 # Dotfiles symlinks
 ln -s "$PWD/zsh/.zshrc" ~/.zshrc
 ln -s "$PWD/zsh/.p10k.zsh" ~/.p10k.zsh
@@ -74,5 +70,3 @@ ln -s "$PWD/git/.gitconfig" ~/.gitconfig
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
-
-ln -s "$PWD/spotify-player/keymap.toml" ~/.config/spotify-player/keymap.toml
