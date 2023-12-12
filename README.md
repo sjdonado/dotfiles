@@ -4,10 +4,9 @@
 
 # Setup
 1. Clone into `~/.config/dotfiles`
-2. Run `./bootstrap.sh`
-3. Run `./shell/fish/setup.sh`
-4. Run `./bin/osx.sh`
-5. Run `mackup restore`
+1. Run `./bootstrap.sh`
+1. Run `./bin/osx.sh`
+1. Run `mackup restore`
 
 ## Config Neovim Plugins
 ```vim
