@@ -60,6 +60,7 @@ cargo install spotify_player --features lyric-finder,image,media-control
 
 # Dotfiles symlinks
 ln -s "$PWD/zsh/.zshrc" ~/.zshrc
+ln -s "$PWD/zsh/.p10k.zsh" ~/.p10k.zsh
 
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
