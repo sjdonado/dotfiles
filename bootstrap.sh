@@ -8,7 +8,7 @@ git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvi
 
 # Essentials
 brew install \
-  fish \
+  powerlevel10k \
   tmux coreutils \
   tree bat fd gawk ripgrep fzf \
   blueutil mackup \
@@ -59,8 +59,7 @@ cargo install spotify_player --features lyric-finder,image,media-control
 ~/.config/dotfiles/spotify-player/setup.sh
 
 # Dotfiles symlinks
-ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
-ln -sf "$PWD/fish/conf.d" ~/.config/fish
+ln -s "$PWD/zsh/.zshrc" ~/.zshrc
 
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
