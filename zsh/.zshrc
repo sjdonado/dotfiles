@@ -15,6 +15,7 @@ alias python=/usr/bin/python3
 alias pip=pip3
 
 # Custom config
+setopt HIST_IGNORE_ALL_DUPS
 export HISTSIZE=20000
 
 source "$HOME/.cargo/env"
