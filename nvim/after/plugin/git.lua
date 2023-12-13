@@ -1,4 +1,5 @@
 local gitsigns = require("gitsigns")
+local git_conflict = require("git-conflict")
 
 local fugitive = require("sjdonado.fugitive")
 
@@ -52,6 +53,8 @@ gitsigns.setup({
     end)
   end,
 })
+
+git_conflict.setup()
 
 -- vim fugitive
 nmap("<C-g>", fugitive.create_or_switch_to_git_tab)

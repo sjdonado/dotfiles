@@ -49,6 +49,7 @@ return require("packer").startup(function(use)
   use("tpope/vim-fugitive")
   use("lewis6991/gitsigns.nvim")
   use("almo7aya/openingh.nvim")
+  use("akinsho/git-conflict.nvim")
 
   -- lsp
   use("neovim/nvim-lspconfig")
