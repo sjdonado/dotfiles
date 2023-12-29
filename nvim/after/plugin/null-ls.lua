@@ -34,10 +34,6 @@ null_ls.setup({
       client.supports_method("textDocument/formatting")
       or client.supports_method("textDocument/rangeFormatting")
     then
-      nnoremap("<leader>f", function()
-        vim.lsp.buf.format({ bufnr = vim.api.nvim_get_current_buf() })
-      end, { buffer = bufnr, desc = "[LSP] Format" })
-
       vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,

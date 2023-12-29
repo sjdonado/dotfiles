@@ -31,7 +31,7 @@ require("nvim-tree").setup({
 
     nnoremap("<CR>", api.node.open.edit, opts("Open"))
     nnoremap("o", api.node.open.edit, opts("Open"))
-    nnoremap("<2-LeftMouse>", api.node.open.edit, opts("Open"))
+    -- nnoremap("<2-LeftMouse>", api.node.open.edit, opts("Open"))
     nnoremap("I", api.tree.toggle_gitignore_filter, opts("Toggle Git Ignore"))
     nnoremap("H", api.tree.toggle_hidden_filter, opts("Toggle Dotfiles"))
     nnoremap("U", api.tree.toggle_custom_filter, opts("Toggle Hidden"))

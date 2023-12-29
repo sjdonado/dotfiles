@@ -14,11 +14,17 @@ toggleterm.setup({
 sjdonado_toggleterm.create_terminal({
   direction = "horizontal",
   keymap = "<leader>;",
-  count = 97,
+  count = 96,
 })
 
 sjdonado_toggleterm.create_terminal({
   direction = "vertical",
   keymap = "<leader>]",
+  count = 97,
+})
+
+sjdonado_toggleterm.create_terminal({
+  direction = "float",
+  keymap = "<leader>'",
   count = 98,
 })

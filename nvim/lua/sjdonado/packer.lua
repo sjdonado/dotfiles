@@ -21,15 +21,15 @@ return require("packer").startup(function(use)
   })
   use("justinmk/vim-sneak")
   use("editorconfig/editorconfig-vim")
+  use("folke/zen-mode.nvim")
+  use("AndrewRadev/splitjoin.vim")
+  use("moll/vim-bbye")
   use({
     "norcalli/nvim-colorizer.lua",
     config = function()
       require("colorizer").setup()
     end,
   })
-  use("folke/zen-mode.nvim")
-  use("AndrewRadev/splitjoin.vim")
-  use("moll/vim-bbye")
 
   -- navigation
   use("nvim-tree/nvim-tree.lua")

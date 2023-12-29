@@ -40,6 +40,10 @@ vim.opt.splitright = true
 -- hide tabline
 vim.opt.showtabline = 0
 
+-- spell check
+vim.opt.spell = true
+vim.opt.spelllang = "en_us"
+
 -- runtime path macos fix
 vim.o.runtimepath = vim.fn.stdpath("data") .. "/site/pack/*/start/*," .. vim.o.runtimepath
 
