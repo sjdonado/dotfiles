@@ -38,6 +38,7 @@ return require("packer").startup(function(use)
   use("wsdjeg/vim-fetch")
 
   use("ThePrimeagen/harpoon")
+  use("kevinhwang91/nvim-bqf")
 
   -- treesitter
   use("nvim-treesitter/nvim-treesitter", {
@@ -46,7 +47,7 @@ return require("packer").startup(function(use)
   use("nvim-treesitter/nvim-treesitter-context")
 
   -- git
-  use("tpope/vim-fugitive")
+  use("NeogitOrg/neogit")
   use("lewis6991/gitsigns.nvim")
   use("almo7aya/openingh.nvim")
   use("akinsho/git-conflict.nvim")

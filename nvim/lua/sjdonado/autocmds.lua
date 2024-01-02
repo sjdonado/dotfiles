@@ -22,16 +22,6 @@ vim.api.nvim_create_autocmd({ "VimResized" }, {
   end,
 })
 
--- wrap and check for spell in text filetypes
--- vim.api.nvim_create_autocmd("FileType", {
---   group = custom_autocmds_group,
---   pattern = { "gitcommit", "markdown" },
---   callback = function()
---     vim.opt_local.wrap = true
---     vim.opt_local.spell = true
---   end,
--- })
-
 -- hide CursorLine on leave window (ignore Floating windows)
 vim.api.nvim_create_autocmd("WinEnter", {
   group = custom_autocmds_group,

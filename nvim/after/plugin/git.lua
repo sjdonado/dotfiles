@@ -1,7 +1,7 @@
 local gitsigns = require("gitsigns")
 local git_conflict = require("git-conflict")
 
-local fugitive = require("sjdonado.fugitive")
+local neogit = require("neogit")
 
 local map = require("sjdonado.keymap").map
 local nmap = require("sjdonado.keymap").nmap
@@ -54,16 +54,18 @@ gitsigns.setup({
   end,
 })
 
-git_conflict.setup()
+git_conflict.setup({})
 
--- vim fugitive
-nmap("<C-g>", fugitive.create_or_switch_to_git_tab)
-nmap("<leader>gc", ":vert G commit<CR>", { silent = true })
-nmap("<leader>gf", ":Git fetch<CR>", { silent = true })
-nmap("<leader>gp", ":Git pull<CR>", { silent = true })
-nmap("<leader>gP", ":Git push<CR>", { silent = true })
+neogit.setup({
+  signs = {
+    item = { "", "" },
+  },
+})
+nmap("<C-g>", function()
+  neogit.open()
+end, { silent = true })
 
 -- openingh config
-nnoremap("<leader>gr", ":OpenInGHRepo<CR>", { silent = true })
-nnoremap("<leader>gF", ":OpenInGHFile<CR>", { silent = true })
-vnoremap("<leader>gF", ":OpenInGHFileLines<CR>", { silent = true })
+nnoremap("<leader>ho", ":OpenInGHRepo<CR>", { silent = true })
+nnoremap("<leader>hf", ":OpenInGHFile<CR>", { silent = true })
+vnoremap("<leader>hF", ":OpenInGHFileLines<CR>", { silent = true })
