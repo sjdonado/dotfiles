@@ -60,7 +60,7 @@ ln -s "$PWD/zsh/.p10k.zsh" ~/.p10k.zsh
 
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
-ln -s "$PWD/alacritty/alacritty.yml" ~/.config/alacritty.yml
+ln -s "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 ln -s "$PWD/nvim" ~/.config/nvim
