@@ -60,6 +60,9 @@ neogit.setup({
   signs = {
     item = { "", "" },
   },
+  integrations = {
+    telescope = nil,
+  },
 })
 nmap("<C-g>", function()
   neogit.open()

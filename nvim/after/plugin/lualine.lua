@@ -47,7 +47,7 @@ local sections = {
   lualine_a = { "mode" },
   lualine_b = { "branch", "diff" },
   lualine_c = {
-    { "%=", separator = "" },
+    { "%=",       separator = "" },
     { "filetype", icon_only = true, separator = "", padding = { right = 0, left = 1 } },
     {
       "filename",
@@ -79,13 +79,7 @@ local inactive_sections = {
   lualine_x = { "location" },
 }
 
-local M = {}
-
-M.load = function()
-  lualine.setup({
-    sections = sections,
-    inactive_sections = inactive_sections,
-  })
-end
-
-return M
+lualine.setup({
+  sections = sections,
+  inactive_sections = inactive_sections,
+})
