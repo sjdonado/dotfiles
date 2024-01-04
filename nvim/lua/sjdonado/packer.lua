@@ -54,7 +54,7 @@ return require("packer").startup(function(use)
 
   -- lsp
   use("neovim/nvim-lspconfig")
-  use("jose-elias-alvarez/null-ls.nvim")
+  use("nvimtools/none-ls.nvim")
 
   use("onsails/lspkind.nvim")
   use("ray-x/lsp_signature.nvim")
