@@ -98,7 +98,7 @@ return require("packer").startup(function(use)
   use({ lazy = true, "klen/nvim-test" })
 
   -- AI Code Assistant
-  use({ lazy = true, "Exafunction/codeium.vim" })
+  use({ lazy = true, "Exafunction/codeium.vim", tag = "1.6.20" })
 
   -- utilities
   -- use({ lazy = true, "Dhanus3133/LeetBuddy.nvim" })
