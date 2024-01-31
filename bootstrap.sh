@@ -32,14 +32,14 @@ brew install --cask amethyst # SIP unblocked not required
 brew install --cask \
   firefox \
   raycast ukelele \
-  qbittorrent table-tool db-browser-for-sqlite \
-  reverso utm browserosaurus
+  table-tool db-browser-for-sqlite dbeaver-community \
+  qbittorrent reverso utm browserosaurus
 
 brew install --cask --no-quarantine chromium
 
 # Toolkit
 brew tap shopify/shopify
-brew install shopify-cli
+brew install shopify-cli firebase-cli scc serverless
 
 brew tap oven-sh/bun
 brew install bun
