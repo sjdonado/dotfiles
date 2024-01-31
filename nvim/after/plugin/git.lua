@@ -64,6 +64,7 @@ neogit.setup({
     telescope = nil,
   },
 })
+
 nmap("<C-g>", function()
   neogit.open()
 end, { silent = true })
