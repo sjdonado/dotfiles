@@ -22,7 +22,7 @@ null_ls.setup({
     null_ls.builtins.diagnostics.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.eslint_d.with({ filetypes = eslint_filetypes }),
     null_ls.builtins.formatting.prettierd,
-    -- null_ls.builtins.diagnostics.editorconfig_checker,
+    null_ls.builtins.diagnostics.editorconfig_checker,
     null_ls.builtins.formatting.stylua,
     null_ls.builtins.formatting.fixjson,
     null_ls.builtins.formatting.rustfmt,
@@ -31,8 +31,8 @@ null_ls.setup({
   },
   on_attach = function(client, bufnr)
     if
-      client.supports_method("textDocument/formatting")
-      or client.supports_method("textDocument/rangeFormatting")
+        client.supports_method("textDocument/formatting")
+        or client.supports_method("textDocument/rangeFormatting")
     then
       vim.api.nvim_clear_autocmds({ buffer = bufnr, group = group })
       vim.api.nvim_create_autocmd("BufWritePre", {
@@ -56,6 +56,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
     if not file_helper.root_has_file(".eslint*") then
       null_ls.disable({ name = "eslint_d" })
+    end
+
+    if not file_helper.root_has_file(".editorconfig*") then
+      null_ls.disable({ name = "editorconfig_checker" })
     end
   end,
 })
