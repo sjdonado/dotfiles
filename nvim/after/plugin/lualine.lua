@@ -47,7 +47,7 @@ local sections = {
   lualine_a = { "mode" },
   lualine_b = { "branch", "diff" },
   lualine_c = {
-    { "%=",       separator = "" },
+    { "%=", separator = "" },
     { "filetype", icon_only = true, separator = "", padding = { right = 0, left = 1 } },
     {
       "filename",

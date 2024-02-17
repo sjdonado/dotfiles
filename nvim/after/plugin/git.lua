@@ -60,8 +60,8 @@ git_conflict.setup({
     theirs = "ct",
     none = "c0",
     both = "cb",
-    next = "[x",
     prev = "]x",
+    next = "[x",
   },
 })
 
@@ -71,6 +71,12 @@ neogit.setup({
   },
   integrations = {
     telescope = nil,
+  },
+  mappings = {
+    status = {
+      ["]x"] = "GoToPreviousHunkHeader",
+      ["[x"] = "GoToNextHunkHeader",
+    },
   },
 })
 
