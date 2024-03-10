@@ -4,4 +4,4 @@ sessions
 .luarc.json
 .env
 
-memtime*
+private*

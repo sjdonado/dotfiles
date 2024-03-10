@@ -27,7 +27,7 @@ eval "$(fnm env --use-on-cd)"
 source "$HOME/.config/dotfiles/zsh/fzf.zsh"
 
 # helpers
-source "$HOME/.config/dotfiles/zsh/memtime.zsh"
+source "$HOME/.config/dotfiles/zsh/private_memtime.zsh"
 
 # zsh plugins
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
