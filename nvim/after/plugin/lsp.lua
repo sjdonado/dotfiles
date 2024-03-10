@@ -91,7 +91,13 @@ end
 
 lspconfig.clangd.setup(config())
 
-lspconfig.tsserver.setup(config())
+lspconfig.tsserver.setup(config({
+  settings = {
+    codeAction = {
+      MoveToANewFile = { enable = false },
+    },
+  },
+}))
 
 lspconfig.jsonls.setup(config())
 -- lspconfig.yamlls.setup(config())
@@ -138,5 +144,16 @@ lspconfig.rust_analyzer.setup(config())
 lspconfig.pylsp.setup(config())
 
 lspconfig.theme_check.setup(config())
+
+lspconfig.eslint.setup(config({
+  on_attach = function(client, bufnr)
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      buffer = bufnr,
+      command = "EslintFixAll",
+    })
+  end,
+}))
+
+lspconfig.jsonls.setup(config())
 
 neodev.setup()
