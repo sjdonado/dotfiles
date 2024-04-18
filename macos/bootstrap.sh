@@ -12,9 +12,8 @@ git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvi
 
 # Essentials
 brew install \
-  zsh-syntax-highlighting powerlevel10k \
-  tmux coreutils \
-  tree bat fd gawk ripgrep fzf \
+  fish tmux coreutils \
+  tree bat fd gawk ripgrep \
   blueutil mackup \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
