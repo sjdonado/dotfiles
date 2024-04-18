@@ -40,7 +40,7 @@ COLORTERM = "truecolor"
 TERM = "xterm-256color"
 
 [font]
-size = 12.5
+size = 13
 
 [font.bold]
 style = "Bold"
@@ -53,9 +53,9 @@ family = "Hack Nerd Font"
 style = "Regular"
 
 [[keyboard.bindings]]
-chars = "\u0002c"
 key = "N"
 mods = "Command"
+action = "CreateNewWindow"
 
 [mouse]
 hide_when_typing = true

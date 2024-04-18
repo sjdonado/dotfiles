@@ -141,7 +141,7 @@ lspconfig.lua_ls.setup(config({
 
 lspconfig.rust_analyzer.setup(config())
 
-lspconfig.pylsp.setup(config())
+-- lspconfig.pylsp.setup(config())
 
 lspconfig.theme_check.setup(config())
 
@@ -155,5 +155,6 @@ lspconfig.eslint.setup(config({
 }))
 
 lspconfig.jsonls.setup(config())
+lspconfig.vuels.setup(config())
 
 neodev.setup()

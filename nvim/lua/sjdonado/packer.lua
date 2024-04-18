@@ -89,7 +89,7 @@ return require("packer").startup(function(use)
   use({ lazy = true, "WhoIsSethDaniel/mason-tool-installer.nvim" })
 
   -- dap
-  use({ lazy = true, "mfussenegger/nvim-dap" })
+  use({ lazy = true, "mfussenegger/nvim-dap", requires = { "nvim-neotest/nvim-nio" } })
   use({ lazy = true, "rcarriga/nvim-dap-ui" })
   use({ lazy = true, "theHamsta/nvim-dap-virtual-text" })
 

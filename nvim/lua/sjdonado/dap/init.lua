@@ -6,8 +6,8 @@ dapui.setup({
     {
       elements = {
         -- { id = "stacks", size = 0.12 },
-        { id = "scopes", size = 0.3 },
-        { id = "repl", size = 0.3 },
+        { id = "scopes",  size = 0.3 },
+        { id = "repl",    size = 0.3 },
         { id = "console", size = 0.4 },
       },
       size = 0.25,

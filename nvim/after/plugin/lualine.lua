@@ -27,6 +27,11 @@ local function lsp_clients(msg)
     end
   end
 
+  -- TODO: debbug
+  -- local null_ls_registered = require("null-ls.sources").get_source({ filetype = buf_ft })
+  -- print(buf_ft, null_ls_registered)
+  -- vim.list_extend(buf_client_names, null_ls_registered)
+
   local supported_formatters = null_ls_helper.registered_formatters(buf_ft)
   vim.list_extend(buf_client_names, supported_formatters)
 

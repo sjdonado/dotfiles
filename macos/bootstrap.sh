@@ -1,5 +1,9 @@
 #!/bin/sh
 
+##########################################
+##            macos setup               ##
+##########################################
+
 # Setup alacritty
 brew install alacritty
 
@@ -14,16 +18,16 @@ brew install \
   blueutil mackup \
   git-delta git-lfs \
   nvim lua tree-sitter shellcheck ccls \
-  tor mitmproxy nmap \
+  tor mitmproxy nmap redis \
   cloudflare/cloudflare/cloudflared \
-  marp-cli redis \
+  marp-cli mailpit bruno \
 
 # Docker
 brew install colima docker docker-compose docker-buildx
-colima start --vm-type vz
+colima start
 
 # Package managers
-brew install fnm rustup luarocks yarn
+brew install fnm rustup luarocks
 
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required
@@ -33,7 +37,8 @@ brew install --cask \
   firefox \
   raycast ukelele \
   table-tool db-browser-for-sqlite dbeaver-community \
-  qbittorrent reverso utm browserosaurus
+  qbittorrent reverso utm browserosaurus \
+  notunes
 
 brew install --cask --no-quarantine chromium
 
@@ -48,15 +53,11 @@ brew install bun
 brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
 
-# Nvim processes from the shell
-pip3 install neovim-remote
-
 # Keyboard layouts setup
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # Dotfiles symlinks
-ln -s "$PWD/zsh/.zshrc" ~/.zshrc
-ln -s "$PWD/zsh/.p10k.zsh" ~/.p10k.zsh
+ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
 
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
