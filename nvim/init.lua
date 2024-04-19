@@ -1,6 +1,5 @@
--- Set <space> as the leader key
 -- See `:help mapleader`
---  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+-- Set <space> as the leader key
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -9,8 +8,6 @@ vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
--- NOTE: You can change these options as you wish!
---  For more options, you can see `:help option-list`
 
 -- Make line numbers default
 vim.opt.number = true
@@ -78,16 +75,8 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
--- or just use <C-\><C-n> to exit terminal mode
--- vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
+vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -99,10 +88,16 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+-- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+-- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+-- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- [[ Custom Keymaps ]]
+vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
+vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
+-- vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
+-- vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -118,11 +113,16 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- [[ Custom Keymaps ]]
-vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
-vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
-vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
-vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
+-- [[ Custom Autocommands ]]
+-- vim.api.nvim_create_autocmd('FileType', {
+--   group = vim.api.nvim_create_augroup('kickstart-spell-check', { clear = true }),
+--   pattern = { 'gitcommit', 'markdown' },
+--   callback = function()
+--     -- vim.opt_local.wrap = true
+--     vim.opt_local.spell = true
+--     vim.opt.spelllang = 'en_us'
+--   end,
+-- })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -134,62 +134,14 @@ end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
 -- [[ Configure and install plugins ]]
---
---  To check the current status of your plugins, run
---    :Lazy
---
---  You can press `?` in this menu for help. Use `:q` to close the window
---
 --  To update plugins you can run
 --    :Lazy update
 --
 require('lazy').setup({
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
-  -- NOTE: Plugins can also be added by using a table,
-  -- with the first argument being the link and the following
-  -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to force a plugin to be loaded.
-  --
-  --  This is equivalent to:
-  --    require('Comment').setup({})
-
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
-
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
-  --    require('gitsigns').setup({ ... })
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
-    'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
-  },
-
-  -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
-  --
-  -- This is often very useful to both group configuration, as well as handle
-  -- lazy loading plugins that don't need to be loaded immediately at startup.
-  --
-  -- For example, in the following configuration, we use:
-  --  event = 'VimEnter'
-  --
-  -- which loads which-key before all the UI elements are loaded. Events can be
-  -- normal autocommands events (`:help autocmd-events`).
-  --
-  -- Then, because we use the `config` key, the configuration only runs
-  -- after the plugin has been loaded:
-  --  config = function() ... end
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
@@ -626,6 +578,10 @@ require('lazy').setup({
             luasnip.lsp_expand(args.body)
           end,
         },
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
         completion = { completeopt = 'menu,menuone,noinsert' },
 
         -- For an understanding of why these mappings were
@@ -690,19 +646,43 @@ require('lazy').setup({
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
+    opts = {
+      on_colors = function(colors)
+        colors.fg = '#ffffff'
+        colors.fg_dark = '#d9dff9'
+        colors.comment = '#6973a1'
+        colors.bg = '#101017'
+        colors.bg_highlight = '#151721'
+        colors.bg_dark = '#0d0d12'
+        colors.git = { change = '#a0b5d6', add = '#8bc7d1', delete = '#c38d94' }
+        colors.gitSigns = { add = '#43bdb8', change = '#95a6c7', delete = '#d1999d' }
+      end,
+      on_highlights = function(highlights, colors)
+        highlights.LineNr = { fg = '#5e6386' }
+        highlights.WinSeparator = { fg = colors.comment }
+        highlights.DiagnosticUnnecessary = { fg = colors.comment }
+        highlights.NvimTreeWinSeparator = { fg = colors.comment }
+        highlights.NvimTreeNormal = { bg = colors.none, fg = colors.none }
+        -- highlights.NeogitHunkHeader = { bg = colors.none, fg = colors.none }
+        highlights.NeogitDiffAddHighlight = { bg = colors.none, fg = colors.none }
+        highlights.NeogitDiffContextHighlight = { bg = colors.none, fg = colors.none }
+        highlights.NeogitDiffDeleteHighlight = { bg = colors.none, fg = colors.none }
+        highlights.NeogitHunkHeaderHighlight = { bg = colors.none, fg = colors.none }
+      end,
+    },
     init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
       vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
   },
 
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
