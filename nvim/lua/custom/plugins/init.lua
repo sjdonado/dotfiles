@@ -82,6 +82,17 @@ return {
     },
   },
   {
+    'folke/zen-mode.nvim',
+    opts = {
+      window = {
+        width = 1,
+      },
+    },
+    keys = {
+      { '<leader>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },
+    },
+  },
+  {
     'akinsho/git-conflict.nvim',
     event = 'VimEnter',
     opts = {
