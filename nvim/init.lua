@@ -1,3 +1,6 @@
+-- Enable 24-bit colour
+vim.opt.termguicolors = true
+
 -- See `:help mapleader`
 -- Set <space> as the leader key
 vim.g.mapleader = ' '
@@ -747,8 +750,7 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns',
 
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   { import = 'custom.plugins' },
