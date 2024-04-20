@@ -1,5 +1,14 @@
 return {
   {
+    'nvim-treesitter/nvim-treesitter-context',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+    },
+    opts = {
+      enable = true,
+    },
+  },
+  {
     'akinsho/toggleterm.nvim',
     opts = {
       open_mapping = [[<c-\>]],
