@@ -223,11 +223,23 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = vim.tbl_extend('force', require('telescope.themes').get_dropdown(), {
+          mappings = {
+            i = {
+              ['<C-t>'] = require('telescope.actions.layout').toggle_preview,
+              ['<C-y>'] = require('telescope.actions').preview_scrolling_up,
+              ['<C-e>'] = require('telescope.actions').preview_scrolling_down,
+              ['<esc>'] = require('telescope.actions').close,
+            },
+          },
+          layout_config = {
+            height = 0.2,
+            width = function(_, max_columns, _)
+              return math.min(max_columns, 110)
+            end,
+          },
+        }),
+
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -594,19 +606,19 @@ require('lazy').setup({
           -- Select the [p]revious item
           ['<C-p>'] = cmp.mapping.select_prev_item(),
 
-          -- Scroll the documentation window [b]ack / [f]orward
-          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          -- Scroll the documentation window [y]down / [e]up
+          ['<C-y>'] = cmp.mapping.scroll_docs(4),
+          ['<C-e>'] = cmp.mapping.scroll_docs(-4),
 
-          -- Accept ([y]es) the completion.
+          -- Accept the completion.
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<C-f>'] = cmp.mapping.confirm { select = true },
 
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
           --  completions whenever it has completion options available.
-          ['<C-Space>'] = cmp.mapping.complete {},
+          -- ['<C-Space>'] = cmp.mapping.complete {},
 
           -- Think of <c-l> as moving to the right of your snippet expansion.
           --  So if you have a snippet that's like:
