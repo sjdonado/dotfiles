@@ -21,12 +21,20 @@ brew install \
   cloudflare/cloudflare/cloudflared \
   marp-cli mailpit bruno \
 
+# Fish shell
+echo "/opt/homebrew/bin/fish" | sudo tee -a /etc/shells
+ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
+
+# Nvim config
+ln -s "$PWD/nvim" ~/.config/nvim
+
 # Docker
 brew install colima docker docker-compose docker-buildx
 colima start
 
 # Package managers
 brew install fnm rustup luarocks pypenv
+ln -sf "$PWD/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
 
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required
@@ -56,17 +64,12 @@ brew install font-hack-nerd-font
 cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
 # Dotfiles symlinks
-ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
-
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
 ln -s "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
-ln -s "$PWD/nvim" ~/.config/nvim
-
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
-
 ln -s "$PWD/.ssh/config" ~/.ssh/config
 
 ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
