@@ -16,7 +16,7 @@ brew install \
   tree bat fd gawk ripgrep \
   blueutil mackup \
   git-delta git-lfs \
-  nvim lua tree-sitter shellcheck ccls \
+  nvim lua \
   tor mitmproxy nmap redis \
   cloudflare/cloudflare/cloudflared \
   marp-cli mailpit bruno \
@@ -26,7 +26,7 @@ brew install colima docker docker-compose docker-buildx
 colima start
 
 # Package managers
-brew install fnm rustup luarocks
+brew install fnm rustup luarocks pypenv
 
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required
