@@ -1,24 +1,41 @@
-> Bye bye vscode 👋🏽
+> Blazyinly fast Development Setup 🚀
 
-<img width="1470" alt="image" src="https://github.com/sjdonado/dotfiles/assets/27580836/0a2abe2c-5f06-4ab8-9536-9b2c6d275db0">
+<img width="1756" alt="Screenshot 2024-04-23 at 10 16 41" src="https://github.com/sjdonado/dotfiles/assets/27580836/8c583289-8b35-4a92-9687-d57d1ec770fd">
 
-# Setup
-1. Clone into `~/.config/dotfiles`
-1. Run `./bootstrap.sh`
-1. Run `./bin/osx.sh`
-1. Run `mackup restore`
+## Getting started
 
-## Config Neovim Plugins
-```vim
-:PackerSync
-:MasonToolsInstall
+1. Clone this repo into `~/.config/dotfiles`
+
+### Terminal + multiplexer + shell
+
+```fish
+# Setup alacritty
+brew install alacritty
+ln -s "~/.config/dotfiles/alacritty/alacritty.toml" ~/.config/alacritty.toml
+
+# Tmux config
+brew install tmux
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# Fish shell
+brew install fish
+echo "/opt/homebrew/bin/fish" | sudo tee -a /etc/shells
+ln -sf "~/.config/dotfiles/fish/config.fish" ~/.config/fish/config.fish
 ```
 
-## Tor Proxy
-1. Enable tor service `brew services start tor`
-2. In Firefox, go to `Network Settings > Manual proxy configuration > SOCKS Host > SOCKS v5` and set `localhost:9050`
-3. Toggle on `Proxy DNS when using SOCKS v5`
-4. Install [https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion](https://addons.mozilla.org/en-US/firefox/addon/duckduckgo-onion)
+### Editor
+
+- Default config
+```fish
+brew install nvim lua
+ln -s "~/.config/dotfiles/nvim" ~/.config/nvim
+```
+- Open `nvim .`
+- Check updates
+```vim
+:Lazy
+:Mason
+```
 
 ### Happy Hacking!
 <img width="200" alt="image" src="https://media.tenor.com/y2JXkY1pXkwAAAAM/cat-computer.gif">
