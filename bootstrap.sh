@@ -6,27 +6,29 @@
 
 # Setup alacritty
 brew install alacritty
+ln -s "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 
+# Tmux config
+brew install tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
-
-# Essentials
-brew install \
-  fish tmux coreutils \
-  tree bat fd gawk ripgrep \
-  blueutil mackup \
-  git-delta git-lfs \
-  nvim lua \
-  tor mitmproxy nmap redis \
-  cloudflare/cloudflare/cloudflared \
-  marp-cli mailpit bruno \
 
 # Fish shell
+brew install fish
 echo "/opt/homebrew/bin/fish" | sudo tee -a /etc/shells
 ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
 
 # Nvim config
+brew install nvim lua
 ln -s "$PWD/nvim" ~/.config/nvim
+
+# Essentials
+brew install coreutils \
+  tree bat fd gawk ripgrep \
+  blueutil mackup \
+  git-delta git-lfs \
+  tor mitmproxy nmap redis \
+  cloudflare/cloudflare/cloudflared \
+  marp-cli mailpit bruno \
 
 # Docker
 brew install colima docker docker-compose docker-buildx
@@ -66,7 +68,6 @@ cp -Rp $PWD/ukelele/* "$HOME/Library/Keyboard Layouts/"
 # Dotfiles symlinks
 ln -sf "$PWD/bat/config" ~/.config/bat/config
 
-ln -s "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 ln -s "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 ln -s "$PWD/git/.gitconfig" ~/.gitconfig
