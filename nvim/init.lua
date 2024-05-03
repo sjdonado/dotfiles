@@ -599,17 +599,23 @@ require('lazy').setup({
     priority = 1000, -- Make sure to load this before all the other start plugins.
     opts = {
       on_colors = function(colors)
-        colors.fg = '#ffffff'
-        colors.fg_dark = '#d9dff9'
-        colors.comment = '#6973a1'
-        colors.bg = '#101017'
-        colors.bg_highlight = '#151721'
-        colors.bg_dark = '#0d0d12'
-        colors.git = { change = '#a0b5d6', add = '#8bc7d1', delete = '#c38d94' }
-        colors.gitSigns = { add = '#43bdb8', change = '#95a6c7', delete = '#d1999d' }
+        -- colors.fg = '#ffffff'
+        -- colors.fg_dark = '#d9dff9'
+        -- colors.comment = '#6973a1'
+        colors.bg = '#000000'
+        colors.bg_dark = '#2b2b32'
+        colors.bg_highlight = '#090a0f'
+        colors.bg_float = '#09090a'
+        colors.bg_pop = '#2b2b32'
+        colors.bg_search = '#0e1736'
+        colors.bg_visual = '#171e3a'
+        -- colors.git = { change = '#a0b5d6', add = '#8bc7d1', delete = '#c38d94' }
+        -- colors.gitSigns = { add = '#43bdb8', change = '#95a6c7', delete = '#d1999d' }
       end,
       on_highlights = function(highlights, colors)
-        highlights.LineNr = { fg = '#5e6386' }
+        highlights.TreesitterContext = { bg = '#1d2030' }
+        highlights.MiniStatuslineFilename = { bg = '#1c1f2e' }
+        -- highlights.LineNr = { fg = '#5e6386' }
         highlights.WinSeparator = { fg = colors.comment }
         highlights.DiagnosticUnnecessary = { fg = colors.comment }
         highlights.NvimTreeWinSeparator = { fg = colors.comment }

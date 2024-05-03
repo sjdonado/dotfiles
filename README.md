@@ -1,7 +1,5 @@
 > Blazyinly fast Development Setup 🚀
 
-<img width="1756" alt="Screenshot 2024-04-23 at 10 16 41" src="https://github.com/sjdonado/dotfiles/assets/27580836/8c583289-8b35-4a92-9687-d57d1ec770fd">
-
 ## Getting started
 
 1. Clone this repo into `~/.config/dotfiles`
