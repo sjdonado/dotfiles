@@ -13,7 +13,7 @@ return {
     opts = {
       open_mapping = [[<c-\>]],
       on_create = function(term)
-        vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]], {
+        vim.keymap.set('t', '<C-n>', [[<C-\><C-n>]], {
           buffer = term.bufnr,
           silent = true,
           desc = 'Exit terminal mode',
