@@ -50,8 +50,8 @@ style = "Bold"
 style = "Italic"
 
 [font.normal]
-family = "Hack Nerd Font"
-style = "Regular"
+family = "JetBrainsMono Nerd Font"
+# style = "SemiBold"
 
 [[keyboard.bindings]]
 key = "N"

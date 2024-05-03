@@ -4,9 +4,9 @@
 ##            macos setup               ##
 ##########################################
 
-# Best font ever
+# Setup fonts
 brew tap homebrew/cask-fonts
-brew install font-hack-nerd-font
+brew install font-jetbrains-mono-nerd-font
 
 # Setup alacritty
 brew install alacritty
