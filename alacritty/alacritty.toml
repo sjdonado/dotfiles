@@ -68,5 +68,5 @@ history = 0
 save_to_clipboard = false
 
 [window]
-decorations = "none"
-startup_mode = "Maximized"
+# decorations = "none"
+# startup_mode = "Maximized"
