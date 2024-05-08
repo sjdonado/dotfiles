@@ -68,6 +68,8 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+vim.opt.laststatus = 3
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -117,15 +119,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- [[ Custom Autocommands ]]
--- vim.api.nvim_create_autocmd('FileType', {
---   group = vim.api.nvim_create_augroup('kickstart-spell-check', { clear = true }),
---   pattern = { 'gitcommit', 'markdown' },
---   callback = function()
---     -- vim.opt_local.wrap = true
---     vim.opt_local.spell = true
---     vim.opt.spelllang = 'en_us'
---   end,
--- })
+-- resize splits if window got resized
+vim.api.nvim_create_autocmd({ 'VimResized' }, {
+  group = vim.api.nvim_create_augroup('kickstart-custom-auto-resize', { clear = true }),
+  callback = function()
+    vim.cmd 'tabdo wincmd ='
+  end,
+})
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -686,23 +686,44 @@ require('lazy').setup({
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
 
-      -- Simple and easy statusline.
-      --  You could remove this setup call if you don't like it,
-      --  and try some other statusline plugin
       local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup { use_icons = vim.g.have_nerd_font, set_vim_settings = false }
 
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
         return '%2l:%-2v'
       end
 
-      -- ... and there is more!
-      --  Check out: https://github.com/echasnovski/mini.nvim
+      -- custom config (wip)
+      -- ---@diagnostic disable-next-line: duplicate-set-field
+      -- statusline.section_git = function()
+      --   -- isn't a normal buffer
+      --   if vim.bo.buftype ~= '' then
+      --     return ''
+      --   end
+      --
+      --   local head = vim.b.gitsigns_head or '-'
+      --   local status = vim.b.gitsigns_status or ''
+      --   return string.format('%s %s', string.sub(head, 1, 20), status)
+      -- end
+      --
+      -- ---@diagnostic disable-next-line: duplicate-set-field
+      -- statusline.section_fileinfo = function()
+      --   local filetype = vim.bo.filetype
+      --
+      --   -- Don't show anything if can't detect file type or not inside a "normal
+      --   -- buffer"
+      --   if (filetype == '') or vim.bo.buftype ~= '' then
+      --     return ''
+      --   end
+      --
+      --   -- Construct output string with extra file info
+      --   local encoding = vim.bo.fileencoding or vim.bo.encoding
+      --   local format = vim.bo.fileformat
+      --
+      --   return string.format('%s %s[%s]', filetype, encoding, format)
+      -- end
     end,
   },
   { -- Highlight, edit, and navigate code
