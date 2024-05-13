@@ -41,7 +41,7 @@ COLORTERM = "truecolor"
 TERM = "xterm-256color"
 
 [font]
-size = 13
+size = 16
 
 [font.bold]
 style = "Bold"
@@ -50,8 +50,7 @@ style = "Bold"
 style = "Italic"
 
 [font.normal]
-family = "JetBrainsMono Nerd Font"
-# style = "SemiBold"
+family = "UbuntuMono Nerd Font"
 
 [[keyboard.bindings]]
 key = "N"
