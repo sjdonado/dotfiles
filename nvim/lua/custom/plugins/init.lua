@@ -8,46 +8,9 @@ return {
       enable = true,
     },
   },
-  -- {
-  --   'akinsho/toggleterm.nvim',
-  --   opts = {
-  --     open_mapping = [[<c-\>]],
-  --     on_create = function(term)
-  --       vim.keymap.set('t', '<C-n>', [[<C-\><C-n>]], {
-  --         buffer = term.bufnr,
-  --         silent = true,
-  --         desc = 'Exit terminal mode',
-  --       })
-  --       vim.keymap.set('t', '<C-w><C-h>', [[<Cmd>wincmd h<CR>]], {
-  --         buffer = term.bufnr,
-  --         silent = true,
-  --         desc = 'Move focus to the left window',
-  --       })
-  --       vim.keymap.set('t', '<C-w><C-j>', [[<Cmd>wincmd j<CR>]], {
-  --         buffer = term.bufnr,
-  --         silent = true,
-  --         desc = 'Move focus to the right window',
-  --       })
-  --       vim.keymap.set('t', '<C-w><C-k>', [[<Cmd>wincmd k<CR>]], {
-  --         buffer = term.bufnr,
-  --         silent = true,
-  --         desc = 'Move focus to the lower window',
-  --       })
-  --       vim.keymap.set('t', '<C-w><C-l>', [[<Cmd>wincmd l<CR>]], {
-  --         buffer = term.bufnr,
-  --         silent = true,
-  --         desc = 'Move focus to the upper window',
-  --       })
-  --     end,
-  --     size = function(term)
-  --       if term.direction == 'horizontal' then
-  --         return 25
-  --       elseif term.direction == 'vertical' then
-  --         return vim.o.columns * 0.43
-  --       end
-  --     end,
-  --   },
-  -- },
+  {
+    'vim-crystal/vim-crystal',
+  },
   {
     'NeogitOrg/neogit',
     dependencies = {

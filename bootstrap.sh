@@ -6,7 +6,7 @@
 
 # Setup fonts
 brew tap homebrew/cask-fonts
-brew install font-jetbrains-mono-nerd-font
+brew install font-ubuntu-mono-nerd-font
 
 # Setup alacritty
 brew install alacritty
@@ -47,7 +47,7 @@ brew install --cask --no-quarantine chromium
 brew install --cask amethyst # SIP unblocked not required
 
 # Package managers
-brew install fnm rustup luarocks pypenv # run rustup-init
+brew install fnm rustup luarocks pypenv crystal # run rustup-init
 ln -sf "$PWD/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
 
 # Docker
@@ -57,7 +57,7 @@ colima start
 # Nice to have
 brew install --cask \
   table-tool db-browser-for-sqlite dbeaver-community \
-  qbittorrent reverso utm
+  qbittorrent reverso utm bruno
 
 brew install tor mitmproxy nmap redis \
   cloudflare/cloudflare/cloudflared \
@@ -69,6 +69,9 @@ brew install shopify-cli firebase-cli scc serverless
 
 brew tap oven-sh/bun
 brew install bun
+
+brew tap amberframework/micrate
+brew install micrate
 
 # Keyboard layouts setup
 cp -Rp $PWD/macos/ukelele/* "$HOME/Library/Keyboard Layouts/"
