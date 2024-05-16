@@ -9,9 +9,6 @@ return {
     },
   },
   {
-    'vim-crystal/vim-crystal',
-  },
-  {
     'NeogitOrg/neogit',
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -127,6 +124,16 @@ return {
         prev = ']x',
         next = '[x',
       },
+    },
+  },
+  {
+    'vim-crystal/vim-crystal',
+  },
+  {
+    'justinmk/vim-sneak',
+    keys = {
+      { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
+      { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
     },
   },
 }

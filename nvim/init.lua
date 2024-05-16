@@ -1,5 +1,5 @@
 -- Enable 24-bit colour
-vim.opt.termguicolors = true
+-- vim.opt.termguicolors = true
 
 -- See `:help mapleader`
 -- Set <space> as the leader key
