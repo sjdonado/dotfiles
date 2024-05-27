@@ -127,7 +127,7 @@ return {
     },
   },
   {
-    'vim-crystal/vim-crystal',
+    'wsdjeg/vim-fetch',
   },
   {
     'justinmk/vim-sneak',
@@ -135,5 +135,8 @@ return {
       { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
       { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
     },
+  },
+  {
+    'vim-crystal/vim-crystal',
   },
 }

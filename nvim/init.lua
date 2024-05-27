@@ -78,8 +78,8 @@ vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+vim.keymap.set('n', ']d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+vim.keymap.set('n', '[d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
@@ -103,6 +103,7 @@ vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
 vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
 -- vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
 -- vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
+vim.keymap.set({ 'n', 'v' }, '<C-s>', ':w<cr>', { silent = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -370,18 +371,11 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        -- gopls = {},
         pyright = {},
         rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --    TODO: https://github.com/pmizio/typescript-tools.nvim (check when beta is done)
-        tsserver = {
-          settings = {
-            codeAction = {
-              MoveToANewFile = { enable = false },
-            },
-          },
-        },
+        tsserver = {},
 
         graphql = {},
         prismals = {},
@@ -406,6 +400,8 @@ require('lazy').setup({
             },
           },
         },
+
+        gopls = {},
       }
 
       require('mason').setup()
@@ -429,6 +425,7 @@ require('lazy').setup({
         'pyright',
         'isort',
         'black',
+        'gopls',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
