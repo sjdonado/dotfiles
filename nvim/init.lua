@@ -347,6 +347,8 @@ require('lazy').setup({
           --  See `:help K` for why this keymap.
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
 
+          map('<C-k>', vim.lsp.buf.signature_help, 'Display signature')
+
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
@@ -626,7 +628,7 @@ require('lazy').setup({
       end,
     },
     init = function()
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-day'
       vim.cmd.hi 'Comment gui=none'
     end,
   },

@@ -1,5 +1,15 @@
 return {
   {
+    'olimorris/persisted.nvim',
+    lazy = false, -- make sure the plugin is always loaded at startup
+    opts = {
+      autoload = true,
+      on_autoload_no_session = function()
+        vim.notify 'No existing session to load.'
+      end,
+    },
+  },
+  {
     'nvim-treesitter/nvim-treesitter-context',
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
@@ -29,16 +39,6 @@ return {
     },
     keys = {
       { '<C-g>', '<cmd>Neogit<CR>', desc = 'Open Neogit' },
-    },
-  },
-  {
-    'olimorris/persisted.nvim',
-    lazy = false, -- make sure the plugin is always loaded at startup
-    opts = {
-      autoload = true,
-      on_autoload_no_session = function()
-        vim.notify 'No existing session to load.'
-      end,
     },
   },
   {
@@ -113,28 +113,14 @@ return {
     },
   },
   {
-    'akinsho/git-conflict.nvim',
-    event = 'VimEnter',
-    opts = {
-      default_mappings = {
-        ours = 'co',
-        theirs = 'ct',
-        none = 'c0',
-        both = 'cb',
-        prev = ']x',
-        next = '[x',
-      },
-    },
-  },
-  {
-    'wsdjeg/vim-fetch',
-  },
-  {
     'justinmk/vim-sneak',
     keys = {
       { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
       { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
     },
+  },
+  {
+    'wsdjeg/vim-fetch',
   },
   {
     'vim-crystal/vim-crystal',
