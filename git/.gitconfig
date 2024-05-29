@@ -9,15 +9,14 @@
   features = sjdonado-theme
 
 [delta "sjdonado-theme"]
-  dark = true
+  navigate = true
   line-numbers = true
-  syntax-theme = Visual Studio Dark+
+  syntax-theme = Github
   file-decoration-style = none
   file-style = omit
   hunk-header-style = file line-number syntax
   hunk-header-decoration-style = omit
   commit-style = raw
-  keep-plus-minus-markers = true
 
 [core]
   editor = nvim

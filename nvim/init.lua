@@ -103,7 +103,9 @@ vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
 vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
 -- vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
 -- vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
+
 vim.keymap.set({ 'n', 'v' }, '<C-s>', ':w<cr>', { silent = true })
+vim.keymap.set('i', '<C-s>', '<Esc>:w<cr>', { silent = true })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -625,6 +627,7 @@ require('lazy').setup({
         highlights.NeogitDiffContextHighlight = { bg = colors.none, fg = colors.none }
         highlights.NeogitDiffDeleteHighlight = { bg = colors.none, fg = colors.none }
         highlights.NeogitHunkHeaderHighlight = { bg = colors.none, fg = colors.none }
+        highlights['@markup.raw.markdown_inline'] = { bg = colors.none }
       end,
     },
     init = function()
