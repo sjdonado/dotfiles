@@ -12,6 +12,10 @@ brew install font-ubuntu-mono-nerd-font
 brew install alacritty
 ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 
+# Setup kitty (temp fix https://github.com/alacritty/alacritty/issues/8009)
+brew install kitty
+ln -sf "$PWD/kitty/kitty.conf" ~/.config/kitty/kitty.conf
+
 # Tmux config
 brew install tmux
 
