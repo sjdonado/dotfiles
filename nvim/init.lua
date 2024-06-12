@@ -670,36 +670,6 @@ require('lazy').setup({
       statusline.section_location = function()
         return '%2l:%-2v'
       end
-
-      -- custom config (wip)
-      -- ---@diagnostic disable-next-line: duplicate-set-field
-      -- statusline.section_git = function()
-      --   -- isn't a normal buffer
-      --   if vim.bo.buftype ~= '' then
-      --     return ''
-      --   end
-      --
-      --   local head = vim.b.gitsigns_head or '-'
-      --   local status = vim.b.gitsigns_status or ''
-      --   return string.format('%s %s', string.sub(head, 1, 20), status)
-      -- end
-      --
-      -- ---@diagnostic disable-next-line: duplicate-set-field
-      -- statusline.section_fileinfo = function()
-      --   local filetype = vim.bo.filetype
-      --
-      --   -- Don't show anything if can't detect file type or not inside a "normal
-      --   -- buffer"
-      --   if (filetype == '') or vim.bo.buftype ~= '' then
-      --     return ''
-      --   end
-      --
-      --   -- Construct output string with extra file info
-      --   local encoding = vim.bo.fileencoding or vim.bo.encoding
-      --   local format = vim.bo.fileformat
-      --
-      --   return string.format('%s %s[%s]', filetype, encoding, format)
-      -- end
     end,
   },
   { -- Highlight, edit, and navigate code
