@@ -6,7 +6,7 @@
 
 # Setup fonts
 brew tap homebrew/cask-fonts
-brew install font-jetbrains-mono-nerd-font
+brew install font-hack-nerd-font
 
 # Setup alacritty
 brew install alacritty
