@@ -4,36 +4,70 @@ live_config_reload = true
 
 draw_bold_text_with_bright_colors = true
 
+##### Light theme
+# [colors.bright]
+# black = "#a0a0a0"
+# blue = "#4a7fb8"
+# cyan = "#009c9f"
+# green = "#388e3c"
+# magenta = "#7b5a8b"
+# red = "#d32f2f"
+# white = "#ffffff"
+# yellow = "#ffa000"
+#
+# [colors.cursor]
+# cursor = "#000000"
+# text = "#ffffff"
+#
+# [colors.normal]
+# black = "#000000"
+# blue = "#1976d2"
+# cyan = "#0097a7"
+# green = "#689f38"
+# magenta = "#8e24aa"
+# red = "#d32f2f"
+# white = "#ffffff"
+# yellow = "#ffa000"
+#
+# [colors.primary]
+# background = "#ffffff"
+# foreground = "#000000"
+#
+# [colors.selection]
+# background = "#a0d2ff"
+# text = "#000000"
+
+#####  Dark theme
 [colors.bright]
-black = "#a0a0a0"
-blue = "#4a7fb8"
-cyan = "#009c9f"
-green = "#388e3c"
-magenta = "#7b5a8b"
-red = "#d32f2f"
-white = "#ffffff"
-yellow = "#ffa000"
+black = "#676965"
+blue = "#83afd8"
+cyan = "#37e5e7"
+green = "#98e342"
+magenta = "#bc93b6"
+red = "#f44135"
+white = "#f1f1ef"
+yellow = "#fcea60"
 
 [colors.cursor]
-cursor = "#000000"
-text = "#ffffff"
+cursor = "#fffeff"
+text = "#000000"
 
 [colors.normal]
 black = "#000000"
-blue = "#1976d2"
-cyan = "#0097a7"
-green = "#689f38"
-magenta = "#8e24aa"
-red = "#d32f2f"
-white = "#ffffff"
-yellow = "#ffa000"
+blue = "#417ab3"
+cyan = "#00a7aa"
+green = "#5da602"
+magenta = "#88658d"
+red = "#d71e00"
+white = "#dbded8"
+yellow = "#cfad00"
 
 [colors.primary]
-background = "#ffffff"
-foreground = "#000000"
+background = "#000000"
+foreground = "#fffeff"
 
 [colors.selection]
-background = "#a0d2ff"
+background = "#c1ddff"
 text = "#000000"
 
 [env]
@@ -50,7 +84,7 @@ style = "Bold"
 style = "Italic"
 
 [font.normal]
-family = "UbuntuMono Nerd Font"
+family = "Hack Nerd Font"
 
 [[keyboard.bindings]]
 key = "N"

@@ -592,50 +592,6 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    opts = {
-      on_colors = function(colors)
-        -- colors.fg = '#ffffff'
-        -- colors.fg_dark = '#d9dff9'
-        -- colors.comment = '#6973a1'
-        colors.bg = '#000000'
-        colors.bg_dark = '#2b2b32'
-        colors.bg_highlight = '#090a0f'
-        colors.bg_float = '#09090a'
-        colors.bg_pop = '#2b2b32'
-        colors.bg_search = '#0e1736'
-        colors.bg_visual = '#171e3a'
-        -- colors.git = { change = '#a0b5d6', add = '#8bc7d1', delete = '#c38d94' }
-        -- colors.gitSigns = { add = '#43bdb8', change = '#95a6c7', delete = '#d1999d' }
-      end,
-      on_highlights = function(highlights, colors)
-        highlights.TreesitterContext = { bg = '#1d2030' }
-        highlights.MiniStatuslineFilename = { bg = '#1c1f2e' }
-        -- highlights.LineNr = { fg = '#5e6386' }
-        highlights.WinSeparator = { fg = colors.comment }
-        highlights.DiagnosticUnnecessary = { fg = colors.comment }
-        highlights.NvimTreeWinSeparator = { fg = colors.comment }
-        highlights.NvimTreeNormal = { bg = colors.none, fg = colors.none }
-        -- highlights.NeogitHunkHeader = { bg = colors.none, fg = colors.none }
-        highlights.NeogitDiffAddHighlight = { bg = colors.none, fg = colors.none }
-        highlights.NeogitDiffContextHighlight = { bg = colors.none, fg = colors.none }
-        highlights.NeogitDiffDeleteHighlight = { bg = colors.none, fg = colors.none }
-        highlights.NeogitHunkHeaderHighlight = { bg = colors.none, fg = colors.none }
-        highlights['@markup.raw.markdown_inline'] = { bg = colors.none }
-      end,
-    },
-    init = function()
-      vim.cmd.colorscheme 'tokyonight-day'
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-
   -- Highlight todo, notes, etc in comments
   {
     'folke/todo-comments.nvim',
