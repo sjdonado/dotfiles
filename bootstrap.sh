@@ -12,6 +12,9 @@ brew install font-hack-nerd-font
 brew install alacritty
 ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 
+# Fix alacritty thin strokes on macos
+defaults write org.alacritty AppleFontSmoothing -int 0
+
 # Tmux config
 brew install tmux
 
