@@ -11,6 +11,7 @@ set -x HISTSIZE 20000
 # Add binaries to PATH
 # set -g -x PATH /usr/local/bin $PATH
 set -g -x PATH /opt/homebrew/bin $PATH
+set -g -x PATH $HOME/.local/bin $PATH
 
 # cargo
 set -Ua fish_user_paths $HOME/.cargo/bin
