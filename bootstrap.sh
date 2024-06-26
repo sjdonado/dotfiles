@@ -41,10 +41,9 @@ brew install coreutils \
   git-delta git-lfs
 
 brew install --cask \
-  firefox \
+  firefox spotify \
   raycast ukelele notunes browserosaurus \
-
-brew install --cask --no-quarantine chromium
+  monitorcontrol
 
 # Tiling Window manager
 brew install --cask amethyst # SIP unblocked not required

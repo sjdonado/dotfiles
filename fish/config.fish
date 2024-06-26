@@ -13,6 +13,9 @@ set -x HISTSIZE 20000
 set -g -x PATH /opt/homebrew/bin $PATH
 set -g -x PATH $HOME/.local/bin $PATH
 
+# Custom commands
+alias workspace="sh ~/.config/dotfiles/bin/workspace.sh"
+
 # cargo
 set -Ua fish_user_paths $HOME/.cargo/bin
 
