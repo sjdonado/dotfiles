@@ -422,6 +422,7 @@ require('lazy').setup({
         'typescript-language-server',
         'js-debug-adapter',
         'eslint_d',
+        -- 'eslint-lsp',
         'prettierd',
         'graphql-language-service-cli',
         'prisma-language-server',
@@ -440,10 +441,15 @@ require('lazy').setup({
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+            -- if server_name == 'eslint' then
+            --   server.on_attach = function(client, bufnr)
+            --     vim.api.nvim_create_autocmd('BufWritePre', {
+            --       buffer = bufnr,
+            --       command = 'EslintFixAll',
+            --     })
+            --   end
+            -- end
             require('lspconfig')[server_name].setup(server)
           end,
         },
@@ -479,10 +485,10 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         python = { 'isort', 'black' },
-        javascript = { 'prettierd' },
-        typescript = { 'prettierd' },
-        javascriptreact = { 'prettierd' },
-        typescriptreact = { 'prettierd' },
+        javascript = { 'prettierd', 'eslint_d' },
+        typescript = { 'prettierd', 'eslint_d' },
+        javascriptreact = { 'prettierd', 'eslint_d' },
+        typescriptreact = { 'prettierd', 'eslint_d' },
       },
     },
   },
@@ -622,7 +628,10 @@ require('lazy').setup({
       require('mini.surround').setup()
 
       local statusline = require 'mini.statusline'
-      statusline.setup { use_icons = vim.g.have_nerd_font, set_vim_settings = false }
+      statusline.setup {
+        use_icons = vim.g.have_nerd_font,
+        set_vim_settings = false,
+      }
 
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
@@ -678,7 +687,6 @@ require('lazy').setup({
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.gitsigns',
 
-  --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   { import = 'custom.plugins' },
 }, {
   ui = {
