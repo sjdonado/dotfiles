@@ -30,6 +30,11 @@ chsh -s /opt/homebrew/bin/fish
 mkdir -p ~/.config/fish/config.fish && \
 ln -s "$PWD/fish/config.fish" ~/.config/fish/config.fish
 
+# oh-my-fish
+curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+omf install https://github.com/sjdonado/omf-theme
+omf theme theme
+
 # Nvim config
 brew install nvim lua
 ln -s "$PWD/nvim" ~/.config/nvim
@@ -58,8 +63,8 @@ colima start
 
 # Nice to have
 brew install --cask \
-  table-tool db-browser-for-sqlite dbeaver-community \
-  qbittorrent reverso utm bruno
+  table-tool db-browser-for-sqlite postico \
+  qbittorrent reverso
 
 brew install tor mitmproxy nmap redis \
   cloudflare/cloudflare/cloudflared \
