@@ -301,7 +301,17 @@ require('lazy').setup({
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
-      { 'j-hui/fidget.nvim', opts = {} },
+      {
+        'j-hui/fidget.nvim',
+        opts = {
+          progress = {
+            ignore_done_already = true,
+            ignore = {
+              'null-ls',
+            },
+          },
+        },
+      },
 
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
       -- used for completion, annotations and signatures of Neovim apis
@@ -360,22 +370,9 @@ require('lazy').setup({
         end,
       })
 
-      -- LSP servers and clients are able to communicate to each other what features they support.
-      --  By default, Neovim doesn't support everything that is in the LSP specification.
-      --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
-      --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
-      -- Enable the following language servers
-      --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-      --
-      --  Add any additional override configuration in the following tables. Available keys are:
-      --  - cmd (table): Override the default command used to start the server
-      --  - filetypes (table): Override the default list of associated filetypes for the server
-      --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
-      --  - settings (table): Override the default settings passed when initializing the server.
-      --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
         pyright = {},
@@ -383,6 +380,14 @@ require('lazy').setup({
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --    TODO: https://github.com/pmizio/typescript-tools.nvim (check when beta is done)
         tsserver = {},
+        eslint = {
+          on_attach = function(client, bufnr)
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              buffer = bufnr,
+              command = 'EslintFixAll',
+            })
+          end,
+        },
 
         graphql = {},
         prismals = {},
@@ -421,9 +426,8 @@ require('lazy').setup({
         'lua-language-server',
         'typescript-language-server',
         'js-debug-adapter',
-        'eslint_d',
-        -- 'eslint-lsp',
-        'prettierd',
+        'eslint-lsp',
+        'prettier',
         'graphql-language-service-cli',
         'prisma-language-server',
         'rust-analyzer',
@@ -442,14 +446,6 @@ require('lazy').setup({
           function(server_name)
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            -- if server_name == 'eslint' then
-            --   server.on_attach = function(client, bufnr)
-            --     vim.api.nvim_create_autocmd('BufWritePre', {
-            --       buffer = bufnr,
-            --       command = 'EslintFixAll',
-            --     })
-            --   end
-            -- end
             require('lspconfig')[server_name].setup(server)
           end,
         },
@@ -457,40 +453,40 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    lazy = false,
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_fallback = true }
+  {
+    'nvimtools/none-ls.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    config = function()
+      local null_ls = require 'null-ls'
+
+      local sources = {
+        null_ls.builtins.formatting.stylua,
+        null_ls.builtins.formatting.black,
+        null_ls.builtins.formatting.isort,
+        -- null_ls.builtins.formatting.prettierd.with {
+        --   extra_filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
+        -- },
+        null_ls.builtins.formatting.prettier.with {
+          extra_filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
+        },
+      }
+
+      null_ls.setup {
+        sources = sources,
+        on_attach = function(client, bufnr)
+          if client.server_capabilities.documentFormattingProvider then
+            vim.api.nvim_create_autocmd('BufWritePre', {
+              buffer = bufnr,
+              callback = function()
+                vim.lsp.buf.format { bufnr = bufnr }
+              end,
+            })
+          end
         end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        return {
-          timeout_ms = 500,
-          lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-        }
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        python = { 'isort', 'black' },
-        javascript = { 'prettierd', 'eslint_d' },
-        typescript = { 'prettierd', 'eslint_d' },
-        javascriptreact = { 'prettierd', 'eslint_d' },
-        typescriptreact = { 'prettierd', 'eslint_d' },
-      },
-    },
+      }
+    end,
   },
 
   { -- Autocompletion
@@ -528,7 +524,6 @@ require('lazy').setup({
       'hrsh7th/cmp-path',
     },
     config = function()
-      -- See `:help cmp`
       local cmp = require 'cmp'
       local luasnip = require 'luasnip'
       luasnip.config.setup {}
@@ -648,9 +643,6 @@ require('lazy').setup({
       auto_install = true,
       highlight = {
         enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
@@ -683,7 +675,6 @@ require('lazy').setup({
 
   require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
-  require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.gitsigns',
 
