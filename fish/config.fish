@@ -5,6 +5,15 @@ set -x LC_ALL en_US.UTF-8
 # Disable greeting
 set -gx fish_greeting ''
 
+# Replace prompt_hostname with root checker
+function prompt_hostname
+    if test (id -u) -eq 0
+        echo '#'
+    else
+        echo '$'
+    end
+end
+
 # Custom config
 set -x HISTSIZE 20000
 
@@ -23,3 +32,4 @@ set -Ua fish_user_paths $HOME/.cargo/bin
 set -Ux PYENV_ROOT $HOME/.pyenv
 set -U fish_user_paths $PYENV_ROOT/bin $fish_user_paths
 # pyenv init - | source
+
