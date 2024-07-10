@@ -5,12 +5,12 @@ set -x LC_ALL en_US.UTF-8
 # Disable greeting
 set -gx fish_greeting ''
 
-# Replace prompt_hostname with root checker
+# Replace prompt_hostname with ip address
 function prompt_hostname
-    if test (id -u) -eq 0
-        echo '#'
-    else
-        echo '$'
+    if test (uname) = "Linux"
+        echo (hostname -I | awk '{print $1}')
+    else if test (uname) = "Darwin"
+        echo (ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}')
     end
 end
 

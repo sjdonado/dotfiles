@@ -2,13 +2,14 @@
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 --new <branch_name> [--database <database_name>] [--setup] [--remove] [--help]"
+  echo "Usage: $0 --new <branch_name> [--database <database_name>] [--setup] [--remove] [--drop-database] [--help]"
   echo ""
   echo "Options:"
   echo "  --new <branch_name>         Specify the new branch name."
   echo "  --remove <branch_name>      Remove the worktree, kill the tmux session, and drop the specified database."
   echo "  --database <database_name>  Specify the database name to replace 'development' in the DATABASE_URL."
   echo "  --setup                     Run the ./cicd-setup.sh script in the monorepo tmux window."
+  echo "  --drop-database             Drop the specified database."
   echo "  --help                      Display this help message."
   exit 0
 }
@@ -22,8 +23,9 @@ fi
 branch_name=""
 database_name=""
 add_worktree=false
-remove_worktree=false
 run_setup=false
+remove_worktree=false
+drop_database=false
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -43,6 +45,9 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --setup)
       run_setup=true
+      ;;
+    --drop-database)
+      drop_database=true
       ;;
     --help)
       usage
@@ -66,18 +71,45 @@ api_path="$worktree_path/Api"
 portal_path="$worktree_path/Portal"
 
 if $remove_worktree; then
-  git worktree remove "$worktree_path"
-  tmux kill-session -t "$branch_name"
+  if $drop_database; then
+    if [ -f "$api_path/.env" ]; then
+      database_url=$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')
 
-  # Drop the database if the database_name is provided
-  if [ -n "$database_name" ]; then
-    database_url=$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')
-    db_user=$(echo $database_url | awk -F[/:@] '{print $4}')
-    db_password=$(echo $database_url | awk -F[@:/] '{print $5}')
-    db_host=$(echo $database_url | awk -F[@:/] '{print $6}')
-    db_name=$(echo $database_url | awk -F[/:] '{print $4}')
+      # Use URL parsing to extract components
+      protocol=$(echo $database_url | sed -e 's,^\(.*://\).*,\1,g')
+      url=$(echo $database_url | sed -e s,$protocol,,g)
+      userpass=$(echo $url | cut -d@ -f1)
+      hostport_db=$(echo $url | cut -d@ -f2)
+      user=$(echo $userpass | cut -d: -f1)
+      password=$(echo $userpass | cut -d: -f2)
+      hostport=$(echo $hostport_db | cut -d/ -f1)
+      db_name=$(echo $hostport_db | cut -d/ -f2 | cut -d? -f1)
 
-    PGPASSWORD="$db_password" psql -U "$db_user" -h "$db_host" -d postgres -c "DROP DATABASE IF EXISTS $database_name;"
+      host=$(echo $hostport | cut -d: -f1)
+      port=$(echo $hostport | cut -d: -f2)
+
+      if [ -n "$db_name" ]; then
+        PGPASSWORD="$password" psql -U "$user" -h "$host" -p "$port" -d postgres -c "DROP DATABASE IF EXISTS \"$db_name\";"
+      else
+        echo "Database name not found in DATABASE_URL"
+        exit 1
+      fi
+    else
+      echo "File not found: $api_path/.env"
+      exit 1
+    fi
+  fi
+
+  if [ -d "$worktree_path" ]; then
+    git worktree remove "$worktree_path"
+  else
+    echo "Worktree path does not exist: $worktree_path"
+  fi
+
+  if tmux has-session -t "$branch_name" 2>/dev/null; then
+    tmux kill-session -t "$branch_name"
+  else
+    echo "Tmux session does not exist: $branch_name"
   fi
 
   exit 0
@@ -103,8 +135,19 @@ if $add_worktree; then
   tmux send-keys -t "$branch_name:2" "cd $portal_path" C-m
 
   # Step 6: Copy .env variables from the original folder (development) to the ./Api and ./Portal
-  cp "$base_path/Api/.env" "$api_path/.env"
-  cp "$base_path/Portal/.env" "$portal_path/.env"
+  if [ -f "$base_path/Api/.env" ]; then
+    cp "$base_path/Api/.env" "$api_path/.env"
+  else
+    echo "File not found: $base_path/Api/.env"
+    exit 1
+  fi
+
+  if [ -f "$base_path/Portal/.env" ]; then
+    cp "$base_path/Portal/.env" "$portal_path/.env"
+  else
+    echo "File not found: $base_path/Portal/.env"
+    exit 1
+  fi
 
   # Step 7: Update `DATABASE_URL` variable in the ./Api/.env file if the database_name is provided
   if [ -n "$database_name" ]; then
