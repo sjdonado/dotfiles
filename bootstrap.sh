@@ -30,11 +30,6 @@ chsh -s /opt/homebrew/bin/fish
 mkdir -p ~/.config/fish/config.fish && \
 ln -s "$PWD/fish/config.fish" ~/.config/fish/config.fish
 
-# oh-my-fish
-curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
-omf install https://github.com/sjdonado/omf-theme
-omf theme theme
-
 # Nvim config
 brew install nvim lua
 ln -s "$PWD/nvim" ~/.config/nvim
@@ -46,7 +41,7 @@ brew install coreutils \
   git-delta git-lfs
 
 brew install --cask \
-  firefox spotify \
+  firefox spotify libreoffice \
   raycast ukelele notunes browserosaurus \
   monitorcontrol
 

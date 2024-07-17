@@ -162,26 +162,26 @@ require('lazy').setup({
     end,
   },
 
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>d', group = '[D]ocument' },
+        { '<leader>h', group = 'Git [H]unk' },
+        { '<leader>r', group = '[R]ename' },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>w', group = '[W]orkspace' },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
+      require('which-key').add {
+        { '<leader>h', desc = 'Git [H]unk', mode = 'v' },
+      }
     end,
   },
   { -- Fuzzy Finder (files, lsp, etc)
@@ -207,7 +207,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
@@ -300,9 +300,8 @@ require('lazy').setup({
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-
       {
-        'j-hui/fidget.nvim',
+        'j-hui/fidget.nvim', -- notifications and LSP progress messages
         opts = {
           progress = {
             ignore_done_already = true,
@@ -312,10 +311,10 @@ require('lazy').setup({
           },
         },
       },
-
-      -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
-      -- used for completion, annotations and signatures of Neovim apis
-      { 'folke/neodev.nvim', opts = {} },
+      {
+        'folke/neodev.nvim', -- completion, annotations and signatures of Neovim apis
+        opts = {},
+      },
     },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -380,6 +379,7 @@ require('lazy').setup({
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --    TODO: https://github.com/pmizio/typescript-tools.nvim (check when beta is done)
         tsserver = {},
+
         eslint = {
           on_attach = function(client, bufnr)
             vim.api.nvim_create_autocmd('BufWritePre', {
@@ -389,7 +389,10 @@ require('lazy').setup({
           end,
         },
 
-        graphql = {},
+        graphql = {
+          filetypes = { 'graphql' },
+        },
+
         prismals = {},
 
         jsonls = {},
@@ -450,6 +453,17 @@ require('lazy').setup({
           end,
         },
       }
+
+      vim.diagnostic.config {
+        severity_sort = true,
+        float = {
+          format = function(diagnostic)
+            -- local server_name = diagnostic.source or 'LSP'
+            -- return string.format('%s [%s]', diagnostic.message, server_name)
+            return diagnostic.message
+          end,
+        },
+      }
     end,
   },
 
@@ -465,9 +479,6 @@ require('lazy').setup({
         null_ls.builtins.formatting.stylua,
         null_ls.builtins.formatting.black,
         null_ls.builtins.formatting.isort,
-        -- null_ls.builtins.formatting.prettierd.with {
-        --   extra_filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
-        -- },
         null_ls.builtins.formatting.prettier.with {
           extra_filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact' },
         },
@@ -480,7 +491,7 @@ require('lazy').setup({
             vim.api.nvim_create_autocmd('BufWritePre', {
               buffer = bufnr,
               callback = function()
-                vim.lsp.buf.format { bufnr = bufnr }
+                vim.cmd 'silent! lua vim.lsp.buf.format { bufnr = bufnr }'
               end,
             })
           end
@@ -673,7 +684,7 @@ require('lazy').setup({
     end,
   },
 
-  require 'kickstart.plugins.debug',
+  -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.gitsigns',
