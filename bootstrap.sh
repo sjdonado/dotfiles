@@ -15,6 +15,11 @@ ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 # Fix alacritty thin strokes on macos
 defaults write org.alacritty AppleFontSmoothing -int 0
 
+# Setup alacritty themes
+mkdir -p ~/.config/alacritty/themes
+ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
+ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
+
 # Tmux config
 brew install tmux
 
