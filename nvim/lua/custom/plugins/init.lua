@@ -144,4 +144,11 @@ return {
       end, { noremap = false, desc = 'Harpoon: Toggle quick menu' })
     end,
   },
+  {
+    'norcalli/nvim-colorizer.lua',
+    opts = {
+      '*',
+      '!vim',
+    },
+  },
 }
