@@ -1,5 +1,5 @@
 -- Enable 24-bit colour
--- vim.opt.termguicolors = true
+vim.opt.termguicolors = true
 
 -- See `:help mapleader`
 -- Set <space> as the leader key
@@ -162,7 +162,7 @@ require('lazy').setup({
     end,
   },
 
-  {                     -- Useful plugin to show you pending keybinds
+  { -- Useful plugin to show you pending keybinds
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -207,7 +207,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
