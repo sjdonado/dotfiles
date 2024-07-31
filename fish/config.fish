@@ -7,11 +7,7 @@ set -gx fish_greeting ''
 
 # Replace prompt_hostname with ip address
 function prompt_hostname
-    if test (uname) = "Linux"
-        echo (hostname -I | awk '{print $1}')
-    else if test (uname) = "Darwin"
-        echo (ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}')
-    end
+  echo ""
 end
 
 # Custom config

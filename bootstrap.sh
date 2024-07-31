@@ -63,8 +63,13 @@ colima start
 
 # Nice to have
 brew install --cask \
-  table-tool db-browser-for-sqlite postico \
+  tableplus \
   qbittorrent reverso
+
+# Tailscale setup
+brew install tailscale mosh
+sudo tailscaled install-system-daemon
+tailscale up
 
 brew install tor mitmproxy nmap redis \
   cloudflare/cloudflare/cloudflared \
