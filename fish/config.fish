@@ -5,13 +5,11 @@ set -x LC_ALL en_US.UTF-8
 # Disable greeting
 set -gx fish_greeting ''
 
-# Replace prompt_hostname with ip address
-function prompt_hostname
-  echo ""
-end
-
 # Custom config
 set -x HISTSIZE 20000
+set -g fish_autosuggestion_enabled 0
+
+function prompt_hostname; end;
 
 # Add binaries to PATH
 # set -g -x PATH /usr/local/bin $PATH
