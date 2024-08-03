@@ -27,7 +27,7 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 # Shell setup
-chsh -s /bin/zsh && brew uninstall fish && rm -rf /opt/homebrew/etc/fish /opt/homebrew/etc/fish/config.fish
+chsh -s /bin/zsh
 brew install starship fzf
 
 ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
