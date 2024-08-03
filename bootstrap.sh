@@ -26,14 +26,12 @@ brew install tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
-# Fish shell
-brew install fish
+# Shell setup
+chsh -s /bin/zsh && brew uninstall fish && rm -rf /opt/homebrew/etc/fish /opt/homebrew/etc/fish/config.fish
+brew install starship fzf
 
-echo "/opt/homebrew/bin/fish" | sudo tee -a /etc/shells
-chsh -s /opt/homebrew/bin/fish
-
-mkdir -p ~/.config/fish/config.fish && \
-ln -s "$PWD/fish/config.fish" ~/.config/fish/config.fish
+ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
+ln -sf "$PWD/zsh/starship.toml" ~/.config/starship.toml
 
 # Nvim config
 brew install nvim lua
@@ -51,11 +49,11 @@ brew install --cask \
   monitorcontrol
 
 # Tiling Window manager
-brew install --cask amethyst # SIP unblocked not required
+# brew install --cask amethyst # SIP unblocked not required
 
 # Package managers
-brew install fnm rustup luarocks pypenv crystal # run rustup-init
-ln -sf "$PWD/fish/conf.d/fnm.fish" ~/.config/fish/conf.d/fnm.fish
+brew install fnm rustup luarocks pypenv crystal
+rustup-init
 
 # Docker
 brew install colima docker docker-compose docker-buildx
