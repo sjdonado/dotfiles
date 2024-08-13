@@ -16,10 +16,11 @@ brew install tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 # Shell
-brew install starship fzf
+chsh -s /bin/zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+brew install fzf
 
 ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
-ln -sf "$PWD/zsh/starship.toml" ~/.config/starship.toml
 ```
 
 ### Editor

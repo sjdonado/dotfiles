@@ -28,10 +28,10 @@ ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 # Shell setup
 chsh -s /bin/zsh
-brew install starship fzf
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+brew install fzf
 
 ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
-ln -sf "$PWD/zsh/starship.toml" ~/.config/starship.toml
 
 # Nvim config
 brew install nvim lua

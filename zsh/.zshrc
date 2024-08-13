@@ -8,6 +8,17 @@ alias workspace=~/.config/dotfiles/bin/workspace.sh
 
 # Custom config
 export HISTSIZE=20000
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+
+# oh-my-zsh config
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+
+plugins=(git)
+zstyle ':omz:alpha:lib:git' async-prompt yes
+
+source $ZSH/oh-my-zsh.sh
 
 # Package managers
 source "$HOME/.cargo/env"
@@ -33,5 +44,3 @@ export FZF_CTRL_R_OPTS="
   --header 'Press CTRL-Y to copy into clipboard'"
 
 source <(fzf --zsh)
-
-eval "$(starship init zsh)"
