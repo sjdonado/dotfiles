@@ -27,11 +27,13 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 # Shell setup
-chsh -s /bin/zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 brew install fzf
 
+chsh -s /bin/zsh
 ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
+
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
 
 # Nvim config
 brew install nvim lua
