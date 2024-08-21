@@ -1,12 +1,12 @@
 return {
   {
-    'olimorris/persisted.nvim',
-    lazy = false, -- make sure the plugin is always loaded at startup
+    'rmagatti/auto-session',
+    lazy = false,
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+    },
     opts = {
-      autoload = true,
-      on_autoload_no_session = function()
-        vim.notify 'No existing session to load.'
-      end,
+      auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
     },
   },
   {
