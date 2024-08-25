@@ -7,7 +7,7 @@ usage() {
   echo "Options:"
   echo "  --new <branch_name>         Specify the new branch name."
   echo "  --remove <branch_name>      Remove the worktree, kill the tmux session, and drop the specified database."
-  echo "  --database <database_name>  Specify the database name to replace 'development' in the DATABASE_URL."
+  echo "  --database <database_name>  Specify the database name to replace in the DATABASE_URL."
   echo "  --setup                     Run the ./cicd-setup.sh script in the monorepo tmux window."
   echo "  --drop-database             Drop the specified database."
   echo "  --help                      Display this help message."
@@ -70,23 +70,17 @@ worktree_path="$base_path/../$branch_name"
 api_path="$worktree_path/Api"
 portal_path="$worktree_path/Portal"
 
+# Function to extract database name from DATABASE_URL
+extract_db_name() {
+  local url=$1
+  echo "$url" | sed -n 's|.*//.*:.*@.*:\(.*\)/\([^?]*\)?.*|\2|p'
+}
+
 if $remove_worktree; then
   if $drop_database; then
     if [ -f "$api_path/.env" ]; then
       database_url=$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')
-
-      # Use URL parsing to extract components
-      protocol=$(echo $database_url | sed -e 's,^\(.*://\).*,\1,g')
-      url=$(echo $database_url | sed -e s,$protocol,,g)
-      userpass=$(echo $url | cut -d@ -f1)
-      hostport_db=$(echo $url | cut -d@ -f2)
-      user=$(echo $userpass | cut -d: -f1)
-      password=$(echo $userpass | cut -d: -f2)
-      hostport=$(echo $hostport_db | cut -d/ -f1)
-      db_name=$(echo $hostport_db | cut -d/ -f2 | cut -d? -f1)
-
-      host=$(echo $hostport | cut -d: -f1)
-      port=$(echo $hostport | cut -d: -f2)
+      db_name=$(extract_db_name "$database_url")
 
       if [ -n "$db_name" ]; then
         PGPASSWORD="$password" psql -U "$user" -h "$host" -p "$port" -d postgres -c "DROP DATABASE IF EXISTS \"$db_name\";"
@@ -149,15 +143,18 @@ if $add_worktree; then
     exit 1
   fi
 
+  original_db_name=$(extract_db_name "$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')")
+
   # Step 7: Update `DATABASE_URL` variable in the ./Api/.env file if the database_name is provided
   if [ -n "$database_name" ]; then
-    sed -i '' "s|\(DATABASE_URL=.*\)development|\1$database_name|g" "$api_path/.env"
+    sed -i '' "s|\(DATABASE_URL=.*\)$original_db_name|\1$database_name|g" "$api_path/.env"
   fi
 
   # Step 8: If --setup flag is provided, run the cicd-setup.sh script
   if $run_setup; then
     tmux send-keys -t "$branch_name:0" "./cicd-setup.sh" C-m
-    tmux send-keys -t "$branch_name:1" "pnpm db-duplicate development $database_name" C-m
+    tmux send-keys -t "$branch_name:1" "pnpm db-duplicate $original_db_name $database_name" C-m
+    tmux send-keys -t "$branch_name:1" "clear" C-m
   fi
 
   # Step 9: Open editor
