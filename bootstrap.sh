@@ -8,17 +8,21 @@
 brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
 
-# Setup alacritty
-brew install alacritty
-ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
+# # Setup alacritty
+# brew install alacritty
+# ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
+#
+# # Fix alacritty thin strokes on macos
+# defaults write org.alacritty AppleFontSmoothing -int 0
 
-# Fix alacritty thin strokes on macos
-defaults write org.alacritty AppleFontSmoothing -int 0
+# # Setup alacritty themes
+# mkdir -p ~/.config/alacritty/themes
+# ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
+# ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
 
-# Setup alacritty themes
-mkdir -p ~/.config/alacritty/themes
-ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
-ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
+# Setup kitty
+brew install kitty
+ln -sf $PWD/kitty/kitty.conf ~/.config/kitty/kitty.conf
 
 # Tmux config
 brew install tmux
