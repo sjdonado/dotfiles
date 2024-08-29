@@ -40,7 +40,7 @@ export FZF_CTRL_T_OPTS="
 export FZF_CTRL_R_OPTS="
   --height 10%
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
-  --color header:italic
+  --color bw
   --header 'Press CTRL-Y to copy into clipboard'"
 
 source <(fzf --zsh)

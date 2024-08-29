@@ -51,7 +51,7 @@ brew install coreutils \
   git-delta git-lfs
 
 brew install --cask \
-  firefox httpie \
+  firefox hoppscotch \
   spotify libreoffice \
   raycast ukelele notunes browserosaurus \
   monitorcontrol

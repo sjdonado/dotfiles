@@ -68,7 +68,11 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Global status line
 vim.opt.laststatus = 3
+
+-- Default fold method is manual
+vim.opt.foldmethod = 'marker'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -162,7 +166,7 @@ require('lazy').setup({
     end,
   },
 
-  {                     -- Useful plugin to show you pending keybinds
+  { -- Useful plugin to show you pending keybinds
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -207,7 +211,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
@@ -686,10 +690,20 @@ require('lazy').setup({
 
     'Mofiqul/vscode.nvim',
     config = function()
+      local c = require('vscode.colors').get_colors()
+
       require('vscode').setup {
         style = 'light',
         disable_nvimtree_bg = true,
+        group_overrides = {
+          TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
+          DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
+        },
       }
+
       vim.cmd.colorscheme 'vscode'
     end,
   },
