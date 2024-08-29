@@ -99,8 +99,8 @@ vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic
 -- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- [[ Custom Keymaps ]]
-vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
-vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
+-- vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
+-- vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
 -- vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
 -- vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
 
@@ -162,7 +162,7 @@ require('lazy').setup({
     end,
   },
 
-  { -- Useful plugin to show you pending keybinds
+  {                     -- Useful plugin to show you pending keybinds
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -207,7 +207,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
@@ -682,15 +682,32 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
+  { -- Color scheme
 
-  -- Color scheme
-  {
     'Mofiqul/vscode.nvim',
     config = function()
-      require('vscode').setup()
-      vim.o.background = 'light'
+      require('vscode').setup {
+        style = 'light',
+        disable_nvimtree_bg = true,
+      }
       vim.cmd.colorscheme 'vscode'
     end,
+  },
+  { -- Smooth scroll
+    'karb94/neoscroll.nvim',
+    opts = {
+      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
+        '<C-u>',
+        '<C-d>',
+        '<C-b>',
+        '<C-f>',
+        '<C-y>',
+        '<C-e>',
+        'zt',
+        'zz',
+        'zb',
+      },
+    },
   },
 
   -- require 'kickstart.plugins.debug',
