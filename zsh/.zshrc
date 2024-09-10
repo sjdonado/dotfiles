@@ -35,6 +35,7 @@ export FZF_PREVIEW_COMMAND="bat --style=numbers,changes --wrap never --color alw
 
 export FZF_CTRL_T_OPTS="
   --min-height 30
+  --color bw
   --preview '($FZF_PREVIEW_COMMAND) 2> /dev/null'"
 
 export FZF_CTRL_R_OPTS="

@@ -110,8 +110,11 @@ if $remove_worktree; then
 fi
 
 if $add_worktree; then
+  # Step 0 update refs
+  git fetch
+
   # Step 1: Create a new git worktree based on the argument sent (branch name)
-  git worktree add -B "$branch_name" "$worktree_path"
+  git worktree add --checkout -B "$branch_name" "$worktree_path"
 
   # Step 2: Create a new tmux session with the same branch name
   tmux new-session -d -s "$branch_name"
@@ -157,9 +160,16 @@ if $add_worktree; then
     tmux send-keys -t "$branch_name:1" "clear" C-m
   fi
 
-  # Step 9: Open editor
-  tmux send-keys -t "$branch_name:1" "nvim ." C-m
-  tmux send-keys -t "$branch_name:2" "nvim ." C-m
+  # Step 9: Split the pane horizontally and open nvim in the upper pane for Api and Portal windows
+  tmux split-window -v -t "$branch_name:1"
+  tmux resize-pane -Z -t "$branch_name:1.0"
+  tmux send-keys -t "$branch_name:1.0" "nvim ." C-m
+  tmux send-keys -t "$branch_name:1.1" "cd $api_path" C-m
+
+  tmux split-window -v -t "$branch_name:2"
+  tmux resize-pane -Z -t "$branch_name:2.0"
+  tmux send-keys -t "$branch_name:2.0" "nvim ." C-m
+  tmux send-keys -t "$branch_name:2.1" "cd $portal_path" C-m
 
   # Attach to the tmux session
   # tmux attach -t "$branch_name"
