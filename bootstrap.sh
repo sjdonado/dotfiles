@@ -70,7 +70,7 @@ colima start
 # Nice to have
 brew install --cask \
   tableplus \
-  qbittorrent reverso
+  qbittorrent reverso wealthfolio
 
 # Tailscale setup
 brew install tailscale mosh

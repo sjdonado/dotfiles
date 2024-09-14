@@ -695,27 +695,27 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
-  { -- Color scheme
-
-    'Mofiqul/vscode.nvim',
-    config = function()
-      local c = require('vscode.colors').get_colors()
-
-      require('vscode').setup {
-        style = 'light',
-        disable_nvimtree_bg = true,
-        group_overrides = {
-          TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
-          DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
-        },
-      }
-
-      vim.cmd.colorscheme 'vscode'
-    end,
-  },
+  -- { -- Color scheme
+  --
+  --   'Mofiqul/vscode.nvim',
+  --   config = function()
+  --     local c = require('vscode.colors').get_colors()
+  --
+  --     require('vscode').setup {
+  --       style = 'light',
+  --       disable_nvimtree_bg = true,
+  --       group_overrides = {
+  --         TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
+  --         DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
+  --       },
+  --     }
+  --
+  --     vim.cmd.colorscheme 'vscode'
+  --   end,
+  -- },
   { -- Smooth scroll
     'karb94/neoscroll.nvim',
     opts = {
