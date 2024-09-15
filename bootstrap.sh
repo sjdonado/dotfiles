@@ -23,7 +23,8 @@ brew install font-hack-nerd-font
 # Setup kitty
 brew install kitty
 ln -sf $PWD/kitty/kitty.conf ~/.config/kitty/kitty.conf
-ln -sf $PWD/kitty/current-theme.conf ~/.config/kitty/current-theme.conf
+ln -sf $PWD/kitty/light-theme.conf ~/.config/kitty/light-theme.conf
+ln -sf $PWD/kitty/dark-theme.conf ~/.config/kitty/dark-theme.conf
 
 # Tmux config
 brew install tmux

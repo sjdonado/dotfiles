@@ -1,3 +1,6 @@
+[env]
+TERM = "alacritty-direct"
+
 [colors.primary]
 background = "#000000"
 foreground = "#fffeff"
