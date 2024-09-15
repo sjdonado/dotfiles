@@ -128,22 +128,22 @@ return {
   {
     'vim-crystal/vim-crystal',
   },
-  {
-    'ThePrimeagen/harpoon',
-    branch = 'harpoon2',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      local harpoon = require 'harpoon'
-      harpoon:setup()
-
-      vim.keymap.set('n', '<leader>a', function()
-        harpoon:list():add()
-      end, { noremap = false, desc = 'Harpoon: Append file to list' })
-      vim.keymap.set('n', '<leader><tab>', function()
-        harpoon.ui:toggle_quick_menu(harpoon:list())
-      end, { noremap = false, desc = 'Harpoon: Toggle quick menu' })
-    end,
-  },
+  -- {
+  --   'ThePrimeagen/harpoon',
+  --   branch = 'harpoon2',
+  --   dependencies = { 'nvim-lua/plenary.nvim' },
+  --   config = function()
+  --     local harpoon = require 'harpoon'
+  --     harpoon:setup()
+  --
+  --     vim.keymap.set('n', '<leader>a', function()
+  --       harpoon:list():add()
+  --     end, { noremap = false, desc = 'Harpoon: Append file to list' })
+  --     vim.keymap.set('n', '<leader><tab>', function()
+  --       harpoon.ui:toggle_quick_menu(harpoon:list())
+  --     end, { noremap = false, desc = 'Harpoon: Toggle quick menu' })
+  --   end,
+  -- },
   {
     'norcalli/nvim-colorizer.lua',
     opts = {
@@ -151,4 +151,5 @@ return {
       '!vim',
     },
   },
+  { 'akinsho/git-conflict.nvim', version = '*', config = true },
 }
