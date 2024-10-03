@@ -68,6 +68,8 @@ rustup-init
 brew install colima docker docker-compose docker-buildx
 colima start
 
+echo '"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]' >> ~/.docker/config.json
+
 # Nice to have
 brew install --cask \
   tableplus \
