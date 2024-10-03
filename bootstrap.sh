@@ -9,22 +9,22 @@ brew tap homebrew/cask-fonts
 brew install font-hack-nerd-font
 
 # # Setup alacritty
-# brew install alacritty
-# ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
-#
+brew install alacritty
+ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
+
 # # Fix alacritty thin strokes on macos
-# defaults write org.alacritty AppleFontSmoothing -int 0
+defaults write org.alacritty AppleFontSmoothing -int 0
 
 # # Setup alacritty themes
-# mkdir -p ~/.config/alacritty/themes
-# ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
-# ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
+mkdir -p ~/.config/alacritty/themes
+ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
+ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
 
 # Setup kitty
-brew install kitty
-ln -sf $PWD/kitty/kitty.conf ~/.config/kitty/kitty.conf
-ln -sf $PWD/kitty/light-theme.conf ~/.config/kitty/light-theme.conf
-ln -sf $PWD/kitty/dark-theme.conf ~/.config/kitty/dark-theme.conf
+# brew install kitty
+# ln -sf $PWD/kitty/kitty.conf ~/.config/kitty/kitty.conf
+# ln -sf $PWD/kitty/light-theme.conf ~/.config/kitty/light-theme.conf
+# ln -sf $PWD/kitty/dark-theme.conf ~/.config/kitty/dark-theme.conf
 
 # Tmux config
 brew install tmux
@@ -49,16 +49,14 @@ ln -s "$PWD/nvim" ~/.config/nvim
 brew install coreutils \
   tree bat fd gawk ripgrep \
   blueutil mackup \
-  git-delta git-lfs
+  git-delta git-lfs \
+  caarlos0/tap/timer terminal-notifier
 
 brew install --cask \
   firefox hoppscotch \
   spotify libreoffice \
   raycast ukelele notunes browserosaurus \
   monitorcontrol
-
-# Tiling Window manager
-# brew install --cask amethyst # SIP unblocked not required
 
 # Package managers
 brew install fnm rustup luarocks pypenv crystal
