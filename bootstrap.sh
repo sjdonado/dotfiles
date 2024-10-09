@@ -71,7 +71,7 @@ echo '"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]' >> ~/.doc
 # Nice to have
 brew install --cask \
   tableplus \
-  qbittorrent reverso wealthfolio
+  qbittorrent netnewswire wealthfolio
 
 # Tailscale setup
 brew install tailscale mosh
