@@ -152,4 +152,24 @@ return {
     },
   },
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
+  {
+    'zbirenbaum/copilot.lua',
+    cmd = 'Copilot',
+    event = 'InsertEnter',
+    config = function()
+      require('copilot').setup {
+        panel = {
+          layout = {
+            position = 'right',
+          },
+        },
+        suggestion = {
+          auto_trigger = false,
+          keymap = {
+            accept = '<Tab>',
+          },
+        },
+      }
+    end,
+  },
 }
