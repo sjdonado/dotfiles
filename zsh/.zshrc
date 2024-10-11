@@ -5,12 +5,6 @@ export LC_ALL=en_US.UTF-8
 # Custom keymaps
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
-alias work="timer 60m && terminal-notifier -message 'Pomodoro'\
-        -title 'Work Timer is up! Take a Break 😊'\
-        -sound Crystal"
-alias rest="timer 10m && terminal-notifier -message 'Pomodoro'\
-        -title 'Break is over! Get back to work 😬'\
-        -sound Crystal"
 
 # Custom config
 export HISTSIZE=20000

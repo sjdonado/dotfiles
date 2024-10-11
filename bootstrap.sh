@@ -49,8 +49,7 @@ ln -s "$PWD/nvim" ~/.config/nvim
 brew install coreutils \
   tree bat fd gawk ripgrep \
   blueutil mackup \
-  git-delta git-lfs \
-  caarlos0/tap/timer terminal-notifier
+  git-delta git-lfs
 
 brew install --cask \
   firefox hoppscotch \
