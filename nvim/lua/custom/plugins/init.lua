@@ -154,6 +154,9 @@ return {
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
     'zbirenbaum/copilot.lua',
+    dependencies = {
+      'hrsh7th/nvim-cmp',
+    },
     cmd = 'Copilot',
     event = 'InsertEnter',
     config = function()
@@ -171,5 +174,69 @@ return {
         },
       }
     end,
+    keys = {
+      {
+        '<C-g>',
+        function()
+          require('cmp').close()
+          require('copilot.suggestion').next()
+        end,
+        desc = 'Trigger [G]ithub Copilot suggestion',
+        mode = { 'i', 's' },
+      },
+    },
+  },
+  {
+    'CopilotC-Nvim/CopilotChat.nvim',
+    branch = 'canary',
+    dependencies = {
+      { 'zbirenbaum/copilot.lua' },
+      { 'nvim-lua/plenary.nvim' },
+    },
+    build = 'make tiktoken',
+    opts = {
+      debug = true, -- Enable debugging
+      window = {
+        layout = 'float',
+        height = 0.9,
+      },
+    },
+    keys = {
+      {
+        '<leader>gg',
+        function()
+          require('CopilotChat').toggle {}
+        end,
+        desc = '[G]ithub Copilot - To[G]gle chat',
+        mode = { 'n', 'v' },
+      },
+      -- {
+      --   '<leader>ce',
+      --   function()
+      --     require('CopilotChat').open(require('CopilotChat').prompts().Explain)
+      --   end,
+      --   desc = 'CopilotChat - Explain chat',
+      --   mode = { 'n', 'v' },
+      -- },
+      -- {
+      --   '<leader>cr',
+      --   function()
+      --     require('CopilotChat').open(require('CopilotChat').prompts().Review)
+      --   end,
+      --   desc = 'CopilotChat - Review chat',
+      --   mode = { 'n', 'v' },
+      -- },
+      {
+        '<leader>gq',
+        function()
+          local input = vim.fn.input 'Quick Chat: '
+          if input ~= '' then
+            require('CopilotChat').ask(input, { selection = require('CopilotChat.select').visual })
+          end
+        end,
+        desc = '[G]ithub Copilot - [Q]uick chat',
+        mode = { 'n', 'v' },
+      },
+    },
   },
 }

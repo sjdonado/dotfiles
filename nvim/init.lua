@@ -605,10 +605,6 @@ require('lazy').setup({
           { name = 'path' },
         },
       }
-      vim.keymap.set({ 'i', 's' }, '<C-o>', function()
-        require('cmp').close()
-        require('copilot.suggestion').next()
-      end, { desc = 'Trigger copilot suggestion' })
     end,
   },
 
