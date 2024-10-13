@@ -4,12 +4,15 @@
 ##            macos setup               ##
 ##########################################
 
+# Install dependencies from Brewfile
+brew bundle install
+
 # Setup fonts
-brew tap homebrew/cask-fonts
-brew install font-hack-nerd-font
+# brew tap homebrew/cask-fonts
+# brew install font-hack-nerd-font
 
 # # Setup alacritty
-brew install alacritty
+# brew install alacritty
 ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 
 # # Fix alacritty thin strokes on macos
@@ -27,13 +30,13 @@ ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
 # ln -sf $PWD/kitty/dark-theme.conf ~/.config/kitty/dark-theme.conf
 
 # Tmux config
-brew install tmux
+# brew install tmux
 
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
 # Shell setup
-brew install fzf
+# brew install fzf
 
 chsh -s /bin/zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -42,27 +45,27 @@ ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
 ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
 
 # Nvim config
-brew install nvim lua
+# brew install nvim lua
 ln -s "$PWD/nvim" ~/.config/nvim
 
-# Essentials
-brew install coreutils \
-  tree bat fd gawk ripgrep \
-  blueutil mackup \
-  git-delta git-lfs
-
-brew install --cask \
-  firefox hoppscotch \
-  spotify libreoffice \
-  raycast ukelele notunes browserosaurus \
-  monitorcontrol
+# # Essentials
+# brew install coreutils \
+#   tree bat fd gawk ripgrep \
+#   blueutil mackup \
+#   git-delta git-lfs
+#
+# brew install --cask \
+#   firefox hoppscotch \
+#   spotify libreoffice \
+#   raycast ukelele notunes browserosaurus \
+#   monitorcontrol
 
 # Package managers
-brew install fnm rustup luarocks pypenv crystal
+# brew install fnm rustup luarocks pypenv crystal
 rustup-init
 
 # Docker
-brew install colima docker docker-compose docker-buildx
+# brew install colima docker docker-compose docker-buildx
 colima start
 
 echo '"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]' >> ~/.docker/config.json
@@ -73,13 +76,13 @@ brew install --cask \
   qbittorrent netnewswire wealthfolio
 
 # Tailscale setup
-brew install tailscale mosh
-sudo tailscaled install-system-daemon
-tailscale up
+# brew install tailscale mosh
+# sudo tailscaled install-system-daemon
+# tailscale up
 
-brew install tor mitmproxy nmap redis \
-  cloudflare/cloudflare/cloudflared \
-  marp-cli mailpit
+# brew install tor mitmproxy nmap redis \
+#   cloudflare/cloudflare/cloudflared \
+#   mailpit
 
 # Toolkit
 brew tap shopify/shopify
