@@ -4,41 +4,21 @@
 
 1. Clone this repo into `~/.config/dotfiles`
 
-### Terminal + multiplexer + shell
+### Boostrap
 
-```fish
-# Setup alacritty
-brew install alacritty
-ln -s "~/.config/dotfiles/alacritty/alacritty.toml" ~/.config/alacritty.toml
+- Init run `boostrap.sh`
+- Update Brewfile: `brew bundle dump --describe --force`
 
-# Tmux config
-brew install tmux
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+### Terminal multiplexer
 
-# Shell
-chsh -s /bin/zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-brew install fzf
+- Init run `tmux`
+- Install plugins: Press `prefix` + `I` (capital i, as in Install)
 
-ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
-```
+### Text editor
 
-### Editor
-
-- Default config
-
-```fish
-brew install nvim lua
-ln -s "~/.config/dotfiles/nvim" ~/.config/nvim
-```
-
-- Open `nvim .`
-- Check updates
-
-```vim
-:Lazy
-:Mason
-```
+- Init run `nvim .`
+- Update plugins: `:Lazy`
+- Update LSP servers, DAP servers, linters, and formatters: `:Mason`
 
 ### Happy Hacking!
 
