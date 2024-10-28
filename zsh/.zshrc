@@ -1,17 +1,13 @@
-# Locale
 export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 
-# Custom keymaps
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
 
-# Custom config
 export HISTSIZE=20000
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_IGNORE_SPACE
 
-# oh-my-zsh config
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="sjdonado"
 
@@ -23,14 +19,12 @@ source $ZSH/oh-my-zsh.sh
 # Package managers
 source "$HOME/.cargo/env"
 
-# Version managers
-eval "$(fnm env)"
+# eval "$(fnm env)"
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
 
-# fzf config
 export FZF_PREVIEW_COMMAND="bat --style=numbers,changes --wrap never --color always {} || cat {} || tree -C {}"
 
 export FZF_CTRL_T_OPTS="
