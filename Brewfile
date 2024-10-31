@@ -2,8 +2,6 @@ tap "agrinman/tap"
 tap "amberframework/micrate"
 tap "cloudflare/cloudflare"
 tap "homebrew/bundle"
-tap "homebrew/cask"
-tap "homebrew/cask-fonts"
 tap "homebrew/services"
 tap "koekeishiya/formulae"
 tap "oven-sh/bun"
@@ -20,8 +18,6 @@ brew "blueutil"
 brew "bore-cli"
 # Library for manipulating PNG images
 brew "libpng"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.12"
 # Low-level library for pixel manipulation
 brew "pixman"
 # Vector graphics library with cross-device output support
@@ -96,14 +92,10 @@ brew "node"
 brew "openjdk"
 # Development kit for the Java programming language
 brew "openjdk@11"
-# Cryptography and SSL/TLS Toolkit
-brew "openssl@1.1"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
-# Persistent key-value database, with built-in net interface
-brew "redis"
-# Fast, efficient and secure backup program
-brew "restic"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.12"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Rust toolchain installer
@@ -120,21 +112,16 @@ brew "tmux"
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
-# JavaScript package manager
-brew "yarn"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # GPU-accelerated terminal emulator
 cask "alacritty"
-# Open-source browser prompter
-cask "browserosaurus"
 # Voice and text chat software
 cask "discord"
 # Web browser
 cask "firefox"
-cask "font-0xproto"
 cask "font-hack-nerd-font"
 # Open source API development ecosystem
 cask "hoppscotch"
