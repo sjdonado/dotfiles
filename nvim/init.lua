@@ -650,6 +650,15 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter-textobjects',
+      {
+        'nvim-treesitter/nvim-treesitter-context',
+        opts = {
+          enable = true,
+        },
+      },
+    },
     opts = {
       ensure_installed = 'all',
       auto_install = true,
@@ -676,13 +685,37 @@ require('lazy').setup({
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup(opts)
 
-      -- There are additional nvim-treesitter modules that you can use to interact
-      -- with nvim-treesitter. You should go explore a few and see what interests you:
-      --
-      --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-      --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-      --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+      require('nvim-treesitter.configs').setup {
+        textobjects = {
+          move = {
+            enable = true,
+            set_jumps = true, -- whether to set jumps in the jumplist
+            goto_next_start = {
+              [']m'] = '@function.outer',
+            },
+            goto_previous_start = {
+              ['[m'] = '@function.outer',
+            },
+          },
+        },
+      }
     end,
+  },
+  { -- Smooth scroll
+    'karb94/neoscroll.nvim',
+    opts = {
+      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
+        '<C-u>',
+        '<C-d>',
+        '<C-b>',
+        '<C-f>',
+        '<C-y>',
+        '<C-e>',
+        'zt',
+        'zz',
+        'zb',
+      },
+    },
   },
   -- { -- Color scheme
   --
@@ -705,22 +738,6 @@ require('lazy').setup({
   --     vim.cmd.colorscheme 'vscode'
   --   end,
   -- },
-  { -- Smooth scroll
-    'karb94/neoscroll.nvim',
-    opts = {
-      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
-        '<C-u>',
-        '<C-d>',
-        '<C-b>',
-        '<C-f>',
-        '<C-y>',
-        '<C-e>',
-        'zt',
-        'zz',
-        'zb',
-      },
-    },
-  },
 
   -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',

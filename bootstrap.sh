@@ -41,12 +41,6 @@ rustup-init
 colima start
 echo '"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]' >> ~/.docker/config.json
 
-brew tap oven-sh/bun
-brew install bun
-
-brew tap amberframework/micrate
-brew install micrate
-
 # Keyboard layouts setup
 cp -Rp $PWD/macos/ukelele/* "$HOME/Library/Keyboard Layouts/"
 
