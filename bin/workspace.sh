@@ -2,14 +2,12 @@
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 --new <branch_name> [--database <database_name>] [--setup] [--remove] [--drop-database] [--help]"
+  echo "Usage: $0 --new <branch_name> [--setup] [--remove] [--help]"
   echo ""
   echo "Options:"
   echo "  --new <branch_name>         Specify the new branch name."
-  echo "  --remove <branch_name>      Remove the worktree, kill the tmux session, and drop the specified database."
-  echo "  --database <database_name>  Specify the database name to replace in the DATABASE_URL."
-  echo "  --setup                     Run the ./cicd-setup.sh script in the monorepo tmux window."
-  echo "  --drop-database             Drop the specified database."
+  echo "  --remove <branch_name>      Remove the worktree and kill the tmux session."
+  echo "  --setup                     Run the pnpm run build command in the monorepo tmux window."
   echo "  --help                      Display this help message."
   exit 0
 }
@@ -21,11 +19,9 @@ fi
 
 # Parse arguments
 branch_name=""
-database_name=""
 add_worktree=false
 run_setup=false
 remove_worktree=false
-drop_database=false
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -39,15 +35,8 @@ while [[ "$#" -gt 0 ]]; do
       branch_name=$2
       shift
       ;;
-    --database)
-      database_name=$2
-      shift
-      ;;
     --setup)
       run_setup=true
-      ;;
-    --drop-database)
-      drop_database=true
       ;;
     --help)
       usage
@@ -67,33 +56,12 @@ fi
 # Set variables
 base_path=$(git rev-parse --show-toplevel)
 worktree_path="$base_path/../$branch_name"
-api_path="$worktree_path/Api"
-portal_path="$worktree_path/Portal"
-
-# Function to extract database name from DATABASE_URL
-extract_db_name() {
-  local url=$1
-  echo "$url" | sed -n 's|.*//.*:.*@.*:\(.*\)/\([^?]*\)?.*|\2|p'
-}
+web_path="$worktree_path/apps/web"
+api_path="$worktree_path/apps/api"
+supabase_path="$worktree_path/apps/supabase"
+package_path="$worktree_path/package"
 
 if $remove_worktree; then
-  if $drop_database; then
-    if [ -f "$api_path/.env" ]; then
-      database_url=$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')
-      db_name=$(extract_db_name "$database_url")
-
-      if [ -n "$db_name" ]; then
-        PGPASSWORD="$password" psql -U "$user" -h "$host" -p "$port" -d postgres -c "DROP DATABASE IF EXISTS \"$db_name\";"
-      else
-        echo "Database name not found in DATABASE_URL"
-        exit 1
-      fi
-    else
-      echo "File not found: $api_path/.env"
-      exit 1
-    fi
-  fi
-
   if [ -d "$worktree_path" ]; then
     git worktree remove "$worktree_path"
   else
@@ -110,7 +78,7 @@ if $remove_worktree; then
 fi
 
 if $add_worktree; then
-  # Step 0 update refs
+  # Step 0: Update refs
   git fetch
 
   # Step 1: Create a new git worktree based on the argument sent (branch name)
@@ -119,57 +87,53 @@ if $add_worktree; then
   # Step 2: Create a new tmux session with the same branch name
   tmux new-session -d -s "$branch_name"
 
-  # Step 3: Open a window inside the folder in the new tmux session and rename the session with the name `monorepo`
-  tmux rename-window -t "$branch_name:0" 'monorepo'
+  # Step 2.1: Set environment variables for the tmux session
+  tmux set-environment -t "$branch_name" NODE_OPTIONS "--max_old_space_size=6144"
+  tmux set-environment -t "$branch_name" SUPABASE_WORKDIR "$SUPABASE_WORKDIR"
+
+  # Step 3: Open a window inside the folder in the new tmux session
+  tmux new-window -t "$branch_name" -n 'monorepo'
+  tmux kill-window -t "$branch_name:0"
   tmux send-keys -t "$branch_name:0" "cd $worktree_path" C-m
 
-  # Step 4: Open another window with the name `api` inside the ./Api folder in that workspace
+  # Step 4: Open a window for each specified path
+  tmux new-window -t "$branch_name" -n 'web'
+  tmux send-keys -t "$branch_name:1" "cd $web_path" C-m
+
   tmux new-window -t "$branch_name" -n 'api'
-  tmux send-keys -t "$branch_name:1" "cd $api_path" C-m
+  tmux send-keys -t "$branch_name:2" "cd $api_path" C-m
 
-  # Step 5: Open another window with the name `portal` inside the ./Portal folder in that workspace
-  tmux new-window -t "$branch_name" -n 'portal'
-  tmux send-keys -t "$branch_name:2" "cd $portal_path" C-m
+  tmux new-window -t "$branch_name" -n 'supabase'
+  tmux send-keys -t "$branch_name:3" "cd $supabase_path" C-m
 
-  # Step 6: Copy .env variables from the original folder (development) to the ./Api and ./Portal
-  if [ -f "$base_path/Api/.env" ]; then
-    cp "$base_path/Api/.env" "$api_path/.env"
+  tmux new-window -t "$branch_name" -n 'package'
+  tmux send-keys -t "$branch_name:4" "cd $package_path" C-m
+
+  # Step 5: Copy .env files from the original folder to the new locations
+  if [ -f "$base_path/apps/web/.env" ]; then
+    cp "$base_path/apps/web/.env" "$web_path/.env"
   else
-    echo "File not found: $base_path/Api/.env"
-    exit 1
+    echo "File not found: $base_path/apps/web/.env"
   fi
 
-  if [ -f "$base_path/Portal/.env" ]; then
-    cp "$base_path/Portal/.env" "$portal_path/.env"
+  if [ -f "$base_path/apps/api/.env" ]; then
+    cp "$base_path/apps/api/.env" "$api_path/.env"
   else
-    echo "File not found: $base_path/Portal/.env"
-    exit 1
+    echo "File not found: $base_path/apps/api/.env"
   fi
 
-  original_db_name=$(extract_db_name "$(grep '^DATABASE_URL=' "$api_path/.env" | sed 's/^DATABASE_URL=//')")
-
-  # Step 7: Update `DATABASE_URL` variable in the ./Api/.env file if the database_name is provided
-  if [ -n "$database_name" ]; then
-    sed -i '' "s|\(DATABASE_URL=.*\)$original_db_name|\1$database_name|g" "$api_path/.env"
-  fi
-
-  # Step 8: If --setup flag is provided, run the cicd-setup.sh script
+  # Step 6: Run the pnpm run build command if --setup flag is provided
   if $run_setup; then
-    tmux send-keys -t "$branch_name:0" "./cicd-setup.sh" C-m
-    tmux send-keys -t "$branch_name:1" "pnpm db-duplicate $original_db_name $database_name" C-m
-    tmux send-keys -t "$branch_name:1" "clear" C-m
+    tmux send-keys -t "$branch_name:0" "pnpm install && pnpm run build" C-m
   fi
 
-  # Step 9: Split the pane horizontally and open nvim in the upper pane for Api and Portal windows
-  tmux split-window -v -t "$branch_name:1"
-  tmux resize-pane -Z -t "$branch_name:1.0"
-  tmux send-keys -t "$branch_name:1.0" "nvim ." C-m
-  tmux send-keys -t "$branch_name:1.1" "cd $api_path" C-m
-
-  tmux split-window -v -t "$branch_name:2"
-  tmux resize-pane -Z -t "$branch_name:2.0"
-  tmux send-keys -t "$branch_name:2.0" "nvim ." C-m
-  tmux send-keys -t "$branch_name:2.1" "cd $portal_path" C-m
+  # Step 7: Split the pane horizontally and open nvim in the upper pane for each window
+  for i in {1..4}; do
+    tmux split-window -v -t "$branch_name:$i"
+    tmux resize-pane -Z -t "$branch_name:$i.0"
+    tmux send-keys -t "$branch_name:$i.0" "nvim ." C-m
+    tmux send-keys -t "$branch_name:$i.1" "cd ${worktree_path}/apps" C-m
+  done
 
   # Attach to the tmux session
   # tmux attach -t "$branch_name"
