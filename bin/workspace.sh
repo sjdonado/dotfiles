@@ -59,7 +59,7 @@ worktree_path="$base_path/../$branch_name"
 web_path="$worktree_path/apps/web"
 api_path="$worktree_path/apps/api"
 supabase_path="$worktree_path/apps/supabase"
-package_path="$worktree_path/package"
+packages_path="$worktree_path/packages"
 
 if $remove_worktree; then
   if [ -d "$worktree_path" ]; then
@@ -89,7 +89,7 @@ if $add_worktree; then
 
   # Step 2.1: Set environment variables for the tmux session
   tmux set-environment -t "$branch_name" NODE_OPTIONS "--max_old_space_size=6144"
-  tmux set-environment -t "$branch_name" SUPABASE_WORKDIR "$SUPABASE_WORKDIR"
+  tmux set-environment -t "$branch_name" SUPABASE_WORKDIR "$worktree_path/apps"
 
   # Step 3: Open a window inside the folder in the new tmux session
   tmux new-window -t "$branch_name" -n 'monorepo'
@@ -97,17 +97,17 @@ if $add_worktree; then
   tmux send-keys -t "$branch_name:0" "cd $worktree_path" C-m
 
   # Step 4: Open a window for each specified path
-  tmux new-window -t "$branch_name" -n 'web'
-  tmux send-keys -t "$branch_name:1" "cd $web_path" C-m
-
   tmux new-window -t "$branch_name" -n 'api'
-  tmux send-keys -t "$branch_name:2" "cd $api_path" C-m
+  tmux send-keys -t "$branch_name:1" "cd $api_path" C-m
+
+  tmux new-window -t "$branch_name" -n 'web'
+  tmux send-keys -t "$branch_name:2" "cd $web_path" C-m
 
   tmux new-window -t "$branch_name" -n 'supabase'
   tmux send-keys -t "$branch_name:3" "cd $supabase_path" C-m
 
-  tmux new-window -t "$branch_name" -n 'package'
-  tmux send-keys -t "$branch_name:4" "cd $package_path" C-m
+  tmux new-window -t "$branch_name" -n 'packages'
+  tmux send-keys -t "$branch_name:4" "cd $packages_path" C-m
 
   # Step 5: Copy .env files from the original folder to the new locations
   if [ -f "$base_path/apps/web/.env" ]; then
