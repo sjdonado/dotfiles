@@ -143,4 +143,37 @@ return {
     },
   },
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
+  {
+    'nvim-neotest/neotest',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-neotest/nvim-nio',
+      'nvim-treesitter/nvim-treesitter',
+      'marilari88/neotest-vitest',
+    },
+    config = function()
+      local neotest = require 'neotest'
+
+      neotest.setup {
+        adapters = {
+          require 'neotest-vitest' {},
+        },
+        output_panel = {
+          enabled = true,
+        },
+      }
+
+      vim.keymap.set('n', '<leader>tn', function()
+        neotest.run.run()
+      end, { desc = 'Run nearest test' })
+
+      vim.keymap.set('n', '<leader>tf', function()
+        neotest.run.run(vim.fn.expand '%')
+      end, { desc = 'Run tests in file' })
+
+      vim.keymap.set('n', '<leader>to', function()
+        neotest.output.open()
+      end, { desc = 'Toggle output panel' })
+    end,
+  },
 }
