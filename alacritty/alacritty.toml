@@ -32,8 +32,8 @@ history = 0
 save_to_clipboard = false
 
 [window]
-decorations = "Buttonless"
-startup_mode = "Windowed"
+decorations = "None"
+startup_mode = "Maximized"
 
 [general]
 live_config_reload = true
