@@ -39,5 +39,6 @@ startup_mode = "Maximized"
 live_config_reload = true
 
 import = [
-  "~/.config/alacritty/themes/dark.toml"
+  "~/.config/alacritty/themes/light.toml"
 ]
+
