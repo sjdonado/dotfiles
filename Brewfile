@@ -6,6 +6,7 @@ tap "homebrew/services"
 tap "koekeishiya/formulae"
 tap "oven-sh/bun"
 tap "shopify/shopify"
+tap "supabase/tap"
 # Mozilla CA certificate store
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
@@ -24,18 +25,14 @@ brew "pixman"
 brew "cairo"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
 brew "cloudflared"
-# GNU Transport Layer Security (TLS) Library
-brew "gnutls"
-# Generic machine emulator and virtualizer
-brew "qemu"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
 # Next-gen compiler infrastructure
 brew "llvm"
-# Manage compile and link flags for libraries
-brew "pkg-config"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
 # Fast and statically typed, compiled language with Ruby-like syntax
 brew "crystal"
 # Pack, ship and run any application as a lightweight container
@@ -62,6 +59,8 @@ brew "git-delta"
 brew "git-lfs"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
+# GNU Transport Layer Security (TLS) Library
+brew "gnutls"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Image manipulation library
@@ -94,8 +93,12 @@ brew "openjdk"
 brew "openjdk@11"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
+# Fast, disk space efficient package manager
+brew "pnpm"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.12"
+# Generic machine emulator and virtualizer
+brew "qemu"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Rust toolchain installer
@@ -116,8 +119,12 @@ brew "tree"
 brew "amberframework/micrate/micrate"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
+# Supabase CLI
+brew "supabase/tap/supabase"
 # GPU-accelerated terminal emulator
 cask "alacritty"
+# Free and open-source web browser
+cask "chromium"
 # Voice and text chat software
 cask "discord"
 # Web browser

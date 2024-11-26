@@ -176,4 +176,5 @@ return {
       end, { desc = 'Toggle output panel' })
     end,
   },
+  { 'amadeus/vim-mjml' },
 }
