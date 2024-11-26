@@ -11,17 +11,12 @@ brew bundle install
 ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 
 # # Fix alacritty thin strokes on macos
-defaults write org.alacritty AppleFontSmoothing -int 0
+# defaults write org.alacritty AppleFontSmoothing -int 0
 
 # # Setup alacritty themes
 mkdir -p ~/.config/alacritty/themes
 ln -sf $PWD/alacritty/themes/light.toml ~/.config/alacritty/themes/light.toml
 ln -sf $PWD/alacritty/themes/dark.toml ~/.config/alacritty/themes/dark.toml
-
-# Setup kitty (optional)
-# ln -sf $PWD/kitty/kitty.conf ~/.config/kitty/kitty.conf
-# ln -sf $PWD/kitty/light-theme.conf ~/.config/kitty/light-theme.conf
-# ln -sf $PWD/kitty/dark-theme.conf ~/.config/kitty/dark-theme.conf
 
 # Tmux config
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
