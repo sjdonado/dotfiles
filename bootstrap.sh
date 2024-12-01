@@ -33,8 +33,9 @@ ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
 rustup-init
 
 # Docker
-colima start
-echo '"cliPluginsExtraDirs": ["/opt/homebrew/lib/docker/cli-plugins"]' >> ~/.docker/config.json
+# colima start
+ln -sf "$PWD/docker/colima.yaml" ~/.colima/default/colima.yaml
+ln -sf "$PWD/docker/config.json" ~/.docker/config.json
 
 # Keyboard layouts setup
 cp -Rp $PWD/macos/ukelele/* "$HOME/Library/Keyboard Layouts/"
