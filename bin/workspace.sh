@@ -57,6 +57,7 @@ fi
 base_path=$(git rev-parse --show-toplevel)
 worktree_path="$base_path/../$branch_name"
 web_path="$worktree_path/apps/web"
+customer_portal_path="$worktree_path/apps/customer-portal"
 api_path="$worktree_path/apps/api"
 supabase_path="$worktree_path/apps/supabase"
 packages_path="$worktree_path/packages"
@@ -103,11 +104,14 @@ if $add_worktree; then
   tmux new-window -t "$branch_name" -n 'web'
   tmux send-keys -t "$branch_name:2" "cd $web_path" C-m
 
+  tmux new-window -t "$branch_name" -n 'customer-portal'
+  tmux send-keys -t "$branch_name:3" "cd $customer_portal_path" C-m
+
   tmux new-window -t "$branch_name" -n 'supabase'
-  tmux send-keys -t "$branch_name:3" "cd $supabase_path" C-m
+  tmux send-keys -t "$branch_name:4" "cd $supabase_path" C-m
 
   tmux new-window -t "$branch_name" -n 'packages'
-  tmux send-keys -t "$branch_name:4" "cd $packages_path" C-m
+  tmux send-keys -t "$branch_name:5" "cd $packages_path" C-m
 
   # Step 5: Copy .env files from the original folder to the new locations
   if [ -f "$base_path/apps/web/.env" ]; then
