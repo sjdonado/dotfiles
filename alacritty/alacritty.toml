@@ -38,7 +38,4 @@ startup_mode = "Maximized"
 [general]
 live_config_reload = true
 
-import = [
-  "~/.config/alacritty/themes/light.toml"
-]
-
+import = ["~/.config/alacritty/themes/light.toml"]
