@@ -721,43 +721,6 @@ require('lazy').setup({
       }
     end,
   },
-  { -- Smooth scroll
-    'karb94/neoscroll.nvim',
-    opts = {
-      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
-        '<C-u>',
-        '<C-d>',
-        '<C-b>',
-        '<C-f>',
-        '<C-y>',
-        '<C-e>',
-        'zt',
-        'zz',
-        'zb',
-      },
-    },
-  },
-  { -- Color scheme
-
-    'Mofiqul/vscode.nvim',
-    config = function()
-      local c = require('vscode.colors').get_colors()
-
-      require('vscode').setup {
-        style = 'light',
-        disable_nvimtree_bg = true,
-        group_overrides = {
-          TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
-          DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
-        },
-      }
-
-      vim.cmd.colorscheme 'vscode'
-    end,
-  },
 
   -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
@@ -771,6 +734,8 @@ require('lazy').setup({
     icons = {},
   },
 })
+
+require 'custom.commands'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

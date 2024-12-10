@@ -1,4 +1,57 @@
 return {
+  { -- Smooth scroll
+    'karb94/neoscroll.nvim',
+    opts = {
+      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
+        '<C-u>',
+        '<C-d>',
+        '<C-b>',
+        '<C-f>',
+        '<C-y>',
+        '<C-e>',
+        'zt',
+        'zz',
+        'zb',
+      },
+    },
+  },
+  { -- Color scheme
+    'Mofiqul/vscode.nvim',
+    config = function()
+      local c = require('vscode.colors').get_colors()
+      require('vscode').setup {
+        -- style = 'dark',
+        disable_nvimtree_bg = true,
+        group_overrides = {
+          TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+          DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
+          DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
+        },
+      }
+      vim.cmd.colorscheme 'vscode'
+    end,
+  },
+  -- {
+  --   'f-person/auto-dark-mode.nvim',
+  --   dependencies = { 'Mofiqul/vscode.nvim' },
+  --   opts = {
+  --     update_interval = 1000,
+  --     set_dark_mode = function()
+  --       if vim.o.background ~= 'dark' then
+  --         vim.api.nvim_set_option_value('background', 'dark', {})
+  --         vim.cmd 'UpdateAlacrittyTheme dark'
+  --       end
+  --     end,
+  --     set_light_mode = function()
+  --       if vim.o.background ~= 'light' then
+  --         vim.api.nvim_set_option_value('background', 'light', {})
+  --         vim.cmd 'UpdateAlacrittyTheme light'
+  --       end
+  --     end,
+  --   },
+  -- },
   {
     'rmagatti/auto-session',
     lazy = false,
