@@ -742,9 +742,8 @@ require('lazy').setup({
     'Mofiqul/vscode.nvim',
     config = function()
       local c = require('vscode.colors').get_colors()
-
       require('vscode').setup {
-        style = 'light',
+        -- style = 'dark',
         disable_nvimtree_bg = true,
         group_overrides = {
           TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
@@ -755,7 +754,6 @@ require('lazy').setup({
         },
       }
 
-      vim.cmd.colorscheme 'vscode'
     end,
   },
 
@@ -771,6 +769,8 @@ require('lazy').setup({
     icons = {},
   },
 })
+
+require 'custom.commands'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
