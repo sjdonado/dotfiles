@@ -20,7 +20,7 @@ return {
     config = function()
       local c = require('vscode.colors').get_colors()
       require('vscode').setup {
-        -- style = 'dark',
+        -- style = 'light',
         disable_nvimtree_bg = true,
         group_overrides = {
           TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
@@ -33,25 +33,6 @@ return {
       vim.cmd.colorscheme 'vscode'
     end,
   },
-  -- {
-  --   'f-person/auto-dark-mode.nvim',
-  --   dependencies = { 'Mofiqul/vscode.nvim' },
-  --   opts = {
-  --     update_interval = 1000,
-  --     set_dark_mode = function()
-  --       if vim.o.background ~= 'dark' then
-  --         vim.api.nvim_set_option_value('background', 'dark', {})
-  --         vim.cmd 'UpdateAlacrittyTheme dark'
-  --       end
-  --     end,
-  --     set_light_mode = function()
-  --       if vim.o.background ~= 'light' then
-  --         vim.api.nvim_set_option_value('background', 'light', {})
-  --         vim.cmd 'UpdateAlacrittyTheme light'
-  --       end
-  --     end,
-  --   },
-  -- },
   {
     'rmagatti/auto-session',
     lazy = false,
