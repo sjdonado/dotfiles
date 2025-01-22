@@ -75,6 +75,12 @@ return {
       window = {
         width = 1,
       },
+      on_open = function(win)
+        vim.g.zen_mode_active = true
+      end,
+      on_close = function()
+        vim.g.zen_mode_active = false
+      end,
     },
     keys = {
       { '<leader>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },

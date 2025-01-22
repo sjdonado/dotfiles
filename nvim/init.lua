@@ -641,10 +641,12 @@ require('lazy').setup({
         set_vim_settings = false,
       }
 
-      -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
-        return '%2l:%-2v'
+        local line = vim.fn.line '.'
+        local col = vim.fn.col '.'
+        local zen_indicator = vim.g.zen_mode_active and ' Z' or ''
+        return line .. ':' .. col .. zen_indicator
       end
     end,
   },
