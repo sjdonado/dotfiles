@@ -56,11 +56,12 @@ fi
 # Set variables
 base_path=$(git rev-parse --show-toplevel)
 worktree_path="$base_path/../$branch_name"
+api_path="$worktree_path/apps/api"
 web_path="$worktree_path/apps/web"
 customer_portal_path="$worktree_path/apps/customer-portal"
-api_path="$worktree_path/apps/api"
 supabase_path="$worktree_path/apps/supabase"
-packages_path="$worktree_path/packages"
+ui_library_path="$worktree_path/packages/ui-library"
+type_library_path="$worktree_path/packages/type-library"
 
 if $remove_worktree; then
   if [ -d "$worktree_path" ]; then
@@ -110,20 +111,29 @@ if $add_worktree; then
   tmux new-window -t "$branch_name" -n 'supabase'
   tmux send-keys -t "$branch_name:4" "cd $supabase_path" C-m
 
-  tmux new-window -t "$branch_name" -n 'packages'
-  tmux send-keys -t "$branch_name:5" "cd $packages_path" C-m
+  tmux new-window -t "$branch_name" -n 'ui-library'
+  tmux send-keys -t "$branch_name:5" "cd $ui_library_path" C-m
+
+  tmux new-window -t "$branch_name" -n 'type-library'
+  tmux send-keys -t "$branch_name:6" "cd $type_library_path" C-m
 
   # Step 5: Copy .env files from the original folder to the new locations
+  if [ -f "$base_path/apps/api/.env" ]; then
+    cp "$base_path/apps/api/.env" "$api_path/.env"
+  else
+    echo "File not found: $base_path/apps/api/.env"
+  fi
+
   if [ -f "$base_path/apps/web/.env" ]; then
     cp "$base_path/apps/web/.env" "$web_path/.env"
   else
     echo "File not found: $base_path/apps/web/.env"
   fi
 
-  if [ -f "$base_path/apps/api/.env" ]; then
-    cp "$base_path/apps/api/.env" "$api_path/.env"
+  if [ -f "$base_path/apps/customer-portal/.env" ]; then
+    cp "$base_path/apps/customer-portal/.env" "$customer_portal_path/.env"
   else
-    echo "File not found: $base_path/apps/api/.env"
+    echo "File not found: $base_path/apps/customer-portal/.env"
   fi
 
   # Step 6: Run the pnpm run build command if --setup flag is provided
@@ -132,11 +142,11 @@ if $add_worktree; then
   fi
 
   # Step 7: Split the pane horizontally and open nvim in the upper pane for each window
-  for i in {1..4}; do
+  for i in {1..6}; do
     tmux split-window -v -t "$branch_name:$i"
     tmux resize-pane -Z -t "$branch_name:$i.0"
     tmux send-keys -t "$branch_name:$i.0" "nvim ." C-m
-    tmux send-keys -t "$branch_name:$i.1" "cd ${worktree_path}/apps" C-m
+    tmux send-keys -t "$branch_name:$i.1" "cd ${worktree_path}" C-m
   done
 
   # Attach to the tmux session
