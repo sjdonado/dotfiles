@@ -9,19 +9,7 @@ local function initialize_theme()
   end
 end
 
--- Command to toggle the appearance and update the theme file
-vim.api.nvim_create_user_command('ToggleAppearance', function()
-  local new_theme = vim.o.background == 'dark' and 'light' or 'dark'
-
-  vim.api.nvim_set_option_value('background', new_theme, {})
-
-  local command = string.format([[~/.config/dotfiles/bin/update_alacritty_theme.sh "%s"]], new_theme)
-  vim.fn.system(command)
-
-  vim.fn.writefile({ new_theme }, theme_file)
-end, {
-  desc = 'Toggle between dark and light themes for Neovim and Alacritty, and sync across instances',
-})
+vim.schedule(initialize_theme)
 
 -- Watch for changes in the theme file
 local fs_event = vim.loop.new_fs_event()
@@ -37,4 +25,23 @@ if fs_event then
   end)
 end
 
-initialize_theme()
+-- Command to toggle the appearance and update the theme file
+vim.api.nvim_create_user_command('ToggleAppearance', function()
+  local new_theme = vim.o.background == 'dark' and 'light' or 'dark'
+
+  vim.api.nvim_set_option_value('background', new_theme, {})
+
+  local command = string.format([[~/.config/dotfiles/bin/update_alacritty_theme.sh "%s"]], new_theme)
+  vim.fn.system(command)
+
+  vim.fn.writefile({ new_theme }, theme_file)
+end, {
+  desc = 'Toggle between dark and light themes for Neovim and Alacritty, and sync across instances',
+})
+
+-- Dedicated isolated node version for neovim
+vim.g.node_host_prog = vim.fn.expand("~/.local/share/nvim/node/bin/node")
+vim.env.PATH = vim.fn.expand("~/.local/share/nvim/node/bin") .. ":" .. vim.env.PATH
+vim.api.nvim_create_user_command("CheckNode", function()
+  print("Node version: " .. vim.fn.system(vim.g.node_host_prog .. " -v"))
+end, {})

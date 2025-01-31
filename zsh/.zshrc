@@ -19,8 +19,7 @@ source $ZSH/oh-my-zsh.sh
 
 # Package managers
 source "$HOME/.cargo/env"
-
-# eval "$(fnm env)"
+eval "$(fnm env --use-on-cd --shell zsh)"
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"

@@ -16,7 +16,8 @@
 
 ### Text editor
 
-- Init run `nvim .`
+- Setup `./bin/setup_nvim_dependencies.sh`
+- Initial run `nvim .`
 - Update plugins: `:Lazy`
 - Update LSP servers, DAP servers, linters, and formatters: `:Mason`
 
