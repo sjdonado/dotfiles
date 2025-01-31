@@ -74,6 +74,10 @@ vim.opt.laststatus = 3
 -- Default fold method is manual
 vim.opt.foldmethod = 'marker'
 
+-- Disable Netrw on Startup
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 

@@ -65,7 +65,7 @@ type_library_path="$worktree_path/packages/type-library"
 
 if $remove_worktree; then
   if [ -d "$worktree_path" ]; then
-    git worktree remove "$worktree_path"
+    git worktree remove -f "$worktree_path"
   else
     echo "Worktree path does not exist: $worktree_path"
   fi
