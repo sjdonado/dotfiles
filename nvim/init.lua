@@ -216,6 +216,13 @@ require('lazy').setup({
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      {
+        'isak102/telescope-git-file-history.nvim',
+        dependencies = {
+          'nvim-lua/plenary.nvim',
+          'tpope/vim-fugitive',
+        },
+      },
     },
     config = function()
       --  :Telescope help_tags
@@ -259,6 +266,7 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
       pcall(require('telescope').load_extension, 'dap')
+      pcall(require('telescope').load_extension, 'git_file_history')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -302,6 +310,10 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      vim.keymap.set('n', '<leader>st', function()
+        require('telescope').extensions.git_file_history.git_file_history()
+      end, { desc = '[S]earch Git File [T]imelane' })
     end,
   },
 
