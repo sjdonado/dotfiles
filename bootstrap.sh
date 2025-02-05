@@ -32,6 +32,7 @@ ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
 
 # Package managers
 rustup-init
+curl -fsSL https://get.pnpm.io/install.sh | sh -
 
 # Docker
 # colima start

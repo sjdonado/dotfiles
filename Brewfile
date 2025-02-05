@@ -11,6 +11,10 @@ tap "supabase/tap"
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.12"
+# Official Amazon AWS command-line interface
+brew "awscli"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Get/set bluetooth power and discoverable state
@@ -45,6 +49,8 @@ brew "docker-compose"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# Command-line tools for fly.io services
+brew "flyctl"
 # Command-line fuzzy finder written in Go
 brew "fzf"
 # GNU awk utility
@@ -67,6 +73,8 @@ brew "harfbuzz"
 brew "jpeg"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
+# Postgres C API library
+brew "libpq"
 # Framework for layout and rendering of i18n text
 brew "pango"
 # Library to render SVG files using Cairo
@@ -85,18 +93,12 @@ brew "tree-sitter"
 brew "neovim"
 # Port scanning utility for large networks
 brew "nmap"
-# Platform built on V8 to build network applications
-brew "node"
 # Development kit for the Java programming language
 brew "openjdk"
 # Development kit for the Java programming language
 brew "openjdk@11"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
-# Fast, disk space efficient package manager
-brew "pnpm"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.12"
 # Generic machine emulator and virtualizer
 brew "qemu"
 # Search tool like grep and The Silver Searcher
@@ -119,8 +121,6 @@ brew "tree"
 brew "amberframework/micrate/micrate"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
-# Supabase CLI
-brew "supabase/tap/supabase"
 # GPU-accelerated terminal emulator
 cask "alacritty"
 # Free and open-source web browser
@@ -132,6 +132,10 @@ cask "firefox"
 cask "font-hack-nerd-font"
 # Open source API development ecosystem
 cask "hoppscotch"
+# App to visualise, validate and format JSON datasets
+cask "json-viewer"
+# Multi-platform web browser
+cask "microsoft-edge"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # Tool to control external monitor brightness & volume
@@ -148,6 +152,8 @@ cask "qbittorrent"
 cask "raycast"
 # Music streaming service
 cask "spotify"
+# CSV file editor
+cask "table-tool"
 # Native GUI tool for relational databases
 cask "tableplus"
 # Unicode keyboard layout editor
