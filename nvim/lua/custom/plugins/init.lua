@@ -43,6 +43,16 @@ return {
       auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
     },
   },
+  { 'akinsho/git-conflict.nvim', version = '*', config = true },
+  {
+    'sindrets/diffview.nvim',
+    keys = {
+      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
+      { '<leader>gm', '<cmd>DiffviewOpen --layout=diff1<CR>', desc = 'Merge Tool (Single Panel)' },
+      { '<leader>gt', '<cmd>DiffviewToggle<CR>', desc = 'Toggle Diff View' },
+      { '<leader>gc', '<cmd>DiffviewClose<CR>', desc = 'Close Diff View' },
+    },
+  },
   {
     'NeogitOrg/neogit',
     dependencies = {
@@ -153,28 +163,9 @@ return {
       { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
     },
   },
-  {
-    'wsdjeg/vim-fetch',
-  },
-  {
-    'vim-crystal/vim-crystal',
-  },
-  -- {
-  --   'ThePrimeagen/harpoon',
-  --   branch = 'harpoon2',
-  --   dependencies = { 'nvim-lua/plenary.nvim' },
-  --   config = function()
-  --     local harpoon = require 'harpoon'
-  --     harpoon:setup()
-  --
-  --     vim.keymap.set('n', '<leader>a', function()
-  --       harpoon:list():add()
-  --     end, { noremap = false, desc = 'Harpoon: Append file to list' })
-  --     vim.keymap.set('n', '<leader><tab>', function()
-  --       harpoon.ui:toggle_quick_menu(harpoon:list())
-  --     end, { noremap = false, desc = 'Harpoon: Toggle quick menu' })
-  --   end,
-  -- },
+  { 'wsdjeg/vim-fetch' },
+  { 'vim-crystal/vim-crystal' },
+  { 'amadeus/vim-mjml' },
   {
     'norcalli/nvim-colorizer.lua',
     opts = {
@@ -182,7 +173,6 @@ return {
       '!vim',
     },
   },
-  { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
     'nvim-neotest/neotest',
     dependencies = {
@@ -216,5 +206,48 @@ return {
       end, { desc = 'Toggle output panel' })
     end,
   },
-  { 'amadeus/vim-mjml' },
+  {
+    'p-nerd/sr.nvim',
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+    },
+    config = function()
+      require('sr').setup {
+        keymap = '<leader>s/',
+        ignore_case = false,
+        use_regex = false,
+        preview_changes = true,
+        live_preview = true,
+      }
+    end,
+  },
+  -- {
+  --   'nvim-pack/nvim-spectre',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --   },
+  --   keys = {
+  --     {
+  --       '<leader>S',
+  --       function()
+  --         require('spectre').toggle()
+  --       end,
+  --       { desc = 'Toggle [S]pectre' },
+  --     },
+  --     {
+  --       '<leader>sw',
+  --       function()
+  --         require('spectre').open_visual { select_word = true }
+  --       end,
+  --       { desc = '[S]earch current [W]ord' },
+  --     },
+  --     {
+  --       '<leader>sp',
+  --       function()
+  --         require('spectre').open_file_search { select_word = true }
+  --       end,
+  --       { desc = '[S]earch on current File' },
+  --     },
+  --   },
+  -- },
 }

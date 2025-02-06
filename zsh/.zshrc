@@ -19,6 +19,13 @@ source $ZSH/oh-my-zsh.sh
 
 # Package managers
 source "$HOME/.cargo/env"
+export PATH="/Users/sjdonado/.bun/bin:$PATH"
+
+export PNPM_HOME="/Users/juan/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
 
 # export PYENV_ROOT="$HOME/.pyenv"
 # [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
@@ -38,11 +45,3 @@ export FZF_CTRL_R_OPTS="
   --header 'Press CTRL-Y to copy into clipboard'"
 
 source <(fzf --zsh)
-
-# pnpm
-export PNPM_HOME="/Users/juan/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
