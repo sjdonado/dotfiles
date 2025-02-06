@@ -115,29 +115,6 @@ vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic
 vim.keymap.set({ 'n', 'v' }, '<C-s>', ':w<cr>', { silent = true })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<cr>', { silent = true })
 
--- [[ Basic Autocommands ]]
---  See `:help lua-guide-autocommands`
-
--- Highlight when yanking (copying) text
---  Try it with `yap` in normal mode
---  See `:help vim.highlight.on_yank()`
-vim.api.nvim_create_autocmd('TextYankPost', {
-  desc = 'Highlight when yanking (copying) text',
-  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-})
-
--- [[ Custom Autocommands ]]
--- resize splits if window got resized
-vim.api.nvim_create_autocmd({ 'VimResized' }, {
-  group = vim.api.nvim_create_augroup('kickstart-custom-auto-resize', { clear = true }),
-  callback = function()
-    vim.cmd 'tabdo wincmd ='
-  end,
-})
-
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
