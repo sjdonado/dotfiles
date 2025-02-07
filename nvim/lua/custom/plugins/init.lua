@@ -46,6 +46,7 @@ return {
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
     'sindrets/diffview.nvim',
+    lazy = false,
     keys = {
       { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
       { '<leader>gm', '<cmd>DiffviewOpen --layout=diff1<CR>', desc = 'Merge Tool (Single Panel)' },
