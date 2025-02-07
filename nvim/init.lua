@@ -200,9 +200,6 @@ require('lazy').setup({
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
-        -- You can put your default mappings / updates / etc. in here
-        --  All the info you're looking for is in `:help telescope.setup()`
-        --
         defaults = vim.tbl_extend('force', require('telescope.themes').get_dropdown(), {
           mappings = {
             i = {
@@ -218,6 +215,7 @@ require('lazy').setup({
               return math.min(max_columns, 110)
             end,
           },
+          file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/' },
         }),
 
         pickers = {

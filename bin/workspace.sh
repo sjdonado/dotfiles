@@ -1,20 +1,21 @@
 #!/bin/bash
 
-# Read window configurations from environment variable
-if [[ -z "${WORKTREE_PATHS}" ]]; then
-    echo "Error: WORKTREE_PATHS environment variable is not set"
+# Read internal configuration
+if [[ -z "${WORKSPACE_INTERNAL_LAYOUT}" ]]; then
+    echo "Error: WORKSPACE_INTERNAL_LAYOUT environment variable is not set"
     echo "Format: 'name:relative_path,name2:relative_path2'"
     exit 1
 fi
 
-IFS=',' read -ra paths <<< "${WORKTREE_PATHS}"
+IFS=',' read -ra paths <<< "${WORKSPACE_INTERNAL_LAYOUT}"
 
 usage() {
-    echo "Usage: $0 --open <branch_name> [--setup] [--remove [branch_name]] [--help]"
+    echo "Usage: $0 --open <branch_name> [--setup] [--remove [branch_name]] [--close [branch_name]] [--help]"
     echo ""
     echo "Options:"
     echo "  --open <branch_name>    Open new worktree and tmux session"
     echo "  --remove [branch_name]  Remove worktree and tmux session (auto-detects branch if not specified)"
+    echo "  --close [branch_name]   Close tmux session for branch (auto-detects branch if not specified)"
     echo "  --setup                 Run pnpm install && build after creation"
     echo "  --help                  Show this help"
     exit 0
@@ -24,6 +25,7 @@ usage() {
 add_worktree=false
 run_setup=false
 remove_worktree=false
+close_session=false
 branch_name=""
 
 while [[ $# -gt 0 ]]; do
@@ -35,6 +37,15 @@ while [[ $# -gt 0 ]]; do
             ;;
         --remove)
             remove_worktree=true
+            if [[ $# -gt 1 && $2 != --* ]]; then
+                branch_name=$2
+                shift
+            else
+                branch_name=$(git branch --show-current)
+            fi
+            ;;
+        --close)
+            close_session=true
             if [[ $# -gt 1 && $2 != --* ]]; then
                 branch_name=$2
                 shift
@@ -64,6 +75,16 @@ fi
 
 base_path=$(git rev-parse --show-toplevel)
 worktree_path="$base_path/../$branch_name"
+
+if $close_session; then
+    if tmux has-session -t "$branch_name" 2>/dev/null; then
+        echo "Killing tmux session: $branch_name"
+        tmux kill-session -t "$branch_name"
+    else
+        echo "No tmux session found: $branch_name"
+    fi
+    exit 0
+fi
 
 # Removal functionality
 if $remove_worktree; then
@@ -128,9 +149,14 @@ if $add_worktree; then
     fi
 
     # Tmux session setup
-    tmux new-session -d -s "$branch_name" -n "monorepo" -c "$worktree_path"
-    tmux set-environment -t "$branch_name" NODE_OPTIONS "--max_old_space_size=6144"
-    tmux set-environment -t "$branch_name" SUPABASE_WORKDIR "$worktree_path/apps"
+    tmux new-session -d -s "$branch_name" -n "~" -c "$worktree_path"
+
+    # Set workspace environment variables
+    for var_name in $(printenv | grep -oP '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
+        env_key="${var_name#WORKSPACE_}"
+        env_value="${!var_name}"
+        tmux set-environment -t "$branch_name" "$env_key" "$env_value"
+    done
 
     # Window creation loop
     window_index=1
@@ -157,18 +183,20 @@ if $add_worktree; then
     done
 
     # Environment file handling
-    env_files=("apps/api/.env" "apps/web/.env" "apps/customer-portal/.env")
-    for env_file in "${env_files[@]}"; do
-        src="$base_path/$env_file"
-        dest="$worktree_path/$env_file"
+    for item in "${paths[@]}"; do
+        rel_path="${item#*:}"
+        src="$base_path/$rel_path/.env"
+        dest="$worktree_path/$rel_path/.env"
 
         if [ -f "$src" ]; then
             if [ -f "$dest" ]; then
                 echo "Preserving existing: $dest"
             else
-                echo "Copying environment file: $env_file"
+                echo "Copying environment file: $rel_path/.env"
                 cp "$src" "$dest"
             fi
+        else
+            echo "Warning: .env file not found for folder: $rel_path"
         fi
     done
 
