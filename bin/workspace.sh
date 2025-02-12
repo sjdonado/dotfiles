@@ -152,7 +152,7 @@ if $add_worktree; then
     tmux new-session -d -s "$branch_name" -n "~" -c "$worktree_path"
 
     # Set workspace environment variables
-    for var_name in $(printenv | grep -oP '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
+    for var_name in $(printenv | grep -oE '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
         env_key="${var_name#WORKSPACE_}"
         env_value="${!var_name}"
         tmux set-environment -t "$branch_name" "$env_key" "$env_value"
