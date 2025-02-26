@@ -30,7 +30,7 @@ return {
     keys = {
       { '<leader>gs', '<cmd>tab Git<CR>', desc = 'Git Status' },
       { '<leader>gb', '<cmd>Git blame<CR>', desc = 'Git Blame' },
-      { '<leader>gl', '<cmd>gotright vertical Git log<CR>', desc = 'Git Log' },
+      { '<leader>gl', '<cmd>botright vertical Git log<CR>', desc = 'Git Log' },
       { '<leader>gp', '<cmd>Git push<CR>', desc = 'Git Push' },
       { '<leader>gP', '<cmd>Git pull<CR>', desc = 'Git Pull' },
       { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
@@ -38,6 +38,14 @@ return {
       { '<leader>ga', '<cmd>Git add %<CR>', desc = 'Git Add Current File' },
       { '<leader>gA', '<cmd>Git add .<CR>', desc = 'Git Add All' },
     },
+    config = function()
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'fugitive', 'git' },
+        callback = function(event)
+          vim.keymap.set('n', 'q', '<cmd>close<CR>', { buffer = event.buf, desc = 'Close fugitive window' })
+        end,
+      })
+    end,
   },
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
