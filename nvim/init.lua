@@ -72,7 +72,7 @@ vim.opt.scrolloff = 10
 vim.opt.laststatus = 3
 
 -- Default fold method is manual
-vim.opt.foldmethod = 'marker'
+vim.opt.foldmethod = 'manual'
 
 -- Disable Netrw on Startup
 vim.g.loaded_netrw = 1
@@ -248,7 +248,7 @@ require('lazy').setup({
         }
       end, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>se', function()
-        builtin.grep_string { search = vim.fn.input 'Grep For > ' }
+        builtin.grep_string { search = vim.fn.input 'Grep For > ', use_regex = true }
       end, { desc = '[S]earch by [E]xpand Grep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })

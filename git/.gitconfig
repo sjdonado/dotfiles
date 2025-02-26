@@ -11,7 +11,7 @@
 [delta "sjdonado-theme"]
   navigate = true
   line-numbers = true
-  ; syntax-theme = Github
+  ; syntax-theme = Dracula
   file-decoration-style = none
   file-style = omit
   hunk-header-style = file line-number syntax
