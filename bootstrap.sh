@@ -10,6 +10,7 @@ brew bundle install
 # Setup alacritty
 ln -sf "$PWD/alacritty/alacritty.toml" ~/.config/alacritty.toml
 git update-index --assume-unchanged "$PWD/alacritty/alacritty.toml"
+# to revert git update-index --no-assume-unchanged $PWD/alacritty/alacritty.toml
 
 # # Fix alacritty thin strokes on macos
 # defaults write org.alacritty AppleFontSmoothing -int 0
