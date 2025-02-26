@@ -16,7 +16,7 @@ usage() {
     echo "  --open <branch_name>    Open new worktree and tmux session"
     echo "  --remove [branch_name]  Remove worktree and tmux session (auto-detects branch if not specified)"
     echo "  --close [branch_name]   Close tmux session for branch (auto-detects branch if not specified)"
-    echo "  --setup                 Run pnpm install && build after creation"
+    echo "  --setup                 Run custom setup command defined in WORKSPACE_INTERNAL_SETUP_CMD"
     echo "  --help                  Show this help"
     exit 0
 }
@@ -202,6 +202,10 @@ if $add_worktree; then
 
     # Post-setup commands
     if $run_setup; then
-        tmux send-keys -t "$branch_name:0" "pnpm install && pnpm run build" C-m
+        if [[ -z "${WORKSPACE_INTERNAL_SETUP_CMD}" ]]; then
+            echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
+            exit 1
+        fi
+        tmux send-keys -t "$branch_name:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
     fi
 fi

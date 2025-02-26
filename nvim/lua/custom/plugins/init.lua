@@ -49,7 +49,7 @@ return {
     lazy = false,
     keys = {
       { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
-      { '<leader>gm', '<cmd>DiffviewOpen --layout=diff1<CR>', desc = 'Merge Tool (Single Panel)' },
+      { '<leader>gm', '<cmd>DiffviewOpen<CR>', desc = 'Merge Tool (Single Panel)' },
       { '<leader>gt', '<cmd>DiffviewToggle<CR>', desc = 'Toggle Diff View' },
       { '<leader>gc', '<cmd>DiffviewClose<CR>', desc = 'Close Diff View' },
     },
