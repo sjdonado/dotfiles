@@ -15,24 +15,24 @@ return {
       },
     },
   },
-  { -- Color scheme
-    'Mofiqul/vscode.nvim',
-    config = function()
-      local c = require('vscode.colors').get_colors()
-      require('vscode').setup {
-        -- style = 'light',
-        disable_nvimtree_bg = true,
-        group_overrides = {
-          TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
-          DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
-          DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
-        },
-      }
-      vim.cmd.colorscheme 'vscode'
-    end,
-  },
+  -- { -- Color scheme
+  --   'Mofiqul/vscode.nvim',
+  --   config = function()
+  --     local c = require('vscode.colors').get_colors()
+  --     require('vscode').setup {
+  --       -- style = 'light',
+  --       disable_nvimtree_bg = true,
+  --       group_overrides = {
+  --         TelescopePromptBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         TelescopeResultsBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         TelescopePreviewBorder = { fg = c.vscCursorDark, bg = 'NONE' },
+  --         DiagnosticHint = { fg = c.vscGray, bg = 'NONE' },
+  --         DiagnosticUnderlineHint = { fg = 'NONE', bg = 'NONE', undercurl = true, sp = c.vscGray },
+  --       },
+  --     }
+  --     vim.cmd.colorscheme 'vscode'
+  --   end,
+  -- },
   {
     'rmagatti/auto-session',
     lazy = false,
@@ -105,6 +105,35 @@ return {
       'nvim-tree/nvim-web-devicons',
     },
     opts = {
+      renderer = {
+        icons = {
+          show = {
+            file = vim.g.have_nerd_font,
+            folder = vim.g.have_nerd_font,
+          },
+          glyphs = {
+            folder = {
+              arrow_closed = '>',
+              arrow_open = 'v',
+              default = 'd',
+              open = 'o',
+              empty = 'e',
+              empty_open = 'eo',
+              symlink = 'l',
+              symlink_open = 'lo',
+            },
+            git = {
+              unstaged = 'x',
+              staged = '+',
+              unmerged = '!',
+              renamed = 'r',
+              untracked = '?',
+              deleted = 'd',
+              ignored = 'i',
+            },
+          },
+        },
+      },
       disable_netrw = false,
       hijack_netrw = false,
       actions = {
@@ -113,7 +142,7 @@ return {
         },
       },
       view = {
-        width = 60,
+        width = 50,
       },
       notify = {
         threshold = vim.log.levels.ERROR,
