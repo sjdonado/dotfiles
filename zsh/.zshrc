@@ -1,6 +1,3 @@
-export LC_CTYPE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
 alias brew="sudo -Hu sjdonado brew"
@@ -18,9 +15,7 @@ plugins=()
 source $ZSH/oh-my-zsh.sh
 
 # Package managers
-source "$HOME/.cargo/env"
 export PATH="$HOME/.bun/bin:$PATH"
-
 export PNPM_HOME="$HOME/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;

@@ -28,6 +28,7 @@ chsh -s /bin/zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
+ln -sf "$PWD/zsh/.zshenv" ~/.zshenv
 ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
 
 # Package managers
