@@ -15,7 +15,7 @@ style = "Bold"
 style = "Italic"
 
 [font.normal]
-family = "Hack Nerd Font"
+family = "Menlo"
 
 [[keyboard.bindings]]
 key = "N"
@@ -38,4 +38,4 @@ startup_mode = "Maximized"
 [general]
 live_config_reload = true
 
-import = ["~/.config/alacritty/themes/light.toml"]
+import = ["/Users/sjdonado/.config/alacritty/themes/dark.toml"]
