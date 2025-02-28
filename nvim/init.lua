@@ -91,26 +91,9 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagn
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
--- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
--- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
--- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
--- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
 -- [[ Custom Keymaps ]]
--- vim.keymap.set({ 'n', 'v' }, '<C-y>', '6<C-y>')
--- vim.keymap.set({ 'n', 'v' }, '<C-e>', '6<C-e>')
--- vim.keymap.set({ 'n', 'v' }, '<C-l>', '12zl')
--- vim.keymap.set({ 'n', 'v' }, '<C-h>', '12zh')
+vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>')
+vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>')
 
 vim.keymap.set({ 'n', 'v' }, '<C-s>', ':w<cr>', { silent = true })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<cr>', { silent = true })
@@ -168,24 +151,23 @@ require('lazy').setup({
           -- use the highlights from mini.icons
           -- When `false`, it will use `WhichKeyIcon` instead
           colors = true,
-          -- used by key format
           keys = {
-            Up = 'UP',
-            Down = 'DOWN',
-            Left = 'LEFT',
-            Right = 'RIGHT',
+            Up = '↑',
+            Down = '↓',
+            Left = '←',
+            Right = '→',
             C = 'C',
             M = 'M',
             D = 'D',
             S = 'S',
-            CR = 'ENTER',
-            Esc = 'ESC',
-            ScrollWheelDown = 'SCROLL-DOWN',
-            ScrollWheelUp = 'SCROLL-UP',
-            NL = 'NEWLINE',
-            BS = 'BACKSPACE',
-            Space = 'SPACE',
-            Tab = 'TAB',
+            CR = '<CR>',
+            Esc = '<Esc>',
+            ScrollWheelDown = '⇟',
+            ScrollWheelUp = '⇞',
+            NL = '↵',
+            BS = '⌫',
+            Space = '␣',
+            Tab = '⇥',
             F1 = 'F1',
             F2 = 'F2',
             F3 = 'F3',

@@ -1,100 +1,4 @@
 return {
-  { -- Smooth scroll
-    'karb94/neoscroll.nvim',
-    opts = {
-      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
-        '<C-u>',
-        '<C-d>',
-        '<C-b>',
-        '<C-f>',
-        '<C-y>',
-        '<C-e>',
-        'zt',
-        'zz',
-        'zb',
-      },
-    },
-  },
-  {
-    'rmagatti/auto-session',
-    lazy = false,
-    dependencies = {
-      'nvim-telescope/telescope.nvim',
-    },
-    opts = {
-      auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
-    },
-  },
-  {
-    'tpope/vim-fugitive',
-    keys = {
-      { '<leader>gs', '<cmd>tab Git<CR>', desc = 'Git Status' },
-      { '<leader>gb', '<cmd>Git blame<CR>', desc = 'Git Blame' },
-      { '<leader>gl', '<cmd>botright vertical Git log<CR>', desc = 'Git Log' },
-      { '<leader>gp', '<cmd>Git push<CR>', desc = 'Git Push' },
-      { '<leader>gP', '<cmd>Git pull<CR>', desc = 'Git Pull' },
-      { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
-      { '<leader>gC', '<cmd>botright vertical Git commit --amend<CR>', desc = 'Git Commit Amend' },
-      { '<leader>ga', '<cmd>Git add %<CR>', desc = 'Git Add Current File' },
-      { '<leader>gA', '<cmd>Git add .<CR>', desc = 'Git Add All' },
-    },
-    config = function()
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = { 'fugitive', 'git' },
-        callback = function(event)
-          vim.keymap.set('n', 'q', '<cmd>close<CR>', { buffer = event.buf, desc = 'Close fugitive window' })
-        end,
-      })
-    end,
-  },
-  { 'akinsho/git-conflict.nvim', version = '*', config = true },
-  {
-    'sindrets/diffview.nvim',
-    lazy = false,
-    opts = {
-      icons = {
-        folder_closed = 'c',
-        folder_open = 'o',
-      },
-      signs = {
-        fold_closed = '+',
-        fold_open = '-',
-        done = 'x',
-      },
-    },
-    keys = {
-      { '<C-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
-      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
-    },
-    config = function(_, opts)
-      local diffview = require 'diffview'
-      diffview.setup(opts)
-
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = { 'DiffviewFiles', 'DiffviewFileHistory', 'DiffviewFileHistoryPanel' },
-        callback = function(event)
-          vim.keymap.set('n', 'q', '<cmd>DiffviewClose<CR>', { buffer = event.buf, desc = 'Close Diff View' })
-        end,
-      })
-    end,
-  },
-  {
-    'folke/zen-mode.nvim',
-    opts = {
-      window = {
-        width = 1,
-      },
-      on_open = function(win)
-        vim.g.zen_mode_active = true
-      end,
-      on_close = function()
-        vim.g.zen_mode_active = false
-      end,
-    },
-    keys = {
-      { '<leader>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },
-    },
-  },
   {
     'nvim-tree/nvim-tree.lua',
     version = '*',
@@ -113,26 +17,26 @@ return {
             folder = {
               arrow_closed = '>',
               arrow_open = 'v',
-              default = 'd',
-              open = 'o',
-              empty = 'e',
-              empty_open = 'eo',
-              symlink = 'l',
-              symlink_open = 'lo',
+              default = '[+]',
+              open = '[-]',
+              empty = '[ ]',
+              empty_open = '[.]',
+              symlink = '[~]',
+              symlink_open = '[~-]',
             },
             git = {
-              unstaged = 'x',
+              unstaged = '!',
               staged = '+',
-              unmerged = '!',
-              renamed = 'r',
+              unmerged = '#',
+              renamed = '>>',
               untracked = '?',
-              deleted = 'd',
-              ignored = 'i',
+              deleted = 'x',
+              ignored = '-',
             },
           },
         },
       },
-      disable_netrw = false,
+      disable_netrw = true,
       hijack_netrw = false,
       actions = {
         open_file = {
@@ -184,6 +88,103 @@ return {
       { '<leader>e', '<cmd>NvimTreeFindFileToggle<CR>', { desc = 'Toggle Nvim Tree' } },
     },
   },
+  { -- Smooth scroll
+    'karb94/neoscroll.nvim',
+    opts = {
+      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
+        '<C-u>',
+        '<C-d>',
+        '<C-b>',
+        '<C-f>',
+        '<C-y>',
+        '<C-e>',
+        'zt',
+        'zz',
+        'zb',
+      },
+    },
+  },
+  {
+    'rmagatti/auto-session',
+    lazy = false,
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+    },
+    opts = {
+      auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
+    },
+  },
+  {
+    'tpope/vim-fugitive',
+    keys = {
+      { '<leader>gs', '<cmd>tab Git<CR>', desc = 'Git Status' },
+      { '<leader>gb', '<cmd>Git blame<CR>', desc = 'Git Blame' },
+      { '<leader>gl', '<cmd>botright vertical Git log<CR>', desc = 'Git Log' },
+      { '<leader>gP', '<cmd>Git push<CR>', desc = 'Git Push' },
+      { '<leader>gp', '<cmd>Git pull<CR>', desc = 'Git Pull' },
+      { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
+      { '<leader>gC', '<cmd>botright vertical Git commit --amend<CR>', desc = 'Git Commit Amend' },
+      { '<leader>ga', '<cmd>Git add %<CR>', desc = 'Git Add Current File' },
+      { '<leader>gA', '<cmd>Git add .<CR>', desc = 'Git Add All' },
+    },
+    config = function()
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'fugitive', 'git' },
+        callback = function(event)
+          vim.keymap.set('n', 'q', '<cmd>close<CR>', { buffer = event.buf, desc = 'Close fugitive window' })
+        end,
+      })
+    end,
+  },
+  { 'akinsho/git-conflict.nvim', version = '*', config = true },
+  {
+    'sindrets/diffview.nvim',
+    lazy = false,
+    opts = {
+      use_icons = false,
+      icons = {
+        folder_closed = '[+]',
+        folder_open = '[-]',
+      },
+      signs = {
+        fold_closed = '>',
+        fold_open = 'v',
+        done = '*',
+      },
+    },
+    keys = {
+      { '<C-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
+      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
+    },
+    config = function(_, opts)
+      local diffview = require 'diffview'
+      diffview.setup(opts)
+
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'DiffviewFiles', 'DiffviewFileHistory', 'DiffviewFileHistoryPanel' },
+        callback = function(event)
+          vim.keymap.set('n', 'q', '<cmd>DiffviewClose<CR>', { buffer = event.buf, desc = 'Close Diff View' })
+        end,
+      })
+    end,
+  },
+  {
+    'folke/zen-mode.nvim',
+    opts = {
+      window = {
+        width = 1,
+      },
+      on_open = function(win)
+        vim.g.zen_mode_active = true
+      end,
+      on_close = function()
+        vim.g.zen_mode_active = false
+      end,
+    },
+    keys = {
+      { '<leader>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },
+    },
+  },
   {
     'justinmk/vim-sneak',
     keys = {
@@ -218,6 +219,23 @@ return {
         },
         output_panel = {
           enabled = true,
+        },
+        icons = {
+          child_indent = '|',
+          child_prefix = '+',
+          collapsed = '-',
+          expanded = '>',
+          failed = 'x',
+          final_child_indent = ' ',
+          final_child_prefix = '\\',
+          non_collapsible = '-',
+          notify = '!',
+          passed = '√',
+          running = '*',
+          running_animated = { '/', '|', '\\', '-', '/', '|', '\\', '-' },
+          skipped = 's',
+          unknown = '?',
+          watching = 'o',
         },
       }
 
