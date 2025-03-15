@@ -24,7 +24,12 @@ ln -sf "$PWD/alacritty/themes/dark.toml" ~/.config/alacritty/themes/dark.toml
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 
-# Shell theme setup
+# Shell setup (fish)
+chsh -s "$(brew --prefix)/bin/fish"
+mkdir -p ~/.config/fish
+ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
+
+# Shell setup (zsh)
 chsh -s /bin/zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 

@@ -159,13 +159,6 @@ return {
     config = function(_, opts)
       local diffview = require 'diffview'
       diffview.setup(opts)
-
-      -- vim.api.nvim_create_autocmd('FileType', {
-      --   pattern = { 'DiffviewFiles', 'DiffviewFileHistory', 'DiffviewFileHistoryPanel' },
-      --   callback = function(event)
-      --     vim.keymap.set('n', 'q', '<cmd>DiffviewClose<CR>', { buffer = event.buf, desc = 'Close Diff View' })
-      --   end,
-      -- })
     end,
   },
   {
