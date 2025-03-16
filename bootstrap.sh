@@ -28,6 +28,7 @@ ln -sn "$PWD/tmux/.tmux.conf" ~/.tmux.conf
 chsh -s "$(brew --prefix)/bin/fish"
 mkdir -p ~/.config/fish
 ln -sf "$PWD/fish/config.fish" ~/.config/fish/config.fish
+ln -sf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/"
 
 # Shell setup (zsh)
 chsh -s /bin/zsh
