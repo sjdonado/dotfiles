@@ -736,8 +736,14 @@ require('lazy').setup({
   -- {
   --   'ojroques/nvim-osc52',
   --   config = function()
+  --     local osc52 = require 'osc52'
+  --
+  --     osc52.setup {
+  --       tmux_passthrough = true,
+  --     }
+  --
   --     local function copy(lines, _)
-  --       require('osc52').copy(table.concat(lines, '\n'))
+  --       osc52.copy(table.concat(lines, '\n'))
   --     end
   --
   --     local function paste()

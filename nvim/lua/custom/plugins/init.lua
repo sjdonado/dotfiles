@@ -151,15 +151,22 @@ return {
         fold_open = 'v',
         done = '*',
       },
+      view = {
+        default = {
+          winbar_info = true,
+        },
+        file_history = {
+          layout = 'diff2_vertical',
+        },
+        merge_tool = {
+          layout = 'diff3_mixed',
+        },
+      },
     },
     keys = {
       { '<C-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
       { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
     },
-    config = function(_, opts)
-      local diffview = require 'diffview'
-      diffview.setup(opts)
-    end,
   },
   {
     'folke/zen-mode.nvim',
