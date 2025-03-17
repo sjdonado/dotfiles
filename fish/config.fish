@@ -5,24 +5,15 @@ set -x LANG en_US.UTF-8
 
 # Theme settings
 set -g fish_greeting ""
-function prompt_hostname
-    if test (uname) = "Darwin"
-        # Try en0 (typically Wi-Fi) first, then en1 (often Ethernet)
-        set ip_address (ipconfig getifaddr en0 2>/dev/null)
-        if test -z "$ip_address"
-            set ip_address (ipconfig getifaddr en1 2>/dev/null)
-        end
-    else
-        set ip_address (hostname -I 2>/dev/null | awk '{print $1}')
-        # Fallback if hostname -I is not available
-        if test -z "$ip_address"
-            set ip_address (ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v "127.0.0.1" | head -n1)
-        end
+function fish_prompt
+    set -l last_status $status
+    # Prompt status only if it's not 0
+    set -l stat
+    if test $last_status -ne 0
+        set stat (set_color red)"[$last_status]"(set_color normal)
     end
 
-    if test -n "$ip_address"
-        echo "$ip_address"
-    end
+    string join '' -- (set_color green) (prompt_pwd) (set_color normal) $stat '> '
 end
 
 # General settings
@@ -43,4 +34,5 @@ alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
 alias brew="sudo -Hu sjdonado brew"
 
+# Source external variables
 . "$HOME/.config/dotfiles/.env"
