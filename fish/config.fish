@@ -32,6 +32,7 @@ set -g fish_history_max 20000
 # Path configurations
 set -x PNPM_HOME "$HOME/Library/pnpm"
 set -x PATH $HOME/.cargo/bin $PATH
+set PATH $PATH /Users/juan/.local/bin
 
 fish_add_path /opt/homebrew/bin
 fish_add_path "$HOME/.bun/bin"
@@ -41,3 +42,5 @@ fish_add_path "$PNPM_HOME"
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
 alias brew="sudo -Hu sjdonado brew"
+
+. "$HOME/.config/dotfiles/.env"
