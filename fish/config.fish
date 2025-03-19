@@ -23,7 +23,7 @@ set -g fish_history_max 20000
 # Path configurations
 set -x PNPM_HOME "$HOME/Library/pnpm"
 set -x PATH $HOME/.cargo/bin $PATH
-set PATH $PATH /Users/juan/.local/bin
+set PATH $PATH "$HOME/.local/bin"
 
 fish_add_path /opt/homebrew/bin
 fish_add_path "$HOME/.bun/bin"
