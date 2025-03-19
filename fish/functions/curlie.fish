@@ -1,14 +1,31 @@
 # Example ~> curlie -sv https://httpbin.org/json
 function curlie
+    if not command -sq jq
+        echo "jq is not installed. Installing with Homebrew..."
+        brew install jq
+        if test $status -ne 0
+            echo "Error installing jq. Please install it manually."
+            return 1
+        end
+    end
+    if not command -sq xq
+        echo "xq is not installed. Installing xq with Homebrew..."
+        brew install xq
+        if test $status -ne 0
+            echo "Error installing xq. Please install it manually."
+            return 1
+        end
+    end
+
     set -l curl_args
-    set -l jq_args
+    set -l processor_args
     set -l url_found 0
     set -l has_v 0
     set -l has_s 0
 
     for arg in $argv
         # If it starts with '-', it's a curl option
-        if string match -q -- '-*' $arg
+        if string match -q -- '-*' $arg; and test $url_found -eq 0
             # Check if this argument contains v or s flags
             if string match -q -- '*v*' $arg
                 set has_v 1
@@ -21,9 +38,9 @@ function curlie
         else if test $url_found -eq 0
             set -a curl_args $arg
             set url_found 1
-        # Otherwise, assume it's a jq filter
+        # Otherwise, assume it's an argument for jq/xq processor
         else
-            set -a jq_args $arg
+            set -a processor_args $arg
         end
     end
 
@@ -35,50 +52,66 @@ function curlie
         set -a curl_args "-s"
     end
 
-    # Default jq filter if none provided
-    if test (count $jq_args) -eq 0
-        set jq_args '.'
-    end
+    set -l stderr_file (mktemp)
+    set -l body_file (mktemp)
 
-    set -l tmpfile (mktemp)
+    # Run curl with stdout going directly to body_file and stderr to stderr_file
+    curl $curl_args > $body_file 2> $stderr_file
 
-    # Run curl with curl arguments
-    curl $curl_args 2>&1 | tr -d '\r' > $tmpfile
+    # Clean up stderr file by removing carriage returns
+    cat $stderr_file | tr -d '\r' > $stderr_file.clean
+    mv $stderr_file.clean $stderr_file
 
-    if ! grep -q '^\*' $tmpfile
-        # Not curl verbose output, just display the file content as is
-        cat $tmpfile
+    if ! grep -q '^\*' $stderr_file
+        # Not curl verbose output, just display the body content as is
+        cat $body_file
+        rm $stderr_file $body_file
         return
     end
 
+    # Display connection information
     if test $has_v -eq 1
-      grep '^\*' $tmpfile | sed "s/^/"(set_color 777)"/" | sed "s/\$/"(set_color normal)"/"
+      grep '^\*' $stderr_file | sed "s/^/"(set_color 777)"/" | sed "s/\$/"(set_color normal)"/"
     else
-      grep '^\* Connected to ' $tmpfile | sed 's/^\* Connected to /* Connected to /' | sed "s/^/"(set_color 777)"/" | sed "s/\$/"(set_color normal)"/"
+      grep '^\* Connected to ' $stderr_file | sed 's/^\* Connected to /* Connected to /' | sed "s/^/"(set_color 777)"/" | sed "s/\$/"(set_color normal)"/"
     end
 
     # Request headers
-    grep '^>' $tmpfile | sed 's/^> //' | sed -E "s/(.*:)(.*)/\1"(set_color cyan)"\2"(set_color normal)"/"
+    grep '^>' $stderr_file | sed 's/^> //' | sed -E "s/(.*:)(.*)/\1"(set_color cyan)"\2"(set_color normal)"/"
     # Response headers
-    grep '^<' $tmpfile | sed 's/^< //' | sed -E "s/(.*:)(.*)/\1"(set_color cyan)"\2"(set_color normal)"/"
+    grep '^<' $stderr_file | sed 's/^< //' | sed -E "s/(.*:)(.*)/\1"(set_color cyan)"\2"(set_color normal)"/"
 
-    # Check if content-type is JSON
+    # Check content-type from stderr
+    set -l content_type (grep -i '^< content-type:' $stderr_file | head -1)
     set -l is_json 0
-    if grep -i '^< content-type:.*json' $tmpfile > /dev/null
+    set -l is_html 0
+    set -l is_xml 0
+
+    # Process the body based on content type
+    if string match -q -i '*json*' -- "$content_type"
         set is_json 1
+    else if string match -q -i '*html*' -- "$content_type"
+        set is_html 1
+    else if string match -q -i '*xml*' -- "$content_type"
+        set is_xml 1
     end
 
     if test $is_json -eq 1
-        # Find where the JSON body starts
-        set -l start_line (grep -n '^{' $tmpfile | tail -n 1 | cut -d':' -f1)
-
-        if test -n "$start_line"
-            tail -n +$start_line $tmpfile | jq -C $jq_args
+        if test (count $processor_args) -eq 0
+            cat $body_file | jq '.'
+        else
+            cat $body_file | jq $processor_args
+        end
+    else if test $is_html -eq 1 -o $is_xml -eq 1
+        if test (count $processor_args) -eq 0
+            cat $body_file | xq
+        else
+            cat $body_file | xq $processor_args
         end
     else
-        # For non-JSON content, just display the body without JSON parsing
-        grep -v -E '^[<>*]|^[{}] \[[0-9]+ bytes data\]' $tmpfile
+        # For other content types, just display the body as is
+        cat $body_file
     end
 
-    rm $tmpfile
+    rm $stderr_file $body_file
 end
