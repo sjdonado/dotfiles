@@ -7,9 +7,10 @@
 # Install dependencies from Brewfile
 brew bundle install
 
-# # Setup terminal
-mkdir -p "$HOME/.config/ghostty"
+# Setup terminal
+mkdir -p "$HOME/.config/ghostty" "$HOME/.config/ghostty/themes"
 ln -sf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
+ln -sf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/"
 
 # Tmux config
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

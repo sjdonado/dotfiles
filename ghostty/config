@@ -1,6 +1,6 @@
-theme = dark:Raycast_Dark,light:Raycast_Light
+theme = dark:sjdonado_dark,light:sjdonado_light
 
-font-family = Hack Nerd Font Mono
+font-family = Menlo
 font-thicken = true
 font-size = 12.5
 
@@ -8,9 +8,9 @@ window-inherit-font-size = false
 window-padding-y = 0
 
 cursor-style = block
-cursor-invert-fg-bg = true
 
-selection-invert-fg-bg = true
+cursor-invert-fg-bg = false
+selection-invert-fg-bg = false
 
 shell-integration = fish
 shell-integration-features = no-cursor
