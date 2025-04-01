@@ -1,0 +1,16 @@
+theme = dark:Raycast_Dark,light:Raycast_Light
+
+font-family = Hack Nerd Font Mono
+font-thicken = true
+font-size = 12.5
+
+window-inherit-font-size = false
+window-padding-y = 0
+
+cursor-style = block
+cursor-invert-fg-bg = true
+
+selection-invert-fg-bg = true
+
+shell-integration = fish
+shell-integration-features = no-cursor

@@ -16,6 +16,8 @@ function fish_prompt
     string join '' -- (set_color green) (prompt_pwd) (set_color normal) $stat '> '
 end
 
+set fish_color_autosuggestion '#808080'
+
 # General settings
 set -g fish_history fish
 set -g fish_history_max 20000

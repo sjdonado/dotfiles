@@ -25,6 +25,11 @@ key = "N"
 mods = "Command"
 action = "CreateNewWindow"
 
+[[keyboard.bindings]]
+key = "Z"
+mods = "Control"
+action = "None"
+
 [mouse]
 hide_when_typing = true
 
@@ -41,4 +46,4 @@ startup_mode = "Maximized"
 [general]
 live_config_reload = true
 
-import = ["/Users/sjdonado/.config/alacritty/themes/dark.toml"]
+import = ["/Users/juan/.config/alacritty/themes/light.toml"]
