@@ -176,8 +176,9 @@ if $add_worktree; then
         # Pane management
         tmux split-window -v -t "$branch_name:$window_index"
         tmux resize-pane -Z -t "$branch_name:$window_index.0"
+        # TODO: auto open nvim
         # tmux send-keys -t "$branch_name:$window_index.0" "nvim ." C-m
-        tmux send-keys -t "$branch_name:$window_index.1" "cd $worktree_path" C-m
+        tmux send-keys -t "$branch_name:$window_index.1" "cd $full_path" C-m
 
         ((window_index++))
     done
