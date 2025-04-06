@@ -11,16 +11,16 @@ tap "supabase/tap"
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.12"
-# Official Amazon AWS command-line interface
-brew "awscli"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Get/set bluetooth power and discoverable state
 brew "blueutil"
+# Cross-platform HTTP benchmarking tool
+brew "bombardier"
 # Modern, simple TCP tunnel in Rust that exposes local ports to a remote server
 brew "bore-cli"
+# Powerful, enterprise-ready, open source web server with automatic HTTPS
+brew "caddy"
 # Library for manipulating PNG images
 brew "libpng"
 # Low-level library for pixel manipulation
@@ -39,6 +39,8 @@ brew "llvm"
 brew "pkgconf"
 # Fast and statically typed, compiled language with Ruby-like syntax
 brew "crystal"
+# Power of curl, ease of use of httpie
+brew "curlie"
 # Pack, ship and run any application as a lightweight container
 brew "docker"
 # Docker CLI plugin for extended build capabilities with BuildKit
@@ -49,6 +51,8 @@ brew "docker-compose"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# User-friendly command-line shell for UNIX-like operating systems
+brew "fish"
 # Command-line tools for fly.io services
 brew "flyctl"
 # Command-line fuzzy finder written in Go
@@ -87,6 +91,8 @@ brew "luarocks"
 brew "mackup"
 # Web and API based SMTP testing
 brew "mailpit"
+# Remote terminal application
+brew "mosh"
 # Parser generator tool and incremental parsing library
 brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
@@ -99,6 +105,10 @@ brew "openjdk"
 brew "openjdk@11"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
+# Execute binaries from Python packages in isolated environments
+brew "pipx"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.12"
 # Generic machine emulator and virtualizer
 brew "qemu"
 # Search tool like grep and The Silver Searcher
@@ -111,29 +121,30 @@ brew "scc"
 brew "sqlmap"
 # State of the art linter for the Go programming language
 brew "staticcheck"
+# User interface to the TELNET protocol
+brew "telnet"
 # Terminal multiplexer
 brew "tmux"
 # Anonymizing overlay network for TCP
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Command-line XML and HTML beautifier and content extractor
+brew "xq"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
-# GPU-accelerated terminal emulator
-cask "alacritty"
-# Free and open-source web browser
-cask "chromium"
-# Voice and text chat software
-cask "discord"
-# Web browser
-cask "firefox"
-cask "font-hack-nerd-font"
+# Supabase CLI
+brew "supabase/tap/supabase"
+# Universal database tool and SQL client
+cask "dbeaver-community"
+# Google Chromium, sans integration with Google
+cask "eloston-chromium"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
 # Open source API development ecosystem
 cask "hoppscotch"
-# App to visualise, validate and format JSON datasets
-cask "json-viewer"
 # Multi-platform web browser
 cask "microsoft-edge"
 # Intercept, modify, replay, save HTTP/S traffic
@@ -154,9 +165,7 @@ cask "raycast"
 cask "spotify"
 # CSV file editor
 cask "table-tool"
-# Native GUI tool for relational databases
-cask "tableplus"
 # Unicode keyboard layout editor
 cask "ukelele"
-# Investment portfolio tracker
-cask "wealthfolio"
+# Gecko based web browser
+cask "zen-browser"
