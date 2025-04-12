@@ -22,14 +22,6 @@ mkdir -p "$HOME/.config/fish" "$HOME/.config/fish/functions"
 ln -sf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
 ln -sf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/"
 
-# Shell setup (zsh)
-chsh -s /bin/zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-ln -sf "$PWD/zsh/.zshrc" ~/.zshrc
-ln -sf "$PWD/zsh/.zshenv" ~/.zshenv
-ln -sf "$PWD/zsh/sjdonado.zsh-theme" ~/.oh-my-zsh/themes/sjdonado.zsh-theme
-
 # Package managers
 rustup-init
 curl -fsSL https://get.pnpm.io/install.sh | sh -
@@ -43,10 +35,12 @@ ln -sf "$PWD/docker/config.json" ~/.docker/config.json
 cp -Rp "$PWD/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/"
 
 # Dotfiles symlinks
-ln -sf "$PWD/bat/config" ~/.config/bat/config
-ln -sf "$PWD/git/.gitconfig" ~/.gitconfig
-ln -s "$PWD/.ssh/config" ~/.ssh/config
-ln -s "$PWD/.mackup.cfg" ~/.mackup.cfg
+ln -s "$PWD/.ssh/config" "$HOME/.ssh/config"
+ln -s "$PWD/.mackup.cfg" "$HOME/.mackup.cfg"
+ln -sf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
+
+ln -sf "$PWD/bat/config" "$HOME/.config/bat/config"
+ln -sf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"
 
 # Nvim config
-ln -s "$PWD/nvim" ~/.config/nvim
+ln -s "$PWD/nvim" "$HOME/.config/nvim"
