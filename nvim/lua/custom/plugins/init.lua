@@ -110,13 +110,6 @@ return {
     },
   },
   {
-    'justinmk/vim-sneak',
-    keys = {
-      { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
-      { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
-    },
-  },
-  {
     'norcalli/nvim-colorizer.lua',
     opts = {
       '*',
@@ -171,4 +164,11 @@ return {
       }
     end,
   },
+  -- {
+  --   'justinmk/vim-sneak',
+  --   keys = {
+  --     { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
+  --     { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
+  --   },
+  -- },
 }

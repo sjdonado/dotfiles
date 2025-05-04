@@ -68,117 +68,131 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate branch name when needed
-if { $add_worktree || $remove_worktree; } && [[ -z "$branch_name" ]]; then
+if { $add_worktree || $remove_worktree; } && [[ -z "${branch_name}" ]]; then
     echo "Error: Branch name required"
     usage
 fi
 
 base_path=$(git rev-parse --show-toplevel)
-worktree_path="$base_path/../$branch_name"
+worktree_path="$base_path/../${branch_name}"
 
 if $close_session; then
-    if tmux has-session -t "$branch_name" 2>/dev/null; then
-        echo "Killing tmux session: $branch_name"
-        tmux kill-session -t "$branch_name"
+    if tmux has-session -t "${branch_name}" 2>/dev/null; then
+        echo "Killing tmux session: ${branch_name}"
+        tmux kill-session -t "${branch_name}"
     else
-        echo "No tmux session found: $branch_name"
+        echo "No tmux session found: ${branch_name}"
     fi
     exit 0
 fi
 
-# Removal functionality
 if $remove_worktree; then
-    # Prevent deletion of protected branches
-    protected_branches=("main" "master")
-    if [[ " ${protected_branches[@]} " =~ " $branch_name " ]]; then
-        echo "Error: Refusing to remove protected branch: $branch_name"
+    protected_branches=(main master)
+    for p in "${protected_branches[@]}"; do
+        [[ "${branch_name}" == "${p}" ]] && {
+            echo "Error: refusing to remove protected branch: ${branch_name}"
+            exit 1
+        }
+    done
+
+    # Determine the on-disk worktree path, then canonicalize (so ../ is removed)
+    if [[ "${branch_name}" == "." ]]; then
+        workdir="$PWD"
+        branch_name=$(basename "${workdir}")
+    else
+        workdir="$base_path/../${branch_name}"
+    fi
+    if [[ ! -d "${workdir}" ]]; then
+        echo "Error: cannot resolve worktree path for branch: ${branch_name}"
+        exit 1
+    fi
+    if command -v realpath >/dev/null 2>&1; then
+        abs_path=$(realpath "${workdir}")
+    else
+        abs_path=$(cd "${workdir}" && pwd -P)
+    fi
+
+    # Gather registered worktree paths
+    reg_paths=$(git worktree list --porcelain | awk '$1=="worktree"{print $2}')
+
+    if echo "${reg_paths}" | grep -Fxq "${abs_path}"; then
+        echo "Removing registered worktree: ${abs_path}"
+        git worktree remove --force "${abs_path}" || {
+            echo "Error: failed to remove registered worktree: ${abs_path}"
+            exit 1
+        }
+    else
+        echo "No registered worktree found at: ${abs_path}"
         exit 1
     fi
 
-    # Get registered worktree path from git
-    worktree_info=$(git worktree list | grep "\[$branch_name\]$" || true)
-
-    if [ -n "$worktree_info" ]; then
-        # Extract actual worktree path from git output
-        registered_path=$(echo "$worktree_info" | awk '{print $1}')
-        echo "Removing registered worktree: $registered_path"
-
-        git worktree remove "$registered_path" || {
-            echo "Error: Failed to remove worktree at $registered_path"
-            exit 1
-        }
-    elif [ -d "$worktree_path" ]; then
-        # Fallback to directory check with warning
-        echo "Warning: Removing unregistered worktree directory"
-        rm -rf "$worktree_path"
+    # Kill any node/mason (or other) processes running under this worktree
+    echo "Scanning for processes under ${abs_path} to kill..."
+    if command -v lsof >/dev/null 2>&1; then
+      pids=$(lsof +D "${abs_path}" -t 2>/dev/null)
     else
-        echo "No worktree found for branch: $branch_name"
+      # fallback: match in command line
+      pids=$(ps -eo pid,cmd | awk -v path="${abs_path}" '$0 ~ path {print $1}')
     fi
-
-    # Cleanup tmux session
-    if tmux has-session -t "$branch_name" 2>/dev/null; then
-        echo "Killing tmux session: $branch_name"
-        tmux kill-session -t "$branch_name"
-    else
-        echo "No tmux session found: $branch_name"
+    if [[ -n "${pids}" ]]; then
+      echo "Killing processes: ${pids}"
+      echo "${pids}" | xargs -r kill
     fi
 
     exit 0
 fi
 
-# Worktree creation
 if $add_worktree; then
     # Create worktree if missing
-    if [ -d "$worktree_path" ]; then
-        echo "Reusing existing worktree at: $worktree_path"
+    if [ -d "${worktree_path}" ]; then
+        echo "Reusing existing worktree at: ${worktree_path}"
 
         # Validate existing worktree
-        if [ ! -d "$worktree_path/.git" ]; then
+        if [ ! -d "${worktree_path}/.git" ]; then
             echo "Error: Directory exists but is not a git worktree"
             exit 1
         fi
     else
         git fetch
-        git worktree add --checkout -B "$branch_name" "$worktree_path"
+        git worktree add --checkout -B "${branch_name}" "${worktree_path}"
     fi
 
     # Tmux session cleanup
-    if tmux has-session -t "$branch_name" 2>/dev/null; then
-        echo "Killing existing tmux session: $branch_name"
-        tmux kill-session -t "$branch_name"
+    if tmux has-session -t "${branch_name}" 2>/dev/null; then
+        echo "Killing existing tmux session: ${branch_name}"
+        tmux kill-session -t "${branch_name}"
     fi
 
     # Tmux session setup
-    tmux new-session -d -s "$branch_name" -n "~" -c "$worktree_path"
+    tmux new-session -d -s "${branch_name}" -n "~" -c "${worktree_path}"
 
     # Set workspace environment variables
     for var_name in $(printenv | grep -oE '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
         env_key="${var_name#WORKSPACE_}"
         env_value="${!var_name}"
-        tmux set-environment -t "$branch_name" "$env_key" "$env_value"
+        tmux set-environment -t "${branch_name}" "${env_key}" "${env_value}"
     done
 
-    # Window creation loop
     window_index=1
     for item in "${paths[@]}"; do
         name="${item%%:*}"
         rel_path="${item#*:}"
-        full_path="$worktree_path/$rel_path"
+        full_path="${worktree_path}/${rel_path}"
 
         # Create window and verify path
-        if [ -d "$full_path" ]; then
-            tmux new-window -t "$branch_name:$window_index" -n "$name" -c "$full_path"
+        if [ -d "${full_path}" ]; then
+            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${full_path}"
         else
-            echo "Warning: Path not found - $full_path"
-            tmux new-window -t "$branch_name:$window_index" -n "$name" -c "$worktree_path"
+            echo "Warning: Path not found - ${full_path}"
+            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${worktree_path}"
         fi
 
         # Pane management
-        tmux split-window -v -t "$branch_name:$window_index"
-        tmux resize-pane -Z -t "$branch_name:$window_index.0"
+        tmux split-window -v -t "${branch_name}:${window_index}"
+        tmux resize-pane -Z -t "${branch_name}:${window_index}.0"
         # TODO: auto open nvim
-        # tmux send-keys -t "$branch_name:$window_index.0" "nvim ." C-m
-        tmux send-keys -t "$branch_name:$window_index.1" "cd $full_path" C-m
+        # tmux send-keys -t "${branch_name}:${window_index}.0" "nvim ." C-m
+        tmux send-keys -t "${branch_name}:${window_index}.1" "cd ${full_path}" C-m
 
         ((window_index++))
     done
@@ -186,18 +200,18 @@ if $add_worktree; then
     # Environment file handling
     for item in "${paths[@]}"; do
         rel_path="${item#*:}"
-        src="$base_path/$rel_path/.env"
-        dest="$worktree_path/$rel_path/.env"
+        src="${base_path}/${rel_path}/.env"
+        dest="${worktree_path}/${rel_path}/.env"
 
-        if [ -f "$src" ]; then
-            if [ -f "$dest" ]; then
-                echo "Preserving existing: $dest"
+        if [ -f "${src}" ]; then
+            if [ -f "${dest}" ]; then
+                echo "Preserving existing: ${dest}"
             else
-                echo "Copying environment file: $rel_path/.env"
-                cp "$src" "$dest"
+                echo "Copying environment file: ${rel_path}/.env"
+                cp "${src}" "${dest}"
             fi
         else
-            echo "Warning: .env file not found for folder: $rel_path"
+            echo "Warning: .env file not found for folder: ${rel_path}"
         fi
     done
 
@@ -207,6 +221,6 @@ if $add_worktree; then
             echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
             exit 1
         fi
-        tmux send-keys -t "$branch_name:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
+        tmux send-keys -t "${branch_name}:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
     fi
 fi
