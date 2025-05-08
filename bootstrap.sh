@@ -44,3 +44,5 @@ ln -sf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"
 
 # Nvim config
 ln -s "$PWD/nvim" "$HOME/.config/nvim"
+# Zed config
+ln -sf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
