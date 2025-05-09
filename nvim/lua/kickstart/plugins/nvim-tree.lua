@@ -66,6 +66,6 @@ return {
     end,
   },
   keys = {
-    { '<D-S-e>', '<cmd>NvimTreeFindFileToggle<CR>', { desc = 'Toggle Nvim Tree' } },
+    { '<leader>e', '<cmd>NvimTreeFindFileToggle<CR>', { desc = 'Toggle Nvim Tree' } },
   },
 }

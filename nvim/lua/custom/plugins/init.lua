@@ -88,7 +88,7 @@ return {
       },
     },
     keys = {
-      { '<D-s-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
+      { '<leader>tg', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
       { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
     },
   },
@@ -164,11 +164,4 @@ return {
       }
     end,
   },
-  -- {
-  --   'justinmk/vim-sneak',
-  --   keys = {
-  --     { 'f', '<Plug>Sneak_s', desc = 'Jump to any location specified by two charakters' },
-  --     { 'F', '<Plug>Sneak_S', desc = 'Jump to any location specified by two characters (reverse)' },
-  --   },
-  -- },
 }

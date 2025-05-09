@@ -8,14 +8,13 @@
 [
   {
     "context": "Workspace",
-    "bindings": {
-      // "shift shift": "file_finder::Toggle"
-    }
+    "bindings": {}
   },
   {
     "context": "Editor",
     "bindings": {
-      "cmd-shift-g": "git_panel::ToggleFocus"
+      "cmd-shift-g": "git_panel::ToggleFocus",
+      "cmd-[": "workspace::ToggleLeftDock"
       // "j k": ["workspace::SendKeystrokes", "escape"]
     }
   }
