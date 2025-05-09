@@ -10,12 +10,11 @@ fi
 IFS=',' read -ra paths <<< "${WORKSPACE_INTERNAL_LAYOUT}"
 
 usage() {
-    echo "Usage: $0 --open <branch_name> [--setup] [--remove [branch_name]] [--close [branch_name]] [--help]"
+    echo "Usage: $0 --open <branch_name> [--setup] [--remove [branch_name]] [--help]"
     echo ""
     echo "Options:"
-    echo "  --open <branch_name>    Open new worktree and tmux session"
-    echo "  --remove [branch_name]  Remove worktree and tmux session (auto-detects branch if not specified)"
-    echo "  --close [branch_name]   Close tmux session for branch (auto-detects branch if not specified)"
+    echo "  --open <branch_name>    Open new worktree"
+    echo "  --remove [branch_name]  Remove worktree (auto-detects branch if not specified)"
     echo "  --setup                 Run custom setup command defined in WORKSPACE_INTERNAL_SETUP_CMD"
     echo "  --help                  Show this help"
     exit 0
@@ -25,7 +24,6 @@ usage() {
 add_worktree=false
 run_setup=false
 remove_worktree=false
-close_session=false
 branch_name=""
 
 while [[ $# -gt 0 ]]; do
@@ -37,15 +35,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --remove)
             remove_worktree=true
-            if [[ $# -gt 1 && $2 != --* ]]; then
-                branch_name=$2
-                shift
-            else
-                branch_name=$(git branch --show-current)
-            fi
-            ;;
-        --close)
-            close_session=true
             if [[ $# -gt 1 && $2 != --* ]]; then
                 branch_name=$2
                 shift
@@ -75,16 +64,6 @@ fi
 
 base_path=$(git rev-parse --show-toplevel)
 worktree_path="$base_path/../${branch_name}"
-
-if $close_session; then
-    if tmux has-session -t "${branch_name}" 2>/dev/null; then
-        echo "Killing tmux session: ${branch_name}"
-        tmux kill-session -t "${branch_name}"
-    else
-        echo "No tmux session found: ${branch_name}"
-    fi
-    exit 0
-fi
 
 if $remove_worktree; then
     protected_branches=(main master)
@@ -126,7 +105,7 @@ if $remove_worktree; then
         exit 1
     fi
 
-    # Kill any node/mason (or other) processes running under this worktree
+    # Kill any processes running under this worktree
     echo "Scanning for processes under ${abs_path} to kill..."
     if command -v lsof >/dev/null 2>&1; then
       pids=$(lsof +D "${abs_path}" -t 2>/dev/null)
@@ -157,46 +136,6 @@ if $add_worktree; then
         git worktree add --checkout -B "${branch_name}" "${worktree_path}"
     fi
 
-    # Tmux session cleanup
-    if tmux has-session -t "${branch_name}" 2>/dev/null; then
-        echo "Killing existing tmux session: ${branch_name}"
-        tmux kill-session -t "${branch_name}"
-    fi
-
-    # Tmux session setup
-    tmux new-session -d -s "${branch_name}" -n "~" -c "${worktree_path}"
-
-    # Set workspace environment variables
-    for var_name in $(printenv | grep -oE '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
-        env_key="${var_name#WORKSPACE_}"
-        env_value="${!var_name}"
-        tmux set-environment -t "${branch_name}" "${env_key}" "${env_value}"
-    done
-
-    window_index=1
-    for item in "${paths[@]}"; do
-        name="${item%%:*}"
-        rel_path="${item#*:}"
-        full_path="${worktree_path}/${rel_path}"
-
-        # Create window and verify path
-        if [ -d "${full_path}" ]; then
-            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${full_path}"
-        else
-            echo "Warning: Path not found - ${full_path}"
-            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${worktree_path}"
-        fi
-
-        # Pane management
-        tmux split-window -v -t "${branch_name}:${window_index}"
-        tmux resize-pane -Z -t "${branch_name}:${window_index}.0"
-        # TODO: auto open nvim
-        # tmux send-keys -t "${branch_name}:${window_index}.0" "nvim ." C-m
-        tmux send-keys -t "${branch_name}:${window_index}.1" "cd ${full_path}" C-m
-
-        ((window_index++))
-    done
-
     # Environment file handling
     for item in "${paths[@]}"; do
         rel_path="${item#*:}"
@@ -215,12 +154,86 @@ if $add_worktree; then
         fi
     done
 
-    # Post-setup commands
+    # Provide helpful info
+    echo "Worktree ready at: ${worktree_path}"
+    echo "To open in Zed, run: zed ${worktree_path}"
+
+    # Change directory to the worktree in the current shell
+    cd "${worktree_path}"
+
+    # Set up Ghostty layout using AppleScript for macOS
+    if [[ -n "$GHOSTTY_RESOURCES_DIR" && "$(uname)" == "Darwin" ]]; then
+        echo "Setting up Ghostty layout using AppleScript..."
+
+        # Generate AppleScript to create the desired layout
+        osascript -e "
+        tell application \"Ghostty\"
+            activate
+            delay 0.5
+
+            # Create a new tab
+            tell application \"System Events\"
+                keystroke \"t\" using {command down}
+                delay 0.5
+            end tell
+
+            # Send the cd command to the new tab
+            tell application \"System Events\" to keystroke \"cd ${worktree_path}\"
+            tell application \"System Events\" to keystroke return
+            delay 0.3
+
+            # Create first vertical split (Cmd+D)
+            tell application \"System Events\"
+                keystroke \"d\" using {command down}
+                delay 0.3
+            end tell
+
+            # Go back to left pane (Option+Cmd+Left)
+            tell application \"System Events\"
+                key code 123 using {option down, command down}
+                delay 0.3
+            end tell
+
+            # Create horizontal split in left pane (Cmd+Shift+D)
+            tell application \"System Events\"
+                keystroke \"d\" using {command down, shift down}
+                delay 0.3
+            end tell
+
+            # Go to right pane (Option+Cmd+Right)
+            tell application \"System Events\"
+                key code 124 using {option down, command down}
+                delay 0.3
+            end tell
+
+            # Create horizontal split in right pane (Cmd+Shift+D)
+            tell application \"System Events\"
+                keystroke \"d\" using {command down, shift down}
+                delay 0.3
+            end tell
+
+            # Go back to top-left pane to start working
+            tell application \"System Events\"
+                key code 123 using {option down, command down}
+                delay 0.2
+                key code 126 using {option down, command down}
+            end tell
+        end tell" 2>/dev/null || {
+            echo "AppleScript automation failed."
+            echo "To set up panes in Ghostty manually:"
+            echo "1. Press Cmd+T to create a new tab and cd ${worktree_path}"
+            echo "2. Press Cmd+D to split vertically"
+            echo
+        }
+    else
+        echo "To set up panes in Ghostty manually:"
+        echo "1. Press Cmd+T to create a new tab and cd ${worktree_path}"
+        echo "2. Press Cmd+D to split vertically"
+        echo
+    fi
+
     if $run_setup; then
-        if [[ -z "${WORKSPACE_INTERNAL_SETUP_CMD}" ]]; then
-            echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
-            exit 1
-        fi
-        tmux send-keys -t "${branch_name}:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
+        echo "Running setup command: ${WORKSPACE_INTERNAL_SETUP_CMD}"
+        eval "${WORKSPACE_INTERNAL_SETUP_CMD}"
     fi
 fi
