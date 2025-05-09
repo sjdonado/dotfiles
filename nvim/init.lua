@@ -123,8 +123,8 @@ vim.opt.termguicolors = true
 vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>')
 vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>')
 
-vim.keymap.set({ 'n', 'v' }, '<C-s>', ':w<cr>', { silent = true })
-vim.keymap.set('i', '<C-s>', '<Esc>:w<cr>', { silent = true })
+vim.keymap.set({ 'n', 'v' }, '<D-s>', ':w<cr>', { silent = true })
+vim.keymap.set('i', '<D-s>', '<Esc>:w<cr>', { silent = true })
 
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
@@ -271,10 +271,10 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<D-p>', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', function()
+      vim.keymap.set('n', '<D-S-f>', function()
         builtin.live_grep {
           file_ignore_patterns = { '*%-lock.*' },
         }

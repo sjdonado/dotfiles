@@ -88,7 +88,7 @@ return {
       },
     },
     keys = {
-      { '<C-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
+      { '<D-s-g>', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
       { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
     },
   },
