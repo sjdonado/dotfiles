@@ -25,7 +25,7 @@ add_worktree=false
 run_setup=false
 remove_worktree=false
 close_session=false
-minimize_nvim=false
+minimize_panes=false
 branch_name=""
 
 while [[ $# -gt 0 ]]; do
@@ -36,18 +36,27 @@ while [[ $# -gt 0 ]]; do
             ;;
         --remove)
             remove_worktree=true
-            if [[ $# -gt 1 && $2 != --* ]]; then branch_name=$2; shift
-            else branch_name=$(git branch --show-current); fi
+            if [[ $# -gt 1 && $2 != --* ]]; then
+                branch_name=$2; shift
+            else
+                branch_name=$(git branch --show-current)
+            fi
             ;;
         --close)
             close_session=true
-            if [[ $# -gt 1 && $2 != --* ]]; then branch_name=$2; shift
-            else branch_name=$(git branch --show-current); fi
+            if [[ $# -gt 1 && $2 != --* ]]; then
+                branch_name=$2; shift
+            else
+                branch_name=$(git branch --show-current)
+            fi
             ;;
         --minimize)
-            minimize_nvim=true
-            if [[ $# -gt 1 && $2 != --* ]]; then branch_name=$2; shift
-            else branch_name=$(git branch --show-current); fi
+            minimize_panes=true
+            if [[ $# -gt 1 && $2 != --* ]]; then
+                branch_name=$2; shift
+            else
+                branch_name=$(git branch --show-current)
+            fi
             ;;
         --setup)
             run_setup=true
@@ -63,7 +72,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-if { $add_worktree || $remove_worktree || $close_session || $minimize_nvim; } && [[ -z "${branch_name}" ]]; then
+if { $add_worktree || $remove_worktree || $close_session || $minimize_panes; } && [[ -z "${branch_name}" ]]; then
     echo "Error: branch name required"
     usage
 fi
@@ -113,60 +122,105 @@ if $remove_worktree; then
     exit 0
 fi
 
-if $minimize_nvim; then
+if $minimize_panes; then
     session="$branch_name"
     if ! tmux has-session -t "$session" 2>/dev/null; then
         echo "No tmux session: $session"
         exit 1
     fi
-    panes=$(tmux list-panes -t "$session" -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}" \
-            | awk '/nvim$/ {print $1}')
-    if [[ -z "$panes" ]]; then
-        echo "No nvim panes in session: $session"
-    else
-        for p in $panes; do
-            echo "Closing nvim in pane $p"
-            tmux send-keys -t "$p" ":qa!" C-m
-        done
-    fi
+
+    # For each pane: if it's running nvim, quit cleanly; otherwise send SIGINT (Ctrl-C)
+    tmux list-panes -t "$session" -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}" | \
+    while read -r pane cmd; do
+        if [[ "$cmd" == "nvim" ]]; then
+            # echo "Closing nvim in pane $pane"
+            tmux send-keys -t "$pane" ":qa!" C-m
+        else
+            # echo "Sending SIGINT to process in pane $pane"
+            tmux send-keys -t "$pane" C-c
+        fi
+    done
+
     exit 0
 fi
 
 if $add_worktree; then
-    if [[ -d "$worktree_path" ]]; then
-        echo "Reusing worktree: $worktree_path"
-        [[ ! -d "$worktree_path/.git" ]] && { echo "Not a git worktree: $worktree_path"; exit 1; }
+    # Create worktree if missing
+    if [[ -d "${worktree_path}" ]]; then
+        echo "Reusing existing worktree at: ${worktree_path}"
+        [[ ! -e "${worktree_path}/.git" ]] && { echo "Error: ${worktree_path} is not a git worktree"; exit 1; }
     else
         git fetch
-        git worktree add --checkout -B "$branch_name" "$worktree_path"
+        git worktree add --checkout -B "${branch_name}" "${worktree_path}"
     fi
 
-    # copy .env files
+    # Tmux session cleanup
+    if tmux has-session -t "${branch_name}" 2>/dev/null; then
+        echo "Killing existing tmux session: ${branch_name}"
+        tmux kill-session -t "${branch_name}"
+    fi
+
+    # Tmux session setup
+    tmux new-session -d -s "${branch_name}" -n "~" -c "${worktree_path}"
+
+    # Set workspace environment variables
+    for var_name in $(printenv | grep -oE '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
+        env_key="${var_name#WORKSPACE_}"
+        env_value="${!var_name}"
+        tmux set-environment -t "${branch_name}" "${env_key}" "${env_value}"
+    done
+
+    # Create windows & panes per layout
+    window_index=1
     for item in "${paths[@]}"; do
-        rel=${item#*:}
-        src="$base_path/$rel/.env"
-        dst="$worktree_path/$rel/.env"
-        if [[ -f "$src" && ! -f "$dst" ]]; then
-            echo "Copying $rel/.env"
-            cp "$src" "$dst"
+        name="${item%%:*}"
+        rel_path="${item#*:}"
+        full_path="${worktree_path}/${rel_path}"
+
+        if [[ -d "${full_path}" ]]; then
+            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${full_path}"
+        else
+            echo "Warning: Path not found - ${full_path}"
+            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${worktree_path}"
+        fi
+
+        tmux split-window -v -t "${branch_name}:${window_index}"
+        tmux resize-pane -Z -t "${branch_name}:${window_index}.0"
+        tmux send-keys -t "${branch_name}:${window_index}.1" "cd ${full_path}" C-m
+
+        ((window_index++))
+    done
+
+    # Environment file handling
+    for item in "${paths[@]}"; do
+        rel_path="${item#*:}"
+        src="${base_path}/${rel_path}/.env"
+        dest="${worktree_path}/${rel_path}/.env"
+
+        if [[ -f "${src}" ]]; then
+            if [[ -f "${dest}" ]]; then
+                echo "Preserving existing: ${dest}"
+            else
+                echo "Copying environment file: ${rel_path}/.env"
+                cp "${src}" "${dest}"
+            fi
+        else
+            echo "Warning: .env file not found for folder: ${rel_path}"
         fi
     done
 
-    echo "Worktree ready at: $worktree_path"
-    cd "$worktree_path" || exit 1
-
-    # if inside tmux already, just attach
-    if [[ -n "$TMUX" ]]; then
-        tmux attach-session -t "$branch_name"
-        exit 0
-    fi
-
-    # always use tmux in current terminal
-    tmux new-session -A -s "$branch_name" -c "$worktree_path"
-
+    # Post-setup commands
     if $run_setup; then
-        [[ -z "${WORKSPACE_INTERNAL_SETUP_CMD}" ]] && { echo "Error: WORKSPACE_INTERNAL_SETUP_CMD not set"; exit 1; }
-        echo "Running setup: ${WORKSPACE_INTERNAL_SETUP_CMD}"
-        eval "${WORKSPACE_INTERNAL_SETUP_CMD}"
+        if [[ -z "${WORKSPACE_INTERNAL_SETUP_CMD}" ]]; then
+            echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
+            exit 1
+        fi
+        tmux send-keys -t "${branch_name}:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
     fi
-fii
+
+    if [[ -n "$TMUX" ]]; then
+      tmux switch-client -t "${branch_name}"
+    else
+      tmux attach-session -t "${branch_name}"
+    fi
+fi
