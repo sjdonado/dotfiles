@@ -31,20 +31,12 @@ return {
       fallback = 'dark',
     },
   },
-  { -- Smooth scroll
-    'karb94/neoscroll.nvim',
+  {
+    'arnamak/stay-centered.nvim',
+    lazy = false,
     opts = {
-      mappings = { -- Keys to be mapped to their corresponding default scrolling animation
-        '<C-u>',
-        '<C-d>',
-        '<C-b>',
-        '<C-f>',
-        '<C-y>',
-        '<C-e>',
-        'zt',
-        'zz',
-        'zb',
-      },
+      enabled = true,
+      allow_scroll_move = false,
     },
   },
   {
@@ -79,9 +71,6 @@ return {
         default = {
           winbar_info = true,
         },
-        file_history = {
-          layout = 'diff2_vertical',
-        },
         merge_tool = {
           layout = 'diff3_mixed',
         },
@@ -89,7 +78,8 @@ return {
     },
     keys = {
       { '<leader>tg', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
-      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
+      { '<leader>hf', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
+      { '<leader>hd', '<cmd>DiffviewFileHistory .<CR>', desc = 'Dir Diff View History' },
     },
   },
   {

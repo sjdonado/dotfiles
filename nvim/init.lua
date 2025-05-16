@@ -95,6 +95,9 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.keymap.set('n', '<C-e>', '4j', { desc = 'Scroll down 4 lines' })
+vim.keymap.set('n', '<C-y>', '4k', { desc = 'Scroll up 4 lines' })
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -122,9 +125,6 @@ vim.opt.termguicolors = true
 -- [[ Custom Keymaps ]]
 vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>')
 vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>')
-
-vim.keymap.set({ 'n', 'v' }, '<D-s>', ':w<cr>', { silent = true })
-vim.keymap.set('i', '<D-s>', '<Esc>:w<cr>', { silent = true })
 
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
@@ -357,7 +357,7 @@ require('lazy').setup({
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
-          map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+          map('g.', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
 
           -- Find references for the word under your cursor.
           map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -388,17 +388,8 @@ require('lazy').setup({
           --  the definition of its *type*, not where it was *defined*.
           map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
-          -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
-          ---@param client vim.lsp.Client
-          ---@param method vim.lsp.protocol.Method
-          ---@param bufnr? integer some lsp support methods only in specific files
-          ---@return boolean
           local function client_supports_method(client, method, bufnr)
-            if vim.fn.has 'nvim-0.11' == 1 then
-              return client:supports_method(method, bufnr)
-            else
-              return client.supports_method(method, { bufnr = bufnr })
-            end
+            return client:supports_method(method, bufnr)
           end
 
           -- The following two autocommands are used to highlight references of the
