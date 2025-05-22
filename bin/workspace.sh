@@ -91,7 +91,7 @@ if $close_session; then
 fi
 
 if $remove_worktree; then
-    protected=(main master)
+    protected=(_main _master main master)
     for p in "${protected[@]}"; do
         [[ "${branch_name}" == "${p}" ]] && {
             echo "Refusing to remove protected branch: ${p}"
@@ -123,20 +123,30 @@ if $remove_worktree; then
 fi
 
 if $minimize_panes; then
-    session="$branch_name"
+    # “.” means “current tmux session” when inside tmux, otherwise current git branch
+    if [[ "$branch_name" == "." ]]; then
+        if [[ -n "$TMUX" ]]; then
+            session=$(tmux display-message -p '#S')
+        else
+            session=$(git branch --show-current)
+        fi
+    else
+        session="$branch_name"
+    fi
+
     if ! tmux has-session -t "$session" 2>/dev/null; then
         echo "No tmux session: $session"
         exit 1
     fi
 
-    # For each pane: if it's running nvim, quit cleanly; otherwise send SIGINT (Ctrl-C)
-    tmux list-panes -t "$session" -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}" | \
+    # list every pane in every session, but only act on panes whose session_name matches
+    tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}" | \
+    grep "^${session}:" | \
     while read -r pane cmd; do
         if [[ "$cmd" == "nvim" ]]; then
-            # echo "Closing nvim in pane $pane"
+            echo "Closing nvim in pane $pane"
             tmux send-keys -t "$pane" ":qa!" C-m
         else
-            # echo "Sending SIGINT to process in pane $pane"
             tmux send-keys -t "$pane" C-c
         fi
     done

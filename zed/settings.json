@@ -16,6 +16,10 @@
     "enabled_in_text_threads": false
   },
   "agent": {
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-7-sonnet-thinking-latest"
+    },
     "model_parameters": [],
     "always_allow_tool_actions": true,
     "version": "2"
