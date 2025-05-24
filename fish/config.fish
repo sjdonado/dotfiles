@@ -32,7 +32,6 @@ fish_add_path "$PNPM_HOME"
 # Aliases
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
-alias brew="sudo -Hu sjdonado brew"
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"

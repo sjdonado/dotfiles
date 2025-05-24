@@ -1,6 +1,5 @@
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
-alias brew="sudo -Hu sjdonado brew"
 
 export HISTSIZE=20000
 setopt HIST_IGNORE_ALL_DUPS
