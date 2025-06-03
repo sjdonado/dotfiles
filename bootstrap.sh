@@ -48,5 +48,9 @@ ln -sf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"
 # Nvim config
 ln -s "$PWD/nvim" "$HOME/.config/nvim"
 
+# Zed config
+ln -sf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
+ln -sf "$PWD/zed/keymap.json" "$HOME/.config/zed/keymap.json"
+
 # Finicky config
 ln -sf "$PWD/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"

@@ -34,7 +34,7 @@ bind ctrl-f "tmux-sessionizer"
 
 # Aliases
 alias python=/usr/bin/python3
-alias workspace=~/.config/dotfiles/bin/workspace.sh
+alias workspace=~/.config/dotfiles/bin/workspace
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"

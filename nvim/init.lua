@@ -467,6 +467,7 @@ require('lazy').setup({
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
       local capabilities = require('blink.cmp').get_lsp_capabilities()
+      local base_on_attach = vim.lsp.config.eslint.on_attach
 
       local servers = {
         clangd = {},
@@ -474,14 +475,7 @@ require('lazy').setup({
         pyright = {},
 
         ts_ls = {},
-        eslint = {
-          on_attach = function(client, bufnr)
-            vim.api.nvim_create_autocmd('BufWritePre', {
-              buffer = bufnr,
-              command = 'EslintFixAll',
-            })
-          end,
-        },
+        eslint = {},
 
         jsonls = {},
         cssls = {},
@@ -550,7 +544,7 @@ require('lazy').setup({
       {
         '<leader>f',
         function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
+          require('conform').format { async = true, lsp_format = 'prefer' }
         end,
         mode = '',
         desc = '[F]ormat buffer',
@@ -558,20 +552,11 @@ require('lazy').setup({
     },
     opts = {
       notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        -- local disable_filetypes = { c = true, cpp = true }
-        -- if disable_filetypes[vim.bo[bufnr].filetype] then
-        --   return nil
-        -- else
-        --   return {
-        --     timeout_ms = 500,
-        --     lsp_format = 'fallback',
-        --   }
-        -- end
-      end,
+      -- format_on_save = {
+      --   lsp_fallback = true,
+      --   async = false,
+      --   timeout_ms = 500,
+      -- },
       formatters_by_ft = {
         lua = { 'stylua' },
         python = { 'isort', 'black' },

@@ -1,0 +1,13 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {}
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-shift-g": "git_panel::ToggleFocus",
+      "cmd-[": "workspace::ToggleLeftDock"
+    }
+  }
+]
