@@ -4,6 +4,9 @@
 ##            macos setup               ##
 ##########################################
 
+mkdir -p "$HOME/.local/bin"
+ln -sf "$PWD/bin/"* "$HOME/.local/bin"
+
 # Install dependencies from Brewfile
 brew bundle install
 
