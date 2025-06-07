@@ -11,7 +11,7 @@
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-sonnet-4-thinking-latest"
+      "model": "claude-sonnet-4-thinking"
     },
     "model_parameters": [],
     "always_allow_tool_actions": true,

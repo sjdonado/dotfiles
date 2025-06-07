@@ -549,6 +549,14 @@ require('lazy').setup({
         mode = '',
         desc = '[F]ormat buffer',
       },
+      {
+        '<leader>p',
+        function()
+          require('conform').format { async = true, lsp_fallback = false }
+        end,
+        mode = '',
+        desc = '[F]ormat buffer',
+      },
     },
     opts = {
       notify_on_error = false,

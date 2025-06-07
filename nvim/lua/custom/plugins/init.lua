@@ -42,24 +42,9 @@ return {
   {
     'tpope/vim-fugitive',
     keys = {
-      { '<leader>gs', '<cmd>tab Git<CR>', desc = 'Git Status' },
-      { '<leader>gb', '<cmd>Git blame<CR>', desc = 'Git Blame' },
-      { '<leader>gl', '<cmd>botright vertical Git log<CR>', desc = 'Git Log' },
-      { '<leader>gP', '<cmd>Git push<CR>', desc = 'Git Push' },
-      { '<leader>gp', '<cmd>Git pull<CR>', desc = 'Git Pull' },
-      { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
+      { '<leader>gc', '<cmd>botright vertical Git commit<CR>',         desc = 'Git Commit' },
       { '<leader>gC', '<cmd>botright vertical Git commit --amend<CR>', desc = 'Git Commit Amend' },
-      { '<leader>ga', '<cmd>Git add %<CR>', desc = 'Git Add Current File' },
-      { '<leader>gA', '<cmd>Git add .<CR>', desc = 'Git Add All' },
     },
-    config = function()
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = { 'fugitive', 'git' },
-        callback = function(event)
-          vim.keymap.set('n', 'q', '<cmd>close<CR>', { buffer = event.buf, desc = 'Close fugitive window' })
-        end,
-      })
-    end,
   },
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
@@ -77,7 +62,7 @@ return {
       },
     },
     keys = {
-      { '<leader>tg', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
+      { '<leader>tg', '<cmd>DiffviewOpen<CR>',          desc = 'Open DiffView' },
       { '<leader>hf', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
       { '<leader>hd', '<cmd>DiffviewFileHistory .<CR>', desc = 'Dir Diff View History' },
     },
