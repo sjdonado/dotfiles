@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
 
-# Read internal configuration
-if [[ -z "${WORKSPACE_INTERNAL_LAYOUT}" ]]; then
-    echo "Error: WORKSPACE_INTERNAL_LAYOUT environment variable is not set"
-    echo "Format: 'name:relative_path,name2:relative_path2'"
-    exit 1
-fi
-IFS=',' read -ra paths <<< "${WORKSPACE_INTERNAL_LAYOUT}"
-
 usage() {
     echo "Usage: $0 --open <branch_name> [--setup] [--remove [branch_name]] [--close [branch_name]] [--minimize [branch_name]] [--help]"
     echo ""
@@ -44,14 +36,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --close)
             close_session=true
-            if [[ $# -gt 1 && $2 != --* ]]; then
-                branch_name=$2; shift
-            else
-                branch_name=$(git branch --show-current)
-            fi
-            ;;
-        --minimize)
-            minimize_panes=true
             if [[ $# -gt 1 && $2 != --* ]]; then
                 branch_name=$2; shift
             else
@@ -122,37 +106,33 @@ if $remove_worktree; then
     exit 0
 fi
 
-if $minimize_panes; then
-    # “.” means “current tmux session” when inside tmux, otherwise current git branch
-    if [[ "$branch_name" == "." ]]; then
-        if [[ -n "$TMUX" ]]; then
-            session=$(tmux display-message -p '#S')
-        else
-            session=$(git branch --show-current)
+copy_env_files() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    echo "Copying .env files from $source_dir to $target_dir"
+
+    # Find all .env files in source directory and subdirectories
+    find "$source_dir" -name ".env" -type f | while IFS= read -r env_file; do
+        # Get relative path from source directory
+        rel_path="${env_file#$source_dir/}"
+        target_file="$target_dir/$rel_path"
+        target_parent=$(dirname "$target_file")
+
+        # Create target directory if it doesn't exist
+        if [[ ! -d "$target_parent" ]]; then
+            mkdir -p "$target_parent"
         fi
-    else
-        session="$branch_name"
-    fi
 
-    if ! tmux has-session -t "$session" 2>/dev/null; then
-        echo "No tmux session: $session"
-        exit 1
-    fi
-
-    # list every pane in every session, but only act on panes whose session_name matches
-    tmux list-panes -a -F "#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}" | \
-    grep "^${session}:" | \
-    while read -r pane cmd; do
-        if [[ "$cmd" == "nvim" ]]; then
-            echo "Closing nvim in pane $pane"
-            tmux send-keys -t "$pane" ":qa!" C-m
+        # Copy .env file if target doesn't exist
+        if [[ -f "$target_file" ]]; then
+            echo "Preserving existing: $rel_path"
         else
-            tmux send-keys -t "$pane" C-c
+            echo "Copying environment file: $rel_path"
+            cp "$env_file" "$target_file"
         fi
     done
-
-    exit 0
-fi
+}
 
 if $add_worktree; then
     # Create worktree if missing
@@ -170,8 +150,8 @@ if $add_worktree; then
         tmux kill-session -t "${branch_name}"
     fi
 
-    # Tmux session setup
-    tmux new-session -d -s "${branch_name}" -n "~" -c "${worktree_path}"
+    # Create single tmux session with one window and one pane
+    tmux new-session -d -s "${branch_name}" -c "${worktree_path}"
 
     # Set workspace environment variables
     for var_name in $(printenv | grep -oE '^WORKSPACE_[^=]+' | grep -v '^WORKSPACE_INTERNAL'); do
@@ -180,44 +160,8 @@ if $add_worktree; then
         tmux set-environment -t "${branch_name}" "${env_key}" "${env_value}"
     done
 
-    # Create windows & panes per layout
-    window_index=1
-    for item in "${paths[@]}"; do
-        name="${item%%:*}"
-        rel_path="${item#*:}"
-        full_path="${worktree_path}/${rel_path}"
-
-        if [[ -d "${full_path}" ]]; then
-            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${full_path}"
-        else
-            echo "Warning: Path not found - ${full_path}"
-            tmux new-window -t "${branch_name}:${window_index}" -n "${name}" -c "${worktree_path}"
-        fi
-
-        tmux split-window -v -t "${branch_name}:${window_index}"
-        tmux resize-pane -Z -t "${branch_name}:${window_index}.0"
-        tmux send-keys -t "${branch_name}:${window_index}.1" "cd ${full_path}" C-m
-
-        ((window_index++))
-    done
-
-    # Environment file handling
-    for item in "${paths[@]}"; do
-        rel_path="${item#*:}"
-        src="${base_path}/${rel_path}/.env"
-        dest="${worktree_path}/${rel_path}/.env"
-
-        if [[ -f "${src}" ]]; then
-            if [[ -f "${dest}" ]]; then
-                echo "Preserving existing: ${dest}"
-            else
-                echo "Copying environment file: ${rel_path}/.env"
-                cp "${src}" "${dest}"
-            fi
-        else
-            echo "Warning: .env file not found for folder: ${rel_path}"
-        fi
-    done
+    # Copy all .env files from parent worktree to new worktree
+    copy_env_files "$base_path" "$worktree_path"
 
     # Post-setup commands
     if $run_setup; then
@@ -225,7 +169,7 @@ if $add_worktree; then
             echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
             exit 1
         fi
-        tmux send-keys -t "${branch_name}:0" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
+        tmux send-keys -t "${branch_name}" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
     fi
 
     if [[ -n "$TMUX" ]]; then

@@ -8,14 +8,17 @@
     "enabled_in_text_threads": false
   },
   "agent": {
+    "inline_assistant_model": {
+      "provider": "zed.dev",
+      "model": "claude-sonnet-4"
+    },
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-sonnet-4-thinking"
+      "model": "claude-sonnet-4"
     },
     "model_parameters": [],
-    "always_allow_tool_actions": true,
-    "version": "2"
+    "always_allow_tool_actions": true
   },
   "theme": {
     "mode": "system",
@@ -29,5 +32,13 @@
   "vim_mode": true,
   "ui_font_size": 13,
   "buffer_font_size": 13,
-  "soft_wrap": "editor_width"
+  "soft_wrap": "editor_width",
+  "context_servers": {
+    "postgres-context-server": {
+      "source": "extension",
+      "settings": {
+        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres"
+      }
+    }
+  }
 }
