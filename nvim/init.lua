@@ -103,14 +103,41 @@ vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
 
 -- Enable keystroke logging
--- local function log_keystroke(key, typed)
---   if key ~= nil and key ~= "" then
---     -- Convert key codes to readable format
---     local readable_key = vim.fn.keytrans(key)
---     print("Key pressed: " .. readable_key .. " (raw: " .. vim.inspect(key) .. ")")
---   end
--- end
--- vim.on_key(log_keystroke, vim.api.nvim_create_namespace("keystroke_logger"))
+local monitoring = false
+local ns = vim.api.nvim_create_namespace("keymon")
+
+local function toggle_keystroke_monitor()
+  if monitoring then
+    vim.on_key(nil, ns)
+    monitoring = false
+    print("🔴 Keystroke monitoring OFF")
+  else
+    vim.on_key(function(key, typed)
+      if key and key ~= "" then
+        -- Get bytes as hex
+        local hex = {}
+        for i = 1, #key do
+          table.insert(hex, string.format("%02x", string.byte(key, i)))
+        end
+
+        -- Show key info
+        print(string.format(
+          "Key: %s | Raw: %s | Bytes: [%s] | Len: %d",
+          vim.fn.keytrans(key),
+          vim.inspect(key),
+          table.concat(hex, " "),
+          #key
+        ))
+      end
+    end, ns)
+    monitoring = true
+    print("🟢 Keystroke monitoring ON - Press keys to see what terminal sends")
+  end
+end
+vim.api.nvim_create_user_command('KeyMon', toggle_keystroke_monitor, {})
+
+-- Optional: Create keymap (uncomment if you want)
+-- vim.keymap.set('n', '<leader>km', toggle_keystroke_monitor, { desc = 'Toggle keystroke monitor' })
 
 -- Recommended by rmagatti/auto-session
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
@@ -256,6 +283,7 @@ require('lazy').setup({
               ['<C-y>'] = require('telescope.actions').preview_scrolling_up,
               ['<C-e>'] = require('telescope.actions').preview_scrolling_down,
               ['<C-t>'] = require('telescope.actions').delete_buffer,
+              ['<C-q>'] = require('telescope.actions').send_to_qflist + require('telescope.actions').open_qflist,
             },
           },
           layout_config = {
