@@ -11,6 +11,12 @@ return {
     opts = {
       auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
     },
+    keys = {
+      -- Will use Telescope if installed or a vim.ui.select picker otherwise
+      { "<leader>wr", "<cmd>AutoSession search<CR>", desc = "Session search" },
+      { "<leader>ws", "<cmd>AutoSession save<CR>",   desc = "Save session" },
+      { "<leader>wa", "<cmd>AutoSession toggle<CR>", desc = "Toggle autosave" },
+    },
   },
   {
     'f-person/auto-dark-mode.nvim',

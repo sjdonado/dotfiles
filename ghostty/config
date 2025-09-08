@@ -14,3 +14,5 @@ selection-invert-fg-bg = false
 
 shell-integration = fish
 shell-integration-features = no-cursor
+
+keybind = cmd+s=text:\x13

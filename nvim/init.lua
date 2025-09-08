@@ -98,6 +98,23 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-e>', '4j', { desc = 'Scroll down 4 lines' })
 vim.keymap.set('n', '<C-y>', '4k', { desc = 'Scroll up 4 lines' })
 
+-- Map Ctrl+S to save (which tmux will send when Cmd+S is pressed)
+vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
+vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
+
+-- Enable keystroke logging
+-- local function log_keystroke(key, typed)
+--   if key ~= nil and key ~= "" then
+--     -- Convert key codes to readable format
+--     local readable_key = vim.fn.keytrans(key)
+--     print("Key pressed: " .. readable_key .. " (raw: " .. vim.inspect(key) .. ")")
+--   end
+-- end
+-- vim.on_key(log_keystroke, vim.api.nvim_create_namespace("keystroke_logger"))
+
+-- Recommended by rmagatti/auto-session
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -634,7 +651,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'enter',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps

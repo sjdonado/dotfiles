@@ -38,3 +38,6 @@ alias workspace=~/.config/dotfiles/bin/workspace
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"
+
+# Added by `rbenv init` on Fri Sep  5 07:29:54 CEST 2025
+status --is-interactive; and rbenv init - --no-rehash fish | source
