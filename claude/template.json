@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "neovim": {
+      "type": "stdio",
+      "command": "mcp-neovim-server",
+      "args": [],
+      "env": {
+        "ALLOW_SHELL_COMMANDS": "true",
+        "NVIM_SOCKET_PATH": "/tmp/nvim-socket-*"
+      }
+    }
+  }
+}

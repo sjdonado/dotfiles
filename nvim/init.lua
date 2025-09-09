@@ -147,6 +147,17 @@ vim.api.nvim_create_user_command('KeyMon', toggle_keystroke_monitor, {})
 -- Recommended by rmagatti/auto-session
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
+-- Auto-start server for MCP integration
+-- Create unique socket based on PID to support multiple instances
+local socket_path = '/tmp/nvim-socket-' .. vim.fn.getpid()
+vim.fn.serverstart(socket_path)
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  callback = function()
+    -- Clean up socket file when nvim exits
+    vim.fn.delete(socket_path)
+  end,
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'

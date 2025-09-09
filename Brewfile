@@ -11,6 +11,8 @@ tap "supabase/tap"
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
+# Official Amazon AWS command-line interface
+brew "awscli"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
 # Get/set bluetooth power and discoverable state
@@ -51,6 +53,10 @@ brew "docker-compose"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# Platform built on V8 to build network applications
+brew "node"
+# Firebase command-line tools
+brew "firebase-cli"
 # User-friendly command-line shell for UNIX-like operating systems
 brew "fish"
 # Command-line tools for fly.io services
@@ -69,6 +75,8 @@ brew "git-lfs"
 brew "gnu-sed"
 # GNU Transport Layer Security (TLS) Library
 brew "gnutls"
+# Fast linters runner for Go
+brew "golangci-lint"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Image manipulation library
@@ -91,7 +99,7 @@ brew "mackup"
 brew "mailpit"
 # Remote terminal application
 brew "mosh"
-# Parser generator tool and incremental parsing library
+# Incremental parsing library
 brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
@@ -105,10 +113,14 @@ brew "openjdk@11"
 brew "p7zip"
 # Execute binaries from Python packages in isolated environments
 brew "pipx"
+# Fast, disk space efficient package manager
+brew "pnpm"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.12"
 # Generic machine emulator and virtualizer
 brew "qemu"
+# Ruby version manager
+brew "rbenv"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Rust toolchain installer
@@ -119,6 +131,10 @@ brew "scc"
 brew "sqlmap"
 # State of the art linter for the Go programming language
 brew "staticcheck"
+# SMTP command-line test tool
+brew "swaks"
+# Easiest, most secure way to use WireGuard and 2FA
+brew "tailscale", restart_service: :changed
 # User interface to the TELNET protocol
 brew "telnet"
 # Terminal multiplexer
@@ -131,39 +147,43 @@ brew "tree"
 brew "xq"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
-# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
-brew "oven-sh/bun/bun"
 # Supabase CLI
 brew "supabase/tap/supabase"
-# Universal database tool and SQL client
-cask "dbeaver-community"
-# Google Chromium, sans integration with Google
-cask "eloston-chromium"
+# Display management tool
+cask "betterdisplay"
+# Browser for SQLite databases
+cask "db-browser-for-sqlite"
+# Utility for customizing which browser to start
+cask "finicky"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
-# Open source API development ecosystem
-cask "hoppscotch"
-# Multi-platform web browser
-cask "microsoft-edge"
+# Free and open-source image editor
+cask "gimp"
+# Vector graphics editor
+cask "inkscape"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
-# Tool to control external monitor brightness & volume
-cask "monitorcontrol"
 # Cross-platform MQTT 5.0 Desktop Client
 cask "mqttx"
 # Free and open-source RSS reader
 cask "netnewswire"
 # Simple application that will prevent iTunes or Apple Music from launching
 cask "notunes"
+# Get up and running with large language models locally
+cask "ollama-app"
 # Peer to peer Bitorrent client
 cask "qbittorrent"
 # Control your tools with a few keystrokes
 cask "raycast"
-# Music streaming service
-cask "spotify"
 # CSV file editor
 cask "table-tool"
 # Unicode keyboard layout editor
 cask "ukelele"
+# Google Chromium, sans integration with Google
+cask "ungoogled-chromium"
+# REST, GraphQL and gRPC client
+cask "yaak"
+# Multiplayer code editor
+cask "zed"
 # Gecko based web browser
-cask "zen-browser"
+cask "zen"

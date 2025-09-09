@@ -54,3 +54,4 @@ ln -sf "$PWD/zed/keymap.json" "$HOME/.config/zed/keymap.json"
 
 # Finicky config
 ln -sf "$PWD/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"
+
