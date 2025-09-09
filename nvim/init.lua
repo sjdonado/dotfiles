@@ -572,6 +572,8 @@ require('lazy').setup({
         'eslint-lsp',
         'js-debug-adapter',
         'prettier',
+        'golangci-lint-langserver',
+        'gofumpt',
         -- 'graphql-language-service-cli',
         'json-lsp',
         'css-lsp',
@@ -628,6 +630,7 @@ require('lazy').setup({
       --   timeout_ms = 500,
       -- },
       formatters_by_ft = {
+        go = { 'gofumpt' },
         lua = { 'stylua' },
         python = { 'isort', 'black' },
         javascript = { 'prettier' },
