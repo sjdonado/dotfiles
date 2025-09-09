@@ -5,6 +5,8 @@ return {
     'nvim-tree/nvim-web-devicons',
   },
   opts = {
+    update_cwd = true,
+    sync_root_with_cwd = true,
     renderer = {
       hidden_display = 'simple',
       icons = {

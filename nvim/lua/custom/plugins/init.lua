@@ -135,7 +135,7 @@ return {
     dependencies = { "folke/snacks.nvim" },
     config = true,
     keys = {
-      { "<C-\\>",      "<cmd>ClaudeCodeFocus<cr>",       desc = "Focus Claude" },
+      { "<C-\\>",     "<cmd>ClaudeCodeFocus<cr>",       desc = "Focus Claude" },
       { "<leader>ar", "<cmd>ClaudeCode --resume<cr>",   desc = "Resume Claude" },
       { "<leader>aC", "<cmd>ClaudeCode --continue<cr>", desc = "Continue Claude" },
       { "<leader>am", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude model" },
@@ -153,8 +153,6 @@ return {
     },
     opts = {
       terminal = {
-        ---@module "snacks"
-        ---@type snacks.win.Config|{}
         snacks_win_opts = {
           position = "right",
           keys = {
@@ -165,6 +163,14 @@ return {
               end,
               mode = "t",
               desc = "Hide",
+            },
+            claude_unfocus = {
+              "<C-h>",
+              function(self)
+                vim.cmd("wincmd h")
+              end,
+              mode = "t",
+              desc = "Move to left panel",
             },
           },
         },
