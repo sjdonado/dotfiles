@@ -522,6 +522,7 @@ require('lazy').setup({
       local servers = {
         clangd = {},
         gopls = {},
+        golangci_lint_ls = {},
         pyright = {},
 
         ts_ls = {},

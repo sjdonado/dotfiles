@@ -29,6 +29,7 @@ fish_add_path /opt/homebrew/bin
 
 fish_add_path "$HOME/.bun/bin"
 fish_add_path "$PNPM_HOME"
+fish_add_path "$HOME/go/bin"
 
 bind ctrl-f "tmux-sessionizer"
 
