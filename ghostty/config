@@ -16,3 +16,4 @@ shell-integration = fish
 shell-integration-features = no-cursor
 
 keybind = cmd+s=text:\x13
+keybind = shift+enter=text:\x1b\r
