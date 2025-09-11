@@ -172,6 +172,22 @@ return {
               mode = "t",
               desc = "Move to left panel",
             },
+            claude_scroll = {
+              "<C-n>",
+              function(self)
+                vim.cmd("stopinsert")
+              end,
+              mode = "t",
+              desc = "Enter scroll mode",
+            },
+            claude_insert = {
+              "<C-n>",
+              function(self)
+                vim.cmd("startinsert")
+              end,
+              mode = "n",
+              desc = "Return to insert mode",
+            },
           },
         },
       },
