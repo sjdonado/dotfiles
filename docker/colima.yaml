@@ -1,6 +1,6 @@
 # Number of CPUs to be allocated to the virtual machine.
 # Default: 2
-cpu: 2
+cpu: 4
 
 # Size of the disk in GiB to be allocated to the virtual machine.
 # NOTE: value can only be increased after virtual machine has been created.
@@ -34,12 +34,12 @@ kubernetes:
   # Enable kubernetes.
   # Default: false
   enabled: false
-
+  
   # Kubernetes version to use.
   # This needs to exactly match a k3s version https://github.com/k3s-io/k3s/releases
   # Default: latest stable release
   version: v1.31.2+k3s1
-
+  
   # Additional args to pass to k3s https://docs.k3s.io/cli/server
   # Default: traefik is disabled
   k3sArgs:
@@ -49,6 +49,7 @@ kubernetes:
 # Setting to true does the following on startup
 #  - sets as active Docker context (for Docker runtime).
 #  - sets as active Kubernetes context (if Kubernetes is enabled).
+#  - sets as active Incus remote (for Incus runtime).
 # Default: true
 autoActivate: true
 
@@ -58,7 +59,7 @@ network:
   # NOTE: this is currently macOS only and ignored on Linux.
   # Default: false
   address: false
-
+  
   # Custom DNS resolvers for the virtual machine.
   #
   # EXAMPLE
@@ -66,7 +67,7 @@ network:
   #
   # Default: []
   dns: []
-
+  
   # DNS hostnames to resolve to custom targets using the internal resolver.
   # This setting has no effect if a custom DNS resolver list is supplied above.
   # It does not configure the /etc/hosts files of any machine or container.
@@ -76,7 +77,7 @@ network:
   # dnsHosts:
   #   example.com: 1.2.3.4
   dnsHosts: {}
-
+  
   # Replicate host IP addresses in the VM. This enables port forwarding to specific
   # host IP addresses.
   #   e.g. `docker run --port 10.0.1.2:8080:8080 alpine` would only forward to the
@@ -125,6 +126,10 @@ vmType: qemu
 # Default: false
 rosetta: false
 
+# Enable foreign architecture emulation via binfmt (e.g. amd64 on arm64, arm64 on amd64)
+# Default: true
+binfmt: true
+
 # Enable nested virtualization for the virtual machine (requires m3 mac and vmType `vz`)
 # Default: false
 nestedVirtualization: false
@@ -140,7 +145,7 @@ nestedVirtualization: false
 #
 # NOTE: value cannot be changed after virtual machine is created.
 # Default: virtiofs (for vz), sshfs (for qemu)
-mountType: sshfs
+mountType: virtiofs
 
 # Propagate inotify file events to the VM.
 # NOTE: this is experimental.

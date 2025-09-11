@@ -1,8 +1,6 @@
 tap "agrinman/tap"
 tap "amberframework/micrate"
 tap "cloudflare/cloudflare"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "koekeishiya/formulae"
 tap "oven-sh/bun"
 tap "shopify/shopify"
@@ -99,8 +97,6 @@ brew "mackup"
 brew "mailpit"
 # Remote terminal application
 brew "mosh"
-# Incremental parsing library
-brew "tree-sitter"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Port scanning utility for large networks
@@ -147,10 +143,16 @@ brew "tree"
 brew "xq"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
+# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
+brew "oven-sh/bun/bun"
 # Supabase CLI
 brew "supabase/tap/supabase"
 # Display management tool
 cask "betterdisplay"
+# OpenAI's official ChatGPT desktop app
+cask "chatgpt"
+# Terminal-based AI coding assistant
+cask "claude-code"
 # Browser for SQLite databases
 cask "db-browser-for-sqlite"
 # Utility for customizing which browser to start
@@ -159,12 +161,8 @@ cask "finicky"
 cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
-# Vector graphics editor
-cask "inkscape"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
-# Cross-platform MQTT 5.0 Desktop Client
-cask "mqttx"
 # Free and open-source RSS reader
 cask "netnewswire"
 # Simple application that will prevent iTunes or Apple Music from launching
@@ -175,15 +173,17 @@ cask "ollama-app"
 cask "qbittorrent"
 # Control your tools with a few keystrokes
 cask "raycast"
+# Music streaming service
+cask "spotify"
 # CSV file editor
 cask "table-tool"
-# Unicode keyboard layout editor
-cask "ukelele"
+# Messaging app with a focus on speed and security
+cask "telegram"
 # Google Chromium, sans integration with Google
 cask "ungoogled-chromium"
+# Native desktop client for WhatsApp
+cask "whatsapp"
 # REST, GraphQL and gRPC client
 cask "yaak"
 # Multiplayer code editor
 cask "zed"
-# Gecko based web browser
-cask "zen"
