@@ -572,6 +572,7 @@ require('lazy').setup({
         'eslint-lsp',
         'js-debug-adapter',
         'prettier',
+        'astro-language-server',
         'golangci-lint-langserver',
         'gofumpt',
         -- 'graphql-language-service-cli',
@@ -806,6 +807,7 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      ignore_install = { "haskell", "jsonc" },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:

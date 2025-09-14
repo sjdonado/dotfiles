@@ -135,3 +135,4 @@ ln -snf "$DOTFILES/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"
 touch "$DOTFILES/.env"
 
 log "Done. Open a new terminal session so PATH and shells are consistent."
+

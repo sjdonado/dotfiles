@@ -27,6 +27,10 @@ brew "libpng"
 brew "pixman"
 # Vector graphics library with cross-device output support
 brew "cairo"
+# Platform built on V8 to build network applications
+brew "node"
+# CLI tool for Cloudflare Workers
+brew "cloudflare-wrangler"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
 brew "cloudflared"
 # Container runtimes on MacOS (and Linux) with minimal setup
@@ -51,8 +55,6 @@ brew "docker-compose"
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
-# Platform built on V8 to build network applications
-brew "node"
 # Firebase command-line tools
 brew "firebase-cli"
 # User-friendly command-line shell for UNIX-like operating systems
@@ -157,14 +159,24 @@ cask "claude-code"
 cask "db-browser-for-sqlite"
 # Utility for customizing which browser to start
 cask "finicky"
+# Web browser
+cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
+# Vector graphics editor
+cask "inkscape"
+# Free cross-platform office suite, fresh version
+cask "libreoffice"
+# Open-source, self-hosted Slack-alternative
+cask "mattermost"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # Free and open-source RSS reader
 cask "netnewswire"
+# App to write, plan, collaborate, and get organised
+cask "notion"
 # Simple application that will prevent iTunes or Apple Music from launching
 cask "notunes"
 # Get up and running with large language models locally
@@ -175,6 +187,8 @@ cask "qbittorrent"
 cask "raycast"
 # Music streaming service
 cask "spotify"
+# VPN client for secure internet access and private browsing
+cask "surfshark"
 # CSV file editor
 cask "table-tool"
 # Messaging app with a focus on speed and security
