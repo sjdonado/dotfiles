@@ -132,7 +132,9 @@ ln -snf "$DOTFILES/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 log "Linking Finicky config..."
 ln -snf "$DOTFILES/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"
 
+log "Linking Hammerspoon config..."
+ln -snf "$DOTFILES/hammerspoon" "$HOME/.hammerspoon"
+
 touch "$DOTFILES/.env"
 
 log "Done. Open a new terminal session so PATH and shells are consistent."
-
