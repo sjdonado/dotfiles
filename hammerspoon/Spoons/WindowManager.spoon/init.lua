@@ -58,8 +58,6 @@ function obj:moveWindow(direction)
   elseif direction == "max" then
     winFrame = frame
   elseif direction == "center" then
-    winFrame.w = frame.w * 0.7
-    winFrame.h = frame.h * 0.7
     winFrame.x = frame.x + (frame.w - winFrame.w) / 2
     winFrame.y = frame.y + (frame.h - winFrame.h) / 2
   elseif direction == "almost_max" then
