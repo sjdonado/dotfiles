@@ -86,6 +86,31 @@ spoon.ActionsLauncher:defineActions({
       ]], "Toggle System Appearance")
     end,
     description = "Toggle between light and dark mode"
+  },
+
+  -- Utility Actions
+  {
+    name = "Copy IP",
+    callback = function()
+      spoon.ActionsLauncher.executeShell(
+        "curl -s ifconfig.me | pbcopy && curl -s ifconfig.me",
+        "Copy IP")
+    end,
+    description = "Copy public IP address to clipboard"
+  },
+  {
+    name = "Paste Text Without Formatting",
+    callback = function()
+      local clipboard = hs.pasteboard.getContents()
+      if clipboard then
+        hs.pasteboard.setContents(clipboard)
+        hs.eventtap.event.newKeyEvent({ "cmd" }, "v", true):post()
+        hs.eventtap.event.newKeyEvent({ "cmd" }, "v", false):post()
+      else
+        return "No text in clipboard"
+      end
+    end,
+    description = "Paste clipboard text without formatting"
   }
 })
 
