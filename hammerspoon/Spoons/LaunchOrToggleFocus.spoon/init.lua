@@ -1,10 +1,6 @@
 --- === LaunchOrToggleFocus ===
 ---
 --- Launch applications or toggle focus if already running
----
---- Download: https://github.com/sjdonado/dotfiles/hammerspoon/Spoons
---- Author: sjdonado
---- License: MIT
 
 local obj = {}
 obj.__index = obj
@@ -12,8 +8,8 @@ obj.__index = obj
 -- Metadata
 obj.name = "LaunchOrToggleFocus"
 obj.version = "1.0"
-obj.author = "Custom"
-obj.homepage = "https://github.com/hammerspoon/spoons"
+obj.author = "sjdonado"
+obj.homepage = "https://github.com/sjdonado/dotfiles/hammerspoon/Spoons"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.hotkeys = {}
