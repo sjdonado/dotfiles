@@ -111,12 +111,25 @@ spoon.ActionsLauncher:defineActions({
       end
     end,
     description = "Paste clipboard text without formatting"
+  },
+
+  -- Meeting Actions
+  {
+    name = "Join Meeting",
+    callback = function()
+      return spoon.MySchedule:joinCurrentMeeting()
+    end,
+    description = "Join current or upcoming meeting from calendar"
   }
 })
 
 spoon.ActionsLauncher:bindHotkeys({
-  toggle = { { "alt", "shift" }, "/" } -- Use Alt+Shift+/ to toggle the actions palette
+  toggle = { { "alt", "shift" }, "\\" } -- Use Alt+Shift+/ to toggle the actions palette
 })
+
+-- Load and configure MySchedule
+hs.loadSpoon("MySchedule")
+spoon.MySchedule:start()
 
 -- Auto-reload config when init.lua changes
 local function reloadConfig(files)

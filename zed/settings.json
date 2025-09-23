@@ -15,8 +15,8 @@
     },
     "default_profile": "write",
     "default_model": {
-      "provider": "zed.dev",
-      "model": "claude-sonnet-4"
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-latest"
     },
     "model_parameters": [],
     "always_allow_tool_actions": true
