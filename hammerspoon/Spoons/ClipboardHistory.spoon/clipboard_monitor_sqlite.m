@@ -1,22 +1,75 @@
 #import <Cocoa/Cocoa.h>
 #import <Foundation/Foundation.h>
+#import <sqlite3.h>
 #import <stdio.h>
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        // Hardcode JSON file path to current working directory
+        // Get database path in current working directory
         NSString *currentDir = [[NSFileManager defaultManager] currentDirectoryPath];
-        NSString *jsonFilePath = [currentDir stringByAppendingPathComponent:@"clipboard_history.json"];
+        NSString *dbPath = [currentDir stringByAppendingPathComponent:@"clipboard_history.db"];
+        const char *dbPathCString = [dbPath UTF8String];
 
+        sqlite3 *db;
+        int rc = sqlite3_open(dbPathCString, &db);
+
+        if (rc != SQLITE_OK) {
+            printf("ERROR: Cannot open database: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
+            return 1;
+        }
+
+        // Create tables with FTS5 support
+        const char *createSQL =
+            "CREATE TABLE IF NOT EXISTS clipboard_history ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "content TEXT NOT NULL,"
+            "type TEXT NOT NULL,"
+            "preview TEXT NOT NULL,"
+            "size TEXT NOT NULL,"
+            "timestamp INTEGER NOT NULL,"
+            "time TEXT NOT NULL"
+            ");"
+
+            "CREATE VIRTUAL TABLE IF NOT EXISTS clipboard_fts USING fts5("
+            "content, preview, content=clipboard_history, content_rowid=id"
+            ");"
+
+            "CREATE TRIGGER IF NOT EXISTS clipboard_fts_insert AFTER INSERT ON clipboard_history BEGIN"
+            "  INSERT INTO clipboard_fts(rowid, content, preview) VALUES (new.id, new.content, new.preview);"
+            "END;"
+
+            "CREATE TRIGGER IF NOT EXISTS clipboard_fts_delete AFTER DELETE ON clipboard_history BEGIN"
+            "  INSERT INTO clipboard_fts(clipboard_fts, rowid, content, preview) VALUES('delete', old.id, old.content, old.preview);"
+            "END;"
+
+            "CREATE TRIGGER IF NOT EXISTS clipboard_fts_update AFTER UPDATE ON clipboard_history BEGIN"
+            "  INSERT INTO clipboard_fts(clipboard_fts, rowid, content, preview) VALUES('delete', old.id, old.content, old.preview);"
+            "  INSERT INTO clipboard_fts(rowid, content, preview) VALUES (new.id, new.content, new.preview);"
+            "END;";
+
+        char *errMsg = 0;
+        rc = sqlite3_exec(db, createSQL, 0, 0, &errMsg);
+
+        if (rc != SQLITE_OK) {
+            printf("ERROR: SQL error: %s\n", errMsg);
+            sqlite3_free(errMsg);
+            sqlite3_close(db);
+            return 1;
+        }
+
+        // Get clipboard content
         NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
         if (!pasteboard) {
             printf("ERROR: Could not access pasteboard\n");
+            sqlite3_close(db);
             return 1;
         }
 
         NSArray<NSString *> *types = [pasteboard types];
         if (!types || [types count] == 0) {
             printf("ERROR: No pasteboard types\n");
+            sqlite3_close(db);
             return 1;
         }
 
@@ -33,7 +86,7 @@ int main(int argc, const char * argv[]) {
             if (imageData && [imageData length] > 0) {
                 double sizeKB = (double)[imageData length] / 1024.0;
 
-                // Save image to temp file for preview
+                // Save image to temp file
                 NSString *tempDir = NSTemporaryDirectory();
                 NSString *timestamp = [NSString stringWithFormat:@"%.0f", [[NSDate date] timeIntervalSince1970]];
                 NSString *tempImagePath = [tempDir stringByAppendingPathComponent:[NSString stringWithFormat:@"clipboard_image_%@.png", timestamp]];
@@ -42,7 +95,6 @@ int main(int argc, const char * argv[]) {
                 if (saved) {
                     content = tempImagePath;
                 } else {
-                    // Fallback to suggested desktop path
                     NSString *desktopPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Desktop"];
                     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
                     [formatter setDateFormat:@"yyyy-MM-dd 'at' HH.mm.ss"];
@@ -63,7 +115,6 @@ int main(int argc, const char * argv[]) {
             if (imageData && [imageData length] > 0) {
                 double sizeKB = (double)[imageData length] / 1024.0;
 
-                // Save image to temp file for preview
                 NSString *tempDir = NSTemporaryDirectory();
                 NSString *timestamp = [NSString stringWithFormat:@"%.0f", [[NSDate date] timeIntervalSince1970]];
                 NSString *tempImagePath = [tempDir stringByAppendingPathComponent:[NSString stringWithFormat:@"clipboard_image_%@.jpg", timestamp]];
@@ -72,7 +123,6 @@ int main(int argc, const char * argv[]) {
                 if (saved) {
                     content = tempImagePath;
                 } else {
-                    // Fallback to suggested desktop path
                     NSString *desktopPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Desktop"];
                     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
                     [formatter setDateFormat:@"yyyy-MM-dd 'at' HH.mm.ss"];
@@ -93,7 +143,6 @@ int main(int argc, const char * argv[]) {
             if (fileURL && [fileURL length] > 0) {
                 NSURL *url = [NSURL URLWithString:fileURL];
                 if (url && [url path]) {
-                    // Store full file path for content, filename for preview
                     content = [url path];
                     preview = [url lastPathComponent];
                 } else {
@@ -115,10 +164,10 @@ int main(int argc, const char * argv[]) {
             }
 
             if (stringContent && [stringContent length] > 0) {
-                // Strip whitespace and check if content is meaningful
                 NSString *strippedContent = [stringContent stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
                 if ([strippedContent length] == 0) {
                     printf("ERROR: Content is only whitespace\n");
+                    sqlite3_close(db);
                     return 1;
                 }
 
@@ -134,9 +183,9 @@ int main(int argc, const char * argv[]) {
             }
         }
 
-        // If no content found, exit
         if (!content || [content length] == 0) {
             printf("ERROR: No clipboard content found\n");
+            sqlite3_close(db);
             return 1;
         }
 
@@ -144,88 +193,98 @@ int main(int argc, const char * argv[]) {
         if ([preview length] > 80) {
             preview = [[preview substringToIndex:77] stringByAppendingString:@"..."];
         }
-
-        // Replace newlines with spaces
         preview = [preview stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
         preview = [preview stringByReplacingOccurrencesOfString:@"\r" withString:@" "];
         preview = [preview stringByReplacingOccurrencesOfString:@"\t" withString:@" "];
 
-        // Get timestamp and date
+        // Get timestamp
         NSDate *now = [NSDate date];
-        NSTimeInterval timestamp = [now timeIntervalSince1970];
-
+        NSUInteger timestamp = (NSUInteger)[now timeIntervalSince1970];
         NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-        [dateFormatter setDateFormat:@"yyyy-MM-dd"];
-        NSString *dateString = [dateFormatter stringFromDate:now];
-
         [dateFormatter setDateFormat:@"HH:mm"];
         NSString *timeString = [dateFormatter stringFromDate:now];
 
-        // Load existing history
-        NSMutableArray *history = [[NSMutableArray alloc] init];
-        NSFileManager *fileManager = [NSFileManager defaultManager];
+        // Check for duplicates in last 25 entries
+        const char *checkDuplicateSQL =
+            "SELECT id, timestamp, time FROM clipboard_history "
+            "WHERE content = ? "
+            "ORDER BY timestamp DESC "
+            "LIMIT 25";
 
-        if ([fileManager fileExistsAtPath:jsonFilePath]) {
-            NSData *existingData = [NSData dataWithContentsOfFile:jsonFilePath];
-            if (existingData && [existingData length] > 0) {
-                NSError *parseError = nil;
-                id jsonObject = [NSJSONSerialization JSONObjectWithData:existingData options:0 error:&parseError];
-                if (!parseError && [jsonObject isKindOfClass:[NSArray class]]) {
-                    NSArray *existingHistory = (NSArray *)jsonObject;
-                    [history addObjectsFromArray:existingHistory];
-                }
-            }
-        }
+        sqlite3_stmt *stmt;
+        rc = sqlite3_prepare_v2(db, checkDuplicateSQL, -1, &stmt, NULL);
 
-        // Remove duplicates
-        for (NSInteger i = [history count] - 1; i >= 0; i--) {
-            id item = [history objectAtIndex:i];
-            if ([item isKindOfClass:[NSDictionary class]]) {
-                NSDictionary *entry = (NSDictionary *)item;
-                id existingContent = [entry objectForKey:@"content"];
-                if ([existingContent isKindOfClass:[NSString class]] &&
-                    [(NSString *)existingContent isEqualToString:content]) {
-                    [history removeObjectAtIndex:i];
-                }
-            }
-        }
-
-        // Create new entry
-        NSMutableDictionary *newEntry = [[NSMutableDictionary alloc] init];
-        [newEntry setObject:content forKey:@"content"];
-        [newEntry setObject:contentType forKey:@"type"];
-        [newEntry setObject:preview forKey:@"preview"];
-        [newEntry setObject:sizeDisplay forKey:@"size"];
-        [newEntry setObject:[NSNumber numberWithDouble:timestamp] forKey:@"timestamp"];
-        [newEntry setObject:dateString forKey:@"date"];
-        [newEntry setObject:timeString forKey:@"time"];
-
-        // Add to beginning
-        [history insertObject:newEntry atIndex:0];
-
-        // Limit to 1000 entries
-        if ([history count] > 1000) {
-            NSRange rangeToRemove = NSMakeRange(1000, [history count] - 1000);
-            [history removeObjectsInRange:rangeToRemove];
-        }
-
-        // Save to JSON
-        NSError *jsonError = nil;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:history
-                                                           options:NSJSONWritingPrettyPrinted
-                                                             error:&jsonError];
-        if (jsonData && !jsonError) {
-            BOOL success = [jsonData writeToFile:jsonFilePath atomically:YES];
-            if (success) {
-                printf("SUCCESS: %s entry added\n", [contentType UTF8String]);
-            } else {
-                printf("ERROR: Failed to write file\n");
-                return 1;
-            }
-        } else {
-            printf("ERROR: JSON serialization failed\n");
+        if (rc != SQLITE_OK) {
+            printf("ERROR: Cannot prepare statement: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
             return 1;
         }
+
+        sqlite3_bind_text(stmt, 1, [content UTF8String], -1, SQLITE_STATIC);
+
+        long long existingId = -1;
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            existingId = sqlite3_column_int64(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+
+        if (existingId >= 0) {
+            // Update existing entry
+            const char *updateSQL =
+                "UPDATE clipboard_history SET timestamp = ?, time = ? WHERE id = ?";
+
+            rc = sqlite3_prepare_v2(db, updateSQL, -1, &stmt, NULL);
+            if (rc == SQLITE_OK) {
+                sqlite3_bind_int64(stmt, 1, timestamp);
+                sqlite3_bind_text(stmt, 2, [timeString UTF8String], -1, SQLITE_STATIC);
+                sqlite3_bind_int64(stmt, 3, existingId);
+
+                sqlite3_step(stmt);
+                sqlite3_finalize(stmt);
+
+                // Output the updated entry
+                printf("{\"id\":%lld,\"content\":\"%s\",\"type\":\"%s\",\"preview\":\"%s\",\"size\":\"%s\",\"timestamp\":%lu,\"time\":\"%s\",\"action\":\"moved\"}",
+                       existingId,
+                       [[content stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""] UTF8String],
+                       [contentType UTF8String],
+                       [[preview stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""] UTF8String],
+                       [sizeDisplay UTF8String],
+                       (unsigned long)timestamp,
+                       [timeString UTF8String]);
+            }
+        } else {
+            // Insert new entry
+            const char *insertSQL =
+                "INSERT INTO clipboard_history (content, type, preview, size, timestamp, time) "
+                "VALUES (?, ?, ?, ?, ?, ?)";
+
+            rc = sqlite3_prepare_v2(db, insertSQL, -1, &stmt, NULL);
+            if (rc == SQLITE_OK) {
+                sqlite3_bind_text(stmt, 1, [content UTF8String], -1, SQLITE_STATIC);
+                sqlite3_bind_text(stmt, 2, [contentType UTF8String], -1, SQLITE_STATIC);
+                sqlite3_bind_text(stmt, 3, [preview UTF8String], -1, SQLITE_STATIC);
+                sqlite3_bind_text(stmt, 4, [sizeDisplay UTF8String], -1, SQLITE_STATIC);
+                sqlite3_bind_int64(stmt, 5, timestamp);
+                sqlite3_bind_text(stmt, 6, [timeString UTF8String], -1, SQLITE_STATIC);
+
+                if (sqlite3_step(stmt) == SQLITE_DONE) {
+                    long long newId = sqlite3_last_insert_rowid(db);
+
+                    // Output the new entry
+                    printf("{\"id\":%lld,\"content\":\"%s\",\"type\":\"%s\",\"preview\":\"%s\",\"size\":\"%s\",\"timestamp\":%lu,\"time\":\"%s\",\"action\":\"added\"}",
+                           newId,
+                           [[content stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""] UTF8String],
+                           [contentType UTF8String],
+                           [[preview stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""] UTF8String],
+                           [sizeDisplay UTF8String],
+                           (unsigned long)timestamp,
+                           [timeString UTF8String]);
+                }
+                sqlite3_finalize(stmt);
+            }
+        }
+
+        sqlite3_close(db);
     }
     return 0;
 }

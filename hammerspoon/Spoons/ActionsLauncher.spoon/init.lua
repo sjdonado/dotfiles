@@ -32,15 +32,6 @@ function obj:init()
     if not handler then return end
 
     local result = handler()
-
-    if result == false then
-      -- Reopen chooser after a brief delay to keep it open
-      hs.timer.doAfter(0.1, function()
-        self:show()
-      end)
-      return
-    end
-
     if result and type(result) == "string" and result ~= "" then
       if choice.copyToClipboard then
         hs.pasteboard.setContents(result)
@@ -249,7 +240,7 @@ end
 ---  * query - The query string to set
 function obj:replaceQuery(query)
   self.chooser:query(query)
-  hs.timer.doAfter(0.1, function()
+  hs.timer.doAfter(0, function()
     self:show()
   end)
 end

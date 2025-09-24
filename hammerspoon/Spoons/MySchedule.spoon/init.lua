@@ -19,6 +19,7 @@ obj.cachedEvents = {}    -- Cache for events
 obj.lastUpdate = 0       -- Timestamp of last update
 obj.loadingTask = nil    -- Current loading task
 obj.isLoading = false    -- Loading state
+obj.eventkitBinary = nil -- Cached EventKit fetcher binary
 
 --- MySchedule:init()
 --- Method
@@ -62,6 +63,11 @@ function obj:stop()
     self.loadingTask = nil
   end
   self.isLoading = false
+  -- Clean up compiled binary
+  if self.eventkitBinary then
+    os.remove(self.eventkitBinary)
+    self.eventkitBinary = nil
+  end
   return self
 end
 
@@ -137,28 +143,66 @@ function obj:triggerCalendarPermissions()
   end, { "-e", "tell application \"Calendar\" to return count of calendars" }):start()
 end
 
---- MySchedule:loadEventsWithEventKit()
+--- MySchedule:compileEventKitFetcher()
 --- Method
---- Load events using native EventKit APIs through Objective-C
-function obj:loadEventsWithEventKit()
-  -- Get path to the Objective-C source file
+--- Compile the EventKit fetcher binary if needed
+function obj:compileEventKitFetcher()
+  if self.eventkitBinary then
+    return self.eventkitBinary
+  end
+
   local spoonPath = hs.spoons.scriptPath()
   local objcSourcePath = spoonPath .. "/eventkit_fetcher.m"
+  local binaryPath = spoonPath .. "/eventkit_fetcher_bin"
 
-  -- Create temporary executable path
-  local tmpFile = os.tmpname()
+  -- Check if Objective-C source exists
+  local file = io.open(objcSourcePath, "r")
+  if not file then
+    return nil
+  end
+  file:close()
 
-  -- Compile and run using shell
-  local command = string.format(
-    "/usr/bin/clang -fobjc-arc -framework EventKit -framework Foundation -o %s %s && %s",
-    tmpFile, objcSourcePath, tmpFile)
+  -- Check if binary already exists and is newer than source
+  local sourceAttr = hs.fs.attributes(objcSourcePath)
+  local binaryAttr = hs.fs.attributes(binaryPath)
+
+  if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+    self.eventkitBinary = binaryPath
+    return binaryPath
+  end
+
+  -- Compile the binary
+  local compileCmd = string.format(
+    "/usr/bin/clang -fobjc-arc -framework EventKit -framework Foundation -o %s %s",
+    binaryPath, objcSourcePath)
+  local result = os.execute(compileCmd)
+
+  if result == 0 then
+    self.eventkitBinary = binaryPath
+    return binaryPath
+  else
+    return nil
+  end
+end
+
+--- MySchedule:loadEventsWithEventKit()
+--- Method
+--- Load events using cached native EventKit binary
+function obj:loadEventsWithEventKit()
+  local binaryPath = self:compileEventKitFetcher()
+  if not binaryPath then
+    self.isLoading = false
+    self.cachedEvents = {}
+    self:updateSchedule()
+    return
+  end
+
+  -- Run the cached binary
+  local command = binaryPath
 
   self.loadingTask = hs.task.new("/bin/sh", function(exitCode, stdOut, stdErr)
       self.isLoading = false
       self.loadingTask = nil
-
-      -- Cleanup temp executable
-      os.remove(tmpFile)
 
       if exitCode == 0 and stdOut then
         if stdOut:find("ACCESS_DENIED") then
@@ -446,6 +490,11 @@ function obj:delete()
   if self.menubar then
     self.menubar:delete()
     self.menubar = nil
+  end
+  -- Clean up compiled binary
+  if self.eventkitBinary then
+    os.remove(self.eventkitBinary)
+    self.eventkitBinary = nil
   end
   self.isLoading = false
 end

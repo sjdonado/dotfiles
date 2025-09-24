@@ -1,6 +1,12 @@
 --- === ClipboardHistory ===
 ---
---- Persistent clipboard history with fuzzy search
+--- Persistent clipboard history with fuzzy search and optimized loading
+---
+--- Performance Features:
+--- • Loads 25 most recent items initially using fast Objective-C component
+--- • Unlimited scalable SQLite database with FTS5 full-text search
+--- • Smart 25-entry memory buffer for instant access
+--- • Native Objective-C SQLite integration for maximum performance
 
 local obj = {}
 obj.__index = obj
@@ -15,34 +21,59 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 obj.chooser = nil
 obj.hotkeys = {}
 obj.watcher = nil
-obj.history = {}
-obj.historyFile = nil
+obj.historyBuffer = {} -- Memory buffer with 25 most recent entries
+obj.dbFile = nil
 obj.currentQuery = ""
 obj.clipboardMonitorTask = nil
+obj.sqliteReaderBinary = nil
+obj.clipboardMonitorBinary = nil
 
 --- ClipboardHistory:init()
 --- Method
 --- Initialize the spoon
 function obj:init()
-  -- Set up history file path
+  -- Set up database file path
   local spoonPath = hs.spoons.scriptPath()
-  self.historyFile = spoonPath .. "/clipboard_history.json"
+  self.dbFile = spoonPath .. "/clipboard_history.db"
 
   -- Initialize chooser
+  self:initializeChooser()
+
+  return self
+end
+
+--- ClipboardHistory:initializeChooser()
+--- Method
+--- Initialize or reinitialize the chooser with fresh state
+function obj:initializeChooser()
+  -- Destroy existing chooser if it exists
+  if self.chooser then
+    self.chooser:delete()
+    self.chooser = nil
+  end
+
+  -- Create new chooser
   self.chooser = hs.chooser.new(function(choice)
     if choice then
-      -- Move the selected entry to the top (most recent)
-      self:moveToTop(choice.originalIndex)
-
-      -- Try to paste by default, fall back to copy only in specific cases
-      local shouldJustCopy = self:shouldOnlyCopy()
-
-      if shouldJustCopy then
-        -- Just copy to clipboard without pasting
-        self:copyToClipboard(choice)
+      if choice.isLoadMore then
+        -- Load more entries and reopen chooser
+        self:loadAllHistory()
+        local query = self.chooser:query()
+        self.chooser:query(query)
+        hs.timer.doAfter(0, function()
+          self:show()
+        end)
       else
-        -- Handle different content types for pasting
-        self:pasteContent(choice)
+        -- Try to paste by default, fall back to copy only in specific cases
+        local shouldJustCopy = self:shouldOnlyCopy()
+
+        if shouldJustCopy then
+          -- Just copy to clipboard without pasting
+          self:copyToClipboard(choice)
+        else
+          -- Handle different content types for pasting
+          self:pasteContent(choice)
+        end
       end
     end
   end)
@@ -54,7 +85,9 @@ function obj:init()
     self:updateChoices()
   end)
 
-  return self
+  -- Reset to show only historyBuffer (most recent 25 entries)
+  self.currentQuery = ""
+  self:initializeBuffer()
 end
 
 --- ClipboardHistory:start()
@@ -67,8 +100,8 @@ function obj:start()
   end)
   self.watcher:start()
 
-  -- Initial load of history
-  self:loadHistory()
+  -- Initialize buffer with first 25 entries
+  self:initializeBuffer()
 
   return self
 end
@@ -88,9 +121,51 @@ function obj:stop()
   return self
 end
 
+--- ClipboardHistory:compileClipboardMonitor()
+--- Method
+--- Compile the SQLite clipboard monitor binary if needed
+function obj:compileClipboardMonitor()
+  if self.clipboardMonitorBinary then
+    return self.clipboardMonitorBinary
+  end
+
+  local spoonPath = hs.spoons.scriptPath()
+  local monitorPath = spoonPath .. "/clipboard_monitor_sqlite.m"
+  local binaryPath = spoonPath .. "/clipboard_monitor_sqlite_bin"
+
+  -- Check if Objective-C source exists
+  local file = io.open(monitorPath, "r")
+  if not file then
+    return nil
+  end
+  file:close()
+
+  -- Check if binary already exists and is newer than source
+  local sourceAttr = hs.fs.attributes(monitorPath)
+  local binaryAttr = hs.fs.attributes(binaryPath)
+
+  if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+    self.clipboardMonitorBinary = binaryPath
+    return binaryPath
+  end
+
+  -- Compile the binary
+  local compileCmd = string.format(
+    "/usr/bin/clang -framework Cocoa -framework Foundation -lsqlite3 -o %s %s",
+    binaryPath, monitorPath)
+  local result = os.execute(compileCmd)
+
+  if result == 0 then
+    self.clipboardMonitorBinary = binaryPath
+    return binaryPath
+  else
+    return nil
+  end
+end
+
 --- ClipboardHistory:onClipboardChange()
 --- Method
---- Handle clipboard content changes using Objective-C component
+--- Handle clipboard content changes using cached Objective-C component
 function obj:onClipboardChange()
   -- Cancel any existing monitoring task
   if self.clipboardMonitorTask then
@@ -98,54 +173,174 @@ function obj:onClipboardChange()
     self.clipboardMonitorTask = nil
   end
 
-  local spoonPath = hs.spoons.scriptPath()
-  local objcPath = spoonPath .. "/clipboard_monitor.m"
-  local tmpFile = os.tmpname()
-
-  -- Check if Objective-C component exists
-  local file = io.open(objcPath, "r")
-  if not file then
+  local binaryPath = self:compileClipboardMonitor()
+  if not binaryPath then
     return
   end
-  file:close()
 
-  -- Compile and run the clipboard monitor
-  local command = string.format(
-    "/usr/bin/clang -framework Cocoa -framework Foundation -o %s %s && cd %s && %s",
-    tmpFile, objcPath, hs.spoons.scriptPath(), tmpFile)
+  -- Run the SQLite clipboard monitor from spoon directory
+  local spoonPath = hs.spoons.scriptPath()
+  local sqliteMonitorPath = spoonPath .. "/clipboard_monitor_sqlite_bin"
+  local command = string.format("cd %s && %s", spoonPath, sqliteMonitorPath)
 
   self.clipboardMonitorTask = hs.task.new("/bin/sh", function(exitCode, stdOut, stdErr)
-    os.remove(tmpFile)
     self.clipboardMonitorTask = nil
 
-    if exitCode == 0 then
-      -- Reload history from file after successful update
-      self:loadHistory()
+    if exitCode == 0 and stdOut then
+      -- Parse the new entry from stdout and add to buffer
+      self:addToBuffer(stdOut)
     else
-      print("ClipboardHistory: Objective-C monitor failed:", stdErr or "unknown error")
+      print("ClipboardHistory: SQLite monitor failed:", stdErr or "unknown error")
     end
   end, { "-c", command })
 
   self.clipboardMonitorTask:start()
 end
 
---- ClipboardHistory:loadHistory()
+--- ClipboardHistory:compileSqliteReader()
 --- Method
---- Load clipboard history from JSON file
-function obj:loadHistory()
-  local file = io.open(self.historyFile, "r")
-  if file then
-    local content = file:read("*all")
-    file:close()
+--- Compile the SQLite reader binary if needed
+function obj:compileSqliteReader()
+  if self.sqliteReaderBinary then
+    return self.sqliteReaderBinary
+  end
 
-    local success, data = pcall(hs.json.decode, content)
-    if success and data then
-      self.history = data
+  local spoonPath = hs.spoons.scriptPath()
+  local sqliteReaderPath = spoonPath .. "/sqlite_reader.m"
+  local binaryPath = spoonPath .. "/sqlite_reader_bin"
+
+  -- Check if Objective-C source exists
+  local file = io.open(sqliteReaderPath, "r")
+  if not file then
+    return nil
+  end
+  file:close()
+
+  -- Check if binary already exists and is newer than source
+  local sourceAttr = hs.fs.attributes(sqliteReaderPath)
+  local binaryAttr = hs.fs.attributes(binaryPath)
+
+  if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+    self.sqliteReaderBinary = binaryPath
+    return binaryPath
+  end
+
+  -- Compile the binary
+  local compileCmd = string.format("/usr/bin/clang -framework Foundation -lsqlite3 -o %s %s",
+    binaryPath,
+    sqliteReaderPath)
+  local result = os.execute(compileCmd)
+
+  if result == 0 then
+    self.sqliteReaderBinary = binaryPath
+    return binaryPath
+  else
+    return nil
+  end
+end
+
+--- ClipboardHistory:initializeBuffer()
+--- Method
+--- Initialize buffer with first 25 entries from SQLite database
+function obj:initializeBuffer()
+  local binaryPath = self:compileSqliteReader()
+  if not binaryPath then
+    self.historyBuffer = {}
+    return
+  end
+
+  -- Load first 25 entries using SQLite reader
+  local command = string.format("%s %s recent 25", binaryPath, self.dbFile)
+
+  local handle = io.popen(command, "r")
+  if handle then
+    local output = handle:read("*all")
+    local success, exitCode = handle:close()
+
+    if output and output ~= "" then
+      -- Clean the output
+      output = output:gsub("^%s+", ""):gsub("%s+$", "")
+
+      if output:match("^%[") then
+        local parseSuccess, data = pcall(hs.json.decode, output)
+        if parseSuccess and data and type(data) == "table" then
+          self.historyBuffer = data
+        else
+          self.historyBuffer = {}
+        end
+      else
+        self.historyBuffer = {}
+      end
     else
-      self.history = {}
+      self.historyBuffer = {}
     end
   else
-    self.history = {}
+    self.historyBuffer = {}
+  end
+end
+
+--- ClipboardHistory:addToBuffer(newEntryStr)
+--- Method
+--- Add new entry to buffer from clipboard monitor output
+function obj:addToBuffer(newEntryStr)
+  if not newEntryStr or newEntryStr == "" then
+    return
+  end
+
+  -- Parse the new entry (SQLite monitor outputs the entry with action info)
+  local success, newEntry = pcall(hs.json.decode, newEntryStr)
+  if success and newEntry and type(newEntry) == "table" then
+    if newEntry.action == "moved" then
+      -- Find and move existing entry to top
+      for i = 1, #self.historyBuffer do
+        if self.historyBuffer[i] and self.historyBuffer[i].id == newEntry.id then
+          local existingEntry = table.remove(self.historyBuffer, i)
+          existingEntry.timestamp = newEntry.timestamp
+          existingEntry.time = newEntry.time
+          table.insert(self.historyBuffer, 1, existingEntry)
+          break
+        end
+      end
+    elseif newEntry.action == "added" then
+      -- Add new entry to beginning of buffer
+      table.insert(self.historyBuffer, 1, newEntry)
+
+      -- Keep only 25 entries
+      if #self.historyBuffer > 25 then
+        table.remove(self.historyBuffer)
+      end
+    end
+
+    -- No need to save - SQLite handles persistence
+  end
+end
+
+--- ClipboardHistory:loadAllHistory()
+--- Method
+--- Load all clipboard history entries from SQLite database
+function obj:loadAllHistory()
+  local binaryPath = self:compileSqliteReader()
+  if not binaryPath then
+    return
+  end
+
+  -- Load all entries from SQLite
+  local command = string.format("%s %s recent 10000", binaryPath, self.dbFile)
+
+  local handle = io.popen(command, "r")
+  if handle then
+    local output = handle:read("*all")
+    handle:close()
+
+    if output and output ~= "" then
+      output = output:gsub("^%s+", ""):gsub("%s+$", "")
+      if output:match("^%[") then
+        local parseSuccess, data = pcall(hs.json.decode, output)
+        if parseSuccess and data and type(data) == "table" then
+          self.historyBuffer = data
+        end
+      end
+    end
   end
 end
 
@@ -158,8 +353,8 @@ function obj:updateChoices()
   -- Apply fuzzy search if query exists
   local filteredEntries = {}
   if self.currentQuery == "" then
-    -- No query, show all entries
-    filteredEntries = self.history
+    -- No query, show all entries from buffer
+    filteredEntries = self.historyBuffer
   else
     -- Apply fuzzy search
     local query = self.currentQuery:lower()
@@ -174,18 +369,49 @@ function obj:updateChoices()
       return true
     end
 
-    for _, entry in ipairs(self.history) do
-      local searchableContent = (entry.content or ""):lower()
-      local searchableType = (entry.type or ""):lower()
-      local searchablePreview = (entry.preview or ""):lower()
+    -- Use FTS5 search with prefix matching for consistent results
+    local binaryPath = self:compileSqliteReader()
+    if binaryPath then
+      -- Use prefix matching with * for partial word matches
+      local searchQuery = query:gsub('%s+', '* ') .. '*'
+      local command = string.format("%s %s search \"%s\"", binaryPath, self.dbFile,
+        searchQuery:gsub('"', '\\"'))
+      local handle = io.popen(command, "r")
+      if handle then
+        local output = handle:read("*all")
+        handle:close()
 
-      if fuzzyMatch(searchableContent, query) or
-          fuzzyMatch(searchableType, query) or
-          fuzzyMatch(searchablePreview, query) or
-          searchableContent:find(query, 1, true) or
-          searchableType:find(query, 1, true) or
-          searchablePreview:find(query, 1, true) then
-        table.insert(filteredEntries, entry)
+        if output and output ~= "" then
+          output = output:gsub("^%s+", ""):gsub("%s+$", "")
+          if output:match("^%[") then
+            local parseSuccess, searchResults = pcall(hs.json.decode, output)
+            if parseSuccess and searchResults and type(searchResults) == "table" then
+              filteredEntries = searchResults
+            end
+          end
+        end
+      end
+    end
+
+    -- Fallback to local buffer search if FTS5 fails, with prefix matching
+    if #filteredEntries == 0 then
+      for _, entry in ipairs(self.historyBuffer) do
+        local searchableContent = (entry.content or ""):lower()
+        local searchableType = (entry.type or ""):lower()
+        local searchablePreview = (entry.preview or ""):lower()
+
+        -- Check if any word starts with the query (prefix matching)
+        local function hasWordStartingWith(text, pattern)
+          return text:find('%f[%w]' .. pattern:gsub('[%-%^%$%(%)%%%.%[%]%*%+%-%?]', '%%%1')) ~= nil
+        end
+
+        if hasWordStartingWith(searchableContent, query) or
+            hasWordStartingWith(searchableType, query) or
+            hasWordStartingWith(searchablePreview, query) or
+            fuzzyMatch(searchableContent, query) or
+            searchableContent:find(query, 1, true) then
+          table.insert(filteredEntries, entry)
+        end
       end
     end
   end
@@ -233,15 +459,8 @@ function obj:updateChoices()
     local iconSize = { w = 64, h = 64 }
     local canvas = hs.canvas.new(iconSize)
 
-    -- Color schemes for different file types
-    local colors = {
-      image = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
-      video = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
-      audio = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
-      document = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
-      code = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
-      file = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 }
-    }
+    -- Use Hammerspoon's consistent blue color for all file types
+    local hammerspoonBlue = { red = 0.0, green = 0.47, blue = 1.0, alpha = 1.0 }
 
     local symbols = {
       image = "🖼",
@@ -252,7 +471,7 @@ function obj:updateChoices()
       file = "📁"
     }
 
-    local color = colors[fileType] or colors.file
+    local color = hammerspoonBlue
     local symbol = symbols[fileType] or symbols.file
 
     -- Draw background rectangle
@@ -286,25 +505,18 @@ function obj:updateChoices()
     end
 
     -- Format date for display
-    local dateDisplay = entry.date or ""
-    local today = os.date("%Y-%m-%d")
-    local yesterday = os.date("%Y-%m-%d", os.time() - 24 * 60 * 60)
+    local dateDisplay = ""
+    if entry.timestamp then
+      local timestamp = tonumber(entry.timestamp) or 0
+      local today = os.time()
+      local daysDiff = math.floor((today - timestamp) / 86400)
 
-    if entry.date == today then
-      dateDisplay = "Today"
-    elseif entry.date == yesterday then
-      dateDisplay = "Yesterday"
-    elseif entry.date then
-      dateDisplay = os.date("%b %d", entry.timestamp or os.time())
-    end
-
-    -- Find original index in full history
-    local originalIndex = nil
-    for j, historyEntry in ipairs(self.history) do
-      if historyEntry.content == entry.content and
-          historyEntry.timestamp == entry.timestamp then
-        originalIndex = j
-        break
+      if daysDiff == 0 then
+        dateDisplay = "Today"
+      elseif daysDiff == 1 then
+        dateDisplay = "Yesterday"
+      else
+        dateDisplay = os.date("%b %d", timestamp)
       end
     end
 
@@ -328,8 +540,7 @@ function obj:updateChoices()
       subText = subText,
       content = entry.content,
       timestamp = entry.timestamp,
-      type = entry.type,
-      originalIndex = originalIndex
+      type = entry.type
     }
 
     -- Handle different content types for preview
@@ -396,7 +607,7 @@ function obj:updateChoices()
         canvas[1] = {
           type = "rectangle",
           action = "fill",
-          fillColor = { red = 0.6, green = 0.6, blue = 0.6, alpha = 1.0 },
+          fillColor = { red = 0.0, green = 0.47, blue = 1.0, alpha = 1.0 },
           roundedRectRadii = { xRadius = 8, yRadius = 8 }
         }
         canvas[2] = {
@@ -432,6 +643,34 @@ function obj:updateChoices()
     table.insert(choices, choiceEntry)
   end
 
+  -- Add "Load more" item if we might have more entries and no search query
+  if self.currentQuery == "" and #self.historyBuffer == 25 then
+    local binaryPath = self:compileSqliteReader()
+    local totalEntries = 0
+
+    if binaryPath then
+      local command = string.format("%s %s count", binaryPath, self.dbFile)
+      local handle = io.popen(command, "r")
+      if handle then
+        local output = handle:read("*all")
+        handle:close()
+        local success, data = pcall(hs.json.decode, output)
+        if success and data and data.count then
+          totalEntries = data.count
+        end
+      end
+    end
+
+    if totalEntries > 25 then
+      local remainingCount = totalEntries - 25
+      table.insert(choices, {
+        text = "📥 Load more (" .. remainingCount .. " more entries)",
+        subText = "Load remaining clipboard history entries",
+        isLoadMore = true
+      })
+    end
+  end
+
   self.chooser:choices(choices)
 end
 
@@ -439,9 +678,7 @@ end
 --- Method
 --- Show the clipboard history chooser
 function obj:show()
-  self:loadHistory() -- Refresh from file
-
-  if #self.history == 0 then
+  if #self.historyBuffer == 0 then
     hs.alert.show("📋 Clipboard history is empty", 1)
     return
   end
@@ -460,11 +697,13 @@ end
 
 --- ClipboardHistory:toggle()
 --- Method
---- Toggle the clipboard history chooser visibility
+--- Toggle the clipboard history chooser visibility with fresh initialization
 function obj:toggle()
-  if self.chooser:isVisible() then
+  if self.chooser and self.chooser:isVisible() then
     self:hide()
   else
+    -- Reinitialize chooser for fresh start (resets scroll, search, shows recent 25)
+    self:initializeChooser()
     self:show()
   end
 end
@@ -595,49 +834,25 @@ function obj:pasteContent(choice)
   end)
 end
 
---- ClipboardHistory:moveToTop(index)
---- Method
---- Move entry at index to the top (most recent position) and save to JSON
-function obj:moveToTop(index)
-  if not index or index < 1 or index > #self.history then
-    return
-  end
-
-  local entry = table.remove(self.history, index)
-  if entry then
-    -- Update timestamp and time
-    entry.timestamp = os.time()
-    entry.date = os.date("%Y-%m-%d")
-    entry.time = os.date("%H:%M")
-
-    -- Insert at the beginning
-    table.insert(self.history, 1, entry)
-
-    -- Save to JSON file
-    self:saveHistory()
-  end
-end
-
 --- ClipboardHistory:saveHistory()
 --- Method
---- Save current history to JSON file
+--- No-op since SQLite handles persistence automatically
 function obj:saveHistory()
-  local success, jsonString = pcall(hs.json.encode, self.history)
-  if success then
-    local file = io.open(self.historyFile, "w")
-    if file then
-      file:write(jsonString)
-      file:close()
-    end
-  end
+  -- SQLite handles persistence automatically, no action needed
 end
 
 --- ClipboardHistory:clear()
 --- Method
 --- Clear clipboard history
 function obj:clear()
-  self.history = {}
-  self:saveHistory()
+  self.historyBuffer = {}
+  -- Clear SQLite database
+  local binaryPath = self:compileSqliteReader()
+  if binaryPath then
+    local command = string.format(
+      "sqlite3 %s 'DELETE FROM clipboard_history; DELETE FROM clipboard_fts;'", self.dbFile)
+    os.execute(command)
+  end
   hs.alert.show("🗑️ Clipboard history cleared", 1)
 end
 
@@ -668,6 +883,15 @@ function obj:delete()
   if self.chooser then
     self.chooser:delete()
     self.chooser = nil
+  end
+  -- Clean up compiled binaries
+  if self.sqliteReaderBinary then
+    os.remove(self.sqliteReaderBinary)
+    self.sqliteReaderBinary = nil
+  end
+  if self.clipboardMonitorBinary then
+    os.remove(self.clipboardMonitorBinary)
+    self.clipboardMonitorBinary = nil
   end
 end
 
