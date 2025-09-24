@@ -34,8 +34,14 @@ function obj:init()
       -- Move the selected entry to the top (most recent)
       self:moveToTop(choice.originalIndex)
 
-      -- Handle different content types for pasting
-      self:pasteContent(choice)
+      -- Check if there's an active input field
+      if self:hasActiveInput() then
+        -- Handle different content types for pasting
+        self:pasteContent(choice)
+      else
+        -- Just copy to clipboard without pasting
+        self:copyToClipboard(choice)
+      end
     end
   end)
 
@@ -461,29 +467,135 @@ function obj:toggle()
   end
 end
 
---- ClipboardHistory:pasteContent(choice)
+--- ClipboardHistory:hasActiveInput()
 --- Method
---- Paste content based on its type
-function obj:pasteContent(choice)
+--- Check if there's an active input field or text field
+function obj:hasActiveInput()
+  local app = hs.application.frontmostApplication()
+  if not app then
+    return false
+  end
+
+  local window = app:focusedWindow()
+  if not window then
+    return false
+  end
+
+  local element = hs.uielement.focusedElement()
+  if not element then
+    return false
+  end
+
+  local role = element:attributeValue("AXRole")
+  local subrole = element:attributeValue("AXSubrole")
+  local focused = element:attributeValue("AXFocused")
+  local editable = element:attributeValue("AXEditable")
+
+  -- Check if element is focused first
+  if not focused then
+    return false
+  end
+
+  -- Check for all possible text input and editable field roles
+  local textInputRoles = {
+    "AXTextField",
+    "AXTextArea",
+    "AXSecureTextField",
+    "AXComboBox",
+    "AXTextView",
+    "AXRichText",
+    "AXWebArea",
+    "AXTokenField",
+    "AXDatePicker",
+    "AXIncrementor",
+    "AXSlider",
+    "AXColorWell",
+    "AXPopUpButton",
+    "AXCell",
+    "AXStepper",
+    "AXSpinButton"
+  }
+
+  local textInputSubroles = {
+    "AXSearchField",
+    "AXSecureTextField",
+    "AXNumberField",
+    "AXEmailField",
+    "AXURLField",
+    "AXPasswordField",
+    "AXDateField",
+    "AXTimeField",
+    "AXTextArea",
+    "AXRichTextField",
+    "AXComboBoxTextField",
+    "AXAutoComplete",
+    "AXSearchTextField",
+    "AXTokenField",
+    "AXStandardWindow",
+    "AXDialog",
+    "AXSheet"
+  }
+
+  -- Check if element is explicitly marked as editable
+  if editable then
+    return true
+  end
+
+  -- Check role against known text input roles
+  if role then
+    for _, inputRole in ipairs(textInputRoles) do
+      if role == inputRole then
+        return true
+      end
+    end
+  end
+
+  -- Check subrole against known text input subroles
+  if subrole then
+    for _, inputSubrole in ipairs(textInputSubroles) do
+      if subrole == inputSubrole then
+        return true
+      end
+    end
+  end
+
+  -- Additional check for web content and rich text areas
+  if role == "AXWebArea" or role == "AXTextView" or role == "AXRichText" then
+    return true
+  end
+
+  -- Check for content-editable web elements
+  local description = element:attributeValue("AXDescription")
+  if description and (description:find("edit") or description:find("input") or description:find("text")) then
+    return true
+  end
+
+  return false
+end
+
+--- ClipboardHistory:copyToClipboard(choice)
+--- Method
+--- Copy content to clipboard without pasting
+function obj:copyToClipboard(choice)
   if choice.type == "File path" then
-    -- For file paths, check if we should paste as path or file:// URI
+    -- For file paths, check if we should copy as path or file:// URI
     local filePath = choice.content
 
     -- Check if file exists
     local file = io.open(filePath, "r")
     if file then
       file:close()
-      -- File exists, paste as file:// URI for drag and drop compatibility
+      -- File exists, copy as file:// URI for drag and drop compatibility
       if not filePath:match("^file://") then
         filePath = "file://" .. filePath
       end
       hs.pasteboard.setContents(filePath)
     else
-      -- File doesn't exist, paste as plain text path
+      -- File doesn't exist, copy as plain text path
       hs.pasteboard.setContents(choice.content)
     end
   elseif choice.type and choice.type:find("image") then
-    -- For clipboard images, paste the file path or recreate the image data
+    -- For clipboard images, copy the file path or recreate the image data
     local imagePath = choice.content
     local file = io.open(imagePath, "r")
     if file then
@@ -508,7 +620,18 @@ function obj:pasteContent(choice)
     hs.pasteboard.setContents(choice.content)
   end
 
-  -- Trigger paste command
+  -- Show a silent notification that content was copied
+  hs.alert.show("📋 Copied to clipboard", 0.5)
+end
+
+--- ClipboardHistory:pasteContent(choice)
+--- Method
+--- Paste content based on its type
+function obj:pasteContent(choice)
+  -- First copy to clipboard
+  self:copyToClipboard(choice)
+
+  -- Then trigger paste command
   hs.eventtap.keyStroke({ "cmd" }, "v", 0)
 end
 
