@@ -34,13 +34,15 @@ function obj:init()
       -- Move the selected entry to the top (most recent)
       self:moveToTop(choice.originalIndex)
 
-      -- Check if there's an active input field
-      if self:hasActiveInput() then
-        -- Handle different content types for pasting
-        self:pasteContent(choice)
-      else
+      -- Try to paste by default, fall back to copy only in specific cases
+      local shouldJustCopy = self:shouldOnlyCopy()
+
+      if shouldJustCopy then
         -- Just copy to clipboard without pasting
         self:copyToClipboard(choice)
+      else
+        -- Handle different content types for pasting
+        self:pasteContent(choice)
       end
     end
   end)
@@ -467,109 +469,33 @@ function obj:toggle()
   end
 end
 
---- ClipboardHistory:hasActiveInput()
+--- ClipboardHistory:shouldOnlyCopy()
 --- Method
---- Check if there's an active input field or text field
-function obj:hasActiveInput()
+--- Check if we should only copy (not paste) - be conservative, only copy when certain we shouldn't paste
+function obj:shouldOnlyCopy()
   local app = hs.application.frontmostApplication()
   if not app then
-    return false
+    return true -- No app, just copy
   end
 
-  local window = app:focusedWindow()
-  if not window then
-    return false
-  end
+  local appName = app:name()
 
-  local element = hs.uielement.focusedElement()
-  if not element then
-    return false
-  end
-
-  local role = element:attributeValue("AXRole")
-  local subrole = element:attributeValue("AXSubrole")
-  local focused = element:attributeValue("AXFocused")
-  local editable = element:attributeValue("AXEditable")
-
-  -- Check if element is focused first
-  if not focused then
-    return false
-  end
-
-  -- Check for all possible text input and editable field roles
-  local textInputRoles = {
-    "AXTextField",
-    "AXTextArea",
-    "AXSecureTextField",
-    "AXComboBox",
-    "AXTextView",
-    "AXRichText",
-    "AXWebArea",
-    "AXTokenField",
-    "AXDatePicker",
-    "AXIncrementor",
-    "AXSlider",
-    "AXColorWell",
-    "AXPopUpButton",
-    "AXCell",
-    "AXStepper",
-    "AXSpinButton"
+  -- Don't paste in certain apps where it might be disruptive
+  local copyOnlyApps = {
+    "Finder",
+    "System Preferences",
+    "System Settings",
+    "Activity Monitor",
+    "Console"
   }
 
-  local textInputSubroles = {
-    "AXSearchField",
-    "AXSecureTextField",
-    "AXNumberField",
-    "AXEmailField",
-    "AXURLField",
-    "AXPasswordField",
-    "AXDateField",
-    "AXTimeField",
-    "AXTextArea",
-    "AXRichTextField",
-    "AXComboBoxTextField",
-    "AXAutoComplete",
-    "AXSearchTextField",
-    "AXTokenField",
-    "AXStandardWindow",
-    "AXDialog",
-    "AXSheet"
-  }
-
-  -- Check if element is explicitly marked as editable
-  if editable then
-    return true
-  end
-
-  -- Check role against known text input roles
-  if role then
-    for _, inputRole in ipairs(textInputRoles) do
-      if role == inputRole then
-        return true
-      end
+  for _, copyApp in ipairs(copyOnlyApps) do
+    if appName == copyApp then
+      return true
     end
   end
 
-  -- Check subrole against known text input subroles
-  if subrole then
-    for _, inputSubrole in ipairs(textInputSubroles) do
-      if subrole == inputSubrole then
-        return true
-      end
-    end
-  end
-
-  -- Additional check for web content and rich text areas
-  if role == "AXWebArea" or role == "AXTextView" or role == "AXRichText" then
-    return true
-  end
-
-  -- Check for content-editable web elements
-  local description = element:attributeValue("AXDescription")
-  if description and (description:find("edit") or description:find("input") or description:find("text")) then
-    return true
-  end
-
+  -- For all other cases, try to paste
   return false
 end
 
@@ -628,11 +554,45 @@ end
 --- Method
 --- Paste content based on its type
 function obj:pasteContent(choice)
-  -- First copy to clipboard
-  self:copyToClipboard(choice)
+  -- Copy content to clipboard without showing alert
+  if choice.type == "File path" then
+    local filePath = choice.content
+    local file = io.open(filePath, "r")
+    if file then
+      file:close()
+      if not filePath:match("^file://") then
+        filePath = "file://" .. filePath
+      end
+      hs.pasteboard.setContents(filePath)
+    else
+      hs.pasteboard.setContents(choice.content)
+    end
+  elseif choice.type and choice.type:find("image") then
+    local imagePath = choice.content
+    local file = io.open(imagePath, "r")
+    if file then
+      file:close()
+      local imageData = hs.image.imageFromPath(imagePath)
+      if imageData then
+        hs.pasteboard.setContents(imageData)
+      else
+        local fileURL = imagePath
+        if not fileURL:match("^file://") then
+          fileURL = "file://" .. fileURL
+        end
+        hs.pasteboard.setContents(fileURL)
+      end
+    else
+      hs.pasteboard.setContents(choice.content)
+    end
+  else
+    hs.pasteboard.setContents(choice.content)
+  end
 
-  -- Then trigger paste command
-  hs.eventtap.keyStroke({ "cmd" }, "v", 0)
+  -- Small delay to ensure clipboard is set, then paste
+  hs.timer.doAfter(0.1, function()
+    hs.eventtap.keyStroke({ "cmd" }, "v", 0)
+  end)
 end
 
 --- ClipboardHistory:moveToTop(index)
