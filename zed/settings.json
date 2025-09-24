@@ -10,8 +10,8 @@
   },
   "agent": {
     "inline_assistant_model": {
-      "provider": "zed.dev",
-      "model": "claude-sonnet-4"
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-latest"
     },
     "default_profile": "write",
     "default_model": {
