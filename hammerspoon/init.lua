@@ -85,18 +85,13 @@ spoon.ActionsLauncher:setup({
       description = "Copy public IP address to clipboard"
     },
     {
-      name = "Paste Text Without Formatting",
+      name = "Generate UUID",
       callback = function()
-        local clipboard = hs.pasteboard.getContents()
-        if clipboard then
-          hs.pasteboard.setContents(clipboard)
-          hs.eventtap.event.newKeyEvent({ "cmd" }, "v", true):post()
-          hs.eventtap.event.newKeyEvent({ "cmd" }, "v", false):post()
-        else
-          return "No text in clipboard"
-        end
+        spoon.ActionsLauncher.executeShell(
+          "uuidgen | tr '[:upper:]' '[:lower:]' | tr -d '\\n' | pbcopy && pbpaste",
+          "Generate UUID")
       end,
-      description = "Paste clipboard text without formatting"
+      description = "Generate UUID v4 and copy to clipboard"
     },
   },
   live = {
