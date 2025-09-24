@@ -169,6 +169,29 @@ function obj:show()
   end)
 end
 
+--- KillProcess:hide()
+--- Method
+--- Hide the process chooser
+function obj:hide()
+  self.chooser:hide()
+  -- Stop refresh timer
+  if self.refreshTimer then
+    self.refreshTimer:stop()
+    self.refreshTimer = nil
+  end
+end
+
+--- KillProcess:toggle()
+--- Method
+--- Toggle the process chooser visibility
+function obj:toggle()
+  if self.chooser:isVisible() then
+    self:hide()
+  else
+    self:show()
+  end
+end
+
 --- KillProcess:bindHotkeys(mapping)
 --- Method
 --- Bind hotkeys for KillProcess
@@ -176,9 +199,11 @@ end
 --- Parameters:
 ---  * mapping - A table containing hotkey mappings. Supported keys:
 ---    * show - Show the process chooser (default: no hotkey)
+---    * toggle - Toggle the process chooser visibility (default: no hotkey)
 function obj:bindHotkeys(mapping)
   local def = {
-    show = hs.fnutils.partial(self.show, self)
+    show = hs.fnutils.partial(self.show, self),
+    toggle = hs.fnutils.partial(self.toggle, self)
   }
   hs.spoons.bindHotkeysToSpec(def, mapping)
   return self

@@ -20,21 +20,6 @@ spoon.LaunchOrToggleFocus:bindApps({
   zed        = { hotkey = { { "alt", "shift" }, "space" }, app = "Zed" },
 })
 
-hs.loadSpoon("KillProcess")
-spoon.KillProcess:bindHotkeys({
-  show = { { "alt", "shift" }, "=" }
-})
-
-hs.loadSpoon("WindowManager")
-spoon.WindowManager:bindHotkeys({
-  left_half = { { "cmd", "shift" }, "left" },
-  right_half = { { "cmd", "shift" }, "right" },
-  top_half = { { "cmd", "shift" }, "up" },
-  bottom_half = { { "cmd", "shift" }, "down" },
-  center = { { "cmd", "shift" }, "return" },
-})
-
--- Load and configure ActionsLauncher
 hs.loadSpoon("ActionsLauncher")
 spoon.ActionsLauncher:defineActions({
   -- Window Management Actions
@@ -112,24 +97,34 @@ spoon.ActionsLauncher:defineActions({
     end,
     description = "Paste clipboard text without formatting"
   },
-
-  -- Meeting Actions
-  {
-    name = "Join Meeting",
-    callback = function()
-      return spoon.MySchedule:joinCurrentMeeting()
-    end,
-    description = "Join current or upcoming meeting from calendar"
-  }
 })
 
 spoon.ActionsLauncher:bindHotkeys({
   toggle = { { "alt", "shift" }, "\\" } -- Use Alt+Shift+/ to toggle the actions palette
 })
 
--- Load and configure MySchedule
+hs.loadSpoon("KillProcess")
+spoon.KillProcess:bindHotkeys({
+  toggle = { { "alt", "shift" }, "=" }
+})
+
+hs.loadSpoon("WindowManager")
+spoon.WindowManager:bindHotkeys({
+  left_half = { { "cmd", "shift" }, "left" },
+  right_half = { { "cmd", "shift" }, "right" },
+  top_half = { { "cmd", "shift" }, "up" },
+  bottom_half = { { "cmd", "shift" }, "down" },
+  center = { { "cmd", "shift" }, "return" },
+})
+
 hs.loadSpoon("MySchedule")
 spoon.MySchedule:start()
+
+hs.loadSpoon("ClipboardHistory")
+spoon.ClipboardHistory:start()
+spoon.ClipboardHistory:bindHotkeys({
+  toggle = { { "alt", "shift" }, "-" }
+})
 
 -- Auto-reload config when init.lua changes
 local function reloadConfig(files)
