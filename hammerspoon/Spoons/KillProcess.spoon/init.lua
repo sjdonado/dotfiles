@@ -25,7 +25,7 @@ function obj:init()
     if choice then
       local success = hs.execute(string.format("kill %d", choice.pid))
       if success then
-        hs.alert.show(string.format("🔪 Killed: %s", choice.name), 2)
+        hs.alert.show(string.format(" Killed: %s", choice.name), 2)
       else
         hs.alert.show(string.format("❌ Failed to kill: %s", choice.name), 2)
       end
