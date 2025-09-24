@@ -17,6 +17,13 @@ obj.hotkeys = {}
 obj.chooser = nil
 obj.actions = {}
 obj.callbacks = {}
+obj.liveConfig = {
+  timestamp = true,
+  base64 = true,
+  jwt = true
+}
+obj.originalChoices = {}
+obj.uuidCounter = 0
 
 --- ActionsLauncher:init()
 --- Method
@@ -26,7 +33,12 @@ function obj:init()
     if choice and choice.uuid and self.callbacks[choice.uuid] then
       local result = self.callbacks[choice.uuid]()
       if result and type(result) == "string" and result ~= "" then
-        hs.alert.show(result)
+        if choice.copyToClipboard then
+          hs.pasteboard.setContents(result)
+          hs.alert.show("Copied to clipboard: " .. result)
+        else
+          hs.alert.show(result)
+        end
       end
     end
   end)
@@ -35,25 +47,42 @@ function obj:init()
   self.chooser:searchSubText(true)
   self.chooser:rows(10)
 
+  -- Set up query change callback for interactive actions
+  self.chooser:queryChangedCallback(function(query)
+    self:handleQueryChange(query)
+  end)
+
   return self
 end
 
---- ActionsLauncher:defineActions(actions)
+--- ActionsLauncher:setup(config)
 --- Method
---- Define the available actions
+--- Setup the ActionsLauncher with actions and interactive options
 ---
 --- Parameters:
----  * actions - A table containing action definitions. Each action should have:
----    * name - The display name of the action
----    * callback - The function to execute when the action is selected
----    * description - Optional description for the action
-function obj:defineActions(actions)
-  self.actions = actions
+---  * config - A table containing:
+---    * actions - A table of action definitions (optional)
+---    * live - A table of live action feature flags (optional):
+---      * timestamp - Enable Unix timestamp conversion (default: true)
+---      * base64 - Enable Base64 decoding (default: true)
+---      * jwt - Enable JWT token decoding (default: true)
+function obj:setup(config)
+  config = config or {}
+
+  -- Setup actions
+  self.actions = config.actions or {}
   self.callbacks = {}
+
+  -- Setup live action features
+  if config.live then
+    self.liveConfig.timestamp = config.live.timestamp ~= false
+    self.liveConfig.base64 = config.live.base64 ~= false
+    self.liveConfig.jwt = config.live.jwt ~= false
+  end
 
   -- Convert actions to chooser format and store callbacks
   local choices = {}
-  for i, action in ipairs(actions) do
+  for i, action in ipairs(self.actions) do
     local uuid = tostring(i) -- Simple UUID based on index
 
     -- Store the callback with the UUID
@@ -63,10 +92,12 @@ function obj:defineActions(actions)
     table.insert(choices, {
       text = action.name,
       subText = action.description or "",
-      uuid = uuid
+      uuid = uuid,
+      copyToClipboard = false
     })
   end
 
+  self.originalChoices = choices
   self.chooser:choices(choices)
   return self
 end
@@ -94,6 +125,165 @@ function obj:toggle()
   else
     self:show()
   end
+end
+
+--- ActionsLauncher:handleQueryChange(query)
+--- Method
+--- Handle query changes for live actions
+---
+--- Parameters:
+---  * query - The current search query
+function obj:handleQueryChange(query)
+  if not query or query == "" then
+    self.chooser:choices(self.originalChoices)
+    return
+  end
+
+  local liveChoices = {}
+
+  -- Check if query is a Unix timestamp (10 or 13 digits)
+  if self.liveConfig.timestamp and string.match(query, "^%d+$") and (string.len(query) == 10 or string.len(query) == 13) then
+    local timestamp = tonumber(query)
+    if timestamp then
+      -- Convert to seconds if it's milliseconds
+      if string.len(query) == 13 then
+        timestamp = timestamp / 1000
+      end
+
+      local isoString = os.date("!%Y-%m-%dT%H:%M:%SZ", timestamp)
+      local uuid = self:generateUUID()
+      table.insert(liveChoices, {
+        text = "Unix Timestamp → ISO String",
+        subText = isoString,
+        uuid = uuid,
+        copyToClipboard = true
+      })
+
+      -- Store the callback for this conversion
+      self.callbacks[uuid] = function()
+        return isoString
+      end
+    end
+  end
+
+  -- Check if query is Base64 (basic check for valid Base64 characters and length)
+  if self.liveConfig.base64 and string.match(query, "^[A-Za-z0-9+/]*={0,2}$") and string.len(query) >= 4 and string.len(query) % 4 == 0 then
+    local success, decoded = pcall(function()
+      return hs.base64.decode(query)
+    end)
+
+    if success and decoded and decoded ~= "" then
+      local uuid = self:generateUUID()
+      table.insert(liveChoices, {
+        text = "Base64 → Plain Text",
+        subText = decoded,
+        uuid = uuid,
+        copyToClipboard = true
+      })
+
+      -- Store the callback for this conversion
+      self.callbacks[uuid] = function()
+        return decoded
+      end
+    end
+  end
+
+  -- Check if query is a JWT token (has 3 parts separated by dots)
+  if self.liveConfig.jwt then
+    local jwtParts = {}
+    for part in string.gmatch(query, "[^%.]+") do
+      table.insert(jwtParts, part)
+    end
+
+    if #jwtParts == 3 then
+      -- Decode JWT header (first part)
+      local headerSuccess, header = pcall(function()
+        local paddedHeader = jwtParts[1]
+        -- Convert URL-safe Base64 to standard Base64
+        paddedHeader = paddedHeader:gsub("-", "+"):gsub("_", "/")
+        -- Add padding if needed for base64 decoding
+        local padding = 4 - (string.len(paddedHeader) % 4)
+        if padding < 4 then
+          paddedHeader = paddedHeader .. string.rep("=", padding)
+        end
+        return hs.base64.decode(paddedHeader)
+      end)
+
+      -- Decode JWT payload (second part)
+      local payloadSuccess, payload = pcall(function()
+        local paddedPayload = jwtParts[2]
+        -- Convert URL-safe Base64 to standard Base64
+        paddedPayload = paddedPayload:gsub("-", "+"):gsub("_", "/")
+        -- Add padding if needed for base64 decoding
+        local padding = 4 - (string.len(paddedPayload) % 4)
+        if padding < 4 then
+          paddedPayload = paddedPayload .. string.rep("=", padding)
+        end
+        return hs.base64.decode(paddedPayload)
+      end)
+
+      -- Add header option if successful
+      if headerSuccess and header and header ~= "" then
+        local headerUuid = self:generateUUID()
+        table.insert(liveChoices, {
+          text = "JWT → Decoded Header",
+          subText = header,
+          uuid = headerUuid,
+          copyToClipboard = true
+        })
+
+        -- Store the callback for header conversion
+        self.callbacks[headerUuid] = function()
+          return header
+        end
+      end
+
+      -- Add payload option if successful
+      if payloadSuccess and payload and payload ~= "" then
+        local payloadUuid = self:generateUUID()
+        table.insert(liveChoices, {
+          text = "JWT → Decoded Payload",
+          subText = payload,
+          uuid = payloadUuid,
+          copyToClipboard = true
+        })
+
+        -- Store the callback for payload conversion
+        self.callbacks[payloadUuid] = function()
+          return payload
+        end
+      end
+    end
+  end
+
+  -- If we found live action matches, show only those, otherwise show filtered original choices
+  if #liveChoices > 0 then
+    self.chooser:choices(liveChoices)
+  else
+    -- Filter original choices based on query
+    local filteredChoices = {}
+    local lowerQuery = string.lower(query)
+
+    for _, choice in ipairs(self.originalChoices) do
+      if string.find(string.lower(choice.text), lowerQuery, 1, true) or
+          string.find(string.lower(choice.subText or ""), lowerQuery, 1, true) then
+        table.insert(filteredChoices, choice)
+      end
+    end
+
+    self.chooser:choices(filteredChoices)
+  end
+end
+
+--- ActionsLauncher:generateUUID()
+--- Method
+--- Generate a unique identifier for live actions
+---
+--- Returns:
+---  * A unique string identifier
+function obj:generateUUID()
+  self.uuidCounter = self.uuidCounter + 1
+  return "interactive_" .. tostring(self.uuidCounter) .. "_" .. tostring(os.time())
 end
 
 --- ActionsLauncher:bindHotkeys(mapping)

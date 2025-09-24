@@ -21,82 +21,89 @@ spoon.LaunchOrToggleFocus:bindApps({
 })
 
 hs.loadSpoon("ActionsLauncher")
-spoon.ActionsLauncher:defineActions({
-  -- Window Management Actions
-  {
-    name = "Maximize Window",
-    callback = function() spoon.WindowManager:moveWindow("max") end,
-    description = "Maximize window to full screen"
-  },
-  {
-    name = "Center Window",
-    callback = function() spoon.WindowManager:moveWindow("center") end,
-    description = "Center window in current position"
-  },
-  {
-    name = "Almost Maximize",
-    callback = function() spoon.WindowManager:moveWindow("almost_max") end,
-    description = "Resize window to 90% of screen, centered"
-  },
-  {
-    name = "Reasonable Size",
-    callback = function() spoon.WindowManager:moveWindow("reasonable") end,
-    description = "Resize window to reasonable size (50%x70%), centered"
-  },
+spoon.ActionsLauncher:setup({
+  actions = {
+    -- Window Management Actions
+    {
+      name = "Maximize Window",
+      callback = function() spoon.WindowManager:moveWindow("max") end,
+      description = "Maximize window to full screen"
+    },
+    {
+      name = "Center Window",
+      callback = function() spoon.WindowManager:moveWindow("center") end,
+      description = "Center window in current position"
+    },
+    {
+      name = "Almost Maximize",
+      callback = function() spoon.WindowManager:moveWindow("almost_max") end,
+      description = "Resize window to 90% of screen, centered"
+    },
+    {
+      name = "Reasonable Size",
+      callback = function() spoon.WindowManager:moveWindow("reasonable") end,
+      description = "Resize window to reasonable size (50%x70%), centered"
+    },
 
-  -- System Actions
-  {
-    name = "Toggle Caffeinate",
-    callback = function()
-      spoon.ActionsLauncher.executeShell(
-        "if pgrep caffeinate > /dev/null; then pkill caffeinate && echo 'Caffeinate disabled'; else nohup caffeinate -disu > /dev/null 2>&1 & echo 'Caffeinate enabled'; fi",
-        "Toggle Caffeinate")
-    end,
-    description = "Toggle system sleep prevention"
-  },
-  {
-    name = "Toggle System Appearance",
-    callback = function()
-      spoon.ActionsLauncher.executeAppleScript([[
-        tell application "System Events"
-          tell appearance preferences
-            set dark mode to not dark mode
-            if dark mode then
-              return "Dark mode enabled"
-            else
-              return "Light mode enabled"
-            end if
+    -- System Actions
+    {
+      name = "Toggle Caffeinate",
+      callback = function()
+        spoon.ActionsLauncher.executeShell(
+          "if pgrep caffeinate > /dev/null; then pkill caffeinate && echo 'Caffeinate disabled'; else nohup caffeinate -disu > /dev/null 2>&1 & echo 'Caffeinate enabled'; fi",
+          "Toggle Caffeinate")
+      end,
+      description = "Toggle system sleep prevention"
+    },
+    {
+      name = "Toggle System Appearance",
+      callback = function()
+        spoon.ActionsLauncher.executeAppleScript([[
+          tell application "System Events"
+            tell appearance preferences
+              set dark mode to not dark mode
+              if dark mode then
+                return "Dark mode enabled"
+              else
+                return "Light mode enabled"
+              end if
+            end tell
           end tell
-        end tell
-      ]], "Toggle System Appearance")
-    end,
-    description = "Toggle between light and dark mode"
-  },
+        ]], "Toggle System Appearance")
+      end,
+      description = "Toggle between light and dark mode"
+    },
 
-  -- Utility Actions
-  {
-    name = "Copy IP",
-    callback = function()
-      spoon.ActionsLauncher.executeShell(
-        "curl -s ifconfig.me | pbcopy && curl -s ifconfig.me",
-        "Copy IP")
-    end,
-    description = "Copy public IP address to clipboard"
+    -- Utility Actions
+    {
+      name = "Copy IP",
+      callback = function()
+        spoon.ActionsLauncher.executeShell(
+          "curl -s ifconfig.me | pbcopy && curl -s ifconfig.me",
+          "Copy IP")
+      end,
+      description = "Copy public IP address to clipboard"
+    },
+    {
+      name = "Paste Text Without Formatting",
+      callback = function()
+        local clipboard = hs.pasteboard.getContents()
+        if clipboard then
+          hs.pasteboard.setContents(clipboard)
+          hs.eventtap.event.newKeyEvent({ "cmd" }, "v", true):post()
+          hs.eventtap.event.newKeyEvent({ "cmd" }, "v", false):post()
+        else
+          return "No text in clipboard"
+        end
+      end,
+      description = "Paste clipboard text without formatting"
+    },
   },
-  {
-    name = "Paste Text Without Formatting",
-    callback = function()
-      local clipboard = hs.pasteboard.getContents()
-      if clipboard then
-        hs.pasteboard.setContents(clipboard)
-        hs.eventtap.event.newKeyEvent({ "cmd" }, "v", true):post()
-        hs.eventtap.event.newKeyEvent({ "cmd" }, "v", false):post()
-      else
-        return "No text in clipboard"
-      end
-    end,
-    description = "Paste clipboard text without formatting"
-  },
+  live = {
+    timestamp = true,
+    base64 = true,
+    jwt = true
+  }
 })
 
 spoon.ActionsLauncher:bindHotkeys({
