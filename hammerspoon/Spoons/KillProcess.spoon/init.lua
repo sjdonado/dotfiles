@@ -15,17 +15,30 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 obj.chooser = nil
 obj.hotkeys = {}
 obj.refreshTimer = nil
+obj.refreshIntervalSeconds = 1
 obj.currentQuery = ""
+obj.currentChoices = {}
 
 --- KillProcess:init()
 --- Method
 --- Initialize the spoon
 function obj:init()
+  return self
+end
+
+--- KillProcess:createChooser()
+--- Method
+--- Create a new chooser instance
+function obj:createChooser()
+  if self.chooser then
+    self.chooser:delete()
+  end
+
   self.chooser = hs.chooser.new(function(choice)
     if choice then
       local success = hs.execute(string.format("kill %d", choice.pid))
       if success then
-        hs.alert.show(string.format(" Killed: %s", choice.name), 2)
+        hs.alert.show(string.format("Killed: %s", choice.name), 2)
       else
         hs.alert.show(string.format("❌ Failed to kill: %s", choice.name), 2)
       end
@@ -36,25 +49,35 @@ function obj:init()
   self.chooser:searchSubText(true)
   self.chooser:queryChangedCallback(function(query)
     self.currentQuery = query
-    self:updateChoices()
   end)
 
-  return self
+  -- Set choices to use a function for real-time updates
+  self.chooser:choices(function()
+    return self:getFilteredChoices()
+  end)
+
+  -- Automatically cleanup when chooser is hidden
+  self.chooser:hideCallback(function()
+    if self.refreshTimer then
+      self.refreshTimer:stop()
+      self.refreshTimer = nil
+    end
+    if self.chooser then
+      self.chooser:delete()
+      self.chooser = nil
+    end
+  end)
 end
 
---- KillProcess:updateChoices()
+--- KillProcess:getFilteredChoices()
 --- Method
---- Update choices based on current query
-function obj:updateChoices()
-  -- Get current selection before updating
-  local currentIndex = self.chooser:selectedRow()
-  local currentSelection = self.chooser:selectedRowContents()
-
+--- Get filtered choices based on current query
+function obj:getFilteredChoices()
   local allProcesses = self:getProcessList()
-  local newChoices = {}
+  local choices = {}
 
   if self.currentQuery == "" then
-    newChoices = allProcesses
+    choices = allProcesses
   else
     -- Enable fuzzy search by filtering choices
     local query = self.currentQuery:lower()
@@ -75,28 +98,12 @@ function obj:updateChoices()
       end
 
       if fuzzyMatch(name, query) or fuzzyMatch(subText, query) or name:find(query, 1, true) then
-        table.insert(newChoices, process)
+        table.insert(choices, process)
       end
     end
   end
 
-  -- Update choices
-  self.chooser:choices(newChoices)
-
-  -- Try to maintain selection on the same process (by PID)
-  if currentSelection then
-    local newIndex = currentIndex
-    for i, process in ipairs(newChoices) do
-      if process.pid == currentSelection.pid then
-        newIndex = i
-        break
-      end
-    end
-    -- Restore selection, ensuring it's within bounds
-    if newIndex and newIndex <= #newChoices and newIndex > 0 then
-      self.chooser:selectedRow(newIndex)
-    end
-  end
+  return choices
 end
 
 --- KillProcess:getProcessList()
@@ -147,24 +154,16 @@ end
 --- Method
 --- Show the process chooser
 function obj:show()
+  self:createChooser()
   self.currentQuery = ""
-  self:updateChoices()
   self.chooser:show()
 
-  -- Start refresh timer to update every 2 seconds
   if self.refreshTimer then
     self.refreshTimer:stop()
   end
-  self.refreshTimer = hs.timer.doEvery(2, function()
-    if self.chooser:isVisible() then
-      -- Update choices while preserving current query/filter
-      self:updateChoices()
-    else
-      -- Stop timer when chooser is not visible
-      if self.refreshTimer then
-        self.refreshTimer:stop()
-        self.refreshTimer = nil
-      end
+  self.refreshTimer = hs.timer.doEvery(self.refreshIntervalSeconds, function()
+    if self.chooser and self.chooser:isVisible() then
+      self.chooser:refreshChoicesCallback()
     end
   end)
 end
@@ -173,11 +172,8 @@ end
 --- Method
 --- Hide the process chooser
 function obj:hide()
-  self.chooser:hide()
-  -- Stop refresh timer
-  if self.refreshTimer then
-    self.refreshTimer:stop()
-    self.refreshTimer = nil
+  if self.chooser then
+    self.chooser:hide()
   end
 end
 
@@ -185,7 +181,7 @@ end
 --- Method
 --- Toggle the process chooser visibility
 function obj:toggle()
-  if self.chooser:isVisible() then
+  if self.chooser and self.chooser:isVisible() then
     self:hide()
   else
     self:show()

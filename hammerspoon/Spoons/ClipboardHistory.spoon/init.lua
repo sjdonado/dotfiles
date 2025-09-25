@@ -3,9 +3,9 @@
 --- Persistent clipboard history with fuzzy search and optimized loading
 ---
 --- Performance Features:
---- • Loads 25 most recent items initially using fast Objective-C component
+--- • Loads most recent items initially using fast Objective-C component
 --- • Unlimited scalable SQLite database with FTS5 full-text search
---- • Smart 25-entry memory buffer for instant access
+--- • Smart memory buffer for instant access
 --- • Native Objective-C SQLite integration for maximum performance
 
 local obj = {}
@@ -21,7 +21,8 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 obj.chooser = nil
 obj.hotkeys = {}
 obj.watcher = nil
-obj.historyBuffer = {} -- Memory buffer with 25 most recent entries
+obj.maxRecentEntries = 100 -- Maximum number of recent entries to load initially
+obj.historyBuffer = {}     -- Memory buffer with most recent entries
 obj.dbFile = nil
 obj.currentQuery = ""
 obj.clipboardMonitorTask = nil
@@ -85,7 +86,7 @@ function obj:initializeChooser()
     self:updateChoices()
   end)
 
-  -- Reset to show only historyBuffer (most recent 25 entries)
+  -- Reset to show only historyBuffer (most recent entries)
   self.currentQuery = ""
   self:initializeBuffer()
 end
@@ -100,7 +101,7 @@ function obj:start()
   end)
   self.watcher:start()
 
-  -- Initialize buffer with first 25 entries
+  -- Initialize buffer with first entries
   self:initializeBuffer()
 
   return self
@@ -241,7 +242,7 @@ end
 
 --- ClipboardHistory:initializeBuffer()
 --- Method
---- Initialize buffer with first 25 entries from SQLite database
+--- Initialize buffer with first entries from SQLite database
 function obj:initializeBuffer()
   local binaryPath = self:compileSqliteReader()
   if not binaryPath then
@@ -249,8 +250,8 @@ function obj:initializeBuffer()
     return
   end
 
-  -- Load first 25 entries using SQLite reader
-  local command = string.format("%s %s recent 25", binaryPath, self.dbFile)
+  -- Load first entries using SQLite reader
+  local command = string.format("%s %s recent %d", binaryPath, self.dbFile, self.maxRecentEntries)
 
   local handle = io.popen(command, "r")
   if handle then
@@ -305,8 +306,8 @@ function obj:addToBuffer(newEntryStr)
       -- Add new entry to beginning of buffer
       table.insert(self.historyBuffer, 1, newEntry)
 
-      -- Keep only 25 entries
-      if #self.historyBuffer > 25 then
+      -- Keep only recent entries
+      if #self.historyBuffer > self.maxRecentEntries then
         table.remove(self.historyBuffer)
       end
     end
@@ -644,7 +645,7 @@ function obj:updateChoices()
   end
 
   -- Add "Load more" item if we might have more entries and no search query
-  if self.currentQuery == "" and #self.historyBuffer == 25 then
+  if self.currentQuery == "" and #self.historyBuffer == self.maxRecentEntries then
     local binaryPath = self:compileSqliteReader()
     local totalEntries = 0
 
@@ -661,8 +662,8 @@ function obj:updateChoices()
       end
     end
 
-    if totalEntries > 25 then
-      local remainingCount = totalEntries - 25
+    if totalEntries > self.maxRecentEntries then
+      local remainingCount = totalEntries - self.maxRecentEntries
       table.insert(choices, {
         text = "📥 Load more (" .. remainingCount .. " more entries)",
         subText = "Load remaining clipboard history entries",
@@ -702,7 +703,7 @@ function obj:toggle()
   if self.chooser and self.chooser:isVisible() then
     self:hide()
   else
-    -- Reinitialize chooser for fresh start (resets scroll, search, shows recent 25)
+    -- Reinitialize chooser for fresh start (resets scroll, search, shows recent entries)
     self:initializeChooser()
     self:show()
   end
@@ -828,8 +829,7 @@ function obj:pasteContent(choice)
     hs.pasteboard.setContents(choice.content)
   end
 
-  -- Small delay to ensure clipboard is set, then paste
-  hs.timer.doAfter(0.1, function()
+  hs.timer.doAfter(0, function()
     hs.eventtap.keyStroke({ "cmd" }, "v", 0)
   end)
 end
@@ -856,25 +856,6 @@ function obj:clear()
   hs.alert.show("🗑️ Clipboard history cleared", 1)
 end
 
---- ClipboardHistory:bindHotkeys(mapping)
---- Method
---- Bind hotkeys for ClipboardHistory
----
---- Parameters:
----  * mapping - A table containing hotkey mappings. Supported keys:
----    * show - Show the clipboard history chooser (default: no hotkey)
----    * toggle - Toggle the clipboard history chooser visibility (default: no hotkey)
----    * clear - Clear clipboard history (default: no hotkey)
-function obj:bindHotkeys(mapping)
-  local def = {
-    show = hs.fnutils.partial(self.show, self),
-    toggle = hs.fnutils.partial(self.toggle, self),
-    clear = hs.fnutils.partial(self.clear, self)
-  }
-  hs.spoons.bindHotkeysToSpec(def, mapping)
-  return self
-end
-
 --- ClipboardHistory:delete()
 --- Method
 --- Clean up the spoon
@@ -893,6 +874,25 @@ function obj:delete()
     os.remove(self.clipboardMonitorBinary)
     self.clipboardMonitorBinary = nil
   end
+end
+
+--- ClipboardHistory:bindHotkeys(mapping)
+--- Method
+--- Bind hotkeys for ClipboardHistory
+---
+--- Parameters:
+---  * mapping - A table containing hotkey mappings. Supported keys:
+---    * show - Show the clipboard history chooser (default: no hotkey)
+---    * toggle - Toggle the clipboard history chooser visibility (default: no hotkey)
+---    * clear - Clear clipboard history (default: no hotkey)
+function obj:bindHotkeys(mapping)
+  local def = {
+    show = hs.fnutils.partial(self.show, self),
+    toggle = hs.fnutils.partial(self.toggle, self),
+    clear = hs.fnutils.partial(self.clear, self)
+  }
+  hs.spoons.bindHotkeysToSpec(def, mapping)
+  return self
 end
 
 return obj
