@@ -39,24 +39,25 @@ function obj:launchOrToggle(appName)
   end
 end
 
---- LaunchOrToggleFocus:bindApplications(mapping)
+--- LaunchOrToggleFocus:setup(mapping)
 --- Method
---- Bind hotkeys for multiple applications
+--- Bind hotkeys with explicit app names (most flexible)
 ---
 --- Parameters:
----  * mapping - A table containing application mappings in format:
----    * { hotkey = { modifiers, key }, app = "Application Name" }
+---  * mapping - A table where keys are any identifier and values contain
+---    both hotkey and app name
 ---
 --- Example:
----   spoon.LaunchOrToggleFocus:bindApplications({
----     { hotkey = { { "alt", "shift" }, "s" }, app = "Safari" },
----     { hotkey = { { "alt", "shift" }, "t" }, app = "Terminal" }
+---   spoon.LaunchOrToggleFocus:setup({
+---     browser = { hotkey = { { "alt", "shift" }, "s" }, app = "Safari" },
+---     editor = { hotkey = { { "alt", "shift" }, "space" }, app = "Zed" },
+---     chat = { hotkey = { { "alt", "shift" }, "g" }, app = "ChatGPT" }
 ---   })
-function obj:bindApplications(mapping)
-  for _, item in ipairs(mapping) do
-    if item.hotkey and item.app then
-      hs.hotkey.bind(item.hotkey[1], item.hotkey[2], function()
-        self:launchOrToggle(item.app)
+function obj:setup(mapping)
+  for _, config in pairs(mapping) do
+    if config.hotkey and config.app then
+      hs.hotkey.bind(config.hotkey[1], config.hotkey[2], function()
+        self:launchOrToggle(config.app)
       end)
     end
   end
@@ -86,31 +87,6 @@ function obj:bindHotkeys(mapping)
     end
   end
   hs.spoons.bindHotkeysToSpec(def, mapping)
-  return self
-end
-
---- LaunchOrToggleFocus:bindApps(mapping)
---- Method
---- Bind hotkeys with explicit app names (most flexible)
----
---- Parameters:
----  * mapping - A table where keys are any identifier and values contain
----    both hotkey and app name
----
---- Example:
----   spoon.LaunchOrToggleFocus:bindApps({
----     browser = { hotkey = { { "alt", "shift" }, "s" }, app = "Safari" },
----     editor = { hotkey = { { "alt", "shift" }, "space" }, app = "Zed" },
----     chat = { hotkey = { { "alt", "shift" }, "g" }, app = "ChatGPT" }
----   })
-function obj:bindApps(mapping)
-  for _, config in pairs(mapping) do
-    if config.hotkey and config.app then
-      hs.hotkey.bind(config.hotkey[1], config.hotkey[2], function()
-        self:launchOrToggle(config.app)
-      end)
-    end
-  end
   return self
 end
 

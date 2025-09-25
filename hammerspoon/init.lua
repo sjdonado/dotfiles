@@ -1,5 +1,5 @@
 hs.loadSpoon("LaunchOrToggleFocus")
-spoon.LaunchOrToggleFocus:bindApps({
+spoon.LaunchOrToggleFocus:setup({
   calendar   = { hotkey = { { "alt", "shift" }, "c" }, app = "Calendar" },
   chatgpt    = { hotkey = { { "alt", "shift" }, "g" }, app = "ChatGPT" },
   chromium   = { hotkey = { { "alt", "shift" }, "d" }, app = "Chromium" },
@@ -425,7 +425,6 @@ spoon.ActionsLauncher:setup({
     }
   }
 })
-
 spoon.ActionsLauncher:bindHotkeys({
   toggle = { { "alt", "shift" }, "\\" }
 })
@@ -452,6 +451,26 @@ spoon.ClipboardHistory:start()
 spoon.ClipboardHistory:bindHotkeys({
   toggle = { { "alt", "shift" }, "-" }
 })
+
+hs.loadSpoon("BrowserRedirect")
+spoon.BrowserRedirect:setup({
+  defaultBrowser = "Safari",
+  handlers = {
+    {
+      match = { "localhost*", "127.0.0.1*", "0.0.0.0*" },
+      browser = "Chromium",
+    },
+    {
+      match = { "*autarc.energy*" },
+      browser = "Chromium",
+    },
+    {
+      match = { "*fly.dev*" },
+      browser = "Chromium",
+    },
+  },
+})
+spoon.BrowserRedirect:start()
 
 -- Auto-reload config when init.lua changes
 local function reloadConfig(files)
