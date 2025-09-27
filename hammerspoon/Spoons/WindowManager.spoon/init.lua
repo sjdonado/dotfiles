@@ -21,6 +21,29 @@ function obj:init()
   return self
 end
 
+--- WindowManager:getFocusedWindow()
+--- Method
+--- Get the focused window with retry logic
+---
+--- Returns:
+---  * The focused window object or nil if no window is available after retries
+function obj:getFocusedWindow()
+  local win = hs.window.focusedWindow()
+  if win then return win end
+
+  -- Retry logic - sometimes the focused window isn't immediately available
+  local maxRetries = 3
+  local retryDelay = 0.05 -- 50ms
+
+  for i = 1, maxRetries do
+    hs.timer.usleep(retryDelay * 1000000) -- Convert to microseconds
+    win = hs.window.focusedWindow()
+    if win then return win end
+  end
+
+  return nil
+end
+
 --- WindowManager:moveWindow(direction)
 --- Method
 --- Move and resize the focused window
@@ -28,7 +51,7 @@ end
 --- Parameters:
 ---  * direction - A string indicating the direction/action: "left", "right", "up", "down", "max", "center", "almost_max", "reasonable"
 function obj:moveWindow(direction)
-  local win = hs.window.focusedWindow()
+  local win = self:getFocusedWindow()
   if not win then return end
 
   local screen = win:screen()
