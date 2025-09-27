@@ -1,7 +1,8 @@
 --- === BrowserRedirect ===
 ---
 --- Intelligent URL routing to different browsers based on patterns
---- Simple Lua implementation using `open -a` command
+--- Uses hybrid approach: URL scheme handling + browser extension communication
+--- Includes customizable link mapping interface
 
 local obj = {}
 obj.__index = obj
@@ -13,9 +14,16 @@ obj.author = "sjdonado"
 obj.homepage = "https://github.com/sjdonado/dotfiles/hammerspoon/Spoons"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
-obj.defaultBrowser = "Safari"
-obj.handlers = {}
+obj.default_browser = "Safari"
+obj.redirect = {}
+obj.mapper = {}
 obj.isActive = false
+obj.originalDefaultBrowser = nil
+obj.extensionServer = nil
+obj.lastProcessedURL = nil
+obj.lastProcessedTime = 0
+obj.redirectLookup = {}
+obj.mapperLookup = {}
 
 --- BrowserRedirect:init()
 --- Method
@@ -30,197 +38,570 @@ end
 ---
 --- Parameters:
 ---  * config - A table containing:
----    * defaultBrowser - Default browser name (string)
----    * handlers - Array of handler tables with 'match' patterns and 'browser' name
+---    * default_browser - Default browser name (string)
+---    * redirect - Array of redirect rules with 'match' patterns and 'browser' name
+---    * mapper - Array of URL transformation functions
 function obj:setup(config)
   if not config then
     return self
   end
 
-  self.defaultBrowser = config.defaultBrowser or "Safari"
-  self.handlers = config.handlers or {}
+  self.default_browser = config.default_browser or "Safari"
+  self.redirect = config.redirect or {}
+  self.mapper = config.mapper or {}
+
+  -- Build optimized lookup tables
+  self:_buildLookupTables()
 
   return self
 end
 
+--- BrowserRedirect:_buildLookupTables()
+--- Method
+--- Build optimized lookup tables for O(1) pattern matching
+function obj:_buildLookupTables()
+  self.redirectLookup = {}
+  self.mapperLookup = {}
+
+  -- Build redirect lookup table
+  for _, rule in ipairs(self.redirect) do
+    if rule and rule.match and rule.browser then
+      local patterns = type(rule.match) == "table" and rule.match or { rule.match }
+      for _, pattern in ipairs(patterns) do
+        -- Store exact matches and wildcard patterns separately
+        if pattern:find("*") then
+          -- For wildcard patterns, we still need to check them sequentially
+          self.redirectLookup["__wildcards"] = self.redirectLookup["__wildcards"] or {}
+          table.insert(self.redirectLookup["__wildcards"], {
+            pattern = pattern,
+            browser = rule.browser
+          })
+        else
+          -- Exact matches for O(1) lookup
+          self.redirectLookup[pattern] = rule.browser
+        end
+      end
+    end
+  end
+
+  -- Build mapper lookup table
+  for _, mapper in ipairs(self.mapper) do
+    if mapper.from then
+      if mapper.from:find("*") then
+        self.mapperLookup["__wildcards"] = self.mapperLookup["__wildcards"] or {}
+        table.insert(self.mapperLookup["__wildcards"], mapper)
+      else
+        self.mapperLookup[mapper.from] = mapper
+      end
+    end
+  end
+
+  -- Count exact redirects
+  local exactRedirects = 0
+  for k, v in pairs(self.redirectLookup) do
+    if k ~= "__wildcards" then exactRedirects = exactRedirects + 1 end
+  end
+
+  -- Count exact mappers
+  local exactMappers = 0
+  for k, v in pairs(self.mapperLookup) do
+    if k ~= "__wildcards" then exactMappers = exactMappers + 1 end
+  end
+
+  print(string.format(
+    "BrowserRedirect: Built lookup tables - %d exact redirects, %d wildcard redirects, %d exact mappers, %d wildcard mappers",
+    exactRedirects,
+    self.redirectLookup["__wildcards"] and #self.redirectLookup["__wildcards"] or 0,
+    exactMappers,
+    self.mapperLookup["__wildcards"] and #self.mapperLookup["__wildcards"] or 0))
+end
+
 --- BrowserRedirect:start()
 --- Method
---- Start URL interception by registering URL scheme handlers
+--- Start hybrid URL interception system
 function obj:start()
   if self.isActive then
     return self
   end
 
-  -- Register URL event handlers
-  hs.urlevent.httpCallback = function(scheme, host, params, fullURL, senderPID)
-    self:handleURL(fullURL)
-  end
+  print("BrowserRedirect: Starting hybrid URL interception")
 
-  hs.urlevent.httpsCallback = function(scheme, host, params, fullURL, senderPID)
-    self:handleURL(fullURL)
-  end
+  -- Start URL scheme handler (for external URLs)
+  self:_startURLSchemeHandler()
+
+  -- Start browser extension server (for in-browser URLs)
+  self:_startExtensionServer()
 
   self.isActive = true
+  print("BrowserRedirect: All URL interception methods started")
 
   return self
 end
 
 --- BrowserRedirect:stop()
 --- Method
---- Stop URL interception
+--- Stop all URL interception methods
 function obj:stop()
   if not self.isActive then
     return self
   end
 
-  -- Clear URL callbacks
-  hs.urlevent.httpCallback = nil
-  hs.urlevent.httpsCallback = nil
-
   self.isActive = false
-  hs.alert.show("BrowserRedirect: URL routing stopped", 1)
 
+  -- Stop extension server
+  if self.extensionServer then
+    self.extensionServer:stop()
+    self.extensionServer = nil
+  end
+
+  -- Restore original default browser if we had one
+  if self.originalDefaultBrowser then
+    hs.execute(string.format(
+      "defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerContentType=public.html;LSHandlerRoleAll=%s;}'",
+      self.originalDefaultBrowser))
+    hs.execute(string.format(
+      "defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerURLScheme=http;LSHandlerRoleAll=%s;}'",
+      self.originalDefaultBrowser))
+    hs.execute(string.format(
+      "defaults write com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers -array-add '{LSHandlerURLScheme=https;LSHandlerRoleAll=%s;}'",
+      self.originalDefaultBrowser))
+  end
+
+  print("BrowserRedirect: All URL interception stopped")
   return self
 end
 
---- BrowserRedirect:handleURL(url)
+--- BrowserRedirect:_startURLSchemeHandler()
 --- Method
---- Handle incoming URL and redirect to appropriate browser
+--- Start URL scheme handler for external URLs
+function obj:_startURLSchemeHandler()
+  -- Store original default browser
+  local output = hs.execute(
+    "defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers | grep -A3 LSHandlerURLScheme | grep http -A2 | grep LSHandlerRoleAll -A1 | tail -1 | cut -d'\"' -f2")
+  if output and output ~= "" then
+    self.originalDefaultBrowser = output:gsub("%s+", "")
+  end
+
+  -- Register URL scheme handlers
+  hs.urlevent.setDefaultHandler('http')
+  hs.urlevent.setDefaultHandler('https')
+
+  -- Set up URL event callback
+  hs.urlevent.httpCallback = function(scheme, host, params, fullURL)
+    if fullURL then
+      self:_handleURL(fullURL, "external")
+    end
+  end
+
+  print("BrowserRedirect: URL scheme handler started")
+end
+
+--- BrowserRedirect:_startExtensionServer()
+--- Method
+--- Start HTTP server to receive URLs from browser extensions
+function obj:_startExtensionServer()
+  self.extensionServer = hs.httpserver.new(false, false)
+
+  self.extensionServer:setCallback(function(method, path, headers, body)
+    if method == "POST" and path == "/redirect" then
+      local success, data = pcall(hs.json.decode, body)
+      if success and data.url then
+        self:_handleURL(data.url, "browser-extension")
+        return "200", {}, hs.json.encode({ status = "success" })
+      end
+    end
+    return "404", {}, "Not found"
+  end)
+
+  -- Start server on a random available port
+  self.extensionServer:setPort(0)
+  local success = self.extensionServer:start()
+
+  if success then
+    local port = self.extensionServer:getPort()
+    print(string.format("BrowserRedirect: Extension server started on port %d", port))
+    print("Configure browser extensions to send URLs to: http://localhost:" .. port .. "/redirect")
+  else
+    print("BrowserRedirect: Failed to start extension server")
+  end
+end
+
+--- BrowserRedirect:_handleURL(url, source)
+--- Method
+--- Handle intercepted URL and route to appropriate browser
 ---
 --- Parameters:
----  * url - The full URL to handle
-function obj:handleURL(url)
+---  * url - The intercepted URL
+---  * source - Source of the URL ("external", "pasteboard", "browser-extension")
+function obj:_handleURL(url, source)
   if not url then
     return
   end
 
-  local targetBrowser = self:findMatchingBrowser(url)
+  -- Debounce rapid URL processing
+  local currentTime = hs.timer.secondsSinceEpoch()
+  if self.lastProcessedURL == url and (currentTime - self.lastProcessedTime) < 2 then
+    return
+  end
 
-  -- Open URL in the determined browser
-  local openCmd = string.format('open -a "%s" "%s"', targetBrowser, url)
-  local output, success = hs.execute(openCmd)
+  self.lastProcessedURL = url
+  self.lastProcessedTime = currentTime
 
-  if not success then
-    -- Fallback to system default
-    hs.urlevent.openURL(url)
+  print(string.format("BrowserRedirect: Intercepted URL from %s: %s", source or "unknown", url))
+
+  -- Debug redirect rules
+  print("BrowserRedirect DEBUG: Redirect rules:", #self.redirect)
+  for i, rule in ipairs(self.redirect) do
+    print(string.format("BrowserRedirect DEBUG: Rule %d: match='%s' browser='%s'",
+      i, rule.match or "nil", rule.browser or "nil"))
+  end
+
+  -- Transform the URL if it matches any mappers
+  local transformedURL = self:_transformURL(url)
+  local targetBrowser = self:_findTargetBrowser(transformedURL)
+
+  print(string.format("BrowserRedirect: Routing to %s", targetBrowser))
+
+  -- For browser extension sources, close current tab first
+  if source == "browser-extension" then
+    hs.timer.doAfter(0.1, function()
+      hs.eventtap.keyStroke({ "cmd" }, "w") -- Close current tab
+    end)
+  end
+
+  -- Open URL in target browser
+  hs.timer.doAfter(source == "browser-extension" and 0.2 or 0, function()
+    local success = self:_openInBrowser(transformedURL, targetBrowser)
+    if not success then
+      print("BrowserRedirect: Failed to open in target browser, using system default")
+      hs.urlevent.openURLWithBundle(transformedURL, self.default_browser)
+    end
+  end)
+end
+
+--- BrowserRedirect:_openInBrowser(url, browserName)
+--- Method
+--- Open URL in specific browser
+---
+--- Parameters:
+---  * url - The URL to open
+---  * browserName - Name of the browser
+---
+--- Returns:
+---  * Boolean - Success status
+function obj:_openInBrowser(url, browserName)
+  -- Browser bundle ID mapping
+  local browserBundles = {
+    ["Safari"] = "com.apple.Safari",
+    ["Google Chrome"] = "com.google.Chrome",
+    ["Chromium"] = "org.chromium.Chromium",
+    ["Firefox"] = "org.mozilla.firefox",
+    ["Arc"] = "company.thebrowser.Browser",
+    ["Microsoft Edge"] = "com.microsoft.edgemac",
+    ["Opera"] = "com.operasoftware.Opera",
+    ["Brave Browser"] = "com.brave.Browser"
+  }
+
+  local bundleID = browserBundles[browserName]
+  if bundleID then
+    return hs.urlevent.openURLWithBundle(url, bundleID)
+  else
+    -- Try to open with application name directly
+    local openCmd = string.format('open -a "%s" "%s"', browserName, url)
+    local output, success = hs.execute(openCmd)
+    return success
   end
 end
 
---- BrowserRedirect:findMatchingBrowser(url)
+--- BrowserRedirect:_transformURL(url)
 --- Method
---- Find the appropriate browser for a given URL based on configured handlers
+--- Transform URL based on configured mappers
 ---
 --- Parameters:
----  * url - The URL to match against patterns
+---  * url - The original URL to transform
 ---
 --- Returns:
----  * String - The name of the browser to use
-function obj:findMatchingBrowser(url)
-  local cleanURL = url:lower()
+---  * String - The transformed URL or original if no mapping found
+function obj:_transformURL(url)
+  -- First check exact matches for O(1) lookup
+  local exactMapper = self.mapperLookup[url]
+  if exactMapper then
+    if exactMapper.to then
+      print(string.format("BrowserRedirect: Exact transform: %s -> %s", url, exactMapper.to))
+      return exactMapper.to
+    elseif exactMapper.transform then
+      return exactMapper.transform(exactMapper, url)
+    end
+  end
 
-  for _, handler in ipairs(self.handlers) do
-    if handler.match and handler.browser then
-      for _, pattern in ipairs(handler.match) do
-        if self:matchesPattern(cleanURL, pattern:lower()) then
-          print(string.format("BrowserRedirect: %s -> %s", url, handler.browser))
-          return handler.browser
+  -- Then check wildcard patterns
+  if self.mapperLookup["__wildcards"] then
+    for _, mapper in ipairs(self.mapperLookup["__wildcards"]) do
+      if mapper.from and mapper.to then
+        -- Pattern-based transformation
+        if self:_matchesURLPattern(url, mapper.from) then
+          local transformedURL = self:_transformURLPattern(url, mapper.from, mapper.to)
+          print(string.format("BrowserRedirect: Transforming URL: %s -> %s", url, transformedURL))
+          return transformedURL
+        end
+      elseif mapper.matches and mapper.transform then
+        -- Function-based transformation
+        if mapper.matches(mapper, url) then
+          return mapper.transform(mapper, url)
         end
       end
     end
   end
 
-  return self.defaultBrowser
+  return url
 end
 
---- BrowserRedirect:matchesPattern(url, pattern)
+--- BrowserRedirect:_matchesURLPattern(url, pattern)
 --- Method
---- Check if URL matches a given pattern (supports wildcards)
+--- Check if URL matches a wildcard pattern
 ---
 --- Parameters:
----  * url - The URL to check (should be lowercase)
----  * pattern - The pattern to match against (should be lowercase, supports * wildcards)
+---  * url - The URL to check
+---  * pattern - The pattern to match (supports * wildcards and {param} extractions)
 ---
 --- Returns:
----  * Boolean - True if the URL matches the pattern
-function obj:matchesPattern(url, pattern)
-  -- Convert shell-style wildcards to Lua pattern
-  local luaPattern = pattern:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1") -- Escape special chars
-  luaPattern = luaPattern:gsub("%%%*", ".*")                              -- Convert * to .*
+---  * Boolean - True if URL matches the pattern
+function obj:_matchesURLPattern(url, pattern)
+  -- Convert pattern to Lua pattern
+  local luaPattern = pattern:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1")
+  luaPattern = luaPattern:gsub("%*", ".*")
+  luaPattern = luaPattern:gsub("{[^}]+}", "(.-)")
+  luaPattern = "^" .. luaPattern .. "$"
 
   return url:match(luaPattern) ~= nil
 end
 
---- BrowserRedirect:addHandler(patterns, browser)
+--- BrowserRedirect:_transformURLPattern(url, fromPattern, toPattern)
 --- Method
---- Add a new URL handler dynamically
+--- Transform URL using pattern matching and substitution
 ---
 --- Parameters:
----  * patterns - Array of pattern strings to match
----  * browser - Browser name to use for matching URLs
-function obj:addHandler(patterns, browser)
-  if not patterns or not browser then
-    return self
+---  * url - The original URL
+---  * fromPattern - The pattern to match against (with {param} placeholders)
+---  * toPattern - The target pattern (with {param} references)
+---
+--- Returns:
+---  * String - The transformed URL
+function obj:_transformURLPattern(url, fromPattern, toPattern)
+  -- Extract parameter names from the from pattern
+  local paramNames = {}
+  for param in fromPattern:gmatch("{([^}]+)}") do
+    table.insert(paramNames, param)
   end
 
-  table.insert(self.handlers, {
-    match = patterns,
-    browser = browser
-  })
+  -- Create Lua pattern for matching and capturing
+  local luaPattern = fromPattern:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1")
+  luaPattern = luaPattern:gsub("%*", ".*")
+  luaPattern = luaPattern:gsub("{[^}]+}", "(.-)")
+  luaPattern = "^" .. luaPattern .. "$"
 
-  return self
+  -- Extract parameter values
+  local params = {}
+  local captures = { url:match(luaPattern) }
+  for i, value in ipairs(captures) do
+    if paramNames[i] then
+      params[paramNames[i]] = value
+    end
+  end
+
+  -- Parse URL for query parameters if needed
+  local urlParts = hs.http.urlParts(url)
+  if urlParts and urlParts.query then
+    if type(urlParts.query) == "table" then
+      for key, value in pairs(urlParts.query) do
+        params["query." .. key] = value
+      end
+    elseif type(urlParts.query) == "string" then
+      -- Parse query string manually
+      for pair in urlParts.query:gmatch("([^&]+)") do
+        local key, value = pair:match("([^=]+)=?(.*)")
+        if key then
+          params["query." .. key] = value or ""
+        end
+      end
+    end
+  end
+
+  -- Transform the target pattern
+  local result = toPattern
+  for param, value in pairs(params) do
+    local placeholder = "{" .. param .. "}"
+    local encodePlaceholder = "{" .. param .. "|encode}"
+
+    if result:find(encodePlaceholder, 1, true) then
+      result = result:gsub(encodePlaceholder:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1"),
+        hs.http.encodeForQuery(value or ""))
+    else
+      result = result:gsub(placeholder:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1"), value or "")
+    end
+  end
+
+  return result
 end
 
---- BrowserRedirect:removeHandler(browser)
+--- BrowserRedirect:_findTargetBrowser(url)
 --- Method
---- Remove all handlers for a specific browser
+--- Find the target browser for a given URL based on redirect rules
 ---
 --- Parameters:
----  * browser - Browser name to remove handlers for
-function obj:removeHandler(browser)
-  if not browser then
-    return self
-  end
-
-  local originalCount = #self.handlers
-  self.handlers = hs.fnutils.filter(self.handlers, function(handler)
-    return handler.browser ~= browser
-  end)
-
-  return self
-end
-
---- BrowserRedirect:listHandlers()
---- Method
---- Print current configuration for debugging
-function obj:listHandlers()
-  print("BrowserRedirect Configuration:")
-  print(string.format("  Default browser: %s", self.defaultBrowser))
-  print(string.format("  Active: %s", self.isActive and "Yes" or "No"))
-  print(string.format("  Handlers (%d):", #self.handlers))
-
-  for i, handler in ipairs(self.handlers) do
-    local patterns = table.concat(handler.match or {}, ", ")
-    print(string.format("    %d. %s -> %s", i, patterns, handler.browser or "unknown"))
-  end
-
-  return self
-end
-
---- BrowserRedirect:testURL(url)
---- Method
---- Test which browser would handle a given URL (for debugging)
+---  * url - The URL to find a browser for
 ---
---- Parameters:
----  * url - URL to test
-function obj:testURL(url)
+--- Returns:
+---  * String - The target browser name
+function obj:_findTargetBrowser(url)
   if not url then
+    return self.default_browser
+  end
+
+  -- First check exact matches for O(1) lookup
+  local exactBrowser = self.redirectLookup[url]
+  if exactBrowser then
+    print(string.format("BrowserRedirect: Exact match found: %s -> %s", url, exactBrowser))
+    return exactBrowser
+  end
+
+  -- Then check wildcard patterns
+  if self.redirectLookup["__wildcards"] then
+    for _, rule in ipairs(self.redirectLookup["__wildcards"]) do
+      print(string.format("BrowserRedirect DEBUG: Checking wildcard pattern '%s' against URL '%s'",
+        rule.pattern, url))
+      if self:_matchesPattern(url, rule.pattern) then
+        print(string.format("BrowserRedirect DEBUG: Wildcard pattern matched! Returning browser: %s",
+          rule.browser))
+        return rule.browser
+      end
+    end
+  end
+
+  return self.default_browser
+end
+
+--- BrowserRedirect:_matchesPattern(url, pattern)
+--- Method
+--- Check if URL matches a given pattern (supports wildcards)
+---
+--- Parameters:
+---  * url - The URL to check
+---  * pattern - The pattern to match against
+---
+--- Returns:
+---  * Boolean - True if URL matches the pattern
+function obj:_matchesPattern(url, pattern)
+  if not url or not pattern or type(url) ~= "string" or type(pattern) ~= "string" then
+    print(string.format("BrowserRedirect DEBUG: Invalid input - url: %s, pattern: %s", tostring(url),
+      tostring(pattern)))
+    return false
+  end
+
+  local luaPattern = pattern:gsub("([%^%$%(%)%%%.%[%]%+%-%?])", "%%%1")
+  luaPattern = luaPattern:gsub("%*", ".*")
+  luaPattern = "^" .. luaPattern .. "$"
+
+  local matches = url:match(luaPattern) ~= nil
+  print(string.format("BrowserRedirect DEBUG: Pattern '%s' -> Lua pattern '%s' matches URL '%s': %s",
+    pattern, luaPattern, url, tostring(matches)))
+
+  return matches
+end
+
+--- BrowserRedirect:_isValidURL(str)
+--- Method
+--- Check if string is a valid HTTP/HTTPS URL
+---
+--- Parameters:
+---  * str - String to check
+---
+--- Returns:
+---  * Boolean - True if valid URL
+function obj:_isValidURL(str)
+  if not str or type(str) ~= "string" then
+    return false
+  end
+
+  return str:match("^https?://") ~= nil
+end
+
+--- BrowserRedirect:addRedirect(rule)
+--- Method
+--- Add a redirect rule
+---
+--- Parameters:
+---  * rule - A table with 'match' pattern and 'browser' name
+function obj:addRedirect(rule)
+  if not rule.match or not rule.browser then
+    print("BrowserRedirect ERROR: Redirect rule must have 'match' and 'browser' fields")
     return self
   end
 
-  local targetBrowser = self:findMatchingBrowser(url)
-  print(string.format("BrowserRedirect: Test result - %s would open in %s", url, targetBrowser))
-
+  table.insert(self.redirect, rule)
+  self:_buildLookupTables()
   return self
+end
+
+--- BrowserRedirect:removeRedirect(pattern)
+--- Method
+--- Remove redirect rule by pattern
+---
+--- Parameters:
+---  * pattern - The pattern to remove
+function obj:removeRedirect(pattern)
+  for i = #self.redirect, 1, -1 do
+    if self.redirect[i].match == pattern then
+      table.remove(self.redirect, i)
+    end
+  end
+  self:_buildLookupTables()
+  return self
+end
+
+--- BrowserRedirect:addMapper(mapper)
+--- Method
+--- Add a URL mapper
+---
+--- Parameters:
+---  * mapper - A mapper configuration
+function obj:addMapper(mapper)
+  table.insert(self.mapper, mapper)
+  self:_buildLookupTables()
+  return self
+end
+
+--- BrowserRedirect:removeMapper(name)
+--- Method
+--- Remove mapper by name
+---
+--- Parameters:
+---  * name - The name of the mapper to remove
+function obj:removeMapper(name)
+  for i = #self.mapper, 1, -1 do
+    if self.mapper[i].name == name then
+      table.remove(self.mapper, i)
+    end
+  end
+  self:_buildLookupTables()
+  return self
+end
+
+--- BrowserRedirect:getStats()
+--- Method
+--- Get statistics about redirect rules and mappers
+---
+--- Returns:
+---  * Table - Statistics about the current configuration
+function obj:getStats()
+  return {
+    redirectRules = #self.redirect,
+    mappers = #self.mapper,
+    isActive = self.isActive,
+    originalDefaultBrowser = self.originalDefaultBrowser,
+    extensionServerPort = self.extensionServer and self.extensionServer:getPort() or nil,
+    lastProcessedURL = self.lastProcessedURL
+  }
 end
 
 return obj
