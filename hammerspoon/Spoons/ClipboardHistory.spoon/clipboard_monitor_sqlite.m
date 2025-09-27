@@ -5,6 +5,15 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+        // Get database limit from command line argument, default to 1000
+        int maxEntries = 1000;
+        if (argc > 1) {
+            maxEntries = atoi(argv[1]);
+            if (maxEntries <= 0) {
+                maxEntries = 1000;
+            }
+        }
+
         // Get database path in current working directory
         NSString *currentDir = [[NSFileManager defaultManager] currentDirectoryPath];
         NSString *dbPath = [currentDir stringByAppendingPathComponent:@"clipboard_history.db"];
@@ -269,6 +278,34 @@ int main(int argc, const char * argv[]) {
 
                 if (sqlite3_step(stmt) == SQLITE_DONE) {
                     long long newId = sqlite3_last_insert_rowid(db);
+
+                    // Check if we need to remove old entries to maintain entry limit
+                    const char *countSQL = "SELECT COUNT(*) FROM clipboard_history";
+                    sqlite3_stmt *countStmt;
+                    rc = sqlite3_prepare_v2(db, countSQL, -1, &countStmt, NULL);
+                    if (rc == SQLITE_OK) {
+                        if (sqlite3_step(countStmt) == SQLITE_ROW) {
+                            int totalCount = sqlite3_column_int(countStmt, 0);
+                            if (totalCount > maxEntries) {
+                                // Remove oldest entries to keep only maxEntries
+                                const char *cleanupSQL =
+                                    "DELETE FROM clipboard_history "
+                                    "WHERE id NOT IN ("
+                                    "  SELECT id FROM clipboard_history "
+                                    "  ORDER BY timestamp DESC "
+                                    "  LIMIT ?"
+                                    ")";
+                                sqlite3_stmt *cleanupStmt;
+                                rc = sqlite3_prepare_v2(db, cleanupSQL, -1, &cleanupStmt, NULL);
+                                if (rc == SQLITE_OK) {
+                                    sqlite3_bind_int(cleanupStmt, 1, maxEntries);
+                                    sqlite3_step(cleanupStmt);
+                                    sqlite3_finalize(cleanupStmt);
+                                }
+                            }
+                        }
+                        sqlite3_finalize(countStmt);
+                    }
 
                     // Output the new entry
                     printf("{\"id\":%lld,\"content\":\"%s\",\"type\":\"%s\",\"preview\":\"%s\",\"size\":\"%s\",\"timestamp\":%lu,\"time\":\"%s\",\"action\":\"added\"}",

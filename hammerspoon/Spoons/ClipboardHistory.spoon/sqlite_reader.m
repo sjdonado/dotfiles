@@ -7,9 +7,10 @@ int main(int argc, const char * argv[]) {
         if (argc < 3) {
             printf("Usage: %s <db_file> <mode> [limit] [query]\n", argv[0]);
             printf("Modes:\n");
-            printf("  recent <limit>    - Get recent N entries\n");
-            printf("  search <query>    - Search entries using FTS5\n");
-            printf("  count             - Get total entry count\n");
+            printf("  recent <limit>           - Get recent N entries\n");
+            printf("  search <query> [limit]   - Search entries using FTS5\n");
+            printf("  search_sorted <query> [limit] - Search with prefix/contains sorting\n");
+            printf("  count                    - Get total entry count\n");
             return 1;
         }
 
@@ -93,12 +94,14 @@ int main(int argc, const char * argv[]) {
 
             NSString *query = [NSString stringWithUTF8String:argv[3]];
 
+            int limit = (argc > 4) ? atoi(argv[4]) : 100;
+
             sql = "SELECT h.id, h.content, h.type, h.preview, h.size, h.timestamp, h.time "
                   "FROM clipboard_history h "
                   "JOIN clipboard_fts f ON h.id = f.rowid "
                   "WHERE clipboard_fts MATCH ? "
                   "ORDER BY h.timestamp DESC "
-                  "LIMIT 100";
+                  "LIMIT ?";
 
             rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
             if (rc != SQLITE_OK) {
@@ -108,6 +111,72 @@ int main(int argc, const char * argv[]) {
             }
 
             sqlite3_bind_text(stmt, 1, [query UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 2, limit);
+
+        } else if ([mode isEqualToString:@"search_sorted"]) {
+            if (argc < 4) {
+                printf("ERROR: Search query required\n");
+                sqlite3_close(db);
+                return 1;
+            }
+
+            NSString *query = [NSString stringWithUTF8String:argv[3]];
+            int limit = (argc > 4) ? atoi(argv[4]) : 100;
+            NSString *escapedQuery = [query stringByReplacingOccurrencesOfString:@"\"" withString:@"\"\""];
+
+            // Create different FTS5 queries for different match types
+            // 1. Exact prefix matching with word boundaries
+            NSString *prefixQuery = [NSString stringWithFormat:@"\"%@\"*", escapedQuery];
+            // 2. Word prefix matching (any word starting with query)
+            NSString *wordPrefixQuery = [NSString stringWithFormat:@"%@*", escapedQuery];
+            // 3. Contains matching (phrase anywhere in text)
+            NSString *containsQuery = [NSString stringWithFormat:@"\"%@\"", escapedQuery];
+
+            // Use UNION to combine different match types with priorities:
+            // Priority 1: Exact prefix matches (text starts with query)
+            // Priority 2: Word prefix matches (any word starts with query)
+            // Priority 3: Contains matches (query appears anywhere)
+            sql = "SELECT h.id, h.content, h.type, h.preview, h.size, h.timestamp, h.time, 1 as match_priority "
+                  "FROM clipboard_history h "
+                  "JOIN clipboard_fts f ON h.id = f.rowid "
+                  "WHERE clipboard_fts MATCH ? "
+                  "UNION "
+                  "SELECT h.id, h.content, h.type, h.preview, h.size, h.timestamp, h.time, 2 as match_priority "
+                  "FROM clipboard_history h "
+                  "JOIN clipboard_fts f ON h.id = f.rowid "
+                  "WHERE clipboard_fts MATCH ? "
+                  "AND h.id NOT IN ("
+                  "  SELECT h2.id FROM clipboard_history h2 "
+                  "  JOIN clipboard_fts f2 ON h2.id = f2.rowid "
+                  "  WHERE clipboard_fts MATCH ?"
+                  ") "
+                  "UNION "
+                  "SELECT h.id, h.content, h.type, h.preview, h.size, h.timestamp, h.time, 3 as match_priority "
+                  "FROM clipboard_history h "
+                  "JOIN clipboard_fts f ON h.id = f.rowid "
+                  "WHERE clipboard_fts MATCH ? "
+                  "AND h.id NOT IN ("
+                  "  SELECT h2.id FROM clipboard_history h2 "
+                  "  JOIN clipboard_fts f2 ON h2.id = f2.rowid "
+                  "  WHERE clipboard_fts MATCH ? OR clipboard_fts MATCH ?"
+                  ") "
+                  "ORDER BY match_priority ASC, timestamp DESC "
+                  "LIMIT ?";
+
+            rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+            if (rc != SQLITE_OK) {
+                printf("ERROR: Cannot prepare statement: %s\n", sqlite3_errmsg(db));
+                sqlite3_close(db);
+                return 1;
+            }
+
+            sqlite3_bind_text(stmt, 1, [prefixQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, [wordPrefixQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 3, [prefixQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 4, [containsQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 5, [prefixQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 6, [wordPrefixQuery UTF8String], -1, SQLITE_STATIC);
+            sqlite3_bind_int(stmt, 7, limit);
 
         } else if ([mode isEqualToString:@"count"]) {
             sql = "SELECT COUNT(*) FROM clipboard_history";
@@ -144,6 +213,11 @@ int main(int argc, const char * argv[]) {
                 [entry setObject:[NSString stringWithUTF8String:(char*)sqlite3_column_text(stmt, 4)] forKey:@"size"];
                 [entry setObject:[NSNumber numberWithLongLong:sqlite3_column_int64(stmt, 5)] forKey:@"timestamp"];
                 [entry setObject:[NSString stringWithUTF8String:(char*)sqlite3_column_text(stmt, 6)] forKey:@"time"];
+
+                // Only include match_priority for search_sorted mode
+                if ([mode isEqualToString:@"search_sorted"] && sqlite3_column_count(stmt) > 7) {
+                    [entry setObject:[NSNumber numberWithInt:sqlite3_column_int(stmt, 7)] forKey:@"match_priority"];
+                }
 
                 [results addObject:entry];
             }

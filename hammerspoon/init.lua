@@ -444,9 +444,11 @@ spoon.WindowManager:bindHotkeys({
 })
 
 hs.loadSpoon("MySchedule")
+spoon.MySchedule:compile()
 spoon.MySchedule:start()
 
 hs.loadSpoon("ClipboardHistory")
+spoon.ClipboardHistory:compile()
 spoon.ClipboardHistory:start()
 spoon.ClipboardHistory:bindHotkeys({
   toggle = { { "alt", "shift" }, "-" }
@@ -455,9 +457,9 @@ spoon.ClipboardHistory:bindHotkeys({
 hs.loadSpoon("BrowserRedirect")
 spoon.BrowserRedirect:setup({
   defaultBrowser = "Safari",
-  handlers = {
+  redirect = {
     {
-      match = { "localhost*", "127.0.0.1*", "0.0.0.0*" },
+      match = { "*localhost*", "*127.0.0.1*", "*0.0.0.0*" },
       browser = "Chromium",
     },
     {
@@ -468,6 +470,22 @@ spoon.BrowserRedirect:setup({
       match = { "*fly.dev*" },
       browser = "Chromium",
     },
+    {
+      match = { "*linear*" },
+      browser = "Linear",
+    },
+  },
+  mapper = {
+    {
+      name = "googleToKagiHomepage",
+      from = "*google.com*",
+      to = "https://kagi.com/"
+    },
+    {
+      name = "googleToKagiSearch",
+      from = "*google.com*/search*",
+      to = "https://kagi.com/search?q={query.q|encode}"
+    }
   },
 })
 spoon.BrowserRedirect:start()

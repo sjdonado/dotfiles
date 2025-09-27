@@ -21,13 +21,15 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 obj.chooser = nil
 obj.hotkeys = {}
 obj.watcher = nil
-obj.maxRecentEntries = 100 -- Maximum number of recent entries to load initially
-obj.historyBuffer = {}     -- Memory buffer with most recent entries
+obj.maxRecentEntries = 50     -- Maximum number of recent entries to load initially
+obj.maxDatabaseEntries = 1000 -- Maximum total entries to keep in database
+obj.historyBuffer = {}        -- Memory buffer with most recent entries
 obj.dbFile = nil
 obj.currentQuery = ""
 obj.clipboardMonitorTask = nil
 obj.sqliteReaderBinary = nil
 obj.clipboardMonitorBinary = nil
+obj.logger = hs.logger.new('ClipboardHistory')
 
 --- ClipboardHistory:init()
 --- Method
@@ -109,7 +111,7 @@ end
 
 --- ClipboardHistory:stop()
 --- Method
---- Stop monitoring clipboard changes
+--- Stop clipboard monitoring
 function obj:stop()
   if self.watcher then
     self.watcher:stop()
@@ -119,49 +121,34 @@ function obj:stop()
     self.clipboardMonitorTask:terminate()
     self.clipboardMonitorTask = nil
   end
+  -- Clear cached binary references (don't delete - they're managed by compile())
+  self.sqliteReaderBinary = nil
+  self.clipboardMonitorBinary = nil
   return self
 end
 
 --- ClipboardHistory:compileClipboardMonitor()
 --- Method
---- Compile the SQLite clipboard monitor binary if needed
+--- Compile the clipboard monitor binary if needed (deprecated - use compile() instead)
 function obj:compileClipboardMonitor()
+  -- Use cached binary if available
   if self.clipboardMonitorBinary then
     return self.clipboardMonitorBinary
   end
 
+  -- Check if binary exists (should be compiled by compile() method)
   local spoonPath = hs.spoons.scriptPath()
-  local monitorPath = spoonPath .. "/clipboard_monitor_sqlite.m"
   local binaryPath = spoonPath .. "/clipboard_monitor_sqlite_bin"
 
-  -- Check if Objective-C source exists
-  local file = io.open(monitorPath, "r")
-  if not file then
-    return nil
-  end
-  file:close()
-
-  -- Check if binary already exists and is newer than source
-  local sourceAttr = hs.fs.attributes(monitorPath)
   local binaryAttr = hs.fs.attributes(binaryPath)
-
-  if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+  if binaryAttr then
     self.clipboardMonitorBinary = binaryPath
     return binaryPath
   end
 
-  -- Compile the binary
-  local compileCmd = string.format(
-    "/usr/bin/clang -framework Cocoa -framework Foundation -lsqlite3 -o %s %s",
-    binaryPath, monitorPath)
-  local result = os.execute(compileCmd)
-
-  if result == 0 then
-    self.clipboardMonitorBinary = binaryPath
-    return binaryPath
-  else
-    return nil
-  end
+  -- Binary not found
+  print("ClipboardHistory ERROR: Clipboard monitor binary not found. Run compile() first.")
+  return nil
 end
 
 --- ClipboardHistory:onClipboardChange()
@@ -182,7 +169,8 @@ function obj:onClipboardChange()
   -- Run the SQLite clipboard monitor from spoon directory
   local spoonPath = hs.spoons.scriptPath()
   local sqliteMonitorPath = spoonPath .. "/clipboard_monitor_sqlite_bin"
-  local command = string.format("cd %s && %s", spoonPath, sqliteMonitorPath)
+  local command = string.format("cd %s && %s %d", spoonPath, sqliteMonitorPath,
+    self.maxDatabaseEntries)
 
   self.clipboardMonitorTask = hs.task.new("/bin/sh", function(exitCode, stdOut, stdErr)
     self.clipboardMonitorTask = nil
@@ -198,46 +186,108 @@ function obj:onClipboardChange()
   self.clipboardMonitorTask:start()
 end
 
+--- ClipboardHistory:compile()
+--- Method
+--- Compile both SQLite reader and clipboard monitor binaries
+function obj:compile()
+  print("🔨 ClipboardHistory: Compiling binaries...")
+
+  local spoonPath = hs.spoons.scriptPath()
+
+  -- Compile SQLite reader
+  local sqliteReaderPath = spoonPath .. "/sqlite_reader.m"
+  local sqliteReaderBinary = spoonPath .. "/sqlite_reader_bin"
+
+  local file = io.open(sqliteReaderPath, "r")
+  if not file then
+    error("❌ SQLite reader source file not found: " .. sqliteReaderPath)
+  end
+  file:close()
+
+  local sourceAttr = hs.fs.attributes(sqliteReaderPath)
+  local binaryAttr = hs.fs.attributes(sqliteReaderBinary)
+
+  if not binaryAttr or not sourceAttr or binaryAttr.modification < sourceAttr.modification then
+    local compileCmd = string.format("/usr/bin/clang -framework Foundation -lsqlite3 -o %s %s",
+      sqliteReaderBinary, sqliteReaderPath)
+    local output, success = hs.execute(compileCmd)
+    if not success then
+      error("❌ Failed to compile SQLite reader. Command: " ..
+        compileCmd .. "\nOutput: " .. (output or "no output"))
+    end
+    print("✅ ClipboardHistory: SQLite reader compiled")
+  else
+    print("✅ ClipboardHistory: SQLite reader up to date")
+  end
+
+  -- Compile clipboard monitor
+  local monitorPath = spoonPath .. "/clipboard_monitor_sqlite.m"
+  local monitorBinary = spoonPath .. "/clipboard_monitor_sqlite_bin"
+
+  file = io.open(monitorPath, "r")
+  if not file then
+    error("❌ Clipboard monitor source file not found: " .. monitorPath)
+  end
+  file:close()
+
+  sourceAttr = hs.fs.attributes(monitorPath)
+  binaryAttr = hs.fs.attributes(monitorBinary)
+
+  if not binaryAttr or not sourceAttr or binaryAttr.modification < sourceAttr.modification then
+    compileCmd = string.format(
+      "/usr/bin/clang -framework Cocoa -framework Foundation -lsqlite3 -o %s %s",
+      monitorBinary, monitorPath)
+    output, success = hs.execute(compileCmd)
+    if not success then
+      error("❌ Failed to compile clipboard monitor. Command: " ..
+        compileCmd .. "\nOutput: " .. (output or "no output"))
+    end
+    print("✅ ClipboardHistory: Clipboard monitor compiled")
+  else
+    print("✅ ClipboardHistory: Clipboard monitor up to date")
+  end
+
+  -- Verify binaries were created successfully
+  local finalSqliteAttr = hs.fs.attributes(sqliteReaderBinary)
+  local finalMonitorAttr = hs.fs.attributes(monitorBinary)
+
+  if not finalSqliteAttr then
+    error("❌ SQLite reader binary was not created: " .. sqliteReaderBinary)
+  end
+
+  if not finalMonitorAttr then
+    error("❌ Clipboard monitor binary was not created: " .. monitorBinary)
+  end
+
+  -- Cache binary paths
+  self.sqliteReaderBinary = sqliteReaderBinary
+  self.clipboardMonitorBinary = monitorBinary
+
+  print("✅ ClipboardHistory: All binaries compiled and verified")
+end
+
 --- ClipboardHistory:compileSqliteReader()
 --- Method
---- Compile the SQLite reader binary if needed
+--- Compile the SQLite reader binary if needed (deprecated - use compile() instead)
 function obj:compileSqliteReader()
+  -- Use cached binary if available
   if self.sqliteReaderBinary then
     return self.sqliteReaderBinary
   end
 
+  -- Check if binary exists (should be compiled by compile() method)
   local spoonPath = hs.spoons.scriptPath()
-  local sqliteReaderPath = spoonPath .. "/sqlite_reader.m"
   local binaryPath = spoonPath .. "/sqlite_reader_bin"
 
-  -- Check if Objective-C source exists
-  local file = io.open(sqliteReaderPath, "r")
-  if not file then
-    return nil
-  end
-  file:close()
-
-  -- Check if binary already exists and is newer than source
-  local sourceAttr = hs.fs.attributes(sqliteReaderPath)
   local binaryAttr = hs.fs.attributes(binaryPath)
-
-  if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+  if binaryAttr then
     self.sqliteReaderBinary = binaryPath
     return binaryPath
   end
 
-  -- Compile the binary
-  local compileCmd = string.format("/usr/bin/clang -framework Foundation -lsqlite3 -o %s %s",
-    binaryPath,
-    sqliteReaderPath)
-  local result = os.execute(compileCmd)
-
-  if result == 0 then
-    self.sqliteReaderBinary = binaryPath
-    return binaryPath
-  else
-    return nil
-  end
+  -- Binary not found
+  print("ClipboardHistory ERROR: SQLite reader binary not found. Run compile() first.")
+  return nil
 end
 
 --- ClipboardHistory:initializeBuffer()
@@ -326,7 +376,7 @@ function obj:loadAllHistory()
   end
 
   -- Load all entries from SQLite
-  local command = string.format("%s %s recent 10000", binaryPath, self.dbFile)
+  local command = string.format("%s %s recent %d", binaryPath, self.dbFile, self.maxDatabaseEntries)
 
   local handle = io.popen(command, "r")
   if handle then
@@ -351,69 +401,98 @@ end
 function obj:updateChoices()
   local choices = {}
 
-  -- Apply fuzzy search if query exists
+  -- Apply search if query exists
   local filteredEntries = {}
   if self.currentQuery == "" then
     -- No query, show all entries from buffer
     filteredEntries = self.historyBuffer
   else
-    -- Apply fuzzy search
-    local query = self.currentQuery:lower()
+    -- Use SQLite's search_sorted for efficient search and sorting
+    local query = self.currentQuery
+    self.logger:d("Searching for query: '" .. query .. "'")
 
-    local function fuzzyMatch(str, pattern)
-      local i = 1
-      for j = 1, #pattern do
-        i = str:find(pattern:sub(j, j), i)
-        if not i then return false end
-        i = i + 1
-      end
-      return true
-    end
-
-    -- Use FTS5 search with prefix matching for consistent results
     local binaryPath = self:compileSqliteReader()
     if binaryPath then
-      -- Use prefix matching with * for partial word matches
-      local searchQuery = query:gsub('%s+', '* ') .. '*'
-      local command = string.format("%s %s search \"%s\"", binaryPath, self.dbFile,
-        searchQuery:gsub('"', '\\"'))
+      -- Use the new search_sorted mode for efficient prefix/contains sorting
+      local command = string.format("%s %s search_sorted \"%s\" %d", binaryPath, self.dbFile,
+        query:gsub('"', '\\"'), self.maxRecentEntries)
+      self.logger:d("Executing search command: " .. command)
+
       local handle = io.popen(command, "r")
       if handle then
         local output = handle:read("*all")
-        handle:close()
+        local success, exitType, exitCode = handle:close()
+
+        self.logger:d(string.format("Command exit: success=%s, exitCode=%s", tostring(success),
+          tostring(exitCode)))
 
         if output and output ~= "" then
           output = output:gsub("^%s+", ""):gsub("%s+$", "")
-          if output:match("^%[") then
+          self.logger:d(string.format("Raw output length: %d", #output))
+
+          if output:match("^ERROR:") then
+            self.logger:e("SQLite search error: " .. output)
+          elseif output:match("^%[") then
             local parseSuccess, searchResults = pcall(hs.json.decode, output)
             if parseSuccess and searchResults and type(searchResults) == "table" then
               filteredEntries = searchResults
+              self.logger:d(string.format("SQLite search returned %d results", #filteredEntries))
+
+              -- Log first few results for debugging
+              for i = 1, math.min(3, #filteredEntries) do
+                local entry = filteredEntries[i]
+                self.logger:d(string.format("Result %d: priority=%s, preview=%s",
+                  i, tostring(entry.match_priority), (entry.preview or ""):sub(1, 50)))
+              end
+            else
+              self.logger:e("Failed to parse SQLite search JSON: " .. (output:sub(1, 200) or ""))
             end
+          else
+            self.logger:w("Unexpected SQLite output format: " .. (output:sub(1, 100) or ""))
           end
+        else
+          self.logger:w("Empty output from SQLite search command")
         end
+      else
+        self.logger:e("Failed to execute SQLite search command")
       end
     end
 
-    -- Fallback to local buffer search if FTS5 fails, with prefix matching
+    -- Fallback to buffer search if SQLite search fails
     if #filteredEntries == 0 then
+      self.logger:d("Using fallback buffer search")
+      local queryLower = query:lower()
+      local prefixMatches = {}
+      local containsMatches = {}
+
       for _, entry in ipairs(self.historyBuffer) do
         local searchableContent = (entry.content or ""):lower()
-        local searchableType = (entry.type or ""):lower()
         local searchablePreview = (entry.preview or ""):lower()
+        local searchableType = (entry.type or ""):lower()
 
-        -- Check if any word starts with the query (prefix matching)
-        local function hasWordStartingWith(text, pattern)
-          return text:find('%f[%w]' .. pattern:gsub('[%-%^%$%(%)%%%.%[%]%*%+%-%?]', '%%%1')) ~= nil
-        end
-
-        if hasWordStartingWith(searchableContent, query) or
-            hasWordStartingWith(searchableType, query) or
-            hasWordStartingWith(searchablePreview, query) or
-            fuzzyMatch(searchableContent, query) or
-            searchableContent:find(query, 1, true) then
-          table.insert(filteredEntries, entry)
+        -- Check for prefix matches first
+        if searchableContent:find("^" .. queryLower:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")) or
+            searchablePreview:find("^" .. queryLower:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")) or
+            searchableType:find("^" .. queryLower:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")) then
+          table.insert(prefixMatches, entry)
+          -- Then check for contains matches
+        elseif searchableContent:find(queryLower, 1, true) or
+            searchablePreview:find(queryLower, 1, true) or
+            searchableType:find(queryLower, 1, true) then
+          table.insert(containsMatches, entry)
         end
       end
+
+      -- Combine prefix matches first, then contains matches
+      for _, entry in ipairs(prefixMatches) do
+        table.insert(filteredEntries, entry)
+      end
+      for _, entry in ipairs(containsMatches) do
+        table.insert(filteredEntries, entry)
+      end
+
+      self.logger:d(string.format("Fallback search: %d prefix + %d contains = %d total results",
+        #prefixMatches, #containsMatches, #filteredEntries))
     end
   end
 
@@ -672,6 +751,15 @@ function obj:updateChoices()
     end
   end
 
+  self.logger:d(string.format("updateChoices() called with %d entries", #filteredEntries))
+  if self.currentQuery ~= "" then
+    self.logger:d(string.format("Query: '%s', using filtered %d entries", self.currentQuery,
+      #filteredEntries))
+  else
+    self.logger:d(string.format("No query, using all %d entries", #filteredEntries))
+  end
+
+  self.logger:d(string.format("Setting %d choices in chooser", #choices))
   self.chooser:choices(choices)
 end
 
@@ -865,15 +953,9 @@ function obj:delete()
     self.chooser:delete()
     self.chooser = nil
   end
-  -- Clean up compiled binaries
-  if self.sqliteReaderBinary then
-    os.remove(self.sqliteReaderBinary)
-    self.sqliteReaderBinary = nil
-  end
-  if self.clipboardMonitorBinary then
-    os.remove(self.clipboardMonitorBinary)
-    self.clipboardMonitorBinary = nil
-  end
+  -- Clear cached binary references (don't delete - they're managed by compile())
+  self.sqliteReaderBinary = nil
+  self.clipboardMonitorBinary = nil
 end
 
 --- ClipboardHistory:bindHotkeys(mapping)
