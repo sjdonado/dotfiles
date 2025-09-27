@@ -25,6 +25,20 @@ obj.liveQueries = nil
 --- Method
 --- Initialize the spoon
 function obj:init()
+  -- LiveQueries will be set from config
+  self.liveQueries = nil
+  return self
+end
+
+--- ActionsLauncher:createChooser()
+--- Method
+--- Create a new chooser instance
+function obj:createChooser()
+  if self.chooser then
+    self.chooser:delete()
+    self.chooser = nil
+  end
+
   self.chooser = hs.chooser.new(function(choice)
     if not choice or not choice.uuid then return end
 
@@ -42,19 +56,26 @@ function obj:init()
     end
   end)
 
-  self.chooser:placeholderText("Search actions...")
-  self.chooser:searchSubText(true)
   self.chooser:rows(10)
+  self.chooser:width(50)
+  self.chooser:searchSubText(true)
+  self.chooser:placeholderText("Search actions...")
 
   -- Set up query change callback for interactive actions
   self.chooser:queryChangedCallback(function(query)
     self:handleQueryChange(query)
   end)
 
-  -- LiveQueries will be set from config
-  self.liveQueries = nil
+  -- Set initial choices
+  self.chooser:choices(self.originalChoices)
 
-  return self
+  -- Automatically cleanup when chooser is hidden
+  self.chooser:hideCallback(function()
+    if self.chooser then
+      self.chooser:delete()
+      self.chooser = nil
+    end
+  end)
 end
 
 --- ActionsLauncher:setup(config)
@@ -89,7 +110,6 @@ function obj:setup(config)
     }
   end
 
-  self.chooser:choices(self.originalChoices)
   return self
 end
 
@@ -97,6 +117,7 @@ end
 --- Method
 --- Show the actions chooser
 function obj:show()
+  self:createChooser()
   self.chooser:show()
 end
 
@@ -104,14 +125,16 @@ end
 --- Method
 --- Hide the actions chooser
 function obj:hide()
-  self.chooser:hide()
+  if self.chooser then
+    self.chooser:hide()
+  end
 end
 
 --- ActionsLauncher:toggle()
 --- Method
 --- Toggle the actions chooser visibility
 function obj:toggle()
-  if self.chooser:isVisible() then
+  if self.chooser and self.chooser:isVisible() then
     self:hide()
   else
     self:show()
@@ -229,7 +252,9 @@ end
 --- Parameters:
 ---  * query - The query string to set
 function obj:setQuery(query)
-  self.chooser:query(query)
+  if self.chooser then
+    self.chooser:query(query)
+  end
 end
 
 --- ActionsLauncher:replaceQuery(query)
@@ -239,10 +264,12 @@ end
 --- Parameters:
 ---  * query - The query string to set
 function obj:replaceQuery(query)
-  self.chooser:query(query)
-  hs.timer.doAfter(0, function()
-    self:show()
-  end)
+  if self.chooser then
+    self.chooser:query(query)
+    hs.timer.doAfter(0, function()
+      self:show()
+    end)
+  end
 end
 
 --- ActionsLauncher.executeShell(command, actionName)

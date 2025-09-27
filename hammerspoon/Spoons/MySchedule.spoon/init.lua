@@ -63,11 +63,8 @@ function obj:stop()
     self.loadingTask = nil
   end
   self.isLoading = false
-  -- Clean up compiled binary
-  if self.eventkitBinary then
-    os.remove(self.eventkitBinary)
-    self.eventkitBinary = nil
-  end
+  -- Clear cached binary reference (don't delete - it's managed by init.lua)
+  self.eventkitBinary = nil
   return self
 end
 
@@ -143,22 +140,20 @@ function obj:triggerCalendarPermissions()
   end, { "-e", "tell application \"Calendar\" to return count of calendars" }):start()
 end
 
---- MySchedule:compileEventKitFetcher()
+--- MySchedule:compile()
 --- Method
---- Compile the EventKit fetcher binary if needed
-function obj:compileEventKitFetcher()
-  if self.eventkitBinary then
-    return self.eventkitBinary
-  end
-
+--- Compile the EventKit fetcher binary
+function obj:compile()
   local spoonPath = hs.spoons.scriptPath()
   local objcSourcePath = spoonPath .. "/eventkit_fetcher.m"
   local binaryPath = spoonPath .. "/eventkit_fetcher_bin"
 
+  print("🔨 MySchedule: Compiling EventKit fetcher...")
+
   -- Check if Objective-C source exists
   local file = io.open(objcSourcePath, "r")
   if not file then
-    return nil
+    error("❌ Source file not found: " .. objcSourcePath)
   end
   file:close()
 
@@ -167,29 +162,59 @@ function obj:compileEventKitFetcher()
   local binaryAttr = hs.fs.attributes(binaryPath)
 
   if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
+    print("✅ MySchedule: Binary up to date")
     self.eventkitBinary = binaryPath
-    return binaryPath
+    return
   end
 
-  -- Compile the binary
+  -- Compile the binary synchronously
   local compileCmd = string.format(
     "/usr/bin/clang -fobjc-arc -framework EventKit -framework Foundation -o %s %s",
     binaryPath, objcSourcePath)
-  local result = os.execute(compileCmd)
 
-  if result == 0 then
+  local output, success = hs.execute(compileCmd)
+  if not success then
+    error("❌ Failed to compile EventKit fetcher. Command: " .. compileCmd .. "\nOutput: " .. (output or "no output"))
+  end
+
+  -- Verify binary was created
+  local finalBinaryAttr = hs.fs.attributes(binaryPath)
+  if not finalBinaryAttr then
+    error("❌ Binary was not created: " .. binaryPath)
+  end
+
+  self.eventkitBinary = binaryPath
+  print("✅ MySchedule: Binary compiled successfully")
+end
+
+--- MySchedule:getEventKitBinary()
+--- Method
+--- Get the pre-compiled EventKit fetcher binary path
+function obj:getEventKitBinary()
+  if self.eventkitBinary then
+    return self.eventkitBinary
+  end
+
+  local spoonPath = hs.spoons.scriptPath()
+  local binaryPath = spoonPath .. "/eventkit_fetcher_bin"
+
+  -- Check if binary exists (should be compiled by init.lua)
+  local binaryAttr = hs.fs.attributes(binaryPath)
+  if binaryAttr then
     self.eventkitBinary = binaryPath
     return binaryPath
-  else
-    return nil
   end
+
+  -- Binary not found
+  print("MySchedule ERROR: EventKit binary not found at:", binaryPath)
+  return nil
 end
 
 --- MySchedule:loadEventsWithEventKit()
 --- Method
 --- Load events using cached native EventKit binary
 function obj:loadEventsWithEventKit()
-  local binaryPath = self:compileEventKitFetcher()
+  local binaryPath = self:getEventKitBinary()
   if not binaryPath then
     self.isLoading = false
     self.cachedEvents = {}
@@ -491,11 +516,8 @@ function obj:delete()
     self.menubar:delete()
     self.menubar = nil
   end
-  -- Clean up compiled binary
-  if self.eventkitBinary then
-    os.remove(self.eventkitBinary)
-    self.eventkitBinary = nil
-  end
+  -- Clear cached binary reference (don't delete - it's managed by init.lua)
+  self.eventkitBinary = nil
   self.isLoading = false
 end
 

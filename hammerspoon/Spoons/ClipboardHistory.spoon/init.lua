@@ -82,6 +82,7 @@ function obj:initializeChooser()
   end)
 
   self.chooser:rows(10)
+  self.chooser:width(50)
   self.chooser:searchSubText(true)
   self.chooser:queryChangedCallback(function(query)
     self.currentQuery = query
@@ -579,10 +580,8 @@ function obj:updateChoices()
   for i, entry in ipairs(filteredEntries) do
     local preview = entry.preview or entry.content or ""
 
-    -- Truncate preview if too long
-    if string.len(preview) > 80 then
-      preview = string.sub(preview, 1, 77) .. "..."
-    end
+    -- Use full preview without truncation
+    -- preview = self:truncatePreviewSmartly(preview)
 
     -- Format date for display
     local dateDisplay = ""
