@@ -129,11 +129,10 @@ log "Linking Zed config..."
 ln -snf "$DOTFILES/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$DOTFILES/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
-log "Linking Finicky config..."
-ln -snf "$DOTFILES/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"
-
-log "Linking Hammerspoon config..."
-ln -snf "$DOTFILES/hammerspoon" "$HOME/.hammerspoon"
+log "Martillo setup"
+mkdir -p $HOME/.hammerspoon/
+git clone https://github.com/sjdonado/martillo ~/.martillo
+ln -snf "$DOTFILES/martillo" "$HOME/.hammerspoon"
 
 touch "$DOTFILES/.env"
 

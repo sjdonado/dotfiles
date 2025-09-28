@@ -15,7 +15,7 @@
   colorMoved = default
 
 [init]
-  defaultBranch = master
+  defaultBranch = main
 
 [credential]
   helper = store
