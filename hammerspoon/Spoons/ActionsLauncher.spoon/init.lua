@@ -17,9 +17,13 @@ obj.hotkeys = {}
 obj.chooser = nil
 obj.singleActions = {}
 obj.singleHandlers = {}
+obj.expandHandlers = {}
 obj.originalChoices = {}
+obj.currentChoices = {}
+obj.isExpanded = false
 obj.uuidCounter = 0
 obj.liveQueries = nil
+obj.logger = hs.logger.new('ActionsLauncher', 'info')
 
 --- ActionsLauncher:init()
 --- Method
@@ -36,7 +40,6 @@ end
 function obj:createChooser()
   if self.chooser then
     self.chooser:delete()
-    self.chooser = nil
   end
 
   self.chooser = hs.chooser.new(function(choice)
@@ -46,6 +49,37 @@ function obj:createChooser()
     if not handler then return end
 
     local result = handler()
+
+    -- Check if handler returns false (expandable action)
+    if result == false then
+      local expandHandler = self.expandHandlers[choice.uuid]
+      if expandHandler then
+        local expandedChoices = expandHandler()
+        if expandedChoices and #expandedChoices > 0 then
+          -- Register handlers for expanded choices
+          for _, expandedChoice in ipairs(expandedChoices) do
+            if expandedChoice.uuid and expandedChoice.handler then
+              self.singleHandlers[expandedChoice.uuid] = expandedChoice.handler
+              if expandedChoice.expandHandler then
+                self.expandHandlers[expandedChoice.uuid] = expandedChoice.expandHandler
+              end
+            end
+          end
+
+          -- Update state for expanded view
+          self.currentChoices = expandedChoices
+          self.isExpanded = true
+          self.logger:d("Set expanded state, currentChoices count: " .. #self.currentChoices)
+
+          -- Let chooser close, then immediately reopen with expanded choices
+          hs.timer.doAfter(0.01, function()
+            self:show()
+          end)
+        end
+      end
+    end
+
+    -- Handle normal string results
     if result and type(result) == "string" and result ~= "" then
       if choice.copyToClipboard then
         hs.pasteboard.setContents(result)
@@ -57,7 +91,7 @@ function obj:createChooser()
   end)
 
   self.chooser:rows(10)
-  self.chooser:width(50)
+  self.chooser:width(40)
   self.chooser:searchSubText(true)
   self.chooser:placeholderText("Search actions...")
 
@@ -66,8 +100,25 @@ function obj:createChooser()
     self:handleQueryChange(query)
   end)
 
-  -- Set initial choices
-  self.chooser:choices(self.originalChoices)
+  -- Set choices using a function for dynamic updates
+  self.chooser:choices(function()
+    if self.isExpanded and #self.currentChoices > 0 then
+      -- Clean choices by removing handler functions (they're already registered)
+      local cleanedChoices = {}
+      for _, choice in ipairs(self.currentChoices) do
+        local cleanChoice = {}
+        for key, value in pairs(choice) do
+          if key ~= "handler" and key ~= "expandHandler" then
+            cleanChoice[key] = value
+          end
+        end
+        table.insert(cleanedChoices, cleanChoice)
+      end
+      return cleanedChoices
+    else
+      return self.originalChoices
+    end
+  end)
 
   -- Automatically cleanup when chooser is hidden
   self.chooser:hideCallback(function()
@@ -92,6 +143,7 @@ function obj:setup(config)
   -- Setup actions
   self.singleActions = config.single or {}
   self.singleHandlers = {}
+  self.expandHandlers = {}
 
   -- Setup live queries directly from config
   self.liveQueries = config.live or {}
@@ -101,6 +153,11 @@ function obj:setup(config)
   for i, action in ipairs(self.singleActions) do
     local uuid = action.id or tostring(i)
     self.singleHandlers[uuid] = action.handler
+
+    -- Store expand handler if provided
+    if action.expandHandler then
+      self.expandHandlers[uuid] = action.expandHandler
+    end
 
     self.originalChoices[i] = {
       text = action.name,
@@ -148,8 +205,13 @@ end
 --- Parameters:
 ---  * query - The current search query
 function obj:handleQueryChange(query)
+  -- Don't interfere with expanded state
+  if self.isExpanded then
+    return
+  end
+
   if not query or query == "" then
-    self.chooser:choices(self.originalChoices)
+    -- Let dynamic choices function handle this
     return
   end
 
@@ -266,10 +328,80 @@ end
 function obj:replaceQuery(query)
   if self.chooser then
     self.chooser:query(query)
-    hs.timer.doAfter(0, function()
-      self:show()
-    end)
+    -- Trigger query change handler without recreating chooser
+    self:handleQueryChange(query)
   end
+end
+
+--- ActionsLauncher:refreshExpandedChoices()
+--- Method
+--- Refresh the expanded choices (used after async operations complete)
+function obj:refreshExpandedChoices()
+  if self.isExpanded then
+    -- Update currentChoices from cache if available
+    if _G.networkTestCache and _G.networkTestCache.results then
+      -- Find the network status action to get its expandHandler
+      for _, action in ipairs(self.singleActions) do
+        if action.id == "network_status" then
+          local newChoices = action.expandHandler()
+          if newChoices and #newChoices > 0 then
+            -- Register handlers for new choices
+            for _, expandedChoice in ipairs(newChoices) do
+              if expandedChoice.uuid and expandedChoice.handler then
+                self.singleHandlers[expandedChoice.uuid] = expandedChoice.handler
+                if expandedChoice.expandHandler then
+                  self.expandHandlers[expandedChoice.uuid] = expandedChoice.expandHandler
+                end
+              end
+            end
+
+            self.currentChoices = newChoices
+            self.logger:d("Refreshed currentChoices count: " .. #self.currentChoices)
+
+            -- Recreate chooser with new choices
+            self:show()
+          end
+          break
+        end
+      end
+    end
+  end
+end
+
+--- ActionsLauncher:addBackOption(choices)
+--- Method
+--- Add a "Back" option to a list of choices for navigation
+---
+--- Parameters:
+---  * choices - The choices array to add the back option to
+---
+--- Returns:
+---  * The choices array with back option added
+function obj:addBackOption(choices)
+  local backHandler = function()
+    -- Reset to original state
+    self.isExpanded = false
+    self.currentChoices = {}
+
+    if self.chooser then
+      self.chooser:query("")
+      self.chooser:refreshChoicesCallback()
+    end
+    return false -- Don't close chooser
+  end
+
+  -- Register the back handler
+  self.singleHandlers["back_to_main"] = backHandler
+
+  local backOption = {
+    text = "← Back",
+    subText = "Return to main menu",
+    uuid = "back_to_main"
+  }
+
+  -- Insert at the beginning
+  table.insert(choices, 1, backOption)
+  return choices
 end
 
 --- ActionsLauncher.executeShell(command, actionName)

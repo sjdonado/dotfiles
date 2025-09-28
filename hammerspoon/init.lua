@@ -99,7 +99,135 @@ spoon.ActionsLauncher:setup({
       id = "network_status",
       name = "Network Status",
       handler = function()
-        spoon.ActionsLauncher:replaceQuery("Network Status")
+        -- Check if we have cached results (fresh for 30 seconds)
+        if _G.networkTestCache and _G.networkTestCache.timestamp and
+            (os.time() - _G.networkTestCache.timestamp) < 30 then
+          return false -- Use cached results, expand immediately
+        end
+
+        -- Check if test is already running
+        if _G.networkTestRunning then
+          return false -- Show loading state
+        end
+
+        -- Start new test
+        _G.networkTestRunning = true
+        _G.networkTestCache = nil -- Clear old cache
+
+        -- Start the actual network test
+        local networkTestTask = hs.task.new("/bin/sh", function(exitCode, stdOut, stdErr)
+          _G.networkTestRunning = false
+
+          local networkTestChoices = {}
+
+          if exitCode ~= 0 then
+            table.insert(networkTestChoices, {
+              text = "❌ Network Test Failed",
+              subText = "Unable to reach network",
+              uuid = "network_error",
+              handler = function() return "Network test failed" end
+            })
+            table.insert(networkTestChoices, {
+              text = "🔄 Try Again",
+              subText = "Retry the network test",
+              uuid = "network_retry",
+              handler = function()
+                _G.networkTestCache = nil
+                _G.networkTestRunning = false
+                return false
+              end,
+              expandHandler = function()
+                -- Get the current network status action and call its handler
+                for _, action in ipairs(spoon.ActionsLauncher.singleActions) do
+                  if action.id == "network_status" then
+                    action.handler()
+                    return action.expandHandler()
+                  end
+                end
+                return {}
+              end
+            })
+          else
+            -- Parse ping result
+            local pingLatency = "Unable to measure"
+            local pingLine = stdOut:match(
+              "round%-trip min/avg/max/stddev = [%d%.]+/([%d%.]+)/[%d%.]+/[%d%.]+ ms")
+            if pingLine then
+              pingLatency = string.format("%.1f ms", tonumber(pingLine))
+            end
+
+            -- Get connection status
+            local status = pingLatency ~= "Unable to measure" and "✅ Connected" or "❌ Disconnected"
+
+            -- Create result items
+            table.insert(networkTestChoices, {
+              text = "Network Status",
+              subText = status,
+              uuid = "network_status_result",
+              handler = function() return status end
+            })
+
+            table.insert(networkTestChoices, {
+              text = "Latency",
+              subText = pingLatency,
+              uuid = "network_ping_result",
+              handler = function() return "Latency: " .. pingLatency end
+            })
+
+            table.insert(networkTestChoices, {
+              text = "Run Again",
+              subText = "Check network status again",
+              uuid = "network_rerun",
+              handler = function()
+                _G.networkTestCache = nil
+                _G.networkTestRunning = false
+                return false
+              end,
+              expandHandler = function()
+                -- Get the current network status action and call its handler
+                for _, action in ipairs(spoon.ActionsLauncher.singleActions) do
+                  if action.id == "network_status" then
+                    action.handler()
+                    return action.expandHandler()
+                  end
+                end
+                return {}
+              end
+            })
+          end
+
+          -- Cache results
+          _G.networkTestCache = {
+            results = networkTestChoices,
+            timestamp = os.time()
+          }
+
+          -- Refresh the chooser if it's expanded and visible
+          spoon.ActionsLauncher:refreshExpandedChoices()
+        end, { "-c", "ping -c 3 -W 2000 1.1.1.1" })
+
+        networkTestTask:start()
+        return false -- Expand to show loading state
+      end,
+      expandHandler = function()
+        -- Check if we have cached results
+        if _G.networkTestCache and _G.networkTestCache.timestamp and
+            (os.time() - _G.networkTestCache.timestamp) < 30 then
+          -- Return cached results (fresh for 30 seconds)
+          return spoon.ActionsLauncher:addBackOption(_G.networkTestCache.results)
+        end
+
+        -- Show loading state while test is running or starting
+        local loadingChoices = {
+          {
+            text = "⏳ Loading...",
+            subText = "Checking network status, please wait...",
+            uuid = "network_loading",
+            handler = function() return "" end
+          }
+        }
+
+        return spoon.ActionsLauncher:addBackOption(loadingChoices)
       end,
       description = "Check network connectivity and status"
     },
@@ -312,115 +440,6 @@ spoon.ActionsLauncher:setup({
             end
           end
         end
-      end
-    },
-
-    {
-      id = "networkstatus",
-      enabled = true,
-      query = "Network Status",
-      handler = function(query, context)
-        -- Check if we have cached results
-        if _G.networkTestCache and _G.networkTestCache.timestamp and
-            (os.time() - _G.networkTestCache.timestamp) < 30 then
-          -- Show cached results (fresh for 30 seconds)
-          for _, result in ipairs(_G.networkTestCache.results) do
-            table.insert(context.liveChoices, result)
-          end
-          return
-        end
-
-        -- Check if test is already running
-        if _G.networkTestRunning then
-          table.insert(context.liveChoices, {
-            text = "⏳ Loading...",
-            subText = "Checking network status, please wait...",
-            uuid = "network_loading"
-          })
-          return
-        end
-
-        -- Start new test
-        _G.networkTestRunning = true
-        table.insert(context.liveChoices, {
-          text = "⏳ Loading...",
-          subText = "Checking network status, please wait...",
-          uuid = "network_loading"
-        })
-
-        -- Start the actual network test
-        local networkTestTask = hs.task.new("/bin/sh", function(exitCode, stdOut, stdErr)
-          _G.networkTestRunning = false
-
-          local networkTestChoices = {}
-
-          if exitCode ~= 0 then
-            table.insert(networkTestChoices, {
-              text = "❌ Network Test Failed",
-              subText = "Unable to reach network",
-              uuid = "network_error"
-            })
-            table.insert(networkTestChoices, {
-              text = "🔄 Try Again",
-              subText = "Retry the network test",
-              uuid = "network_retry"
-            })
-
-            context.callbacks["network_retry"] = function()
-              _G.networkTestCache = nil
-              context.launcher:replaceQuery("Network Status")
-              return ""
-            end
-          else
-            -- Parse ping result
-            local pingLatency = "Unable to measure"
-            local pingLine = stdOut:match(
-              "round%-trip min/avg/max/stddev = [%d%.]+/([%d%.]+)/[%d%.]+/[%d%.]+ ms")
-            if pingLine then
-              pingLatency = string.format("%.1f ms", tonumber(pingLine))
-            end
-
-            -- Get connection status
-            local status = pingLatency ~= "Unable to measure" and "✅ Connected" or "❌ Disconnected"
-
-            -- Create result items
-            table.insert(networkTestChoices, {
-              text = "Network Status",
-              subText = status,
-              uuid = "network_status"
-            })
-
-            table.insert(networkTestChoices, {
-              text = "Latency",
-              subText = pingLatency,
-              uuid = "network_ping"
-            })
-
-            table.insert(networkTestChoices, {
-              text = "Run Again",
-              subText = "Check network status again",
-              uuid = "network_rerun"
-            })
-
-            -- Store callback for rerun
-            context.callbacks["network_rerun"] = function()
-              _G.networkTestCache = nil
-              context.launcher:replaceQuery("Network Status")
-              return ""
-            end
-          end
-
-          -- Cache results
-          _G.networkTestCache = {
-            results = networkTestChoices,
-            timestamp = os.time()
-          }
-
-          -- Trigger a refresh by setting the query again
-          context.launcher:replaceQuery("Network Status")
-        end, { "-c", "ping -c 3 -W 2000 1.1.1.1" })
-
-        networkTestTask:start()
       end
     }
   }
