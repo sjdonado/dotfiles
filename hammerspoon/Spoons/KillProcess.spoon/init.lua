@@ -50,7 +50,7 @@ function obj:createChooser()
   end)
 
   self.chooser:rows(10)
-  self.chooser:width(50)
+  self.chooser:width(40)
   self.chooser:searchSubText(true)
   self.chooser:queryChangedCallback(function(query)
     self.currentQuery = query

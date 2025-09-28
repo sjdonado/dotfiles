@@ -63,7 +63,7 @@ function obj:initializeChooser()
         self:loadAllHistory()
         local query = self.chooser:query()
         self.chooser:query(query)
-        hs.timer.doAfter(0, function()
+        hs.timer.doAfter(0.01, function()
           self:show()
         end)
       else
@@ -82,7 +82,7 @@ function obj:initializeChooser()
   end)
 
   self.chooser:rows(10)
-  self.chooser:width(50)
+  self.chooser:width(40)
   self.chooser:searchSubText(true)
   self.chooser:queryChangedCallback(function(query)
     self.currentQuery = query
@@ -148,7 +148,7 @@ function obj:compileClipboardMonitor()
   end
 
   -- Binary not found
-  print("ClipboardHistory ERROR: Clipboard monitor binary not found. Run compile() first.")
+  self.logger:e("Clipboard monitor binary not found. Run compile() first.")
   return nil
 end
 
@@ -180,7 +180,7 @@ function obj:onClipboardChange()
       -- Parse the new entry from stdout and add to buffer
       self:addToBuffer(stdOut)
     else
-      print("ClipboardHistory: SQLite monitor failed:", stdErr or "unknown error")
+      self.logger:e("SQLite monitor failed: " .. (stdErr or "unknown error"))
     end
   end, { "-c", command })
 
@@ -191,7 +191,7 @@ end
 --- Method
 --- Compile both SQLite reader and clipboard monitor binaries
 function obj:compile()
-  print("🔨 ClipboardHistory: Compiling binaries...")
+  self.logger:i("🔨 Compiling binaries...")
 
   local spoonPath = hs.spoons.scriptPath()
 
@@ -216,9 +216,9 @@ function obj:compile()
       error("❌ Failed to compile SQLite reader. Command: " ..
         compileCmd .. "\nOutput: " .. (output or "no output"))
     end
-    print("✅ ClipboardHistory: SQLite reader compiled")
+    self.logger:i("✅ SQLite reader compiled")
   else
-    print("✅ ClipboardHistory: SQLite reader up to date")
+    self.logger:i("✅ SQLite reader up to date")
   end
 
   -- Compile clipboard monitor
@@ -243,9 +243,9 @@ function obj:compile()
       error("❌ Failed to compile clipboard monitor. Command: " ..
         compileCmd .. "\nOutput: " .. (output or "no output"))
     end
-    print("✅ ClipboardHistory: Clipboard monitor compiled")
+    self.logger:i("✅ Clipboard monitor compiled")
   else
-    print("✅ ClipboardHistory: Clipboard monitor up to date")
+    self.logger:i("✅ Clipboard monitor up to date")
   end
 
   -- Verify binaries were created successfully
@@ -264,7 +264,7 @@ function obj:compile()
   self.sqliteReaderBinary = sqliteReaderBinary
   self.clipboardMonitorBinary = monitorBinary
 
-  print("✅ ClipboardHistory: All binaries compiled and verified")
+  self.logger:i("✅ All binaries compiled and verified")
 end
 
 --- ClipboardHistory:compileSqliteReader()
@@ -287,7 +287,7 @@ function obj:compileSqliteReader()
   end
 
   -- Binary not found
-  print("ClipboardHistory ERROR: SQLite reader binary not found. Run compile() first.")
+  self.logger:e("SQLite reader binary not found. Run compile() first.")
   return nil
 end
 

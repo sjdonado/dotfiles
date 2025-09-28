@@ -14,6 +14,7 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.hotkeys = {}
 obj.applications = {}
+obj.logger = hs.logger.new('LaunchOrToggleFocus', 'info')
 
 --- LaunchOrToggleFocus:init()
 --- Method

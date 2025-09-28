@@ -24,6 +24,7 @@ obj.lastProcessedURL = nil
 obj.lastProcessedTime = 0
 obj.redirectLookup = {}
 obj.mapperLookup = {}
+obj.logger = hs.logger.new('BrowserRedirect', 'info')
 
 --- BrowserRedirect:init()
 --- Method
@@ -108,8 +109,8 @@ function obj:_buildLookupTables()
     if k ~= "__wildcards" then exactMappers = exactMappers + 1 end
   end
 
-  print(string.format(
-    "BrowserRedirect: Built lookup tables - %d exact redirects, %d wildcard redirects, %d exact mappers, %d wildcard mappers",
+  self.logger:i(string.format(
+    "Built lookup tables - %d exact redirects, %d wildcard redirects, %d exact mappers, %d wildcard mappers",
     exactRedirects,
     self.redirectLookup["__wildcards"] and #self.redirectLookup["__wildcards"] or 0,
     exactMappers,
@@ -124,7 +125,7 @@ function obj:start()
     return self
   end
 
-  print("BrowserRedirect: Starting hybrid URL interception")
+  self.logger:i("Starting hybrid URL interception")
 
   -- Start URL scheme handler (for external URLs)
   self:_startURLSchemeHandler()
@@ -133,7 +134,7 @@ function obj:start()
   self:_startExtensionServer()
 
   self.isActive = true
-  print("BrowserRedirect: All URL interception methods started")
+  self.logger:i("All URL interception methods started")
 
   return self
 end
@@ -167,7 +168,7 @@ function obj:stop()
       self.originalDefaultBrowser))
   end
 
-  print("BrowserRedirect: All URL interception stopped")
+  self.logger:i("All URL interception stopped")
   return self
 end
 
@@ -193,7 +194,7 @@ function obj:_startURLSchemeHandler()
     end
   end
 
-  print("BrowserRedirect: URL scheme handler started")
+  self.logger:d("URL scheme handler started")
 end
 
 --- BrowserRedirect:_startExtensionServer()
@@ -219,10 +220,11 @@ function obj:_startExtensionServer()
 
   if success then
     local port = self.extensionServer:getPort()
-    print(string.format("BrowserRedirect: Extension server started on port %d", port))
-    print("Configure browser extensions to send URLs to: http://localhost:" .. port .. "/redirect")
+    self.logger:i(string.format("Extension server started on port %d", port))
+    self.logger:i("Configure browser extensions to send URLs to: http://localhost:" ..
+    port .. "/redirect")
   else
-    print("BrowserRedirect: Failed to start extension server")
+    self.logger:e("Failed to start extension server")
   end
 end
 
@@ -247,12 +249,12 @@ function obj:_handleURL(url, source)
   self.lastProcessedURL = url
   self.lastProcessedTime = currentTime
 
-  print(string.format("BrowserRedirect: Intercepted URL from %s: %s", source or "unknown", url))
+  self.logger:d(string.format("Intercepted URL from %s: %s", source or "unknown", url))
 
   -- Debug redirect rules
-  print("BrowserRedirect DEBUG: Redirect rules:", #self.redirect)
+  self.logger:d("Redirect rules: " .. #self.redirect)
   for i, rule in ipairs(self.redirect) do
-    print(string.format("BrowserRedirect DEBUG: Rule %d: match='%s' browser='%s'",
+    self.logger:d(string.format("Rule %d: match='%s' browser='%s'",
       i, rule.match or "nil", rule.browser or "nil"))
   end
 
@@ -260,11 +262,11 @@ function obj:_handleURL(url, source)
   local transformedURL = self:_transformURL(url)
   local targetBrowser = self:_findTargetBrowser(transformedURL)
 
-  print(string.format("BrowserRedirect: Routing to %s", targetBrowser))
+  self.logger:i(string.format("Routing to %s", targetBrowser))
 
   -- For browser extension sources, close current tab first
   if source == "browser-extension" then
-    hs.timer.doAfter(0.1, function()
+    hs.timer.doAfter(0.01, function()
       hs.eventtap.keyStroke({ "cmd" }, "w") -- Close current tab
     end)
   end
@@ -273,7 +275,7 @@ function obj:_handleURL(url, source)
   hs.timer.doAfter(source == "browser-extension" and 0.2 or 0, function()
     local success = self:_openInBrowser(transformedURL, targetBrowser)
     if not success then
-      print("BrowserRedirect: Failed to open in target browser, using system default")
+      self.logger:w("Failed to open in target browser, using system default")
       hs.urlevent.openURLWithBundle(transformedURL, self.default_browser)
     end
   end)
@@ -327,7 +329,7 @@ function obj:_transformURL(url)
   local exactMapper = self.mapperLookup[url]
   if exactMapper then
     if exactMapper.to then
-      print(string.format("BrowserRedirect: Exact transform: %s -> %s", url, exactMapper.to))
+      self.logger:d(string.format("Exact transform: %s -> %s", url, exactMapper.to))
       return exactMapper.to
     elseif exactMapper.transform then
       return exactMapper.transform(exactMapper, url)
@@ -341,7 +343,7 @@ function obj:_transformURL(url)
         -- Pattern-based transformation
         if self:_matchesURLPattern(url, mapper.from) then
           local transformedURL = self:_transformURLPattern(url, mapper.from, mapper.to)
-          print(string.format("BrowserRedirect: Transforming URL: %s -> %s", url, transformedURL))
+          self.logger:d(string.format("Transforming URL: %s -> %s", url, transformedURL))
           return transformedURL
         end
       elseif mapper.matches and mapper.transform then
@@ -461,17 +463,17 @@ function obj:_findTargetBrowser(url)
   -- First check exact matches for O(1) lookup
   local exactBrowser = self.redirectLookup[url]
   if exactBrowser then
-    print(string.format("BrowserRedirect: Exact match found: %s -> %s", url, exactBrowser))
+    self.logger:d(string.format("Exact match found: %s -> %s", url, exactBrowser))
     return exactBrowser
   end
 
   -- Then check wildcard patterns
   if self.redirectLookup["__wildcards"] then
     for _, rule in ipairs(self.redirectLookup["__wildcards"]) do
-      print(string.format("BrowserRedirect DEBUG: Checking wildcard pattern '%s' against URL '%s'",
+      self.logger:d(string.format("Checking wildcard pattern '%s' against URL '%s'",
         rule.pattern, url))
       if self:_matchesPattern(url, rule.pattern) then
-        print(string.format("BrowserRedirect DEBUG: Wildcard pattern matched! Returning browser: %s",
+        self.logger:d(string.format("Wildcard pattern matched! Returning browser: %s",
           rule.browser))
         return rule.browser
       end
@@ -493,7 +495,7 @@ end
 ---  * Boolean - True if URL matches the pattern
 function obj:_matchesPattern(url, pattern)
   if not url or not pattern or type(url) ~= "string" or type(pattern) ~= "string" then
-    print(string.format("BrowserRedirect DEBUG: Invalid input - url: %s, pattern: %s", tostring(url),
+    self.logger:w(string.format("Invalid input - url: %s, pattern: %s", tostring(url),
       tostring(pattern)))
     return false
   end
@@ -503,7 +505,7 @@ function obj:_matchesPattern(url, pattern)
   luaPattern = "^" .. luaPattern .. "$"
 
   local matches = url:match(luaPattern) ~= nil
-  print(string.format("BrowserRedirect DEBUG: Pattern '%s' -> Lua pattern '%s' matches URL '%s': %s",
+  self.logger:d(string.format("Pattern '%s' -> Lua pattern '%s' matches URL '%s': %s",
     pattern, luaPattern, url, tostring(matches)))
 
   return matches
@@ -534,7 +536,7 @@ end
 ---  * rule - A table with 'match' pattern and 'browser' name
 function obj:addRedirect(rule)
   if not rule.match or not rule.browser then
-    print("BrowserRedirect ERROR: Redirect rule must have 'match' and 'browser' fields")
+    self.logger:e("Redirect rule must have 'match' and 'browser' fields")
     return self
   end
 

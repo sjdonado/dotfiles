@@ -20,6 +20,7 @@ obj.lastUpdate = 0       -- Timestamp of last update
 obj.loadingTask = nil    -- Current loading task
 obj.isLoading = false    -- Loading state
 obj.eventkitBinary = nil -- Cached EventKit fetcher binary
+obj.logger = hs.logger.new('MySchedule', 'info')
 
 --- MySchedule:init()
 --- Method
@@ -72,17 +73,17 @@ end
 --- Method
 --- Update the menu bar with current schedule information
 function obj:updateSchedule()
-  print("MySchedule: updateSchedule called")
+  self.logger:d("updateSchedule called")
   local events = self.cachedEvents
-  print("MySchedule: updateSchedule - using", #events, "cached events")
+  self.logger:d("updateSchedule - using " .. #events .. " cached events")
 
   local nextEvent = self:findNextEvent(events)
-  print("MySchedule: updateSchedule - nextEvent:", nextEvent and nextEvent.title or "nil")
+  self.logger:d("updateSchedule - nextEvent: " .. (nextEvent and nextEvent.title or "nil"))
 
   if nextEvent then
     local timeUntil = self:formatTimeUntil(nextEvent.startTimestamp)
     local title = string.format("%s • %s", nextEvent.title, timeUntil)
-    print("MySchedule: Setting menu bar title to:", title)
+    self.logger:d("Setting menu bar title to: " .. title)
 
     -- Truncate if too long for menu bar
     if string.len(title) > 50 then
@@ -93,17 +94,17 @@ function obj:updateSchedule()
     self.menubar:setTooltip(string.format("%s\n%s", nextEvent.title, nextEvent.timeRange))
   else
     if not self.isLoading then
-      print("MySchedule: No next event, setting 'No events'")
+      self.logger:d("No next event, setting 'No events'")
       self.menubar:setTitle("No events")
       self.menubar:setTooltip("No upcoming events found")
     else
-      print("MySchedule: Still loading, keeping loading state")
+      self.logger:d("Still loading, keeping loading state")
     end
   end
 
   -- Update menu
   self:setMenu(nextEvent, events)
-  print("MySchedule: updateSchedule completed")
+  self.logger:d("updateSchedule completed")
 end
 
 --- MySchedule:loadEventsAsync()
@@ -148,7 +149,7 @@ function obj:compile()
   local objcSourcePath = spoonPath .. "/eventkit_fetcher.m"
   local binaryPath = spoonPath .. "/eventkit_fetcher_bin"
 
-  print("🔨 MySchedule: Compiling EventKit fetcher...")
+  self.logger:i("🔨 Compiling EventKit fetcher...")
 
   -- Check if Objective-C source exists
   local file = io.open(objcSourcePath, "r")
@@ -162,7 +163,7 @@ function obj:compile()
   local binaryAttr = hs.fs.attributes(binaryPath)
 
   if binaryAttr and sourceAttr and binaryAttr.modification >= sourceAttr.modification then
-    print("✅ MySchedule: Binary up to date")
+    self.logger:i("✅ Binary up to date")
     self.eventkitBinary = binaryPath
     return
   end
@@ -174,7 +175,8 @@ function obj:compile()
 
   local output, success = hs.execute(compileCmd)
   if not success then
-    error("❌ Failed to compile EventKit fetcher. Command: " .. compileCmd .. "\nOutput: " .. (output or "no output"))
+    error("❌ Failed to compile EventKit fetcher. Command: " ..
+      compileCmd .. "\nOutput: " .. (output or "no output"))
   end
 
   -- Verify binary was created
@@ -184,7 +186,7 @@ function obj:compile()
   end
 
   self.eventkitBinary = binaryPath
-  print("✅ MySchedule: Binary compiled successfully")
+  self.logger:i("✅ Binary compiled successfully")
 end
 
 --- MySchedule:getEventKitBinary()
@@ -206,7 +208,7 @@ function obj:getEventKitBinary()
   end
 
   -- Binary not found
-  print("MySchedule ERROR: EventKit binary not found at:", binaryPath)
+  self.logger:e("EventKit binary not found at: " .. binaryPath)
   return nil
 end
 
@@ -235,11 +237,11 @@ function obj:loadEventsWithEventKit()
             "Calendar access denied. Please grant Hammerspoon calendar access in System Preferences > Privacy & Security > Calendar")
           self.cachedEvents = {}
         else
-          print("MySchedule: EventKit fetch completed")
+          self.logger:d("EventKit fetch completed")
           self:parseEventKitResult(stdOut)
         end
       else
-        print("MySchedule: EventKit failed:", stdErr or "unknown error")
+        self.logger:e("EventKit failed: " .. (stdErr or "unknown error"))
         -- If compilation failed, it might be a permission issue
         if stdErr and stdErr:find("permission") then
           hs.alert.show(
@@ -260,13 +262,13 @@ end
 --- Method
 --- Parse EventKit result data
 function obj:parseEventKitResult(result)
-  print("MySchedule: Parsing EventKit data")
+  self.logger:d("Parsing EventKit data")
   local now = os.time()
 
   if result and string.find(result, "COUNT:") then
     local countStr = string.match(result, "COUNT:(%d+)")
     local eventCount = tonumber(countStr) or 0
-    print("MySchedule: Found", eventCount, "events")
+    self.logger:d("Found " .. eventCount .. " events")
 
     if eventCount > 0 then
       local eventData = string.match(result, "COUNT:%d+%|%|(.+)")
@@ -297,7 +299,7 @@ function obj:parseEventKitResult(result)
               local startTimestamp = now + timeDiff
               local meetingURL = self:extractMeetingURL(eventDescription)
 
-              print("MySchedule: Including event:", title, "timeDiff:", timeDiff)
+              self.logger:d("Including event: " .. title .. " timeDiff: " .. timeDiff)
               table.insert(events, {
                 title = title,
                 startTimestamp = startTimestamp,
@@ -312,7 +314,7 @@ function obj:parseEventKitResult(result)
 
         self.cachedEvents = events
         self.lastUpdate = now
-        print("MySchedule: Cached", #events, "processed events")
+        self.logger:d("Cached " .. #events .. " processed events")
       end
     else
       self.cachedEvents = {}
@@ -326,11 +328,11 @@ end
 --- Find the next upcoming event (prioritize events with positive timeDiff, fallback to closest event)
 function obj:findNextEvent(events)
   if #events == 0 then
-    print("MySchedule: findNextEvent - No events provided")
+    self.logger:d("findNextEvent - No events provided")
     return nil
   end
 
-  print("MySchedule: findNextEvent - Processing", #events, "events:")
+  self.logger:d("findNextEvent - Processing " .. #events .. " events:")
 
   -- Sort events by timeDiff (closest to current time first)
   local sortedEvents = {}
@@ -341,7 +343,7 @@ function obj:findNextEvent(events)
 
   -- Debug: Print all events with their time differences
   for i, event in ipairs(sortedEvents) do
-    print(string.format("MySchedule: Event %d: '%s' (in %d seconds) - %s",
+    self.logger:d(string.format("Event %d: '%s' (in %d seconds) - %s",
       i, event.title, event.timeDiff, event.timeRange))
   end
 
@@ -349,7 +351,7 @@ function obj:findNextEvent(events)
   for i, event in ipairs(sortedEvents) do
     -- Show events that are upcoming or recently started (within 30 minutes past)
     if event.timeDiff >= -1800 then -- -1800 seconds = 30 minutes ago
-      print("MySchedule: Selected event:", event.title, "(timeDiff:", event.timeDiff, ")")
+      self.logger:d("Selected event: " .. event.title .. " (timeDiff: " .. event.timeDiff .. ")")
       return event
     end
   end
@@ -357,11 +359,11 @@ function obj:findNextEvent(events)
   -- If all events are old, return the most recent one
   if #sortedEvents > 0 then
     local lastEvent = sortedEvents[#sortedEvents]
-    print("MySchedule: All events are old, using most recent:", lastEvent.title)
+    self.logger:d("All events are old, using most recent: " .. lastEvent.title)
     return lastEvent
   end
 
-  print("MySchedule: No events found at all")
+  self.logger:d("No events found at all")
   return nil
 end
 
