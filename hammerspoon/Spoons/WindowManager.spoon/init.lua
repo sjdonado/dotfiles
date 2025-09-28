@@ -13,6 +13,7 @@ obj.homepage = "https://github.com/sjdonado/dotfiles/hammerspoon/Spoons"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 obj.hotkeys = {}
+obj.logger = hs.logger.new('WindowManager', 'info')
 
 --- WindowManager:init()
 --- Method
@@ -90,8 +91,8 @@ function obj:moveWindow(direction)
     winFrame.x = frame.x + (frame.w - winFrame.w) / 2
     winFrame.y = frame.y + (frame.h - winFrame.h) / 2
   elseif direction == "reasonable" then
-    -- Reasonable Size: 60% of screen, centered
-    winFrame.w = frame.w * 0.5
+    -- Reasonable Size: 70% of screen, centered
+    winFrame.w = frame.w * 0.6
     winFrame.h = frame.h * 0.7
     winFrame.x = frame.x + (frame.w - winFrame.w) / 2
     winFrame.y = frame.y + (frame.h - winFrame.h) / 2
