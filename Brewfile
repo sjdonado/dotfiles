@@ -5,6 +5,8 @@ tap "koekeishiya/formulae"
 tap "oven-sh/bun"
 tap "shopify/shopify"
 tap "supabase/tap"
+# Run your GitHub Actions locally
+brew "act"
 # Mozilla CA certificate store
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
@@ -33,6 +35,8 @@ brew "node"
 brew "cloudflare-wrangler"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
 brew "cloudflared"
+# Cross-platform make
+brew "cmake"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima"
 # GNU File, Shell, and Text utilities
@@ -81,6 +85,10 @@ brew "golangci-lint"
 brew "harfbuzz"
 # Image manipulation library
 brew "jpeg"
+# Library for interacting with JSON
+brew "jsoncpp"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library
@@ -121,6 +129,8 @@ brew "qemu"
 brew "rbenv"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Embeddable, persistent key-value store for fast storage
+brew "rocksdb"
 # Rust toolchain installer
 brew "rustup"
 # Fast and accurate code counter with complexity and COCOMO estimates
@@ -155,38 +165,28 @@ cask "betterdisplay"
 cask "chatgpt"
 # Terminal-based AI coding assistant
 cask "claude-code"
-# Browser for SQLite databases
-cask "db-browser-for-sqlite"
-# Utility for customizing which browser to start
-cask "finicky"
 # Web browser
 cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
+# Desktop automation application
+cask "hammerspoon"
 # Vector graphics editor
 cask "inkscape"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
-# Open-source, self-hosted Slack-alternative
-cask "mattermost"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # Free and open-source RSS reader
 cask "netnewswire"
 # App to write, plan, collaborate, and get organised
 cask "notion"
-# Simple application that will prevent iTunes or Apple Music from launching
-cask "notunes"
 # Get up and running with large language models locally
 cask "ollama-app"
-# Peer to peer Bitorrent client
-cask "qbittorrent"
 # Control your tools with a few keystrokes
 cask "raycast"
-# Music streaming service
-cask "spotify"
 # VPN client for secure internet access and private browsing
 cask "surfshark"
 # CSV file editor

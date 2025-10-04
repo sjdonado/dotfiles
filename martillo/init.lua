@@ -11,7 +11,7 @@ return require("martillo").setup {
       chromium   = { hotkey = { { "alt", "shift" }, "d" }, app = "Chromium" },
       excalidraw = { hotkey = { { "alt", "shift" }, "x" }, app = "Excalidraw" },
       figma      = { hotkey = { { "alt", "shift" }, "i" }, app = "Figma" },
-      ghostty    = { hotkey = { { "alt", "shift" }, ";" }, app = "Ghostty" },
+      ghostty    = { hotkey = { { "alt", "shift" }, "space" }, app = "Ghostty" },
       googlemeet = { hotkey = { { "alt", "shift" }, "u" }, app = "Google Meet" },
       linear     = { hotkey = { { "alt", "shift" }, "l" }, app = "Linear" },
       mail       = { hotkey = { { "alt", "shift" }, "e" }, app = "Mail" },
@@ -23,7 +23,7 @@ return require("martillo").setup {
       slack      = { hotkey = { { "alt", "shift" }, "s" }, app = "Slack" },
       translate  = { hotkey = { { "alt", "shift" }, "t" }, app = "Kagi Translate" },
       yaak       = { hotkey = { { "alt", "shift" }, "h" }, app = "Yaak" },
-      zed        = { hotkey = { { "alt", "shift" }, "space" }, app = "Zed" },
+      zed        = { hotkey = { { "alt", "shift" }, ";" }, app = "Zed" },
     },
   },
 

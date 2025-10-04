@@ -31,7 +31,7 @@
     "metrics": false
   },
   "vim_mode": true,
-  "ui_font_size": 13,
+  "ui_font_size": 14,
   "buffer_font_size": 13,
   "agent_font_size": 14,
   "soft_wrap": "editor_width",
