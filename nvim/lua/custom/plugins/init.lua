@@ -173,7 +173,7 @@ return {
               desc = "Move to left panel",
             },
             claude_scroll = {
-              "<C-n>",
+              "<C-q>",
               function(self)
                 vim.cmd("stopinsert")
               end,
@@ -181,7 +181,7 @@ return {
               desc = "Enter scroll mode",
             },
             claude_insert = {
-              "<C-n>",
+              "<C-q>",
               function(self)
                 vim.cmd("startinsert")
               end,
