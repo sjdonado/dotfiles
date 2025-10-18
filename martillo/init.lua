@@ -17,14 +17,13 @@ return require("martillo").setup({
       { { "alt", "shift" }, "e",     app = "Mail" },
       { { "alt", "shift" }, "m",     app = "Music" },
       { { "alt", "shift" }, "n",     app = "Notes" },
-      { { "alt", "shift" }, "p",     app = "Plane" },
-      { { "alt", "shift" }, ";",     app = "Postico 2" },
+      { { "alt", "shift" }, "p",     app = "Postico 2" },
       { { "alt", "shift" }, "r",     app = "Reminders" },
       { { "alt", "shift" }, "b",     app = "Safari" },
       { { "alt", "shift" }, "s",     app = "Slack" },
       { { "alt", "shift" }, "t",     app = "Kagi Translate" },
       { { "alt", "shift" }, "h",     app = "Yaak" },
-      { { "alt", "shift" }, "z",     app = "Zed" },
+      { { "alt", "shift" }, ";",     app = "Zed" },
     },
   },
 
@@ -72,7 +71,6 @@ return require("martillo").setup({
   {
     "ClipboardHistory",
     config = function(spoon)
-      spoon:compile()
       spoon:start()
     end,
     keys = {
