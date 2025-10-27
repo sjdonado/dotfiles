@@ -6,24 +6,24 @@ return require("martillo").setup({
   {
     "LaunchOrToggleFocus",
     keys = {
-      { { "alt", "shift" }, "c",     app = "Calendar" },
-      { { "alt", "shift" }, "g",     app = "ChatGPT" },
-      { { "alt", "shift" }, "d",     app = "Chromium" },
-      { { "alt", "shift" }, "x",     app = "Excalidraw" },
-      { { "alt", "shift" }, "i",     app = "Figma" },
-      { { "alt", "shift" }, "space", app = "Ghostty" },
-      { { "alt", "shift" }, "u",     app = "Google Meet" },
-      { { "alt", "shift" }, "l",     app = "Linear" },
-      { { "alt", "shift" }, "e",     app = "Mail" },
-      { { "alt", "shift" }, "m",     app = "Music" },
-      { { "alt", "shift" }, "n",     app = "Notes" },
-      { { "alt", "shift" }, "p",     app = "Postico 2" },
-      { { "alt", "shift" }, "r",     app = "Reminders" },
-      { { "alt", "shift" }, "b",     app = "Safari" },
-      { { "alt", "shift" }, "s",     app = "Slack" },
-      { { "alt", "shift" }, "t",     app = "Kagi Translate" },
-      { { "alt", "shift" }, "h",     app = "Yaak" },
-      { { "alt", "shift" }, ";",     app = "Zed" },
+      { "<leader>", "c",  app = "Calendar" },
+      { "<leader>", "\\", app = "ChatGPT" },
+      { "<leader>", "d",  app = "Chromium" },
+      { "<leader>", "x",  app = "Excalidraw" },
+      { "<leader>", "i",  app = "Figma" },
+      { "<leader>", "g",  app = "Ghostty" },
+      { "<leader>", "u",  app = "Google Meet" },
+      { "<leader>", "l",  app = "Linear" },
+      { "<leader>", "e",  app = "Mail" },
+      { "<leader>", "m",  app = "Music" },
+      { "<leader>", "n",  app = "Notes" },
+      { "<leader>", "p",  app = "Postico 2" },
+      { "<leader>", "r",  app = "Reminders" },
+      { "<leader>", "b",  app = "Safari" },
+      { "<leader>", "s",  app = "Slack" },
+      { "<leader>", "t",  app = "Kagi Translate" },
+      { "<leader>", "h",  app = "Yaak" },
+      { "<leader>", ";",  app = "Zed" },
     },
   },
 
@@ -34,7 +34,7 @@ return require("martillo").setup({
       return require("config.actions")
     end,
     keys = {
-      { { "alt", "shift" }, "\\", desc = "Toggle Actions Launcher" },
+      { "<leader>", "space", desc = "Toggle Actions Launcher" },
     },
   },
 
@@ -42,7 +42,7 @@ return require("martillo").setup({
   {
     "KillProcess",
     keys = {
-      { { "alt", "shift" }, "=", desc = "Toggle Kill Process" },
+      { "<leader>", "=", desc = "Toggle Kill Process" },
     },
   },
 
@@ -50,11 +50,11 @@ return require("martillo").setup({
   {
     "WindowManager",
     keys = {
-      { { "cmd", "shift" }, "left",   "left_half",   desc = "Move window to left half" },
-      { { "cmd", "shift" }, "right",  "right_half",  desc = "Move window to right half" },
-      { { "cmd", "shift" }, "up",     "top_half",    desc = "Move window to top half" },
-      { { "cmd", "shift" }, "down",   "bottom_half", desc = "Move window to bottom half" },
-      { { "cmd", "shift" }, "return", "center",      desc = "Center window" },
+      { "<leader>", "left",   "left_half",   desc = "Move window to left half" },
+      { "<leader>", "right",  "right_half",  desc = "Move window to right half" },
+      { "<leader>", "up",     "top_half",    desc = "Move window to top half" },
+      { "<leader>", "down",   "bottom_half", desc = "Move window to bottom half" },
+      { "<leader>", "return", "center",      desc = "Center window" },
     },
   },
 
@@ -74,7 +74,7 @@ return require("martillo").setup({
       spoon:start()
     end,
     keys = {
-      { { "alt", "shift" }, "-", desc = "Toggle Clipboard History" },
+      { "<leader>", "-", desc = "Toggle Clipboard History" },
     },
   },
 
@@ -102,4 +102,6 @@ return require("martillo").setup({
       spoon:start()
     end,
   },
+}, {
+  leader_key = { "alt", "ctrl" },
 })
