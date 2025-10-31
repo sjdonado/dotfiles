@@ -36,8 +36,4 @@ defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
 echo "[Safari] enable debug menu"
 defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
 
-echo "[Alacritty] font smoothing"
-# https://github.com/alacritty/alacritty/commit/2a676dfad837d1784ed0911d314bc263804ef4ef
-defaults write org.alacritty AppleFontSmoothing -int 0
-
 echo "Please log out to safely restart SystemUIServer"

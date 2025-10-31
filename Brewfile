@@ -17,8 +17,6 @@ brew "awscli"
 brew "bat"
 # Get/set bluetooth power and discoverable state
 brew "blueutil"
-# Cross-platform HTTP benchmarking tool
-brew "bombardier"
 # Modern, simple TCP tunnel in Rust that exposes local ports to a remote server
 brew "bore-cli"
 # Powerful, enterprise-ready, open source web server with automatic HTTPS
@@ -29,7 +27,7 @@ brew "libpng"
 brew "pixman"
 # Vector graphics library with cross-device output support
 brew "cairo"
-# Platform built on V8 to build network applications
+# Open-source, cross-platform JavaScript runtime environment
 brew "node"
 # CLI tool for Cloudflare Workers
 brew "cloudflare-wrangler"
@@ -55,6 +53,8 @@ brew "docker"
 brew "docker-buildx"
 # Isolated development environments using Docker
 brew "docker-compose"
+# Embeddable SQL OLAP Database Management System
+brew "duckdb"
 # Like neofetch, but much faster because written mostly in C
 brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
@@ -129,8 +129,6 @@ brew "qemu"
 brew "rbenv"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Embeddable, persistent key-value store for fast storage
-brew "rocksdb"
 # Rust toolchain installer
 brew "rustup"
 # Fast and accurate code counter with complexity and COCOMO estimates
@@ -151,6 +149,8 @@ brew "tmux"
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
 # Database migration tool written in Crystal
@@ -163,8 +163,8 @@ brew "supabase/tap/supabase"
 cask "betterdisplay"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
-# Terminal-based AI coding assistant
-cask "claude-code"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Web browser
 cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
@@ -181,8 +181,6 @@ cask "libreoffice"
 cask "mitmproxy"
 # Free and open-source RSS reader
 cask "netnewswire"
-# App to write, plan, collaborate, and get organised
-cask "notion"
 # Get up and running with large language models locally
 cask "ollama-app"
 # Control your tools with a few keystrokes
@@ -201,3 +199,5 @@ cask "whatsapp"
 cask "yaak"
 # Multiplayer code editor
 cask "zed"
+go "github.com/air-verse/air"
+go "github.com/bootdotdev/bootdev"

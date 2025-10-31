@@ -1,4 +1,4 @@
-theme = dark:sjdonado_dark,light:sjdonado_light
+theme = sjdonado_dark
 
 font-family = Menlo
 font-thicken = true
