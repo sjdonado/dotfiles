@@ -2,37 +2,61 @@
 package.path = package.path .. ";" .. os.getenv("HOME") .. "/.martillo/?.lua"
 
 return require("martillo").setup({
+  -- Global configuration
+  leader_key = { "alt", "ctrl" },
+
   -- LaunchOrToggleFocus: App switching hotkeys
   {
     "LaunchOrToggleFocus",
     keys = {
-      { "<leader>", "c",  app = "Calendar" },
-      { "<leader>", "\\", app = "ChatGPT" },
-      { "<leader>", "d",  app = "Chromium" },
-      { "<leader>", "x",  app = "Excalidraw" },
-      { "<leader>", "i",  app = "Figma" },
-      { "<leader>", "g",  app = "Ghostty" },
-      { "<leader>", "u",  app = "Google Meet" },
-      { "<leader>", "l",  app = "Linear" },
-      { "<leader>", "e",  app = "Mail" },
-      { "<leader>", "m",  app = "Music" },
-      { "<leader>", "n",  app = "Notes" },
-      { "<leader>", "p",  app = "Postico 2" },
-      { "<leader>", "r",  app = "Reminders" },
-      { "<leader>", "b",  app = "Safari" },
-      { "<leader>", "s",  app = "Slack" },
-      { "<leader>", "t",  app = "Kagi Translate" },
-      { "<leader>", "h",  app = "Yaak" },
-      { "<leader>", ";",  app = "Zed" },
+      { "<leader>", "c", app = "Calendar" },
+      { "<leader>", "d", app = "Chromium" },
+      { "<leader>", "x", app = "Excalidraw" },
+      { "<leader>", "i", app = "Figma" },
+      { "<leader>", ";", app = "Ghostty" },
+      { "<leader>", "u", app = "Google Meet" },
+      { "<leader>", "l", app = "Linear" },
+      { "<leader>", "e", app = "Mail" },
+      { "<leader>", "m", app = "Music" },
+      { "<leader>", "n", app = "Notes" },
+      { "<leader>", "p", app = "Postico 2" },
+      { "<leader>", "r", app = "Reminders" },
+      { "<leader>", "b", app = "Safari" },
+      { "<leader>", "s", app = "Slack" },
+      { "<leader>", "t", app = "Kagi Translate" },
+      { "<leader>", "h", app = "Yaak" },
     },
   },
 
-  -- ActionsLauncher: Command palette with actions
+  -- ActionsLauncher: Command palette with window management actions
   {
     "ActionsLauncher",
     opts = function()
       return require("config.actions")
     end,
+    actions = {
+      static = {
+        -- Window management actions
+        { "window_left_third", keys = { { "<leader>", "left" } } },
+        { "window_right_third", keys = { { "<leader>", "right" } } },
+        { "window_almost_maximize", keys = { { "<leader>", "up" } } },
+        { "window_reasonable_size", keys = { { "<leader>", "down" } } },
+        { "window_center", keys = { { "<leader>", "return" } } },
+        { "window_maximize", alias = "wm" },
+        -- System actions
+        { "toggle_caffeinate", alias = "tc" },
+        { "toggle_system_appearance", alias = "ta" },
+        { "copy_ip", alias = "gi" },
+        { "generate_uuid", alias = "gu" },
+        { "network_status" },
+      },
+      dynamic = {
+        "timestamp",
+        "colors",
+        "base64",
+        "jwt",
+      },
+    },
     keys = {
       { "<leader>", "space", desc = "Toggle Actions Launcher" },
     },
@@ -46,27 +70,6 @@ return require("martillo").setup({
     },
   },
 
-  -- WindowManager: Window manipulation
-  {
-    "WindowManager",
-    keys = {
-      { "<leader>", "left",   "left_half",   desc = "Move window to left half" },
-      { "<leader>", "right",  "right_half",  desc = "Move window to right half" },
-      { "<leader>", "up",     "top_half",    desc = "Move window to top half" },
-      { "<leader>", "down",   "bottom_half", desc = "Move window to bottom half" },
-      { "<leader>", "return", "center",      desc = "Center window" },
-    },
-  },
-
-  -- MySchedule: Personal scheduling
-  {
-    "MySchedule",
-    config = function(spoon)
-      spoon:compile()
-      spoon:start()
-    end,
-  },
-
   -- ClipboardHistory: Clipboard manager
   {
     "ClipboardHistory",
@@ -78,6 +81,15 @@ return require("martillo").setup({
     },
   },
 
+  -- MySchedule: Calendar integration that displays today's events in the menu bar
+  {
+    "MySchedule",
+    config = function(spoon)
+      spoon:compile()
+      spoon:start()
+    end,
+  },
+
   -- BrowserRedirect: Smart browser routing
   {
     "BrowserRedirect",
@@ -85,23 +97,13 @@ return require("martillo").setup({
       defaultBrowser = "Safari",
       redirect = {
         { match = { "*localhost*", "*127.0.0.1*", "*0.0.0.0*" }, browser = "Chromium" },
-        { match = { "*autarc.energy*" },                         browser = "Chromium" },
-        { match = { "*fly.dev*" },                               browser = "Chromium" },
-        { match = { "*linear*" },                                browser = "Linear" },
-      },
-      mapper = {
-        { name = "googleToKagiHomepage", from = "*google.com*", to = "https://kagi.com/" },
-        {
-          name = "googleToKagiSearch",
-          from = "*google.com*/search*",
-          to = "https://kagi.com/search?q={query.q|encode}",
-        },
+        { match = { "*autarc.energy*" }, browser = "Chromium" },
+        { match = { "*fly.dev*" }, browser = "Chromium" },
+        { match = { "*linear*" }, browser = "Linear" },
       },
     },
     config = function(spoon)
       spoon:start()
     end,
   },
-}, {
-  leader_key = { "alt", "ctrl" },
 })
