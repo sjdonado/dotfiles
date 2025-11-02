@@ -1,7 +1,14 @@
 return {
-  { 'wsdjeg/vim-fetch' },
   { 'vim-crystal/vim-crystal' },
   { 'amadeus/vim-mjml' },
+  { 'wsdjeg/vim-fetch' },
+  -- Highlight todo, notes, etc in comments
+  {
+    'folke/todo-comments.nvim',
+    event = 'VimEnter',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = { signs = false },
+  },
   {
     'rmagatti/auto-session',
     lazy = false,
@@ -16,25 +23,6 @@ return {
       { "<leader>wr", "<cmd>AutoSession search<CR>", desc = "Session search" },
       { "<leader>ws", "<cmd>AutoSession save<CR>",   desc = "Save session" },
       { "<leader>wa", "<cmd>AutoSession toggle<CR>", desc = "Toggle autosave" },
-    },
-  },
-  {
-    'f-person/auto-dark-mode.nvim',
-    lazy = false,
-    dependencies = {
-      'lunacookies/vim-colors-xcode',
-    },
-    opts = {
-      set_dark_mode = function()
-        vim.cmd 'colorscheme xcodedarkhc'
-        -- vim.api.nvim_set_option_value('background', 'dark', {})
-      end,
-      set_light_mode = function()
-        vim.cmd 'colorscheme xcodelighthc'
-        -- vim.api.nvim_set_option_value('background', 'light', {})
-      end,
-      update_interval = 3000,
-      fallback = 'dark',
     },
   },
   {
@@ -71,23 +59,6 @@ return {
       { '<leader>tg', '<cmd>DiffviewOpen<CR>',          desc = 'Open DiffView' },
       { '<leader>hf', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
       { '<leader>hd', '<cmd>DiffviewFileHistory .<CR>', desc = 'Dir Diff View History' },
-    },
-  },
-  {
-    'folke/zen-mode.nvim',
-    opts = {
-      window = {
-        width = 1,
-      },
-      on_open = function(win)
-        vim.g.zen_mode_active = true
-      end,
-      on_close = function()
-        vim.g.zen_mode_active = false
-      end,
-    },
-    keys = {
-      { '<leader>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },
     },
   },
   {
@@ -129,68 +100,5 @@ return {
         neotest.output.open()
       end, { desc = 'Toggle output panel' })
     end,
-  },
-  {
-    "coder/claudecode.nvim",
-    dependencies = { "folke/snacks.nvim" },
-    config = true,
-    keys = {
-      { "<C-\\>",     "<cmd>ClaudeCodeFocus<cr>",       desc = "Focus Claude" },
-      { "<leader>ar", "<cmd>ClaudeCode --resume<cr>",   desc = "Resume Claude" },
-      { "<leader>aC", "<cmd>ClaudeCode --continue<cr>", desc = "Continue Claude" },
-      { "<leader>am", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude model" },
-      { "<leader>ab", "<cmd>ClaudeCodeAdd %<cr>",       desc = "Add current buffer" },
-      { "<leader>as", "<cmd>ClaudeCodeSend<cr>",        mode = "v",                  desc = "Send to Claude" },
-      {
-        "<leader>as",
-        "<cmd>ClaudeCodeTreeAdd<cr>",
-        desc = "Add file",
-        ft = { "NvimTree", "neo-tree", "oil", "minifiles" },
-      },
-      -- Diff management
-      { "<leader>aa", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept diff" },
-      { "<leader>ad", "<cmd>ClaudeCodeDiffDeny<cr>",   desc = "Deny diff" },
-    },
-    opts = {
-      terminal = {
-        snacks_win_opts = {
-          position = "right",
-          keys = {
-            claude_hide = {
-              "<C-\\>",
-              function(self)
-                self:hide()
-              end,
-              mode = "t",
-              desc = "Hide",
-            },
-            claude_unfocus = {
-              "<C-h>",
-              function(self)
-                vim.cmd("wincmd h")
-              end,
-              mode = "t",
-              desc = "Move to left panel",
-            },
-            claude_scroll = {
-              "<C-q>",
-              function(self)
-                vim.cmd("stopinsert")
-              end,
-              mode = "t",
-              desc = "Enter scroll mode",
-            },
-            claude_insert = {
-              "<C-q>",
-              function(self)
-                vim.cmd("startinsert")
-              end,
-              mode = "n",
-              desc = "Return to insert mode",
-            },
-          },
-        },
-      },
-    },
   }
 }

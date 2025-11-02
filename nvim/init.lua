@@ -26,9 +26,9 @@ vim.schedule(function()
 end)
 
 -- Set tab width to 2 spaces visually
-vim.opt.tabstop = 2       -- Width of a tab character
-vim.opt.shiftwidth = 2    -- Width for autoindent
-vim.opt.softtabstop = 2   -- Width when hitting tab key
+vim.opt.tabstop = 2     -- Width of a tab character
+vim.opt.shiftwidth = 2  -- Width for autoindent
+vim.opt.softtabstop = 2 -- Width when hitting tab key
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -73,6 +73,8 @@ vim.opt.scrolloff = 10
 -- See `:help 'confirm'`
 vim.opt.confirm = true
 
+vim.api.nvim_set_option_value('background', 'dark', {})
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -81,7 +83,8 @@ vim.opt.confirm = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist,
+  { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -107,45 +110,9 @@ vim.keymap.set('n', '<C-y>', '4k', { desc = 'Scroll up 4 lines' })
 vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
 
--- Enable keystroke logging
-local monitoring = false
-local ns = vim.api.nvim_create_namespace("keymon")
-
-local function toggle_keystroke_monitor()
-  if monitoring then
-    vim.on_key(nil, ns)
-    monitoring = false
-    print("🔴 Keystroke monitoring OFF")
-  else
-    vim.on_key(function(key, typed)
-      if key and key ~= "" then
-        -- Get bytes as hex
-        local hex = {}
-        for i = 1, #key do
-          table.insert(hex, string.format("%02x", string.byte(key, i)))
-        end
-
-        -- Show key info
-        print(string.format(
-          "Key: %s | Raw: %s | Bytes: [%s] | Len: %d",
-          vim.fn.keytrans(key),
-          vim.inspect(key),
-          table.concat(hex, " "),
-          #key
-        ))
-      end
-    end, ns)
-    monitoring = true
-    print("🟢 Keystroke monitoring ON - Press keys to see what terminal sends")
-  end
-end
-vim.api.nvim_create_user_command('KeyMon', toggle_keystroke_monitor, {})
-
--- Optional: Create keymap (uncomment if you want)
--- vim.keymap.set('n', '<leader>km', toggle_keystroke_monitor, { desc = 'Toggle keystroke monitor' })
-
 -- Recommended by rmagatti/auto-session
-vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions =
+"blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 -- Auto-start server for MCP integration
 -- Create unique socket based on PID to support multiple instances
@@ -189,28 +156,14 @@ vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>')
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
--- [[ Custom LSP keymaps ]]
-vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'LSP: Hover Documentation' })
-vim.keymap.set('n', '<leader>K', vim.lsp.buf.signature_help, { desc = 'Display signature' })
-
 require('lazy').setup({
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
   },
-
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -284,7 +237,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
@@ -345,7 +298,8 @@ require('lazy').setup({
       end, { desc = '[S]earch by [E]xpand Grep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>ss', builtin.resume, { desc = '[S]earch Resume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>s.', builtin.oldfiles,
+        { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
@@ -398,7 +352,7 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
-      { 'j-hui/fidget.nvim', opts = {} },
+      { 'j-hui/fidget.nvim',       opts = {} },
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
@@ -442,7 +396,8 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols,
+            'Open Workspace Symbols')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
@@ -460,7 +415,8 @@ require('lazy').setup({
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight',
+              { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
               group = highlight_augroup,
@@ -491,6 +447,10 @@ require('lazy').setup({
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
           end
+
+          -- [[ Custom LSP keymaps ]]
+          vim.keymap.set('n', 'K', vim.lsp.buf.hover, { desc = 'LSP: Hover Documentation' })
+          vim.keymap.set('n', '<leader>K', vim.lsp.buf.signature_help, { desc = 'Display signature' })
         end,
       })
 
@@ -531,19 +491,20 @@ require('lazy').setup({
       local base_on_attach = vim.lsp.config.eslint.on_attach
 
       local servers = {
-        clangd = {},
-        gopls = {},
-        golangci_lint_ls = {},
-        pyright = {},
-
-        ts_ls = {},
-        eslint = {},
-
-        jsonls = {},
-        cssls = {},
-        yamlls = {},
-
+        astro = { package = 'astro-language-server' },
+        basedpyright = { package = 'basedpyright' },
+        clangd = { package = 'clangd' },
+        crystalline = { package = 'crystalline' },
+        cssls = { package = 'css-lsp' },
+        eslint = {
+          package = 'eslint-lsp',
+          on_attach = base_on_attach,
+        },
+        gopls = { package = 'gopls' },
+        golangci_lint_ls = { package = 'golangci-lint-langserver' },
+        jsonls = { package = 'json-lsp' },
         lua_ls = {
+          package = 'lua-language-server',
           -- cmd = { ... },
           -- filetypes = { ... },
           -- capabilities = {},
@@ -557,44 +518,57 @@ require('lazy').setup({
             },
           },
         },
+        svelte = { package = 'svelte-language-server' },
+        tailwindcss = { package = 'tailwindcss-language-server' },
+        ts_ls = { package = 'typescript-language-server' },
+        vtsls = { package = 'vtsls' },
+        yamlls = { package = 'yaml-language-server' },
       }
 
       -- Ensure the servers and tools above are installed
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        'clangd',
-        'gopls',
-        'pyright',
-        -- 'rust-analyzer',
-        'stylua',
-        -- 'lua-language-server',
-        'typescript-language-server',
-        'eslint-lsp',
+      local server_names = vim.tbl_keys(servers)
+      table.sort(server_names)
+
+      local ensure_installed = {}
+      for _, server_name in ipairs(server_names) do
+        local server = servers[server_name]
+        if server.package ~= nil then
+          table.insert(ensure_installed, server.package)
+        end
+      end
+
+      local additional_tools = {
+        'black',
+        'gofumpt',
+        'isort',
         'js-debug-adapter',
         'prettier',
-        'astro-language-server',
-        'golangci-lint-langserver',
-        'gofumpt',
-        -- 'graphql-language-service-cli',
-        'json-lsp',
-        'css-lsp',
-        'yaml-language-server',
-        'isort',
-        'black',
-      })
+        'ruff',
+        'stylua',
+      }
+      vim.list_extend(ensure_installed, additional_tools)
+      table.sort(ensure_installed)
+
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        ensure_installed = server_names,
         automatic_installation = false,
         handlers = {
           function(server_name)
-            local server = servers[server_name] or {}
+            local server = servers[server_name]
+            if server == nil then
+              return
+            end
+
+            local opts = vim.tbl_deep_extend('force', {}, server)
+            opts.package = nil
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
+            opts.capabilities = vim.tbl_deep_extend('force', {}, capabilities,
+              opts.capabilities or {})
+            require('lspconfig')[server_name].setup(opts)
           end,
         },
       }
@@ -739,14 +713,6 @@ require('lazy').setup({
       -- Shows a signature help window while you type arguments for a function
       signature = { enabled = true },
     },
-  },
-
-  -- Highlight todo, notes, etc in comments
-  {
-    'folke/todo-comments.nvim',
-    event = 'VimEnter',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = { signs = false },
   },
 
   { -- Collection of various small independent plugins/modules
