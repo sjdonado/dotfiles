@@ -20,9 +20,9 @@ return {
     },
     keys = {
       -- Will use Telescope if installed or a vim.ui.select picker otherwise
-      { "<leader>wr", "<cmd>AutoSession search<CR>", desc = "Session search" },
-      { "<leader>ws", "<cmd>AutoSession save<CR>",   desc = "Save session" },
-      { "<leader>wa", "<cmd>AutoSession toggle<CR>", desc = "Toggle autosave" },
+      { '<leader>wr', '<cmd>AutoSession search<CR>', desc = 'Session search' },
+      { '<leader>ws', '<cmd>AutoSession save<CR>', desc = 'Save session' },
+      { '<leader>wa', '<cmd>AutoSession toggle<CR>', desc = 'Toggle autosave' },
     },
   },
   {
@@ -36,7 +36,7 @@ return {
   {
     'tpope/vim-fugitive',
     keys = {
-      { '<leader>gc', '<cmd>botright vertical Git commit<CR>',         desc = 'Git Commit' },
+      { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
       { '<leader>gC', '<cmd>botright vertical Git commit --amend<CR>', desc = 'Git Commit Amend' },
     },
   },
@@ -56,7 +56,7 @@ return {
       },
     },
     keys = {
-      { '<leader>tg', '<cmd>DiffviewOpen<CR>',          desc = 'Open DiffView' },
+      { '<leader>tg', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
       { '<leader>hf', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
       { '<leader>hd', '<cmd>DiffviewFileHistory .<CR>', desc = 'Dir Diff View History' },
     },
@@ -100,5 +100,10 @@ return {
         neotest.output.open()
       end, { desc = 'Toggle output panel' })
     end,
-  }
+  },
+  {
+    'linw1995/nvim-mcp',
+    build = 'cargo install --path .',
+    opts = {},
+  },
 }

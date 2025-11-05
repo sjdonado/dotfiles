@@ -5,3 +5,6 @@ sessions
 .env
 
 private*
+
+lazy-lock.json
+*.log

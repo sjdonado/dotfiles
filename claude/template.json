@@ -1,15 +1,17 @@
 {
   "mcpServers": {
-    "neovim": {
-      "command": "npx",
+    "nvim": {
+      "type": "stdio",
+      "command": "nvim-mcp",
       "args": [
-        "-y",
-        "mcp-neovim-server"
+        "--log-file",
+        ".",
+        "--log-level",
+        "debug",
+        "--connect",
+        "auto"
       ],
-      "env": {
-        "ALLOW_SHELL_COMMANDS": "true",
-        "NVIM_SOCKET_PATH": "/tmp/nvim-socket-*"
-      }
+      "env": {}
     }
   }
 }

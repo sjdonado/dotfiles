@@ -114,17 +114,6 @@ vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file 
 vim.o.sessionoptions =
 "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
--- Auto-start server for MCP integration
--- Create unique socket based on PID to support multiple instances
-local socket_path = '/tmp/nvim-socket-' .. vim.fn.getpid()
-vim.fn.serverstart(socket_path)
-vim.api.nvim_create_autocmd("VimLeavePre", {
-  callback = function()
-    -- Clean up socket file when nvim exits
-    vim.fn.delete(socket_path)
-  end,
-})
-
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -261,7 +250,7 @@ require('lazy').setup({
               return math.min(max_columns, 110)
             end,
           },
-          file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/' },
+          file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/', '*.min' },
         }),
 
         pickers = {
@@ -333,10 +322,13 @@ require('lazy').setup({
     -- used for completion, annotations and signatures of Neovim apis
     'folke/lazydev.nvim',
     ft = 'lua',
+    dependencies = {
+      { 'Bilal2453/luvit-meta', lazy = true },
+    },
     opts = {
       library = {
         -- Load luvit types when the `vim.uv` word is found
-        { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+        { path = 'luvit-meta/library', words = { 'vim%.uv' } },
       },
     },
   },
