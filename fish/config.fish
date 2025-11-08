@@ -20,6 +20,7 @@ set -g fish_history fish
 set -g fish_history_max 20000
 
 # Path configurations
+set -x EDITOR "nvim"
 set -x PNPM_HOME "$HOME/Library/pnpm"
 set -x PATH $HOME/.cargo/bin $PATH
 
