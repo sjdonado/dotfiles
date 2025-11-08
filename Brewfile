@@ -2,8 +2,8 @@ tap "agrinman/tap"
 tap "amberframework/micrate"
 tap "cloudflare/cloudflare"
 tap "koekeishiya/formulae"
+tap "morantron/tmux-fingers"
 tap "oven-sh/bun"
-tap "shopify/shopify"
 tap "supabase/tap"
 # Run your GitHub Actions locally
 brew "act"
@@ -17,6 +17,8 @@ brew "awscli"
 brew "bat"
 # Get/set bluetooth power and discoverable state
 brew "blueutil"
+# Cross-platform HTTP benchmarking tool
+brew "bombardier"
 # Modern, simple TCP tunnel in Rust that exposes local ports to a remote server
 brew "bore-cli"
 # Powerful, enterprise-ready, open source web server with automatic HTTPS
@@ -155,6 +157,8 @@ brew "uv"
 brew "xq"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
+# mouseless terminal interaction
+brew "morantron/tmux-fingers/tmux-fingers"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # Supabase CLI
@@ -163,8 +167,10 @@ brew "supabase/tap/supabase"
 cask "betterdisplay"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
+# Terminal-based AI coding assistant
+cask "claude-code"
+# Voice and text chat software
+cask "discord"
 # Web browser
 cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
@@ -173,6 +179,8 @@ cask "ghostty"
 cask "gimp"
 # Desktop automation application
 cask "hammerspoon"
+# Chromium-based web browser
+cask "helium-browser"
 # Vector graphics editor
 cask "inkscape"
 # Free cross-platform office suite, fresh version
@@ -183,16 +191,12 @@ cask "mitmproxy"
 cask "netnewswire"
 # Get up and running with large language models locally
 cask "ollama-app"
-# Control your tools with a few keystrokes
-cask "raycast"
 # VPN client for secure internet access and private browsing
 cask "surfshark"
 # CSV file editor
 cask "table-tool"
 # Messaging app with a focus on speed and security
 cask "telegram"
-# Google Chromium, sans integration with Google
-cask "ungoogled-chromium"
 # Native desktop client for WhatsApp
 cask "whatsapp"
 # REST, GraphQL and gRPC client
