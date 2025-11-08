@@ -10,21 +10,21 @@ return require("martillo").setup({
     "LaunchOrToggleFocus",
     keys = {
       { "<leader>", "c", app = "Calendar" },
-      { "<leader>", "d", app = "Chromium" },
       { "<leader>", "x", app = "Excalidraw" },
       { "<leader>", "i", app = "Figma" },
       { "<leader>", ";", app = "Ghostty" },
       { "<leader>", "u", app = "Google Meet" },
-      { "<leader>", "l", app = "Linear" },
+      { "<leader>", "h", app = "Helium" },
+      { "<leader>", "l", app = "Music" },
       { "<leader>", "e", app = "Mail" },
-      { "<leader>", "m", app = "Music" },
+      { "<leader>", "m", app = "Messages" },
       { "<leader>", "n", app = "Notes" },
-      { "<leader>", "p", app = "Postico 2" },
+      { "<leader>", "d", app = "Postico 2" },
       { "<leader>", "r", app = "Reminders" },
       { "<leader>", "b", app = "Safari" },
       { "<leader>", "s", app = "Slack" },
       { "<leader>", "t", app = "Kagi Translate" },
-      { "<leader>", "h", app = "Yaak" },
+      { "<leader>", "y", app = "Yaak" },
     },
   },
 
@@ -37,8 +37,8 @@ return require("martillo").setup({
     actions = {
       static = {
         -- Window management actions
-        { "window_left_third", keys = { { "<leader>", "left" } } },
-        { "window_right_third", keys = { { "<leader>", "right" } } },
+        { "window_left_two_thirds", keys = { { "<leader>", "left" } } },
+        { "window_right_two_thirds", keys = { { "<leader>", "right" } } },
         { "window_almost_maximize", keys = { { "<leader>", "up" } } },
         { "window_reasonable_size", keys = { { "<leader>", "down" } } },
         { "window_center", keys = { { "<leader>", "return" } } },
