@@ -26,8 +26,8 @@ vim.schedule(function()
 end)
 
 -- Set tab width to 2 spaces visually
-vim.opt.tabstop = 2     -- Width of a tab character
-vim.opt.shiftwidth = 2  -- Width for autoindent
+vim.opt.tabstop = 2 -- Width of a tab character
+vim.opt.shiftwidth = 2 -- Width for autoindent
 vim.opt.softtabstop = 2 -- Width when hitting tab key
 
 -- Enable break indent
@@ -83,8 +83,7 @@ vim.api.nvim_set_option_value('background', 'dark', {})
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist,
-  { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -111,8 +110,7 @@ vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
 
 -- Recommended by rmagatti/auto-session
-vim.o.sessionoptions =
-"blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions'
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -152,7 +150,7 @@ require('lazy').setup({
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
   },
-  {                     -- Useful plugin to show you pending keybinds.
+  { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -226,7 +224,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
       --  :Telescope help_tags
@@ -272,23 +270,57 @@ require('lazy').setup({
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
+
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sp', builtin.find_files, { desc = '[S]earch [F]iles' })
-      -- vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
+
+      vim.keymap.set('n', '<leader>sp', function()
+        builtin.find_files {
+          hidden = true, -- Search hidden files (respects .gitignore)
+        }
+      end, { desc = '[S]earch [F]iles' })
+
       vim.keymap.set('n', '<leader>sf', function()
         builtin.live_grep {
-          file_ignore_patterns = { '*%-lock.*' },
+          additional_args = { '--hidden' },
         }
       end, { desc = '[S]earch by [G]rep' })
+
+      vim.keymap.set('n', '<leader>sa', function()
+        builtin.live_grep {
+          additional_args = {
+            '--hidden',
+            '-u',
+            '--glob',
+            '!node_modules',
+            '--glob',
+            '!*.min.*',
+            '--glob',
+            '!*-lock.*',
+            '--glob',
+            '!*.lock',
+          },
+        }
+      end, { desc = '[S]earch [All] by Grep' })
+
+      vim.keymap.set('n', '<leader>sw', function()
+        builtin.grep_string {
+          additional_args = { '--hidden' },
+        }
+      end, { desc = '[S]earch current [W]ord' })
+
       vim.keymap.set('n', '<leader>sg', function()
-        builtin.grep_string { search = vim.fn.input 'Grep For > ', use_regex = true }
+        builtin.grep_string {
+          search = vim.fn.input 'Grep For > ',
+          use_regex = true,
+          additional_args = { '--hidden' },
+        }
       end, { desc = '[S]earch by [E]xpand Grep' })
+
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      -- vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>ss', builtin.resume, { desc = '[S]earch Resume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles,
-        { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
@@ -344,7 +376,7 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
-      { 'j-hui/fidget.nvim',       opts = {} },
+      { 'j-hui/fidget.nvim', opts = {} },
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
@@ -388,8 +420,7 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols,
-            'Open Workspace Symbols')
+          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
@@ -407,8 +438,7 @@ require('lazy').setup({
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight',
-              { clear = false })
+            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
               group = highlight_augroup,
@@ -513,7 +543,7 @@ require('lazy').setup({
         svelte = { package = 'svelte-language-server' },
         tailwindcss = { package = 'tailwindcss-language-server' },
         ts_ls = { package = 'typescript-language-server' },
-        vtsls = { package = 'vtsls' },
+        -- vtsls = { package = 'vtsls' },
         yamlls = { package = 'yaml-language-server' },
       }
 
@@ -558,8 +588,7 @@ require('lazy').setup({
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            opts.capabilities = vim.tbl_deep_extend('force', {}, capabilities,
-              opts.capabilities or {})
+            opts.capabilities = vim.tbl_deep_extend('force', {}, capabilities, opts.capabilities or {})
             require('lspconfig')[server_name].setup(opts)
           end,
         },
@@ -765,7 +794,7 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
-      ignore_install = { "haskell", "ipkg" },
+      ignore_install = { 'haskell', 'ipkg' },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
