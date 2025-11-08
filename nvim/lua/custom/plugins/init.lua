@@ -12,9 +12,6 @@ return {
   {
     'rmagatti/auto-session',
     lazy = false,
-    dependencies = {
-      'nvim-telescope/telescope.nvim',
-    },
     opts = {
       auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
     },
@@ -56,9 +53,9 @@ return {
       },
     },
     keys = {
-      { '<leader>tg', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView' },
-      { '<leader>hf', '<cmd>DiffviewFileHistory %<CR>', desc = 'File Diff View History' },
-      { '<leader>hd', '<cmd>DiffviewFileHistory .<CR>', desc = 'Dir Diff View History' },
+      { '<leader>gs', '<cmd>DiffviewOpen<CR>', desc = 'Open DiffView with Git Status' },
+      { '<leader>gl', '<cmd>DiffviewFileHistory <CR>', desc = 'Open DiffView with Git Log' },
+      { '<leader>gf', '<cmd>DiffviewFileHistory %<CR>', desc = 'Open DiffView with Git File History' },
     },
   },
   {
