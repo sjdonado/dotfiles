@@ -1,4 +1,13 @@
 return {
+  {
+    'chrisgrieser/nvim-various-textobjs',
+    event = 'VeryLazy',
+    opts = {
+      keymaps = {
+        useDefaults = true,
+      },
+    },
+  },
   { 'vim-crystal/vim-crystal' },
   { 'amadeus/vim-mjml' },
   { 'wsdjeg/vim-fetch' },

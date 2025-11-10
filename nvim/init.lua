@@ -144,7 +144,7 @@ vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnost
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
 require('lazy').setup({
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  -- 'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically (not required if .editorconfig)
 
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
@@ -280,27 +280,26 @@ require('lazy').setup({
         }
       end, { desc = '[S]earch [F]iles' })
 
-      vim.keymap.set('n', '<leader>sf', function()
-        builtin.live_grep {
-          additional_args = { '--hidden' },
-        }
-      end, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sf', builtin.live_grep, { desc = '[S]earch by [G]rep' })
 
       vim.keymap.set('n', '<leader>sa', function()
-        builtin.live_grep {
-          additional_args = {
-            '--hidden',
-            '-u',
-            '--glob',
-            '!node_modules',
-            '--glob',
-            '!*.min.*',
-            '--glob',
-            '!*-lock.*',
-            '--glob',
-            '!*.lock',
-          },
+        local exclude = {
+          'node_modules',
+          'dist',
+          '.astro',
+          '.svelte-kit',
+          '*.min.*',
+          '*-lock.*',
+          '*.lock',
         }
+
+        local args = { '--hidden', '-u' }
+        for _, pat in ipairs(exclude) do
+          table.insert(args, '--glob')
+          table.insert(args, '!' .. pat)
+        end
+
+        builtin.live_grep { additional_args = args }
       end, { desc = '[S]earch [All] by Grep' })
 
       vim.keymap.set('n', '<leader>sw', function()
@@ -629,10 +628,12 @@ require('lazy').setup({
         go = { 'gofumpt' },
         lua = { 'stylua' },
         python = { 'isort', 'black' },
+        astro = { 'prettier' },
         javascript = { 'prettier' },
         javascriptreact = { 'prettier' },
         typescript = { 'prettier' },
         typescriptreact = { 'prettier' },
+        svelte = { 'prettier' },
       },
     },
   },
