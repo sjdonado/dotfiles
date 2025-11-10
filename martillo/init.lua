@@ -19,6 +19,7 @@ return require("martillo").setup({
       { "<leader>", "e", app = "Mail" },
       { "<leader>", "m", app = "Messages" },
       { "<leader>", "n", app = "Notes" },
+      { "<leader>", "p", app = "Passwords" },
       { "<leader>", "d", app = "Postico 2" },
       { "<leader>", "r", app = "Reminders" },
       { "<leader>", "b", app = "Safari" },
@@ -94,12 +95,12 @@ return require("martillo").setup({
   {
     "BrowserRedirect",
     opts = {
-      defaultBrowser = "Safari",
+      default_app = "Safari",
       redirect = {
-        { match = { "*localhost*", "*127.0.0.1*", "*0.0.0.0*" }, browser = "Chromium" },
-        { match = { "*autarc.energy*" }, browser = "Chromium" },
-        { match = { "*fly.dev*" }, browser = "Chromium" },
-        { match = { "*linear*" }, browser = "Linear" },
+        { match = { "*localhost*", "*127.0.0.1*", "*0.0.0.0*" }, app = "Helium" },
+        { match = { "*autarc.energy*" }, app = "Helium" },
+        { match = { "*fly.dev*" }, app = "Helium" },
+        { match = { "*meet.google*" }, app = "Helium" },
       },
     },
     config = function(spoon)
