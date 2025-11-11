@@ -1,4 +1,7 @@
 return {
+  { 'vim-crystal/vim-crystal' },
+  { 'amadeus/vim-mjml' },
+  { 'wsdjeg/vim-fetch' },
   {
     'chrisgrieser/nvim-various-textobjs',
     event = 'VeryLazy',
@@ -8,10 +11,23 @@ return {
       },
     },
   },
-  { 'vim-crystal/vim-crystal' },
-  { 'amadeus/vim-mjml' },
-  { 'wsdjeg/vim-fetch' },
-  -- Highlight todo, notes, etc in comments
+  {
+    'f-person/auto-dark-mode.nvim',
+    dependencies = {
+      'EdenEast/nightfox.nvim',
+    },
+    lazy = false,
+    opts = {
+      set_dark_mode = function()
+        vim.cmd.colorscheme 'nightfox'
+      end,
+      set_light_mode = function()
+        vim.cmd.colorscheme 'dayfox'
+      end,
+      update_interval = 3000,
+      fallback = 'dark',
+    },
+  },
   {
     'folke/todo-comments.nvim',
     event = 'VimEnter',

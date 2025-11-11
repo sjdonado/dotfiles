@@ -2,8 +2,6 @@
   "verbose": true,
   "editorMode": "vim",
   "autoCompactEnabled": false,
-  "memoryUsageCount": 1,
-  "promptQueueUseCount": 84,
   "showExpandedTodos": true,
   "autoConnectIde": true,
   "mcpServers": {
