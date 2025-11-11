@@ -24,8 +24,7 @@ return {
       set_light_mode = function()
         vim.cmd.colorscheme 'dayfox'
       end,
-      update_interval = 3000,
-      fallback = 'dark',
+      update_interval = 500,
     },
   },
   {
@@ -57,6 +56,7 @@ return {
   },
   {
     'tpope/vim-fugitive',
+    lazy = false,
     keys = {
       { '<leader>gc', '<cmd>botright vertical Git commit<CR>', desc = 'Git Commit' },
       { '<leader>gC', '<cmd>botright vertical Git commit --amend<CR>', desc = 'Git Commit Amend' },
@@ -65,7 +65,7 @@ return {
   { 'akinsho/git-conflict.nvim', version = '*', config = true },
   {
     'sindrets/diffview.nvim',
-    lazy = false,
+    lazy = true,
     opts = {
       use_icons = vim.g.have_nerd_font,
       view = {
@@ -92,6 +92,7 @@ return {
   },
   {
     'nvim-neotest/neotest',
+    lazy = true,
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-neotest/nvim-nio',
