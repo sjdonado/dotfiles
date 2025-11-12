@@ -144,7 +144,7 @@ vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnost
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
 
 require('lazy').setup({
-  -- 'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically (not required if .editorconfig)
+  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically (not required if .editorconfig)
 
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes

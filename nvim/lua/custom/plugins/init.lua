@@ -14,15 +14,15 @@ return {
   {
     'f-person/auto-dark-mode.nvim',
     dependencies = {
-      'EdenEast/nightfox.nvim',
+      'projekt0n/github-nvim-theme',
     },
     lazy = false,
     opts = {
       set_dark_mode = function()
-        vim.cmd.colorscheme 'nightfox'
+        vim.cmd.colorscheme 'github_dark_default'
       end,
       set_light_mode = function()
-        vim.cmd.colorscheme 'dayfox'
+        vim.cmd.colorscheme 'github_light_default'
       end,
       update_interval = 500,
     },
