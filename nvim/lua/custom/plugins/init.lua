@@ -13,18 +13,15 @@ return {
   },
   {
     'f-person/auto-dark-mode.nvim',
-    dependencies = {
-      'projekt0n/github-nvim-theme',
-    },
-    lazy = false,
+    priority = 1000,
     opts = {
+      update_interval = 300,
       set_dark_mode = function()
-        vim.cmd.colorscheme 'github_dark_default'
+        vim.cmd.colorscheme 'sjdonado_dark'
       end,
       set_light_mode = function()
-        vim.cmd.colorscheme 'github_light_default'
+        vim.cmd.colorscheme 'sjdonado_light'
       end,
-      update_interval = 500,
     },
   },
   {

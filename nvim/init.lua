@@ -73,8 +73,6 @@ vim.opt.scrolloff = 10
 -- See `:help 'confirm'`
 vim.opt.confirm = true
 
-vim.api.nvim_set_option_value('background', 'dark', {})
-
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
