@@ -287,8 +287,7 @@ require('lazy').setup({
           '.astro',
           '.svelte-kit',
           '*.min.*',
-          '*-lock.*',
-          '*.lock',
+          '*lock.*',
         }
 
         local args = { '--hidden', '-u' }
