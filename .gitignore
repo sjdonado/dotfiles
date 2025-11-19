@@ -8,3 +8,5 @@ private*
 
 lazy-lock.json
 *.log
+
+martillo/init.lua
