@@ -3,6 +3,23 @@ return {
   { 'amadeus/vim-mjml' },
   { 'wsdjeg/vim-fetch' },
   {
+    'folke/zen-mode.nvim',
+    opts = {
+      window = {
+        width = 1,
+      },
+      on_open = function()
+        vim.g.zen_mode_active = true
+      end,
+      on_close = function()
+        vim.g.zen_mode_active = false
+      end,
+    },
+    keys = {
+      { '<C-w>z', '<cmd>ZenMode<CR>', desc = 'Toggle [Z]en Mode' },
+    },
+  },
+  {
     'chrisgrieser/nvim-various-textobjs',
     event = 'VeryLazy',
     opts = {
