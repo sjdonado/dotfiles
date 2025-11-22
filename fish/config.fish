@@ -24,6 +24,13 @@ set -x EDITOR "nvim"
 set -x PNPM_HOME "$HOME/Library/pnpm"
 set -x PATH $HOME/.cargo/bin $PATH
 
+# Add custom man pages
+if set -q MANPATH
+    set -x MANPATH "$HOME/.config/dotfiles/man:$MANPATH"
+else
+    set -x MANPATH "$HOME/.config/dotfiles/man:"
+end
+
 fish_add_path "$HOME/.local/bin"
 fish_add_path /opt/homebrew/bin
 
