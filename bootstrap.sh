@@ -125,6 +125,25 @@ ln -snf "$DOTFILES/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || t
 log "Linking Neovim config..."
 ln -snf "$DOTFILES/nvim" "$HOME/.config/nvim"
 
+log "Installing Node.js LTS for Neovim LSP..."
+NODE_DIR="$HOME/.local/share/nvim/node"
+if [ ! -d "$NODE_DIR/bin" ]; then
+  NODE_VERSION=$(curl -fsSL "https://nodejs.org/dist/index.json" | jq -r '[.[] | select(.lts != false)] | first | .version' | sed 's/v//')
+
+  if [ -z "$NODE_VERSION" ]; then
+    echo "Warning: Failed to fetch the latest Node.js LTS version. Skipping Neovim Node.js setup."
+  else
+    NODE_TAR="node-v${NODE_VERSION}-darwin-arm64.tar.gz"
+    NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TAR}"
+
+    mkdir -p "$NODE_DIR"
+    echo "Installing Node.js LTS ($NODE_VERSION) for Neovim on Apple Silicon..."
+    curl -fsSL "$NODE_URL" | tar -xz -C "$NODE_DIR" --strip-components=1
+  fi
+else
+  echo "Node.js LTS already installed in $NODE_DIR"
+fi
+
 log "Linking Zed config..."
 ln -snf "$DOTFILES/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$DOTFILES/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
