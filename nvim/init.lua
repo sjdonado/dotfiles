@@ -278,7 +278,11 @@ require('lazy').setup({
         }
       end, { desc = '[S]earch [F]iles' })
 
-      vim.keymap.set('n', '<leader>sf', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sf', function()
+        builtin.live_grep {
+          additional_args = { '--fixed-strings' },
+        }
+      end, { desc = '[S]earch by [G]rep' })
 
       vim.keymap.set('n', '<leader>sa', function()
         local exclude = {
@@ -290,7 +294,7 @@ require('lazy').setup({
           '*lock.*',
         }
 
-        local args = { '--hidden', '-u' }
+        local args = { '--hidden', '-u', '--fixed-strings' }
         for _, pat in ipairs(exclude) do
           table.insert(args, '--glob')
           table.insert(args, '!' .. pat)
@@ -301,7 +305,7 @@ require('lazy').setup({
 
       vim.keymap.set('n', '<leader>sw', function()
         builtin.grep_string {
-          additional_args = { '--hidden' },
+          additional_args = { '--hidden', '--fixed-strings' },
         }
       end, { desc = '[S]earch current [W]ord' })
 
