@@ -145,7 +145,7 @@ Worktrees with uncommitted changes
 This is a safe way to clean up completed or abandoned branches.
 .SH ENVIRONMENT
 .TP
-.B worktree_INTERNAL_LAYOUT
+.B WORKSPACE_INTERNAL_LAYOUT
 Defines the tmux layout configuration for new sessions. Uses a simple format:
 .IR <count><direction> , <count><direction> ,...
 where
@@ -259,7 +259,7 @@ worktree close
 .nf
 .RS
 # Configure layout and create new worktree
-export worktree_INTERNAL_LAYOUT="2v,3h"
+export WORKSPACE_INTERNAL_LAYOUT="2v,3h"
 worktree \-\-worktree create feature/new-api \-\-setup
 
 # Work on the feature...
@@ -286,7 +286,7 @@ To configure worktree behavior, set environment variables in your shell configur
 .nf
 .RS
 # Tmux layout: 2 vertical panes in first window, 3 horizontal in second
-export worktree_INTERNAL_LAYOUT="2v,3h"
+export WORKSPACE_INTERNAL_LAYOUT="2v,3h"
 
 # Setup command to run with create \-\-setup
 export worktree_INTERNAL_SETUP_CMD="pnpm install && pnpm build"

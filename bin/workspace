@@ -17,6 +17,12 @@ usage() {
     echo "  remove [branch_name]    Remove git worktree (auto-detects if omitted)"
     echo "  cleanup                 Remove all unused worktrees"
     echo "  --setup                 Run \$worktree_INTERNAL_SETUP_CMD after create command"
+    echo ""
+    echo "Layout (WORKSPACE_INTERNAL_LAYOUT env var):"
+    echo "  Format: <count><dir>[,<count><dir>,...] where dir is v/h/g"
+    echo "  v = vertical splits (side by side), h = horizontal splits (stacked)"
+    echo "  g = grid layout (equal squares, e.g., 4g = 2x2 grid)"
+    echo "  Example: 4g = single window with 4 equal panes"
     exit 0
 }
 
@@ -335,18 +341,18 @@ copy_env_files() {
 create_tmux_layout() {
     local session_name="$1"
     local work_dir="$2"
-    local layout="${worktree_INTERNAL_LAYOUT:-1v}"
+    local layout="${WORKSPACE_INTERNAL_LAYOUT:-1v}"
 
     # Create initial session with first window
     tmux new-session -d -s "${session_name}" -c "${work_dir}"
 
-    # Parse layout: format is "2v,3h,1v" where number=panes, letter=direction (v/h)
+    # Parse layout: format is "2v,3h,1v,4g" where number=panes, letter=direction (v/h/g for grid)
     IFS=',' read -ra windows <<< "$layout"
     local first_window=true
 
     for window_spec in "${windows[@]}"; do
         # Extract count and direction (e.g., "2v" -> count=2, dir=v)
-        if [[ "$window_spec" =~ ^([0-9]+)([vh])$ ]]; then
+        if [[ "$window_spec" =~ ^([0-9]+)([vhg])$ ]]; then
             local pane_count="${BASH_REMATCH[1]}"
             local direction="${BASH_REMATCH[2]}"
 
@@ -360,17 +366,32 @@ create_tmux_layout() {
                 local target="${session_name}"
             fi
 
-            # Create splits to reach desired pane count
-            local splits_needed=$((pane_count - 1))
-            for ((i=0; i<splits_needed; i++)); do
-                if [[ "$direction" == "v" ]]; then
-                    tmux split-window -t "$target" -h -c "${work_dir}"
-                else
-                    tmux split-window -t "$target" -v -c "${work_dir}"
-                fi
-                # Rebalance panes after each split
-                tmux select-layout -t "$target" "tiled" 2>/dev/null || true
-            done
+            if [[ "$direction" == "g" ]]; then
+                # Grid layout: create panes and use tiled layout for equal distribution
+                local splits_needed=$((pane_count - 1))
+                for ((i=0; i<splits_needed; i++)); do
+                    # Alternate between horizontal and vertical splits for better grid
+                    if (( i % 2 == 0 )); then
+                        tmux split-window -t "$target" -h -c "${work_dir}"
+                    else
+                        tmux split-window -t "$target" -v -c "${work_dir}"
+                    fi
+                done
+                # Apply tiled layout for equal squares
+                tmux select-layout -t "$target" "tiled"
+            else
+                # Create splits to reach desired pane count
+                local splits_needed=$((pane_count - 1))
+                for ((i=0; i<splits_needed; i++)); do
+                    if [[ "$direction" == "v" ]]; then
+                        tmux split-window -t "$target" -h -c "${work_dir}"
+                    else
+                        tmux split-window -t "$target" -v -c "${work_dir}"
+                    fi
+                    # Rebalance panes after each split
+                    tmux select-layout -t "$target" "tiled" 2>/dev/null || true
+                done
+            fi
         fi
     done
 
