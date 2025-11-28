@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Toggle nvim pane (pane 0)
+# Logic:
+# - If not in pane 0: go to pane 0 and zoom it
+# - If in pane 0 and not zoomed: zoom it
+# - If in pane 0 and zoomed: unzoom and switch to last pane (terminal)
+
+current_pane=$(tmux display-message -p '#{pane_index}')
+is_zoomed=$(tmux display-message -p '#{window_zoomed_flag}')
+
+if [ "$current_pane" != "0" ]; then
+    # Not in pane 0, go to it and zoom
+    tmux select-pane -t 0
+    tmux resize-pane -Z
+elif [ "$is_zoomed" = "1" ]; then
+    # In pane 0 and zoomed, unzoom and switch to last pane
+    tmux resize-pane -Z
+    tmux last-pane
+else
+    # In pane 0 and not zoomed, zoom it
+    tmux resize-pane -Z
+fi
