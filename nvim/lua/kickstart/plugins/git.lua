@@ -1,0 +1,204 @@
+return {
+	{
+		'lewis6991/gitsigns.nvim',
+		opts = {
+			signs = {
+				add = { text = '+' },
+				change = { text = '~' },
+				delete = { text = '_' },
+				topdelete = { text = '‾' },
+				changedelete = { text = '~' },
+			},
+			current_line_blame = true,
+			on_attach = function(bufnr)
+				local gitsigns = require 'gitsigns'
+
+				local function map(mode, l, r, opts)
+					opts = opts or {}
+					opts.buffer = bufnr
+					vim.keymap.set(mode, l, r, opts)
+				end
+
+				-- Navigation
+				map('n', ']c', function()
+					if vim.wo.diff then
+						vim.cmd.normal { ']c', bang = true }
+					else
+						gitsigns.nav_hunk 'next'
+					end
+				end, { desc = 'Jump to next git [c]hange' })
+
+				map('n', '[c', function()
+					if vim.wo.diff then
+						vim.cmd.normal { '[c', bang = true }
+					else
+						gitsigns.nav_hunk 'prev'
+					end
+				end, { desc = 'Jump to previous git [c]hange' })
+
+				-- Actions
+				-- visual mode
+				map('v', '<leader>hs', function()
+					gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
+				end, { desc = 'git [s]tage hunk' })
+				map('v', '<leader>hr', function()
+					gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
+				end, { desc = 'git [r]eset hunk' })
+				-- normal mode
+				map('n', '<leader>hs', gitsigns.stage_hunk, { desc = 'git [s]tage hunk' })
+				map('n', '<leader>hr', gitsigns.reset_hunk, { desc = 'git [r]eset hunk' })
+				map('n', '<leader>hS', gitsigns.stage_buffer, { desc = 'git [S]tage buffer' })
+				map('n', '<leader>hu', gitsigns.stage_hunk, { desc = 'git [u]ndo stage hunk' })
+				map('n', '<leader>hR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
+				map('n', '<leader>hp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
+				map('n', '<leader>hb', gitsigns.blame_line, { desc = 'git [b]lame line' })
+				map('n', '<leader>hd', gitsigns.diffthis, { desc = 'git [d]iff against index' })
+				map('n', '<leader>hD', function()
+					gitsigns.diffthis '@'
+				end, { desc = 'git [D]iff against last commit' })
+				-- Toggles
+				map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
+				map('n', '<leader>tD', gitsigns.preview_hunk_inline, { desc = '[T]oggle git show [D]eleted' })
+			end,
+		},
+	},
+	{
+		'ksaito422/remote-line.nvim',
+		keys = {
+			{ '<leader>hl', '<cmd>RemoteLine<CR>', desc = 'Open git remote [Line]' },
+		},
+	},
+	{
+		'tpope/vim-fugitive',
+		lazy = false,
+		config = function()
+			-- Auto-cleanup commit buffer after :wq
+			vim.api.nvim_create_autocmd('BufWinLeave', {
+				pattern = 'COMMIT_EDITMSG',
+				callback = function(ev)
+					-- If buffer was saved (not modified), delete it after window closes
+					if not vim.api.nvim_get_option_value('modified', { buf = ev.buf }) then
+						vim.defer_fn(function()
+							if vim.api.nvim_buf_is_valid(ev.buf) then
+								vim.api.nvim_buf_delete(ev.buf, { force = true })
+							end
+						end, 100)
+					end
+				end,
+			})
+
+			local function toggle_commit_split(amend)
+				local commit_bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
+
+				-- Check if commit buffer exists
+				if commit_bufnr ~= -1 then
+					local commit_winnr = vim.fn.bufwinnr(commit_bufnr)
+					if commit_winnr ~= -1 then
+						-- Commit window is visible, hide it (keeps buffer loaded)
+						vim.cmd(commit_winnr .. 'wincmd w')
+						vim.cmd 'hide'
+						return
+					else
+						-- Buffer exists but not visible, reopen it in a split
+						vim.cmd 'botright vsplit'
+						vim.cmd('buffer ' .. commit_bufnr)
+						return
+					end
+				end
+
+				-- Buffer doesn't exist, create it
+				if amend then
+					vim.cmd 'botright vertical Git commit --amend'
+					-- Add a visual indicator that this is an amend
+					vim.defer_fn(function()
+						local bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
+						if bufnr ~= -1 then
+							-- Ensure buffer stays loaded when hidden and doesn't reload from disk
+							vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = bufnr })
+							vim.api.nvim_set_option_value('autoread', false, { buf = bufnr })
+							vim.api.nvim_buf_set_extmark(bufnr, vim.api.nvim_create_namespace 'git_amend', 0, 0, {
+								virt_text = { { ' [AMEND]', 'WarningMsg' } },
+								virt_text_pos = 'inline',
+							})
+						end
+					end, 100)
+				else
+					vim.cmd 'botright vertical Git commit'
+					-- Ensure buffer stays loaded when hidden and doesn't reload from disk
+					vim.defer_fn(function()
+						local bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
+						if bufnr ~= -1 then
+							vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = bufnr })
+							vim.api.nvim_set_option_value('autoread', false, { buf = bufnr })
+						end
+					end, 100)
+				end
+			end
+
+			vim.keymap.set('n', '<leader>gc', function()
+				toggle_commit_split(false)
+			end, { desc = 'Toggle Git Commit' })
+
+			vim.keymap.set('n', '<leader>gC', function()
+				toggle_commit_split(true)
+			end, { desc = 'Toggle Git Commit Amend' })
+		end,
+	},
+	{ 'akinsho/git-conflict.nvim', version = '*', config = true },
+	{
+		'sindrets/diffview.nvim',
+		lazy = true,
+		opts = {
+			use_icons = vim.g.have_nerd_font,
+			view = {
+				default = {
+					winbar_info = true,
+				},
+				merge_tool = {
+					layout = 'diff3_mixed',
+				},
+			},
+		},
+		keys = {
+			{
+			'<leader>gs',
+			function()
+				local current_tabpage = vim.api.nvim_get_current_tabpage()
+
+				-- Check if current tab has a DiffView buffer
+				for _, win in ipairs(vim.api.nvim_tabpage_list_wins(current_tabpage)) do
+					local bufnr = vim.api.nvim_win_get_buf(win)
+					local bufname = vim.api.nvim_buf_get_name(bufnr)
+					if bufname:match '^diffview://' then
+						-- We're in a DiffView tab, close it
+						vim.cmd 'DiffviewClose'
+						return
+					end
+				end
+
+				-- Check if any other tab contains a DiffView buffer
+				for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
+					if tabpage ~= current_tabpage then
+						for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tabpage)) do
+							local bufnr = vim.api.nvim_win_get_buf(win)
+							local bufname = vim.api.nvim_buf_get_name(bufnr)
+							if bufname:match '^diffview://' then
+								-- Found a DiffView tab, switch to it
+								local tabnr = vim.api.nvim_tabpage_get_number(tabpage)
+								vim.cmd('tabnext ' .. tabnr)
+								return
+							end
+						end
+					end
+				end
+
+				-- If not open, open it
+				vim.cmd 'DiffviewOpen'
+			end,
+			desc = 'Toggle DiffView with Git Status',
+		},
+			{ '<leader>gl', '<cmd>DiffviewFileHistory <CR>',  desc = 'Open DiffView with Git Log' },
+			{ '<leader>gf', '<cmd>DiffviewFileHistory %<CR>', desc = 'Open DiffView with Git File History' },
+		},
+	},
+}
