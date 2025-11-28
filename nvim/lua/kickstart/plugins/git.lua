@@ -220,30 +220,34 @@ return {
 			},
 		},
 		keys = {
-			{
-			'<leader>gs',
-			function()
+			{ '<leader>gs', desc = 'Toggle DiffView with Git Status' },
+			{ '<leader>gl', desc = 'Toggle DiffView with Git Log' },
+			{ '<leader>gf', desc = 'Toggle DiffView with Git File History' },
+		},
+		config = function(_, opts)
+			require('diffview').setup(opts)
+
+			-- Reusable toggle function for diffview
+			local function toggle_diffview(pattern, open_command)
 				local current_tabpage = vim.api.nvim_get_current_tabpage()
 
-				-- Check if current tab has a DiffView buffer
+				-- Check if current tab has a buffer matching the pattern
 				for _, win in ipairs(vim.api.nvim_tabpage_list_wins(current_tabpage)) do
 					local bufnr = vim.api.nvim_win_get_buf(win)
 					local bufname = vim.api.nvim_buf_get_name(bufnr)
-					if bufname:match '^diffview://' then
-						-- We're in a DiffView tab, close it
+					if bufname:match(pattern) then
 						vim.cmd 'DiffviewClose'
 						return
 					end
 				end
 
-				-- Check if any other tab contains a DiffView buffer
+				-- Check if any other tab contains a buffer matching the pattern
 				for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
 					if tabpage ~= current_tabpage then
 						for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tabpage)) do
 							local bufnr = vim.api.nvim_win_get_buf(win)
 							local bufname = vim.api.nvim_buf_get_name(bufnr)
-							if bufname:match '^diffview://' then
-								-- Found a DiffView tab, switch to it
+							if bufname:match(pattern) then
 								local tabnr = vim.api.nvim_tabpage_get_number(tabpage)
 								vim.cmd('tabnext ' .. tabnr)
 								return
@@ -253,12 +257,21 @@ return {
 				end
 
 				-- If not open, open it
-				vim.cmd 'DiffviewOpen'
-			end,
-			desc = 'Toggle DiffView with Git Status',
-		},
-			{ '<leader>gl', '<cmd>DiffviewFileHistory <CR>',  desc = 'Open DiffView with Git Log' },
-			{ '<leader>gf', '<cmd>DiffviewFileHistory %<CR>', desc = 'Open DiffView with Git File History' },
-		},
+				vim.cmd(open_command)
+			end
+
+			-- Set up keymaps
+			vim.keymap.set('n', '<leader>gs', function()
+				toggle_diffview('DiffviewFilePanel$', 'DiffviewOpen')
+			end, { desc = 'Toggle DiffView with Git Status' })
+
+			vim.keymap.set('n', '<leader>gl', function()
+				toggle_diffview('DiffviewFileHistoryPanel', 'DiffviewFileHistory')
+			end, { desc = 'Toggle DiffView with Git Log' })
+
+			vim.keymap.set('n', '<leader>gf', function()
+				toggle_diffview('DiffviewFileHistoryPanel', 'DiffviewFileHistory %')
+			end, { desc = 'Toggle DiffView with Git File History' })
+		end,
 	},
 }
