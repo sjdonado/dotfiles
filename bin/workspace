@@ -37,6 +37,100 @@ sessionizer_mode=false
 target_path=""
 branch_name=""
 
+create_tmux_layout() {
+    local session_name="$1"
+    local work_dir="$2"
+    local layout="${WORKSPACE_INTERNAL_LAYOUT:-1v}"
+
+    # Create initial session with first window
+    tmux new-session -d -s "${session_name}" -c "${work_dir}"
+
+    # Parse layout: format is "2v,3h,1v,4g" where number=panes, letter=direction (v/h/g for grid)
+    IFS=',' read -ra windows <<< "$layout"
+    local first_window=true
+
+    for window_spec in "${windows[@]}"; do
+        # Extract count and direction (e.g., "2v" -> count=2, dir=v)
+        if [[ "$window_spec" =~ ^([0-9]+)([vhg])$ ]]; then
+            local pane_count="${BASH_REMATCH[1]}"
+            local direction="${BASH_REMATCH[2]}"
+
+            if $first_window; then
+                # Use the already created window
+                first_window=false
+                local target="${session_name}:0"
+            else
+                # Create new window
+                tmux new-window -t "${session_name}" -c "${work_dir}"
+                local target="${session_name}"
+            fi
+
+            if [[ "$direction" == "g" ]]; then
+                # Grid layout: create panes and use tiled layout for equal distribution
+                local splits_needed=$((pane_count - 1))
+                for ((i=0; i<splits_needed; i++)); do
+                    # Alternate between horizontal and vertical splits for better grid
+                    if (( i % 2 == 0 )); then
+                        tmux split-window -t "$target" -h -c "${work_dir}"
+                    else
+                        tmux split-window -t "$target" -v -c "${work_dir}"
+                    fi
+                done
+                # Apply tiled layout for equal squares
+                tmux select-layout -t "$target" "tiled"
+            else
+                # Create splits to reach desired pane count
+                local splits_needed=$((pane_count - 1))
+                for ((i=0; i<splits_needed; i++)); do
+                    if [[ "$direction" == "v" ]]; then
+                        tmux split-window -t "$target" -h -c "${work_dir}"
+                    else
+                        tmux split-window -t "$target" -v -c "${work_dir}"
+                    fi
+                done
+                # Apply appropriate layout after all splits
+                if [[ "$direction" == "v" ]]; then
+                    tmux select-layout -t "$target" "even-horizontal"
+                else
+                    tmux select-layout -t "$target" "even-vertical"
+                fi
+            fi
+        fi
+    done
+
+    # Select first window and first pane
+    tmux select-window -t "${session_name}:0"
+    tmux select-pane -t "${session_name}:0.0"
+}
+
+copy_env_files() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    echo "Copying .env files from $source_dir to $target_dir"
+
+    # Find all .env files in source directory and subdirectories
+    find "$source_dir" -name ".env" -type f | while IFS= read -r env_file; do
+        # Get relative path from source directory
+        rel_path="${env_file#$source_dir/}"
+        target_file="$target_dir/$rel_path"
+        target_parent=$(dirname "$target_file")
+
+        # Create target directory if it doesn't exist
+        if [[ ! -d "$target_parent" ]]; then
+            mkdir -p "$target_parent"
+        fi
+
+        # Copy .env file if target doesn't exist
+        if [[ -f "$target_file" ]]; then
+            echo "Preserving existing: $rel_path"
+        else
+            echo "Copying environment file: $rel_path"
+            cp "$env_file" "$target_file"
+        fi
+    done
+}
+
 # Parse command (first argument)
 if [[ $# -eq 0 ]]; then
     usage
@@ -160,18 +254,22 @@ esac
 
 # Open command: create/attach tmux session for directory
 if [[ -n $target_path ]]; then
-    selected_name=$(basename "$target_path" | tr . _)
-    tmux_running=$(pgrep tmux)
-
-    # If not in tmux and tmux isn't running, create new session
-    if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
-        tmux new-session -s "$selected_name" -c "$target_path"
-        exit 0
+    # Try to get relative path from current directory
+    current_dir="$(pwd)"
+    if [[ "$target_path" == "$current_dir/"* ]]; then
+        # Target is within current directory - use relative path
+        selected_name="${target_path#$current_dir/}"
+    else
+        # Target is outside current directory - use basename
+        selected_name=$(basename "$target_path")
     fi
+
+    # Replace slashes and dots with underscores for tmux session name
+    selected_name=$(echo "$selected_name" | tr './' '__')
 
     # Create session if it doesn't exist
     if ! tmux has-session -t="$selected_name" 2> /dev/null; then
-        tmux new-session -ds "$selected_name" -c "$target_path"
+        create_tmux_layout "$selected_name" "$target_path"
     fi
 
     # Attach or switch to session
@@ -309,96 +407,6 @@ if $remove_worktree; then
 
     exit 0
 fi
-
-copy_env_files() {
-    local source_dir="$1"
-    local target_dir="$2"
-
-    echo "Copying .env files from $source_dir to $target_dir"
-
-    # Find all .env files in source directory and subdirectories
-    find "$source_dir" -name ".env" -type f | while IFS= read -r env_file; do
-        # Get relative path from source directory
-        rel_path="${env_file#$source_dir/}"
-        target_file="$target_dir/$rel_path"
-        target_parent=$(dirname "$target_file")
-
-        # Create target directory if it doesn't exist
-        if [[ ! -d "$target_parent" ]]; then
-            mkdir -p "$target_parent"
-        fi
-
-        # Copy .env file if target doesn't exist
-        if [[ -f "$target_file" ]]; then
-            echo "Preserving existing: $rel_path"
-        else
-            echo "Copying environment file: $rel_path"
-            cp "$env_file" "$target_file"
-        fi
-    done
-}
-
-create_tmux_layout() {
-    local session_name="$1"
-    local work_dir="$2"
-    local layout="${WORKSPACE_INTERNAL_LAYOUT:-1v}"
-
-    # Create initial session with first window
-    tmux new-session -d -s "${session_name}" -c "${work_dir}"
-
-    # Parse layout: format is "2v,3h,1v,4g" where number=panes, letter=direction (v/h/g for grid)
-    IFS=',' read -ra windows <<< "$layout"
-    local first_window=true
-
-    for window_spec in "${windows[@]}"; do
-        # Extract count and direction (e.g., "2v" -> count=2, dir=v)
-        if [[ "$window_spec" =~ ^([0-9]+)([vhg])$ ]]; then
-            local pane_count="${BASH_REMATCH[1]}"
-            local direction="${BASH_REMATCH[2]}"
-
-            if $first_window; then
-                # Use the already created window
-                first_window=false
-                local target="${session_name}:0"
-            else
-                # Create new window
-                tmux new-window -t "${session_name}" -c "${work_dir}"
-                local target="${session_name}"
-            fi
-
-            if [[ "$direction" == "g" ]]; then
-                # Grid layout: create panes and use tiled layout for equal distribution
-                local splits_needed=$((pane_count - 1))
-                for ((i=0; i<splits_needed; i++)); do
-                    # Alternate between horizontal and vertical splits for better grid
-                    if (( i % 2 == 0 )); then
-                        tmux split-window -t "$target" -h -c "${work_dir}"
-                    else
-                        tmux split-window -t "$target" -v -c "${work_dir}"
-                    fi
-                done
-                # Apply tiled layout for equal squares
-                tmux select-layout -t "$target" "tiled"
-            else
-                # Create splits to reach desired pane count
-                local splits_needed=$((pane_count - 1))
-                for ((i=0; i<splits_needed; i++)); do
-                    if [[ "$direction" == "v" ]]; then
-                        tmux split-window -t "$target" -h -c "${work_dir}"
-                    else
-                        tmux split-window -t "$target" -v -c "${work_dir}"
-                    fi
-                    # Rebalance panes after each split
-                    tmux select-layout -t "$target" "tiled" 2>/dev/null || true
-                done
-            fi
-        fi
-    done
-
-    # Select first window and first pane
-    tmux select-window -t "${session_name}:0"
-    tmux select-pane -t "${session_name}:0.0"
-}
 
 if $add_worktree; then
     # Always fetch latest changes from remote
