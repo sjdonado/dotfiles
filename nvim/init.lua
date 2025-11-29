@@ -539,8 +539,26 @@ require('lazy').setup({
         },
         svelte = { package = 'svelte-language-server' },
         tailwindcss = { package = 'tailwindcss-language-server' },
-        ts_ls = { package = 'typescript-language-server' },
-        -- vtsls = { package = 'vtsls' },
+        -- ts_ls = { package = 'typescript-language-server' },
+        vtsls = {
+          package = 'vtsls',
+          settings = {
+            vtsls = {
+              enableMoveToFileCodeAction = true,
+              autoUseWorkspaceTsdk = true,
+            },
+            typescript = {
+              updateImportsOnFileMove = { enabled = 'always' },
+              suggest = { completeFunctionCalls = true },
+              inlayHints = {
+                -- Disable to save some memory
+                parameterNames = { enabled = 'none' },
+                propertyDeclarationTypes = { enabled = false },
+                variableTypes = { enabled = false },
+              },
+            },
+          },
+        },
         yamlls = { package = 'yaml-language-server' },
       }
 
