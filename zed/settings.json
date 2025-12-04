@@ -1,45 +1,44 @@
 {
-  "use_system_window_tabs": true,
-  "edit_predictions": {
-    "mode": "subtle",
-    "copilot": {
-      "proxy": null,
-      "proxy_no_verify": null
-    },
-    "enabled_in_text_threads": false
-  },
-  "agent": {
-    "inline_assistant_model": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-latest"
-    },
-    "default_profile": "write",
-    "default_model": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-latest"
-    },
-    "model_parameters": [],
-    "always_allow_tool_actions": true
-  },
-  "theme": {
-    "mode": "system",
-    "light": "One Light",
-    "dark": "One Dark"
-  },
-  "telemetry": {
-    "diagnostics": false,
-    "metrics": false
-  },
-  "vim_mode": true,
-  "ui_font_size": 14,
-  "buffer_font_size": 13,
-  "soft_wrap": "editor_width",
-  "context_servers": {
-    "postgres-context-server": {
-      "source": "extension",
-      "settings": {
-        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres"
-      }
-    }
-  }
+	"use_system_window_tabs": true,
+	"edit_predictions": {
+		"mode": "subtle",
+		"copilot": {
+			"proxy": null,
+			"proxy_no_verify": null
+		},
+		"enabled_in_text_threads": false
+	},
+	"agent": {
+		"inline_assistant_model": {
+			"provider": "anthropic",
+			"model": "claude-sonnet-4-latest"
+		},
+		"default_profile": "write",
+		"default_model": {
+			"provider": "anthropic",
+			"model": "claude-sonnet-4-latest"
+		},
+		"model_parameters": [],
+		"always_allow_tool_actions": true
+	},
+	"theme": {
+		"mode": "system",
+		"light": "One Light",
+		"dark": "One Dark"
+	},
+	"telemetry": {
+		"diagnostics": false,
+		"metrics": false
+	},
+	"vim_mode": true,
+	"ui_font_size": 13,
+	"buffer_font_size": 13,
+	"soft_wrap": "editor_width",
+	"context_servers": {
+		"postgres-context-server": {
+			"settings": {
+				"database_url": "postgresql://postgres:postgres@localhost:54322/postgres"
+			}
+		}
+	}
 }
