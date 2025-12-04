@@ -40,6 +40,9 @@ fish_add_path "$HOME/go/bin"
 
 bind ctrl-f "workspace open"
 
+# Homebrew multi-user setup
+alias brew="sudo -Hu hb brew"
+
 # Aliases
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace

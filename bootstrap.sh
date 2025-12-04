@@ -151,7 +151,7 @@ ln -snf "$DOTFILES/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 log "Martillo setup"
 mkdir -p $HOME/.hammerspoon/
 git clone https://github.com/sjdonado/martillo ~/.martillo
-ln -snf "$DOTFILES/martillo" "$HOME/.hammerspoon"
+ln -snf "$DOTFILES/martillo/init.lua" "$HOME/.hammerspoon/init.lua"
 
 touch "$DOTFILES/.env"
 

@@ -71,6 +71,8 @@ brew "flyctl"
 brew "fzf"
 # GNU awk utility
 brew "gawk"
+# Interact with Google Gemini AI models from the command-line
+brew "gemini-cli"
 # GitHub command-line tool
 brew "gh"
 # Library and utilities for processing GIFs
@@ -169,8 +171,8 @@ cask "betterdisplay"
 cask "chatgpt"
 # Terminal-based AI coding assistant
 cask "claude-code"
-# Voice and text chat software
-cask "discord"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Web browser
 cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
@@ -187,18 +189,10 @@ cask "inkscape"
 cask "libreoffice"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
-# Free and open-source RSS reader
-cask "netnewswire"
-# Get up and running with large language models locally
-cask "ollama-app"
 # VPN client for secure internet access and private browsing
 cask "surfshark"
 # CSV file editor
 cask "table-tool"
-# Messaging app with a focus on speed and security
-cask "telegram"
-# Native desktop client for WhatsApp
-cask "whatsapp"
 # REST, GraphQL and gRPC client
 cask "yaak"
 # Multiplayer code editor
