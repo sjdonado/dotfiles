@@ -38,7 +38,7 @@ fish_add_path "$HOME/.bun/bin"
 fish_add_path "$PNPM_HOME"
 fish_add_path "$HOME/go/bin"
 
-bind ctrl-f "workspace open"
+bind ctrl-f "workspace open; commandline -f repaint"
 
 # Homebrew multi-user setup
 alias brew="sudo -Hu hb brew"
