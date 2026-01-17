@@ -57,12 +57,8 @@ brew "docker-buildx"
 brew "docker-compose"
 # Embeddable SQL OLAP Database Management System
 brew "duckdb"
-# Like neofetch, but much faster because written mostly in C
-brew "fastfetch"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
-# Firebase command-line tools
-brew "firebase-cli"
 # User-friendly command-line shell for UNIX-like operating systems
 brew "fish"
 # Command-line tools for fly.io services
@@ -71,8 +67,6 @@ brew "flyctl"
 brew "fzf"
 # GNU awk utility
 brew "gawk"
-# Interact with Google Gemini AI models from the command-line
-brew "gemini-cli"
 # GitHub command-line tool
 brew "gh"
 # Library and utilities for processing GIFs
@@ -91,8 +85,6 @@ brew "harfbuzz"
 brew "jpeg"
 # Library for interacting with JSON
 brew "jsoncpp"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library
@@ -157,6 +149,8 @@ brew "tree"
 brew "uv"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
+# Programming language designed for robustness, optimality, and clarity
+brew "zig"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
 # mouseless terminal interaction
@@ -171,8 +165,8 @@ cask "betterdisplay"
 cask "chatgpt"
 # Terminal-based AI coding assistant
 cask "claude-code"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
+# Email client
+cask "fastmail"
 # Web browser
 cask "firefox"
 # Terminal emulator that uses platform-native UI and GPU acceleration
@@ -190,7 +184,9 @@ cask "libreoffice"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing
-cask "surfshark"
+cask "nordvpn"
+# Team communication and collaboration software
+cask "slack"
 # CSV file editor
 cask "table-tool"
 # REST, GraphQL and gRPC client
@@ -199,3 +195,7 @@ cask "yaak"
 cask "zed"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
+go "github.com/golangci/golangci-lint/cmd/golangci-lint"
+go "github.com/todaatsushi/twt"
+cargo "nvim-mcp"
+cargo "sleek"
