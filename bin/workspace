@@ -15,7 +15,8 @@ usage() {
     echo "Worktree Mode Commands (requires --worktree):"
     echo "  create <branch_name>    Create new git worktree and open tmux session"
     echo "  remove [branch_name]    Remove git worktree (auto-detects if omitted)"
-    echo "  cleanup                 Remove all unused worktrees"
+    echo "  prune [--force]         Remove all unused worktrees"
+    echo "                          --force: Also remove worktrees with uncommitted changes"
     echo "  --setup                 Run \$worktree_INTERNAL_SETUP_CMD after create command"
     echo ""
     echo "Layout (WORKSPACE_INTERNAL_LAYOUT env var):"
@@ -32,7 +33,8 @@ run_setup=false
 remove_worktree=false
 close_session=false
 minimize_panes=false
-cleanup_worktrees=false
+prune_worktrees=false
+force_prune=false
 sessionizer_mode=false
 target_path=""
 branch_name=""
@@ -236,12 +238,25 @@ case $command in
             fi
         fi
         ;;
-    cleanup)
+    prune)
         if ! $worktree_mode; then
-            echo "Error: 'cleanup' command only available in worktree mode (use --worktree)"
+            echo "Error: 'prune' command only available in worktree mode (use --worktree)"
             usage
         fi
-        cleanup_worktrees=true
+        prune_worktrees=true
+        # Check for --force flag
+        while [[ $# -gt 0 ]]; do
+            case $1 in
+                --force)
+                    force_prune=true
+                    ;;
+                *)
+                    echo "Unknown option for 'prune': $1"
+                    usage
+                    ;;
+            esac
+            shift
+        done
         ;;
     help|--help|-h)
         usage
@@ -312,11 +327,11 @@ if $minimize_panes; then
     exit 0
 fi
 
-if $cleanup_worktrees; then
+if $prune_worktrees; then
     base_path=$(git rev-parse --show-toplevel)
     protected=(_main _master main master)
 
-    echo "Scanning worktrees for cleanup..."
+    echo "Scanning worktrees for pruning..."
 
     # Get list of all worktrees (excluding main worktree)
     git worktree list --porcelain | awk '
@@ -347,14 +362,18 @@ if $cleanup_worktrees; then
             continue
         fi
 
-        # Check if working tree is clean
-        if [[ -n $(cd "$worktree_path" && git status --porcelain) ]]; then
+        # Check if working tree is clean (skip this check if --force is used)
+        if ! $force_prune && [[ -n $(cd "$worktree_path" && git status --porcelain) ]]; then
             echo "⏭  Skipping $branch_name (uncommitted changes)"
             continue
         fi
 
         # Safe to remove
-        echo "🗑  Removing $branch_name (no session, clean working tree)"
+        if $force_prune && [[ -n $(cd "$worktree_path" && git status --porcelain) ]]; then
+            echo "🗑  Removing $branch_name (forced, uncommitted changes present)"
+        else
+            echo "🗑  Removing $branch_name (no session, clean working tree)"
+        fi
         git worktree remove --force "$worktree_path" 2>/dev/null || {
             echo "   Failed to remove $worktree_path, trying to clean up..."
             # Kill stray processes
@@ -368,7 +387,7 @@ if $cleanup_worktrees; then
         }
     done
 
-    echo "Cleanup complete."
+    echo "Prune complete."
     exit 0
 fi
 
