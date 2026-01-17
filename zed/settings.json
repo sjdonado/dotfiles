@@ -1,5 +1,8 @@
 {
-	"use_system_window_tabs": true,
+ "git_panel": {
+  "tree_view": true
+ },
+ "use_system_window_tabs": true,
 	"theme": {
 		"mode": "system",
 		"light": "One Light",
@@ -10,7 +13,7 @@
 		"metrics": false
 	},
 	"vim_mode": true,
-	"ui_font_size": 13,
+	"ui_font_size": 14,
 	"buffer_font_size": 13,
 	"soft_wrap": "editor_width",
 	"edit_predictions": {

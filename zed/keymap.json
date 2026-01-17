@@ -8,5 +8,10 @@
     "bindings": {
       "cmd-shift-g": "git_panel::ToggleFocus"
     }
+  },
+  {
+    "bindings": {
+      "cmd-:": "terminal_panel::ToggleFocus"
+    }
   }
 ]

@@ -155,4 +155,6 @@ ln -snf "$DOTFILES/martillo/init.lua" "$HOME/.hammerspoon/init.lua"
 
 touch "$DOTFILES/.env"
 
+touch "$HOME/.hushlogin"
+
 log "Done. Open a new terminal session so PATH and shells are consistent."
