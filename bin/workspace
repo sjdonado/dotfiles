@@ -160,7 +160,6 @@ case $command in
             # Use fzf to find git projects (repos + worktrees) up to 3 levels deep
             target_path=$(find "$(pwd)" -maxdepth 3 -name ".git" \( -type d -o -type f \) -exec dirname {} \; 2>/dev/null | sort -u | fzf)
             if [[ -z $target_path ]]; then
-                echo "No project selected"
                 exit 0
             fi
         else

@@ -1,0 +1,8 @@
+{
+	"verbose": true,
+	"editorMode": "vim",
+	"autoCompactEnabled": false,
+	"showExpandedTodos": true,
+	"autoConnectIde": true,
+	"mcpServers": {}
+}
