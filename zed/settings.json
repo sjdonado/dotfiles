@@ -1,41 +1,45 @@
 {
-	"auto_update": false,
-	"git_panel": {
-		"tree_view": true,
-	},
-	"use_system_window_tabs": true,
-	"theme": {
-		"mode": "system",
-		"light": "One Light",
-		"dark": "One Dark",
-	},
-	"telemetry": {
-		"diagnostics": false,
-		"metrics": false,
-	},
-	"vim_mode": true,
-	"ui_font_size": 14.0,
-	"buffer_font_size": 13.0,
-	"soft_wrap": "editor_width",
-	"edit_predictions": {
-		"mode": "subtle",
-		"copilot": {
-			"proxy": null,
-			"proxy_no_verify": null,
-		},
-		"enabled_in_text_threads": false,
-	},
-	"agent": {
-		"inline_assistant_model": {
-			"provider": "anthropic",
-			"model": "claude-sonnet-4-latest",
-		},
-		"default_profile": "write",
-		"default_model": {
-			"provider": "anthropic",
-			"model": "claude-sonnet-4-latest",
-		},
-		"model_parameters": [],
-		"always_allow_tool_actions": true,
-	},
+  "agent_servers": {
+    "claude": {
+      "favorite_models": ["sonnet"],
+      "default_config_options": {},
+      "favorite_config_option_values": {},
+    },
+  },
+  "auto_update": false,
+  "git_panel": {
+    "tree_view": true,
+  },
+  "use_system_window_tabs": true,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark",
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false,
+  },
+  "vim_mode": true,
+  "ui_font_size": 14.0,
+  "buffer_font_size": 13.0,
+  "soft_wrap": "editor_width",
+  "edit_predictions": {
+    "mode": "subtle",
+    "copilot": {
+      "proxy": null,
+      "proxy_no_verify": null,
+    },
+    "enabled_in_text_threads": false,
+  },
+  "agent": {
+    "default_model": {
+      "provider": "copilot_chat",
+      "model": "oswe-vscode-prime"
+    },
+    "default_profile": "write",
+
+    "model_parameters": [],
+    "always_allow_tool_actions": true,
+  },
 }
