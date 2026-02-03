@@ -1,4 +1,30 @@
 {
+  "features": {
+    "edit_prediction_provider": "copilot"
+  },
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        },
+        "javascript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        }
+      },
+      "enable_lsp_tasks": true
+    }
+  },
+  "context_servers": {
+    "postgres-context-server": {
+      "enabled": true,
+      "settings": {}
+    }
+  },
   "agent_servers": {
     "claude": {
       "favorite_models": ["sonnet"],

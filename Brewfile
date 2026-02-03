@@ -173,8 +173,6 @@ cask "firefox"
 cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
-# Desktop automation application
-cask "hammerspoon"
 # Chromium-based web browser
 cask "helium-browser"
 # Vector graphics editor
@@ -185,6 +183,8 @@ cask "libreoffice"
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing
 cask "nordvpn"
+# Control your tools with a few keystrokes
+cask "raycast"
 # Team communication and collaboration software
 cask "slack"
 # CSV file editor
@@ -197,5 +197,4 @@ go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/cmd/golangci-lint"
 go "github.com/todaatsushi/twt"
-cargo "nvim-mcp"
 cargo "sleek"
