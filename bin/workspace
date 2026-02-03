@@ -17,7 +17,7 @@ usage() {
     echo "  remove [branch_name]    Remove git worktree (auto-detects if omitted)"
     echo "  prune [--force]         Remove all unused worktrees"
     echo "                          --force: Also remove worktrees with uncommitted changes"
-    echo "  --setup                 Run \$worktree_INTERNAL_SETUP_CMD after create command"
+    echo "  --setup                 Run \$WORKSPACE_INTERNAL_SETUP_CMD after create command"
     echo ""
     echo "Layout (WORKSPACE_INTERNAL_LAYOUT env var):"
     echo "  Format: <count><dir>[,<count><dir>,...] where dir is v/h/g"
@@ -129,6 +129,34 @@ copy_env_files() {
         else
             echo "Copying environment file: $rel_path"
             cp "$env_file" "$target_file"
+        fi
+    done
+}
+
+copy_pem_files() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    echo "Copying .pem files from $source_dir to $target_dir"
+
+    # Find all .pem files in source directory and subdirectories
+    find "$source_dir" -name "*.pem" -type f | while IFS= read -r pem_file; do
+        # Get relative path from source directory
+        rel_path="${pem_file#$source_dir/}"
+        target_file="$target_dir/$rel_path"
+        target_parent=$(dirname "$target_file")
+
+        # Create target directory if it doesn't exist
+        if [[ ! -d "$target_parent" ]]; then
+            mkdir -p "$target_parent"
+        fi
+
+        # Copy .pem file if target doesn't exist
+        if [[ -f "$target_file" ]]; then
+            echo "Preserving existing: $rel_path"
+        else
+            echo "Copying certificate file: $rel_path"
+            cp "$pem_file" "$target_file"
         fi
     done
 }
@@ -497,13 +525,16 @@ if $add_worktree; then
     # Copy all .env files from parent worktree to new worktree
     copy_env_files "$base_path" "$worktree_path"
 
+    # Copy all .pem files from parent worktree to new worktree
+    copy_pem_files "$base_path" "$worktree_path"
+
     # Post-setup commands
     if $run_setup; then
-        if [[ -z "${worktree_INTERNAL_SETUP_CMD}" ]]; then
-            echo "Error: worktree_INTERNAL_SETUP_CMD is not set"
+        if [[ -z "${WORKSPACE_INTERNAL_SETUP_CMD}" ]]; then
+            echo "Error: WORKSPACE_INTERNAL_SETUP_CMD is not set"
             exit 1
         fi
-        tmux send-keys -t "${branch_name}" "${worktree_INTERNAL_SETUP_CMD}" C-m
+        tmux send-keys -t "${branch_name}" "${WORKSPACE_INTERNAL_SETUP_CMD}" C-m
     fi
 
     if [[ -n "$TMUX" ]]; then
