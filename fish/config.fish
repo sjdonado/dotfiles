@@ -38,17 +38,21 @@ fish_add_path "$HOME/.bun/bin"
 fish_add_path "$PNPM_HOME"
 fish_add_path "$HOME/go/bin"
 
-bind ctrl-f "workspace open; commandline -f repaint"
-
 # Homebrew multi-user setup
 alias brew="sudo -Hu hb brew"
 
 # Aliases
 alias python=/usr/bin/python3
-alias workspace=~/.config/dotfiles/bin/workspace
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"
 
 status --is-interactive; and rbenv init - --no-rehash fish | source
 source "$HOME/.cargo/env.fish"
+
+set -gx MANPATH "$HOME/.local/share/man" $MANPATH
+
+# workspace - tmux session manager (Ctrl-F to open)
+if command -q workspace
+    bind \cf "workspace open; commandline -f repaint"
+end

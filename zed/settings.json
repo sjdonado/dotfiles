@@ -1,29 +1,28 @@
 {
-  "features": {
-    "edit_prediction_provider": "copilot"
-  },
+  "buffer_font_size": 13.0,
+  "ui_font_size": 14.0,
   "lsp": {
     "vtsls": {
       "settings": {
         "typescript": {
           "updateImportsOnFileMove": {
-            "enabled": "always"
-          }
+            "enabled": "always",
+          },
         },
         "javascript": {
           "updateImportsOnFileMove": {
-            "enabled": "always"
-          }
-        }
+            "enabled": "always",
+          },
+        },
       },
-      "enable_lsp_tasks": true
-    }
+      "enable_lsp_tasks": true,
+    },
   },
   "context_servers": {
     "postgres-context-server": {
       "enabled": true,
-      "settings": {}
-    }
+      "settings": {},
+    },
   },
   "agent_servers": {
     "claude": {
@@ -47,10 +46,9 @@
     "metrics": false,
   },
   "vim_mode": true,
-  "ui_font_size": 14.0,
-  "buffer_font_size": 13.0,
   "soft_wrap": "editor_width",
   "edit_predictions": {
+    "provider": "copilot",
     "mode": "subtle",
     "copilot": {
       "proxy": null,
@@ -61,7 +59,7 @@
   "agent": {
     "default_model": {
       "provider": "copilot_chat",
-      "model": "oswe-vscode-prime"
+      "model": "oswe-vscode-prime",
     },
     "default_profile": "write",
 

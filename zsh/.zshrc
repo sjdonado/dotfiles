@@ -34,3 +34,14 @@ source <(fzf --zsh)
 
 # Custom env variables
 source "$HOME/.config/dotfiles/.env"
+
+# workspace - tmux session manager (Ctrl-F to open)
+workspace-open-widget() {
+  workspace open
+  zle reset-prompt
+}
+zle -N workspace-open-widget
+bindkey '^F' workspace-open-widget
+
+export MANPATH="$HOME/.local/share/man:$MANPATH"
+
