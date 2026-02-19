@@ -44,4 +44,3 @@ zle -N workspace-open-widget
 bindkey '^F' workspace-open-widget
 
 export MANPATH="$HOME/.local/share/man:$MANPATH"
-

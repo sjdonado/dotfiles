@@ -21,7 +21,9 @@
   "context_servers": {
     "postgres-context-server": {
       "enabled": true,
-      "settings": {},
+      "settings": {
+        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres"
+      },
     },
   },
   "agent_servers": {
@@ -57,13 +59,15 @@
     "enabled_in_text_threads": false,
   },
   "agent": {
+    "tool_permissions": {
+      "default": "allow"
+    },
     "default_model": {
       "provider": "copilot_chat",
-      "model": "oswe-vscode-prime",
+      "model": "claude-haiku-4.5",
     },
     "default_profile": "write",
 
     "model_parameters": [],
-    "always_allow_tool_actions": true,
   },
 }
