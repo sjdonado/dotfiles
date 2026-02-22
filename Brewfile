@@ -1,6 +1,9 @@
 tap "agrinman/tap"
 tap "amberframework/micrate"
+tap "bahaaio/pomo"
+tap "caarlos0/tap"
 tap "cloudflare/cloudflare"
+tap "hamed-elfayome/claude-usage"
 tap "koekeishiya/formulae"
 tap "morantron/tmux-fingers"
 tap "oven-sh/bun"
@@ -37,6 +40,8 @@ brew "cloudflare-wrangler"
 brew "cloudflared"
 # Cross-platform make
 brew "cmake"
+# Dependency manager for Cocoa projects
+brew "cocoapods"
 # Container runtimes on MacOS (and Linux) with minimal setup
 brew "colima"
 # GNU File, Shell, and Text utilities
@@ -101,16 +106,22 @@ brew "luarocks"
 brew "mackup"
 # Web and API based SMTP testing
 brew "mailpit"
+# Simple tool to make locally trusted development certificates
+brew "mkcert"
 # Remote terminal application
 brew "mosh"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Port scanning utility for large networks
 brew "nmap"
+# Libraries for security-enabled client and server applications
+brew "nss"
 # Development kit for the Java programming language
 brew "openjdk"
 # Development kit for the Java programming language
 brew "openjdk@11"
+# Development kit for the Java programming language
+brew "openjdk@17"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
 # Execute binaries from Python packages in isolated environments
@@ -135,8 +146,6 @@ brew "sqlmap"
 brew "staticcheck"
 # SMTP command-line test tool
 brew "swaks"
-# Easiest, most secure way to use WireGuard and 2FA
-brew "tailscale", restart_service: :changed
 # User interface to the TELNET protocol
 brew "telnet"
 # Terminal multiplexer
@@ -157,14 +166,16 @@ brew "amberframework/micrate/micrate"
 brew "morantron/tmux-fingers/tmux-fingers"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
-# Supabase CLI
-brew "supabase/tap/supabase"
+# Password manager that keeps all passwords secure behind one password
+cask "1password"
+# Command-line interface for 1Password
+cask "1password-cli"
 # Display management tool
 cask "betterdisplay"
-# OpenAI's official ChatGPT desktop app
-cask "chatgpt"
 # Terminal-based AI coding assistant
 cask "claude-code"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Email client
 cask "fastmail"
 # Web browser
@@ -179,10 +190,14 @@ cask "helium-browser"
 cask "inkscape"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
+# Markdown editor
+cask "markedit"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing
 cask "nordvpn"
+# A simple Pomodoro timer TUI application written in Go.
+cask "bahaaio/pomo/pomo"
 # Control your tools with a few keystrokes
 cask "raycast"
 # Team communication and collaboration software
@@ -195,6 +210,5 @@ cask "yaak"
 cask "zed"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
-go "github.com/golangci/golangci-lint/cmd/golangci-lint"
+go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 go "github.com/todaatsushi/twt"
-cargo "sleek"
