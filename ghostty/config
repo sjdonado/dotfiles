@@ -8,6 +8,7 @@ window-inherit-font-size = false
 window-padding-y = 0
 
 cursor-style = block
+mouse-scroll-multiplier = 1 
 
 cursor-invert-fg-bg = false
 selection-invert-fg-bg = false
