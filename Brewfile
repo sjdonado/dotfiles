@@ -108,6 +108,8 @@ brew "mackup"
 brew "mailpit"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
+# Deep clean and optimize your Mac
+brew "mole"
 # Remote terminal application
 brew "mosh"
 # Ambitious Vim-fork focused on extensibility and agility
@@ -174,8 +176,6 @@ cask "1password-cli"
 cask "betterdisplay"
 # Terminal-based AI coding assistant
 cask "claude-code"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
 # Email client
 cask "fastmail"
 # Web browser
