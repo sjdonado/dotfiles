@@ -6,7 +6,7 @@
 
 ### Boostrap
 
-- Init run `boostrap.sh`
+- Run from the dotfiles directory: `./bootstrap.sh`
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
 ### Terminal multiplexer

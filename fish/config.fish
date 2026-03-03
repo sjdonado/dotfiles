@@ -51,6 +51,5 @@ status --is-interactive; and rbenv init - --no-rehash fish | source
 source "$HOME/.cargo/env.fish"
 
 if command -q wt
-    # bind \cf "wt switch; commandline -f repaint"
-    bind \cf "wt switch"
+    bind \cf "wt switch; commandline -f repaint"
 end

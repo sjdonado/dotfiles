@@ -4,7 +4,6 @@ set -euo pipefail
 # helpers
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
-DOTFILES="${DOTFILES:-$PWD}"
 
 # Xcode CLT (needed for Homebrew)
 if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1 \
@@ -48,26 +47,26 @@ mkdir -p "$HOME/.config/zed"
 mkdir -p "$HOME/.config/finicky"
 
 log "Linking local bin..."
-ln -snf "$DOTFILES/bin/"* "$HOME/.local/bin" 2>/dev/null || true
+ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
 
 # Install dependencies from Brewfile
-if [ -f "$DOTFILES/Brewfile" ]; then
+if [ -f "$PWD/Brewfile" ]; then
   log "Installing dependencies from Brewfile..."
   # 'brew bundle' auto-detects Brewfile in CWD; use explicit path:
-  brew bundle --file="$DOTFILES/Brewfile" || true
+  brew bundle --file="$PWD/Brewfile" || true
 else
   log "No Brewfile found, skipping."
 fi
 
 log "Setting up Ghostty config..."
-ln -snf "$DOTFILES/ghostty/config" "$HOME/.config/ghostty/config"
-ln -snf "$DOTFILES/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
+ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
+ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
 log "Setting up tmux..."
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone --depth=1 https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
 fi
-ln -snf "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
+ln -snf "$PWD/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 log "Installing/setting fish shell..."
 if ! have fish; then
@@ -88,8 +87,8 @@ if [ "$SHELL" != "$FISH_PATH" ]; then
 fi
 
 # link fish config
-ln -snf "$DOTFILES/fish/config.fish" "$HOME/.config/fish/config.fish"
-ln -snf "$DOTFILES/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
+ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
+ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
 
 log "Installing rustup (if missing)..."
 if ! have rustup-init && ! have rustup; then
@@ -107,23 +106,23 @@ if ! have pnpm; then
 fi
 
 log "Linking Docker/Colima configs..."
-ln -snf "$DOTFILES/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
-ln -snf "$DOTFILES/docker/config.json" "$HOME/.docker/config.json"
+ln -snf "$PWD/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
+ln -snf "$PWD/docker/config.json" "$HOME/.docker/config.json"
 # NOTE: Do not auto-start colima here. User can run: colima start
 
 log "Copying custom keyboard layouts..."
-cp -Rp "$DOTFILES/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/" 2>/dev/null || true
+cp -Rp "$PWD/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/" 2>/dev/null || true
 
 log "Linking dotfiles..."
-[ -f "$DOTFILES/.ssh/config" ] && ln -snf "$DOTFILES/.ssh/config" "$HOME/.ssh/config"
-[ -f "$DOTFILES/.mackup.cfg" ] && ln -snf "$DOTFILES/.mackup.cfg" "$HOME/.mackup.cfg"
-ln -snf "$DOTFILES/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
+[ -f "$PWD/.ssh/config" ] && ln -snf "$PWD/.ssh/config" "$HOME/.ssh/config"
+[ -f "$PWD/.mackup.cfg" ] && ln -snf "$PWD/.mackup.cfg" "$HOME/.mackup.cfg"
+ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
 
-ln -snf "$DOTFILES/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
-ln -snf "$DOTFILES/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
+ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
+ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
 log "Linking Neovim config..."
-ln -snf "$DOTFILES/nvim" "$HOME/.config/nvim"
+ln -snf "$PWD/nvim" "$HOME/.config/nvim"
 
 log "Installing Node.js LTS for Neovim LSP..."
 NODE_DIR="$HOME/.local/share/nvim/node"
@@ -144,16 +143,20 @@ else
   echo "Node.js LTS already installed in $NODE_DIR"
 fi
 
+log "Linking Worktrunk config..."
+mkdir -p "$HOME/.config/worktrunk"
+ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
+
 log "Linking Zed config..."
-ln -snf "$DOTFILES/zed/settings.json" "$HOME/.config/zed/settings.json"
-ln -snf "$DOTFILES/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
+ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
+ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
 log "Martillo setup"
 mkdir -p $HOME/.hammerspoon/
 git clone https://github.com/sjdonado/martillo ~/.martillo
-ln -snf "$DOTFILES/martillo/init.lua" "$HOME/.hammerspoon/init.lua"
+ln -snf "$PWD/martillo/init.lua" "$HOME/.hammerspoon/init.lua"
 
-touch "$DOTFILES/.env"
+touch "$PWD/.env"
 
 touch "$HOME/.hushlogin"
 
