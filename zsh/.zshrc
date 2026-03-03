@@ -44,3 +44,5 @@ zle -N workspace-open-widget
 bindkey '^F' workspace-open-widget
 
 export MANPATH="$HOME/.local/share/man:$MANPATH"
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi

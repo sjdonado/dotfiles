@@ -50,9 +50,7 @@ alias python=/usr/bin/python3
 status --is-interactive; and rbenv init - --no-rehash fish | source
 source "$HOME/.cargo/env.fish"
 
-set -gx MANPATH "$HOME/.local/share/man" $MANPATH
-
-# workspace - tmux session manager (Ctrl-F to open)
-if command -q workspace
-    bind \cf "workspace open; commandline -f repaint"
+if command -q wt
+    # bind \cf "wt switch; commandline -f repaint"
+    bind \cf "wt switch"
 end

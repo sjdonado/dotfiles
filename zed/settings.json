@@ -19,34 +19,10 @@
     },
   },
   "context_servers": {
-    "chrome-devtools-mcp-zed": {
-      "enabled": true,
-      "remote": false,
-      "settings": {
-        "browser_url": null,
-        "ws_endpoint": null,
-        "ws_headers": null,
-        "auto_connect": null,
-        "channel": null,
-        "headless": null,
-        "isolated": null,
-        "user_data_dir": null,
-        "viewport": null,
-        "executable_path": null,
-        "chrome_arg": [],
-        "proxy_server": null,
-        "accept_insecure_certs": null,
-        "category_emulation": null,
-        "category_performance": null,
-        "category_network": null,
-        "log_file": null,
-        "extra_args": []
-      }
-    },
     "postgres-context-server": {
       "enabled": true,
       "settings": {
-        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres"
+        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres",
       },
     },
   },
@@ -55,9 +31,7 @@
       "favorite_models": ["sonnet"],
       "default_config_options": {},
       "favorite_config_option_values": {
-        "model": [
-          "default"
-        ]
+        "model": ["default"],
       },
     },
   },
@@ -67,9 +41,8 @@
   },
   "use_system_window_tabs": true,
   "theme": {
-    "mode": "system",
     "light": "One Light",
-    "dark": "One Dark",
+    "dark": "One Dark - Darkened",
   },
   "telemetry": {
     "diagnostics": false,
@@ -88,14 +61,13 @@
   },
   "agent": {
     "tool_permissions": {
-      "default": "allow"
+      "default": "allow",
     },
     "default_model": {
       "provider": "copilot_chat",
       "model": "claude-haiku-4.5",
     },
     "default_profile": "write",
-
     "model_parameters": [],
   },
 }

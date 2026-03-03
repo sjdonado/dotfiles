@@ -1,0 +1,13 @@
+[commit.generation]
+command = "CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt=''"
+
+[post-create]
+copy = "wt step copy-ignored"
+tmux = """
+S={{ branch | sanitize }}
+W={{ worktree_path }}
+tmux new-session -d -s "$S" -c "$W"
+"""
+
+[pre-remove]
+tmux = "tmux kill-session -t {{ branch | sanitize }} 2>/dev/null || true"
