@@ -43,6 +43,8 @@ alias brew="sudo -Hu hb brew"
 
 # Aliases
 alias python=/usr/bin/python3
+alias wtc="wt switch --create"
+alias wtl="wt list --full"
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"
@@ -53,3 +55,7 @@ source "$HOME/.cargo/env.fish"
 if command -q wt
     bind \cf "wt switch; commandline -f repaint"
 end
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init2.fish 2>/dev/null || :
