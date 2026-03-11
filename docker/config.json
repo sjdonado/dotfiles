@@ -1,6 +1,6 @@
 {
 	"auths": {},
-	"currentContext": "colima",
+	"currentContext": "orbstack",
 	"cliPluginsExtraDirs": [
 		"/opt/homebrew/lib/docker/cli-plugins"
 	]

@@ -19,13 +19,7 @@
     },
   },
   "context_servers": {
-    "postgres-context-server": {
-      "enabled": true,
-      "settings": {
-        "database_url": "postgresql://postgres:postgres@localhost:54322/postgres",
-      },
     },
-  },
   "agent_servers": {
     "claude": {
       "favorite_models": ["sonnet"],
