@@ -42,8 +42,6 @@ brew "cloudflared"
 brew "cmake"
 # Dependency manager for Cocoa projects
 brew "cocoapods"
-# Container runtimes on MacOS (and Linux) with minimal setup
-brew "colima"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
 # Next-gen compiler infrastructure
@@ -132,8 +130,6 @@ brew "pipx"
 brew "pnpm"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.12"
-# Generic machine emulator and virtualizer
-brew "qemu"
 # Ruby version manager
 brew "rbenv"
 # Search tool like grep and The Silver Searcher
@@ -158,6 +154,10 @@ brew "tor"
 brew "tree"
 # Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
+# Watch files and take action when they change
+brew "watchman"
+# CLI for Git worktree management, designed for parallel AI agent workflows
+brew "worktrunk"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
 # Programming language designed for robustness, optimality, and clarity
@@ -176,16 +176,24 @@ cask "1password-cli"
 cask "betterdisplay"
 # Terminal-based AI coding assistant
 cask "claude-code"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Email client
 cask "fastmail"
 # Web browser
 cask "firefox"
+# Set of tools to manage resources and applications hosted on Google Cloud
+cask "gcloud-cli"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
+# Web browser
+cask "google-chrome"
 # Chromium-based web browser
 cask "helium-browser"
+# Tool to optimise images to a smaller size
+cask "imageoptim"
 # Vector graphics editor
 cask "inkscape"
 # Free cross-platform office suite, fresh version
@@ -196,6 +204,8 @@ cask "markedit"
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing
 cask "nordvpn"
+# Replacement for Docker Desktop
+cask "orbstack"
 # A simple Pomodoro timer TUI application written in Go.
 cask "bahaaio/pomo/pomo"
 # Control your tools with a few keystrokes
@@ -208,6 +218,8 @@ cask "table-tool"
 cask "yaak"
 # Multiplayer code editor
 cask "zed"
+# OpenJDK distribution from Azul
+cask "zulu@17"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"

@@ -21,13 +21,17 @@
   "context_servers": {
     },
   "agent_servers": {
-    "claude": {
-      "favorite_models": ["sonnet"],
-      "default_config_options": {},
+    "claude-acp": {
+      "type": "registry",
+      "favorite_models": [
+        "sonnet"
+      ],
       "favorite_config_option_values": {
-        "model": ["default"],
-      },
-    },
+        "model": [
+          "default"
+        ]
+      }
+    }
   },
   "auto_update": false,
   "git_panel": {

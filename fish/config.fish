@@ -52,10 +52,6 @@ alias wtl="wt list --full"
 status --is-interactive; and rbenv init - --no-rehash fish | source
 source "$HOME/.cargo/env.fish"
 
-if command -q wt
-    bind \cf "wt switch; commandline -f repaint"
-end
-
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
