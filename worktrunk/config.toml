@@ -1,6 +1,4 @@
-[commit.generation]
-command = "CLAUDECODE= MAX_THINKING_TOKENS=0 claude -p --model=haiku --tools='' --disable-slash-commands --setting-sources='' --system-prompt=''"
-
 [post-create]
 copy = "wt step copy-ignored"
+claude = 'cmux new-workspace && cmux send "cd $(pwd) && claude --dangerously-skip-permissions" && cmux send-key enter && cmux new-split down'
 

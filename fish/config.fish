@@ -46,6 +46,10 @@ alias python=/usr/bin/python3
 alias wtc="wt switch --create"
 alias wtl="wt list --full"
 
+# Keymaps
+bind \ca. 'zed (pwd)'
+bind \e 'toggle_vi_mode; commandline -f repaint'
+
 # Source external variables
 . "$HOME/.config/dotfiles/.env"
 
