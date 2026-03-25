@@ -1,7 +1,7 @@
 return {
+  { 'wsdjeg/vim-fetch' },
   { 'vim-crystal/vim-crystal' },
   { 'amadeus/vim-mjml' },
-  { 'wsdjeg/vim-fetch' },
   {
     'folke/zen-mode.nvim',
     opts = {
@@ -28,16 +28,17 @@ return {
       },
     },
   },
+  { 'oskarnurm/koda.nvim', lazy = false, priority = 1000 },
   {
     'f-person/auto-dark-mode.nvim',
     priority = 1000,
     opts = {
       update_interval = 300,
       set_dark_mode = function()
-        vim.cmd.colorscheme 'sjdonado_dark'
+        vim.cmd.colorscheme 'koda-moss'
       end,
       set_light_mode = function()
-        vim.cmd.colorscheme 'sjdonado_light'
+        vim.cmd.colorscheme 'koda-glade'
       end,
     },
   },
@@ -61,57 +62,10 @@ return {
     },
   },
   {
-    'arnamak/stay-centered.nvim',
-    lazy = false,
-    opts = {
-      enabled = true,
-      allow_scroll_move = false,
-    },
-  },
-  {
     'norcalli/nvim-colorizer.lua',
     opts = {
       '*',
       '!vim',
     },
-  },
-  {
-    'nvim-neotest/neotest',
-    lazy = true,
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-neotest/nvim-nio',
-      'nvim-treesitter/nvim-treesitter',
-      'marilari88/neotest-vitest',
-    },
-    config = function()
-      local neotest = require 'neotest'
-
-      neotest.setup {
-        adapters = {
-          require 'neotest-vitest' {},
-        },
-        output_panel = {
-          enabled = true,
-        },
-      }
-
-      vim.keymap.set('n', '<leader>tn', function()
-        neotest.run.run()
-      end, { desc = 'Run nearest test' })
-
-      vim.keymap.set('n', '<leader>tf', function()
-        neotest.run.run(vim.fn.expand '%')
-      end, { desc = 'Run tests in file' })
-
-      vim.keymap.set('n', '<leader>to', function()
-        neotest.output.open()
-      end, { desc = 'Toggle output panel' })
-    end,
-  },
-  {
-    'linw1995/nvim-mcp',
-    build = 'cargo install --path .',
-    opts = {},
   },
 }

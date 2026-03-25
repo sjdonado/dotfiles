@@ -1,6 +1,6 @@
 {
-  "buffer_font_size": 13.0,
   "ui_font_size": 14.0,
+  "buffer_font_size": 13.0,
   "lsp": {
     "vtsls": {
       "settings": {
@@ -18,20 +18,15 @@
       "enable_lsp_tasks": true,
     },
   },
-  "context_servers": {
-    },
+  "context_servers": {},
   "agent_servers": {
     "claude-acp": {
       "type": "registry",
-      "favorite_models": [
-        "sonnet"
-      ],
+      "favorite_models": ["sonnet"],
       "favorite_config_option_values": {
-        "model": [
-          "default"
-        ]
-      }
-    }
+        "model": ["default"],
+      },
+    },
   },
   "auto_update": false,
   "git_panel": {

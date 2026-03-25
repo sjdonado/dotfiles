@@ -11,8 +11,8 @@ vim.g.have_nerd_font = true
 vim.opt.number = true
 vim.opt.relativenumber = true
 
--- Disable mouse mode
-vim.opt.mouse = ''
+-- Enable mouse mode
+vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
@@ -103,6 +103,11 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-e>', '4j', { desc = 'Scroll down 4 lines' })
 vim.keymap.set('n', '<C-y>', '4k', { desc = 'Scroll up 4 lines' })
 
+for _, mode in ipairs { 'n', 'i', 'v', 'x', 's', 'o', 'c', 't' } do
+  vim.keymap.set(mode, '<ScrollWheelLeft>', '<Nop>', {})
+  vim.keymap.set(mode, '<ScrollWheelRight>', '<Nop>', {})
+end
+
 -- Map Ctrl+S to save (which tmux will send when Cmd+S is pressed)
 vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
@@ -135,8 +140,11 @@ vim.g.loaded_netrwPlugin = 1
 vim.opt.termguicolors = true
 
 -- [[ Custom Keymaps ]]
-vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>')
-vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>')
+vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>', { desc = '[T]ab [C]lose' })
+vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>', { desc = '[T]ab [N]ew' })
+vim.keymap.set('n', '<Leader>to', '<cmd>tab split<CR>', { desc = '[T]ab [O]pen buffer in new tab' })
+vim.keymap.set('n', 'gt', '<cmd>tabnext<CR>', { desc = 'Next tab' })
+vim.keymap.set('n', 'gT', '<cmd>tabprev<CR>', { desc = 'Previous tab' })
 
 vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
 vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
@@ -193,6 +201,7 @@ require('lazy').setup({
       spec = {
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
+        { '<leader>g', group = '[G]it' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
       },
     },
@@ -216,7 +225,6 @@ require('lazy').setup({
         end,
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
-      { 'nvim-telescope/telescope-dap.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
@@ -261,7 +269,6 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
-      pcall(require('telescope').load_extension, 'dap')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -490,15 +497,6 @@ require('lazy').setup({
         virtual_text = {
           source = 'if_many',
           spacing = 2,
-          format = function(diagnostic)
-            local diagnostic_message = {
-              [vim.diagnostic.severity.ERROR] = diagnostic.message,
-              [vim.diagnostic.severity.WARN] = diagnostic.message,
-              [vim.diagnostic.severity.INFO] = diagnostic.message,
-              [vim.diagnostic.severity.HINT] = diagnostic.message,
-            }
-            return diagnostic_message[diagnostic.severity]
-          end,
         },
       }
 
@@ -578,7 +576,6 @@ require('lazy').setup({
         'black',
         'gofumpt',
         'isort',
-        'js-debug-adapter',
         'prettier',
         'ruff',
         'stylua',
@@ -820,7 +817,6 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
-  -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.nvim-tree',

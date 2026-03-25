@@ -1,12 +1,5 @@
 [
   {
-    "context": "Workspace",
-    "bindings": {
-      "cmd-;": "terminal_panel::ToggleFocus",
-      "cmd-shift-g": "git::Diff",
-    },
-  },
-  {
     "context": "Editor",
     "bindings": {
       "cmd-;": null,
@@ -14,7 +7,9 @@
   },
   {
     "bindings": {
+      "cmd-;": "terminal_panel::ToggleFocus",
       "cmd-shift-b": "git::BranchDiff",
+      "cmd-shift-g": "git::Diff",
     },
   },
 ]

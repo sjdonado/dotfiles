@@ -1,4 +1,4 @@
 [post-create]
 copy = "wt step copy-ignored"
-claude = 'cmux new-workspace && cmux send "cd $(pwd) && claude --dangerously-skip-permissions" && cmux send-key enter && cmux new-split down'
+claude = 'WS=$(cmux new-workspace | awk "{print \$2}") && cmux rename-workspace --workspace $WS "$(basename $(pwd))" && cmux send --workspace $WS "cd $(pwd) && claude --dangerously-skip-permissions\n" && cmux new-split right --workspace $WS'
 
