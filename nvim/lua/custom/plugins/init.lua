@@ -1,4 +1,15 @@
 return {
+  {
+    'hinell/lsp-timeout.nvim',
+    dependencies = { 'neovim/nvim-lspconfig' },
+    init = function()
+      vim.g.lspTimeoutConfig = {
+        stopTimeout = 1000 * 60 * 1, -- 1 min idle → stop servers
+        startTimeout = 1000 * 10, -- 10 sec after focus → restart
+        silent = true,
+      }
+    end,
+  },
   { 'wsdjeg/vim-fetch' },
   { 'vim-crystal/vim-crystal' },
   { 'amadeus/vim-mjml' },
@@ -28,7 +39,12 @@ return {
       },
     },
   },
-  { 'oskarnurm/koda.nvim', lazy = false, priority = 1000 },
+  {
+    'oskarnurm/koda.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = { transparent = true },
+  },
   {
     'f-person/auto-dark-mode.nvim',
     priority = 1000,
@@ -36,9 +52,11 @@ return {
       update_interval = 300,
       set_dark_mode = function()
         vim.cmd.colorscheme 'koda-moss'
+        vim.api.nvim_set_hl(0, 'GitSignsCurrentLineBlame', { fg = '#6a6a6a', italic = true })
       end,
       set_light_mode = function()
         vim.cmd.colorscheme 'koda-glade'
+        vim.api.nvim_set_hl(0, 'GitSignsCurrentLineBlame', { fg = '#9ca3af', italic = true })
       end,
     },
   },

@@ -1,4 +1,4 @@
-theme = dark:sjdonado_dark,light:sjdonado_light
+theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
 
 font-family = Menlo
 font-thicken = true
@@ -8,7 +8,7 @@ window-inherit-font-size = false
 window-padding-y = 0
 
 cursor-style = block
-mouse-scroll-multiplier = 1 
+mouse-scroll-multiplier = 1
 
 cursor-invert-fg-bg = false
 selection-invert-fg-bg = false

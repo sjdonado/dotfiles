@@ -22,15 +22,31 @@ vim.api.nvim_create_autocmd({ 'VimResized' }, {
   end,
 })
 
--- Dedicated isolated node version for neovim
-vim.g.node_host_prog = vim.fn.expand '~/.local/share/nvim/node/bin/node'
+-- Dedicated isolated node version for neovim LSP servers
 vim.env.PATH = vim.fn.expand '~/.local/share/nvim/node/bin' .. ':' .. vim.env.PATH
-vim.api.nvim_create_user_command('CheckNode', function()
-  print('Node version: ' .. vim.fn.system(vim.g.node_host_prog .. ' -v'))
-end, {})
+vim.env.NODE_OPTIONS = '--max-old-space-size=4096'
 
--- LSP toggle
-local lsp_disabled = false
+-- LSP manual toggle (disabled by default)
+local lsp_disabled = true
+
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('lsp-attach-guard', { clear = true }),
+  callback = function(args)
+    local should_detach = lsp_disabled or not vim.bo[args.buf].modifiable
+    if should_detach then
+      vim.schedule(function()
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client then
+          if lsp_disabled then
+            client:stop()
+          else
+            vim.lsp.buf_detach_client(args.buf, client.id)
+          end
+        end
+      end)
+    end
+  end,
+})
 
 vim.api.nvim_create_user_command('LspToggle', function()
   if lsp_disabled then

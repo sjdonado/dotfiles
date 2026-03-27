@@ -10,6 +10,8 @@ return {
 				changedelete = { text = '~' },
 			},
 			current_line_blame = true,
+			current_line_blame_opts = { delay = 200 },
+			current_line_blame_formatter = ' <abbrev_sha> <author>, <author_time:%R> - <summary>',
 			on_attach = function(bufnr)
 				local gitsigns = require 'gitsigns'
 
@@ -51,7 +53,75 @@ return {
 				map('n', '<leader>hu', gitsigns.stage_hunk, { desc = 'git [u]ndo stage hunk' })
 				map('n', '<leader>hR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
 				map('n', '<leader>hp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
-				map('n', '<leader>hb', gitsigns.blame_line, { desc = 'git [b]lame line' })
+				-- Blame with commit URL in a floating window
+				local function get_blame_info()
+					local file = vim.fn.expand '%:p'
+					local line = vim.fn.line '.'
+					local blame_out = vim.fn.systemlist('git blame -p -L ' .. line .. ',' .. line .. ' -- ' .. vim.fn.shellescape(file))
+					if #blame_out == 0 then return nil end
+					local parts = vim.split(blame_out[1], ' ')
+					local sha = parts[1]
+					local orig_line = parts[2]
+					if sha:match '^0+$' then return nil end
+					local info = { sha = sha, orig_line = orig_line }
+					for _, bl in ipairs(blame_out) do
+						info.author = info.author or bl:match '^author (.+)$'
+						info.author_mail = info.author_mail or bl:match '^author%-mail (.+)$'
+						info.date = info.date or bl:match '^author%-time (.+)$'
+						info.summary = info.summary or bl:match '^summary (.+)$'
+						info.filename = info.filename or bl:match '^filename (.+)$'
+					end
+					if info.date then
+						info.date = os.date('%Y-%m-%d %H:%M', tonumber(info.date))
+					end
+					local path_hash = vim.trim(vim.fn.system("printf '%s' " .. vim.fn.shellescape(info.filename or '') .. " | shasum -a 256 | cut -d' ' -f1"))
+					local repo_url = vim.trim(vim.fn.system 'gh repo view --json url -q .url')
+					info.url = repo_url .. '/commit/' .. sha .. '#diff-' .. path_hash .. 'R' .. orig_line
+					return info
+				end
+
+				map('n', '<leader>hb', function()
+					local info = get_blame_info()
+					if not info then
+						vim.notify('No blame info (uncommitted?)', vim.log.levels.WARN)
+						return
+					end
+					local lines = {
+						info.author .. ' ' .. (info.author_mail or ''),
+						'',
+						info.summary or '',
+						'',
+						info.date .. '  ' .. info.sha:sub(1, 8),
+						info.url,
+					}
+					local buf = vim.api.nvim_create_buf(false, true)
+					vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+					local width = 0
+					for _, l in ipairs(lines) do width = math.max(width, #l) end
+					local win = vim.api.nvim_open_win(buf, true, {
+						relative = 'cursor',
+						row = 1,
+						col = 0,
+						width = math.min(width + 2, vim.o.columns - 4),
+						height = #lines,
+						style = 'minimal',
+						border = 'rounded',
+					})
+					vim.bo[buf].modifiable = false
+					vim.bo[buf].bufhidden = 'wipe'
+					-- Press Enter to open URL, q or Esc to close
+					vim.keymap.set('n', '<CR>', function()
+						vim.fn.system('open ' .. vim.fn.shellescape(info.url))
+						vim.api.nvim_win_close(win, true)
+					end, { buffer = buf })
+					vim.keymap.set('n', 'y', function()
+						vim.fn.setreg('+', info.sha)
+						vim.notify('Copied: ' .. info.sha)
+						vim.api.nvim_win_close(win, true)
+					end, { buffer = buf })
+					vim.keymap.set('n', 'q', function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
+					vim.keymap.set('n', '<Esc>', function() vim.api.nvim_win_close(win, true) end, { buffer = buf })
+				end, { desc = 'git [b]lame line (full)' })
 				map('n', '<leader>hd', gitsigns.diffthis, { desc = 'git [d]iff against index' })
 				map('n', '<leader>hD', function()
 					gitsigns.diffthis '@'
@@ -60,12 +130,6 @@ return {
 				map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
 				map('n', '<leader>tD', gitsigns.preview_hunk_inline, { desc = '[T]oggle git show [D]eleted' })
 			end,
-		},
-	},
-	{
-		'ksaito422/remote-line.nvim',
-		keys = {
-			{ '<leader>hl', '<cmd>RemoteLine<CR>', desc = 'Open git remote [Line]' },
 		},
 	},
 	{
@@ -195,11 +259,11 @@ return {
 				end
 			end
 
-			vim.keymap.set('n', '<leader>gcc', function()
+			vim.keymap.set('n', 'cc', function()
 				toggle_commit_split(false)
 			end, { desc = 'Toggle Git Commit' })
 
-			vim.keymap.set('n', '<leader>gca', function()
+			vim.keymap.set('n', 'ca', function()
 				toggle_commit_split(true)
 			end, { desc = 'Toggle Git Commit Amend' })
 		end,
@@ -217,7 +281,10 @@ return {
 		},
 		opts = {
 			explorer = {
-				view_mode = "tree"
+				view_mode = "tree",
+			},
+			diff = {
+				layout= "inline"
 			}
 		},
 	},

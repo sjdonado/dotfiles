@@ -68,6 +68,9 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Always show tabline
+vim.opt.showtabline = 2
+
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
@@ -140,14 +143,10 @@ vim.g.loaded_netrwPlugin = 1
 vim.opt.termguicolors = true
 
 -- [[ Custom Keymaps ]]
-vim.keymap.set({ 'n', 'v' }, '<Leader>tc', '<cmd>tabclose<CR>', { desc = '[T]ab [C]lose' })
-vim.keymap.set({ 'n', 'v' }, '<Leader>tn', '<cmd>tabnew<CR>', { desc = '[T]ab [N]ew' })
-vim.keymap.set('n', '<Leader>to', '<cmd>tab split<CR>', { desc = '[T]ab [O]pen buffer in new tab' })
-vim.keymap.set('n', 'gt', '<cmd>tabnext<CR>', { desc = 'Next tab' })
-vim.keymap.set('n', 'gT', '<cmd>tabprev<CR>', { desc = 'Previous tab' })
-
-vim.keymap.set('n', 'vd', vim.diagnostic.open_float, { desc = '[V]iew [D]iagnostic error messages' })
-vim.keymap.set('n', 'vq', vim.diagnostic.setloclist, { desc = '[V]iew diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<Leader>tc', function() require('mini.bufremove').delete() end, { desc = '[T]ab [C]lose buffer' })
+vim.keymap.set('n', '<Leader>tn', '<cmd>enew<CR>', { desc = '[T]ab [N]ew buffer' })
+vim.keymap.set('n', 'gt', '<cmd>bnext<CR>', { desc = 'Next buffer' })
+vim.keymap.set('n', 'gT', '<cmd>bprev<CR>', { desc = 'Previous buffer' })
 
 require('lazy').setup({
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically (not required if .editorconfig)
@@ -276,17 +275,23 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
 
-      vim.keymap.set('n', '<leader>sp', function()
+      vim.keymap.set('n', '<leader>p', function()
         builtin.find_files {
           hidden = true, -- Search hidden files (respects .gitignore)
         }
       end, { desc = '[S]earch [F]iles' })
 
-      vim.keymap.set('n', '<leader>sf', function()
+      vim.keymap.set('n', 'g/', function()
         builtin.live_grep {
           additional_args = { '--fixed-strings' },
         }
       end, { desc = '[S]earch by [G]rep' })
+
+      vim.keymap.set('v', 'g/', function()
+        builtin.grep_string {
+          additional_args = { '--hidden', '--fixed-strings' },
+        }
+      end, { desc = '[S]earch current [W]ord' })
 
       vim.keymap.set('n', '<leader>sa', function()
         local exclude = {
@@ -306,12 +311,6 @@ require('lazy').setup({
 
         builtin.live_grep { additional_args = args }
       end, { desc = '[S]earch [All] by Grep' })
-
-      vim.keymap.set('n', '<leader>sw', function()
-        builtin.grep_string {
-          additional_args = { '--hidden', '--fixed-strings' },
-        }
-      end, { desc = '[S]earch current [W]ord' })
 
       vim.keymap.set('n', '<leader>sg', function()
         builtin.grep_string {
@@ -344,11 +343,6 @@ require('lazy').setup({
       --     prompt_title = 'Live Grep in Open Files',
       --   }
       -- end, { desc = '[S]earch [/] in Open Files' })
-
-      -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
     end,
   },
 
@@ -375,8 +369,8 @@ require('lazy').setup({
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
       -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      { 'williamboman/mason.nvim', opts = {} },
-      'williamboman/mason-lspconfig.nvim',
+      { 'mason-org/mason.nvim', opts = {} },
+      'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -435,34 +429,30 @@ require('lazy').setup({
             return client:supports_method(method, bufnr)
           end
 
-          -- The following two autocommands are used to highlight references of the
-          -- word under your cursor when your cursor rests there for a little while.
-          --    See `:help CursorHold` for information about when this is executed
-          --
-          -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          -- local client = vim.lsp.get_client_by_id(event.data.client_id)
-          -- if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-          --   local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
-          --   vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-          --     buffer = event.buf,
-          --     group = highlight_augroup,
-          --     callback = vim.lsp.buf.document_highlight,
-          --   })
-          --
-          --   vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-          --     buffer = event.buf,
-          --     group = highlight_augroup,
-          --     callback = vim.lsp.buf.clear_references,
-          --   })
-          --
-          --   vim.api.nvim_create_autocmd('LspDetach', {
-          --     group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
-          --     callback = function(event2)
-          --       vim.lsp.buf.clear_references()
-          --       vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
-          --     end,
-          --   })
-          -- end
+          -- Highlight references of the word under cursor when it rests there.
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+              buffer = event.buf,
+              group = highlight_augroup,
+              callback = vim.lsp.buf.document_highlight,
+            })
+
+            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+              buffer = event.buf,
+              group = highlight_augroup,
+              callback = vim.lsp.buf.clear_references,
+            })
+
+            vim.api.nvim_create_autocmd('LspDetach', {
+              group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+              callback = function(event2)
+                vim.lsp.buf.clear_references()
+                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+              end,
+            })
+          end
 
           -- The following code creates a keymap to toggle inlay hints in your
           -- code, if the language server you are using supports them
@@ -483,9 +473,13 @@ require('lazy').setup({
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
       vim.diagnostic.config {
+        update_in_insert = false,
         severity_sort = true,
         float = { border = 'rounded', source = 'if_many' },
-        underline = { severity = vim.diagnostic.severity.ERROR },
+        underline = { severity = { min = vim.diagnostic.severity.WARN } },
+        virtual_text = true,
+        virtual_lines = false,
+        jump = { float = true },
         signs = vim.g.have_nerd_font and {
           text = {
             [vim.diagnostic.severity.ERROR] = '󰅚 ',
@@ -494,10 +488,6 @@ require('lazy').setup({
             [vim.diagnostic.severity.HINT] = '󰌶 ',
           },
         } or {},
-        virtual_text = {
-          source = 'if_many',
-          spacing = 2,
-        },
       }
 
       -- LSP servers and clients are able to communicate to each other what features they support.
@@ -546,6 +536,9 @@ require('lazy').setup({
               autoUseWorkspaceTsdk = true,
             },
             typescript = {
+              tsserver = {
+                maxTsServerMemory = 4096,
+              },
               updateImportsOnFileMove = { enabled = 'always' },
               suggest = { completeFunctionCalls = true },
               inlayHints = {
@@ -588,23 +581,14 @@ require('lazy').setup({
       require('mason-lspconfig').setup {
         ensure_installed = server_names,
         automatic_installation = false,
-        handlers = {
-          function(server_name)
-            local server = servers[server_name]
-            if server == nil then
-              return
-            end
-
-            local opts = vim.tbl_deep_extend('force', {}, server)
-            opts.package = nil
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            opts.capabilities = vim.tbl_deep_extend('force', {}, capabilities, opts.capabilities or {})
-            require('lspconfig')[server_name].setup(opts)
-          end,
-        },
       }
+
+      for name, config in pairs(servers) do
+        config.package = nil
+        config.capabilities = vim.tbl_deep_extend('force', {}, capabilities, config.capabilities or {})
+        vim.lsp.config(name, config)
+        vim.lsp.enable(name)
+      end
     end,
   },
 
@@ -767,6 +751,12 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
+
+      -- Buffer tabline (VSCode-like tabs)
+      require('mini.tabline').setup()
+
+      -- Clean buffer removal without breaking layout
+      require('mini.bufremove').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
