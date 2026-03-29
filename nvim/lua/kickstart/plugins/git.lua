@@ -132,160 +132,18 @@ return {
 			end,
 		},
 	},
+{ 'akinsho/git-conflict.nvim', version = '*', config = true },
 	{
-		'tpope/vim-fugitive',
-		lazy = false,
-		config = function()
-			-- Store the in-progress commit message
-			local saved_commit_message = nil
-
-			-- Extract commit message (non-comment lines)
-			local function extract_commit_message(bufnr)
-				local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-				local message_lines = {}
-
-				for _, line in ipairs(lines) do
-					-- Stop at the first comment line
-					if line:match '^#' then
-						break
-					end
-					table.insert(message_lines, line)
-				end
-
-				-- Remove trailing empty lines
-				while #message_lines > 0 and message_lines[#message_lines]:match '^%s*$' do
-					table.remove(message_lines)
-				end
-
-				return #message_lines > 0 and message_lines or nil
-			end
-
-			-- Apply saved commit message to buffer
-			local function apply_commit_message(bufnr, message_lines)
-				if not message_lines or #message_lines == 0 then
-					return
-				end
-
-				-- Find where the comments start
-				local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-				local comment_start = 0
-				for i, line in ipairs(lines) do
-					if line:match '^#' then
-						comment_start = i - 1
-						break
-					end
-				end
-
-				-- Replace the non-comment part with our saved message
-				-- Add a blank line after message if there isn't one
-				local lines_to_insert = vim.deepcopy(message_lines)
-				if comment_start > 0 then
-					table.insert(lines_to_insert, '')
-				end
-				vim.api.nvim_buf_set_lines(bufnr, 0, comment_start, false, lines_to_insert)
-			end
-
-			-- Auto-cleanup commit buffer after :wq
-			vim.api.nvim_create_autocmd('BufWinLeave', {
-				pattern = 'COMMIT_EDITMSG',
-				callback = function(ev)
-					-- If buffer was saved (not modified), commit was submitted
-					if not vim.api.nvim_get_option_value('modified', { buf = ev.buf }) then
-						-- Clear saved message since commit was successful
-						saved_commit_message = nil
-						vim.defer_fn(function()
-							if vim.api.nvim_buf_is_valid(ev.buf) then
-								vim.api.nvim_buf_delete(ev.buf, { force = true })
-							end
-						end, 100)
-					else
-						-- Buffer was just hidden, save the commit message
-						saved_commit_message = extract_commit_message(ev.buf)
-					end
-				end,
-			})
-
-			local function toggle_commit_split(amend)
-				local commit_bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
-
-				-- Check if commit buffer exists
-				if commit_bufnr ~= -1 then
-					local commit_winnr = vim.fn.bufwinnr(commit_bufnr)
-					if commit_winnr ~= -1 then
-						-- Commit window is visible, hide it (message will be saved by autocmd)
-						vim.cmd(commit_winnr .. 'wincmd w')
-						vim.cmd 'hide'
-						return
-					else
-						-- Buffer exists but not visible, delete it to create fresh one
-						vim.api.nvim_buf_delete(commit_bufnr, { force = true })
-					end
-				end
-
-				-- Create fresh commit buffer
-				if amend then
-					vim.cmd 'botright vertical Git commit --amend'
-					-- Add a visual indicator and apply saved message
-					vim.defer_fn(function()
-						local bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
-						if bufnr ~= -1 then
-							-- Ensure buffer stays loaded when hidden and doesn't reload from disk
-							vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = bufnr })
-							vim.api.nvim_set_option_value('autoread', false, { buf = bufnr })
-							vim.api.nvim_buf_set_extmark(bufnr, vim.api.nvim_create_namespace 'git_amend', 0, 0, {
-								virt_text = { { ' [AMEND]', 'WarningMsg' } },
-								virt_text_pos = 'inline',
-							})
-							-- Apply saved commit message if any
-							if saved_commit_message then
-								apply_commit_message(bufnr, saved_commit_message)
-							end
-						end
-					end, 100)
-				else
-					vim.cmd 'botright vertical Git commit'
-					-- Ensure buffer stays loaded when hidden and apply saved message
-					vim.defer_fn(function()
-						local bufnr = vim.fn.bufnr 'COMMIT_EDITMSG'
-						if bufnr ~= -1 then
-							vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = bufnr })
-							vim.api.nvim_set_option_value('autoread', false, { buf = bufnr })
-							-- Apply saved commit message if any
-							if saved_commit_message then
-								apply_commit_message(bufnr, saved_commit_message)
-							end
-						end
-					end, 100)
-				end
-			end
-
-			vim.keymap.set('n', 'cc', function()
-				toggle_commit_split(false)
-			end, { desc = 'Toggle Git Commit' })
-
-			vim.keymap.set('n', 'ca', function()
-				toggle_commit_split(true)
-			end, { desc = 'Toggle Git Commit Amend' })
-		end,
-	},
-	{ 'akinsho/git-conflict.nvim', version = '*', config = true },
-	{
-		'esmuellert/codediff.nvim',
-		lazy = true,
+		'NeogitOrg/neogit',
+		dependencies = { 'nvim-lua/plenary.nvim' },
 		keys = {
-			{ '<leader>gs', '<cmd>CodeDiff<CR>', desc = 'CodeDiff changed files' },
-			{ '<leader>gl', '<cmd>CodeDiff history<CR>', desc = 'CodeDiff commit history' },
-			{ '<leader>gf', '<cmd>CodeDiff file HEAD<CR>', desc = 'CodeDiff file vs last commit' },
-			{ '<leader>gm', '<cmd>CodeDiff main<CR>', desc = 'CodeDiff vs main' },
-			{ '<leader>gp', '<cmd>CodeDiff main...<CR>', desc = 'CodeDiff PR-style vs main' },
+			{ '<leader>gs', function() require('neogit').open() end, desc = 'Neogit status' },
+			{ '<leader>gl', function() require('neogit').open({ 'log' }) end, desc = 'Neogit log' },
 		},
 		opts = {
-			explorer = {
-				view_mode = "tree",
+			integrations = {
+				diffview = false,
 			},
-			diff = {
-				layout= "inline"
-			}
 		},
 	},
 }

@@ -40,23 +40,15 @@ return {
     },
   },
   {
-    'oskarnurm/koda.nvim',
-    lazy = false,
-    priority = 1000,
-    opts = { transparent = true },
-  },
-  {
     'f-person/auto-dark-mode.nvim',
     priority = 1000,
     opts = {
       update_interval = 300,
       set_dark_mode = function()
-        vim.cmd.colorscheme 'koda-moss'
-        vim.api.nvim_set_hl(0, 'GitSignsCurrentLineBlame', { fg = '#6a6a6a', italic = true })
+        vim.cmd.colorscheme 'sjdonado_dark'
       end,
       set_light_mode = function()
-        vim.cmd.colorscheme 'koda-glade'
-        vim.api.nvim_set_hl(0, 'GitSignsCurrentLineBlame', { fg = '#9ca3af', italic = true })
+        vim.cmd.colorscheme 'sjdonado_light'
       end,
     },
   },
