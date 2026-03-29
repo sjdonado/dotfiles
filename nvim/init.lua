@@ -598,7 +598,7 @@ require('lazy').setup({
     cmd = { 'ConformInfo' },
     keys = {
       {
-        '<leader>f',
+        '<leader>ff',
         function()
           require('conform').format { async = true, lsp_format = 'prefer' }
         end,
@@ -606,7 +606,7 @@ require('lazy').setup({
         desc = '[F]ormat buffer',
       },
       {
-        '<leader>p',
+        '<leader>fp',
         function()
           require('conform').format { async = true, lsp_fallback = false }
         end,
