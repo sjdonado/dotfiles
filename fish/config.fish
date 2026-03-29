@@ -37,6 +37,7 @@ fish_add_path /opt/homebrew/bin
 fish_add_path "$HOME/.bun/bin"
 fish_add_path "$PNPM_HOME"
 fish_add_path "$HOME/go/bin"
+fish_add_path "$HOME/Library/Android/sdk/platform-tools"
 
 # Homebrew multi-user setup
 alias brew="sudo -Hu hb brew"

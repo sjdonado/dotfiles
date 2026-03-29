@@ -1,10 +1,12 @@
 tap "agrinman/tap"
 tap "amberframework/micrate"
+tap "anomalyco/tap"
 tap "bahaaio/pomo"
 tap "caarlos0/tap"
 tap "cloudflare/cloudflare"
 tap "hamed-elfayome/claude-usage"
 tap "koekeishiya/formulae"
+tap "manaflow-ai/cmux"
 tap "morantron/tmux-fingers"
 tap "oven-sh/bun"
 tap "supabase/tap"
@@ -14,6 +16,10 @@ brew "act"
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
+# Browser automation CLI for AI agents
+brew "agent-browser"
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Clone of cat(1) with syntax highlighting and Git integration
@@ -32,8 +38,6 @@ brew "libpng"
 brew "pixman"
 # Vector graphics library with cross-device output support
 brew "cairo"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
 # CLI tool for Cloudflare Workers
 brew "cloudflare-wrangler"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
@@ -164,6 +168,8 @@ brew "xq"
 brew "zig"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
+# The AI coding agent built for the terminal.
+brew "anomalyco/tap/opencode"
 # mouseless terminal interaction
 brew "morantron/tmux-fingers/tmux-fingers"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
@@ -176,16 +182,14 @@ cask "1password-cli"
 cask "betterdisplay"
 # Terminal-based AI coding assistant
 cask "claude-code"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
+# Ghostty-based terminal with vertical tabs and notifications for AI coding agents
+cask "cmux"
 # Email client
 cask "fastmail"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # Free and open-source image editor
 cask "gimp"
 # Web browser
@@ -198,16 +202,18 @@ cask "imageoptim"
 cask "inkscape"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
+# App to manage software development and track bugs
+cask "linear-linear"
 # Markdown editor
 cask "markedit"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing
 cask "nordvpn"
+# App to write, plan, collaborate, and get organised
+cask "notion"
 # Replacement for Docker Desktop
 cask "orbstack"
-# A simple Pomodoro timer TUI application written in Go.
-cask "bahaaio/pomo/pomo"
 # Control your tools with a few keystrokes
 cask "raycast"
 # Team communication and collaboration software
@@ -222,5 +228,5 @@ cask "zed"
 cask "zulu@17"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
-go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
-go "github.com/todaatsushi/twt"
+go "github.com/pressly/goose/v3/cmd/goose"
+go "github.com/sqlc-dev/sqlc/cmd/sqlc"
