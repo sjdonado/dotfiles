@@ -1,0 +1,54 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "id": "1",
+        "type": "model",
+        "color": "cyan"
+      },
+      {
+        "id": "235f5404-98d4-49ee-8e6c-42a62208d0f1",
+        "type": "separator"
+      },
+      {
+        "id": "3",
+        "type": "context-percentage",
+        "color": "brightBlack"
+      },
+      {
+        "id": "fe3f9f7f-74b3-4882-ad14-66a6891e5023",
+        "type": "separator"
+      },
+      {
+        "id": "fc8a699e-8d86-4dc1-b974-b366446fd919",
+        "type": "session-usage"
+      },
+      {
+        "id": "55feb668-7620-4c15-be11-3f932c951957",
+        "type": "separator"
+      },
+      {
+        "id": "2d734db0-caa0-4821-9a29-f62fe5cbbe0c",
+        "type": "weekly-usage"
+      }
+    ]
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 2,
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [
+      ""
+    ],
+    "separatorInvertBackground": [
+      false
+    ],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false
+  }
+}

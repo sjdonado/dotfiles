@@ -147,6 +147,12 @@ log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 
+log "Linking Claude Code config..."
+mkdir -p "$HOME/.claude"
+mkdir -p "$HOME/.config/ccstatusline"
+ln -snf "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
+ln -snf "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
+
 log "Linking Zed config..."
 ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
