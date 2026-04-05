@@ -45,6 +45,7 @@ alias brew="sudo -Hu hb brew"
 # Aliases
 alias python=/usr/bin/python3
 alias wtc="wt switch --create --no-cd"
+alias wtr="wt remove -D --force"
 alias wtl="wt list --full"
 
 # Keymaps
