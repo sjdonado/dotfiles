@@ -1,4 +1,4 @@
 [post-create]
 copy = "wt step copy-ignored"
-claude = 'WS=$(cmux new-workspace | awk "{print \$2}") && cmux rename-workspace --workspace $WS "$(basename $(pwd))" && cmux send --workspace $WS "cd $(pwd) && claude --dangerously-skip-permissions\n" && cmux new-split right --workspace $WS && PANE=$(cmux list-panes --workspace $WS | grep focused | awk "{print \$1}") && cmux resize-pane --pane $PANE --workspace $WS -L --amount 50'
+claude = 'WS=$(cmux new-workspace | awk "{print \$2}") && cmux rename-workspace --workspace $WS "$(basename $(pwd))" && cmux resize-pane --workspace $WS --amount 60 && cmux send --workspace $WS "cd $(pwd) && claude --dangerously-skip-permissions\n" && cmux new-split right --workspace $WS'
 

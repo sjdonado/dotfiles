@@ -143,6 +143,10 @@ else
   echo "Node.js LTS already installed in $NODE_DIR"
 fi
 
+log "Linking cmux config..."
+mkdir -p "$HOME/.config/cmux"
+ln -snf "$PWD/cmux/settings.json" "$HOME/.config/cmux/settings.json"
+
 log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
