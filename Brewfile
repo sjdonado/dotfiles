@@ -168,10 +168,6 @@ brew "xq"
 brew "zig"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
-# The AI coding agent built for the terminal.
-brew "anomalyco/tap/opencode"
-# mouseless terminal interaction
-brew "morantron/tmux-fingers/tmux-fingers"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # Password manager that keeps all passwords secure behind one password
@@ -180,8 +176,6 @@ cask "1password"
 cask "1password-cli"
 # Display management tool
 cask "betterdisplay"
-# Terminal-based AI coding assistant
-cask "claude-code"
 # Ghostty-based terminal with vertical tabs and notifications for AI coding agents
 cask "cmux"
 # Email client
@@ -190,22 +184,14 @@ cask "fastmail"
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Free and open-source image editor
-cask "gimp"
 # Web browser
 cask "google-chrome"
 # Chromium-based web browser
 cask "helium-browser"
-# Tool to optimise images to a smaller size
-cask "imageoptim"
 # Vector graphics editor
 cask "inkscape"
-# Free cross-platform office suite, fresh version
-cask "libreoffice"
 # App to manage software development and track bugs
 cask "linear-linear"
-# Markdown editor
-cask "markedit"
 # Intercept, modify, replay, save HTTP/S traffic
 cask "mitmproxy"
 # VPN client for secure internet access and private browsing

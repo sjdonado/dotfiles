@@ -39,9 +39,6 @@ fish_add_path "$PNPM_HOME"
 fish_add_path "$HOME/go/bin"
 fish_add_path "$HOME/Library/Android/sdk/platform-tools"
 
-# Homebrew multi-user setup
-alias brew="sudo -Hu hb brew"
-
 # Aliases
 alias python=/usr/bin/python3
 alias wtc="wt switch --create --no-cd"
