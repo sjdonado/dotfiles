@@ -178,6 +178,8 @@ cask "1password-cli"
 cask "betterdisplay"
 # Ghostty-based terminal with vertical tabs and notifications for AI coding agents
 cask "cmux"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Email client
 cask "fastmail"
 # Web browser
@@ -190,6 +192,8 @@ cask "google-chrome"
 cask "helium-browser"
 # Vector graphics editor
 cask "inkscape"
+# Free cross-platform office suite, fresh version
+cask "libreoffice"
 # App to manage software development and track bugs
 cask "linear-linear"
 # Intercept, modify, replay, save HTTP/S traffic
