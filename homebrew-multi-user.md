@@ -80,4 +80,5 @@ Log out and back in after adding users to the group.
 ## Notes
 
 - Re-run step 2 if permissions break after `brew update` or after installing new taps. Git operations and `brew update` can reset permissions on `.git` internals, causing "Permission denied" errors for other users.
+- Re-run step 4 after installing new taps. The glob `/opt/homebrew/Library/Taps/*/*` only catches taps that exist at the time it's run — new taps cause `fatal: not in a git directory` errors for other users.
 - Casks requiring system-level install still need admin privileges.

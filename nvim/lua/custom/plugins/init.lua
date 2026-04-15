@@ -2,6 +2,7 @@ return {
   {
     'hinell/lsp-timeout.nvim',
     dependencies = { 'neovim/nvim-lspconfig' },
+    event = 'LspAttach',
     init = function()
       vim.g.lspTimeoutConfig = {
         stopTimeout = 1000 * 60 * 1, -- 1 min idle → stop servers
