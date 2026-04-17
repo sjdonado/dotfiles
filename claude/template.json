@@ -4,5 +4,22 @@
 	"autoCompactEnabled": false,
 	"showExpandedTodos": true,
 	"autoConnectIde": true,
-	"mcpServers": {}
+  "mcpServers": {
+    "grafana": {
+      "type": "stdio",
+      "command": "/Users/juan/go/bin/mcp-grafana",
+      "args": [],
+      "env": {
+        "GRAFANA_URL": "host",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "key"
+      }
+    },
+    "linear-server": {
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp",
+      "headers": {
+        "Authorization": "Bearer key"
+      }
+    }
+  }
 }
