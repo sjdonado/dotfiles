@@ -1,15 +1,5 @@
-tap "agrinman/tap"
 tap "amberframework/micrate"
-tap "anomalyco/tap"
-tap "bahaaio/pomo"
-tap "caarlos0/tap"
-tap "cloudflare/cloudflare"
-tap "hamed-elfayome/claude-usage"
-tap "koekeishiya/formulae"
-tap "manaflow-ai/cmux"
-tap "morantron/tmux-fingers"
 tap "oven-sh/bun"
-tap "supabase/tap"
 # Run your GitHub Actions locally
 brew "act"
 # Mozilla CA certificate store
@@ -176,8 +166,6 @@ cask "1password"
 cask "1password-cli"
 # Display management tool
 cask "betterdisplay"
-# Ghostty-based terminal with vertical tabs and notifications for AI coding agents
-cask "cmux"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 # Email client
@@ -186,8 +174,8 @@ cask "fastmail"
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Web browser
-cask "google-chrome"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
 # Chromium-based web browser
 cask "helium-browser"
 # Vector graphics editor
@@ -204,19 +192,16 @@ cask "nordvpn"
 cask "notion"
 # Replacement for Docker Desktop
 cask "orbstack"
-# Control your tools with a few keystrokes
-cask "raycast"
-# Team communication and collaboration software
-cask "slack"
-# CSV file editor
-cask "table-tool"
+# Native database client for many database types
+cask "tablepro"
 # REST, GraphQL and gRPC client
 cask "yaak"
-# Multiplayer code editor
-cask "zed"
 # OpenJDK distribution from Azul
 cask "zulu@17"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
-go "github.com/pressly/goose/v3/cmd/goose"
-go "github.com/sqlc-dev/sqlc/cmd/sqlc"
+go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
+go "github.com/grafana/mcp-grafana/cmd/mcp-grafana"
+go "github.com/todaatsushi/twt"
+npm "corepack"
+npm "pinchtab"
