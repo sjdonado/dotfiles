@@ -48,6 +48,7 @@ alias wtl="wt list --full"
 
 # Keymaps
 bind \e 'toggle_vi_mode; commandline -f repaint'
+bind \cf fzf_git_repos
 
 # Source external variables
 . "$HOME/.config/dotfiles/.env"

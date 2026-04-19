@@ -52,6 +52,8 @@ brew "docker"
 brew "docker-buildx"
 # Isolated development environments using Docker
 brew "docker-compose"
+# Select default apps for documents and URL schemes on macOS
+brew "duti"
 # Embeddable SQL OLAP Database Management System
 brew "duckdb"
 # Simple, fast and user-friendly alternative to find
