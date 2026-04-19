@@ -80,8 +80,9 @@ if ! grep -qx "$FISH_PATH" /etc/shells; then
   echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
 fi
 
-# change default shell if not already fish
-if [ "$SHELL" != "$FISH_PATH" ]; then
+# change default shell if not already fish (check dscl, not $SHELL subshell var)
+CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
+if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
   echo "Changing login shell to fish (requires your password)..."
   chsh -s "$FISH_PATH"
 fi
@@ -89,6 +90,17 @@ fi
 # link fish config
 ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
 ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
+
+# Relocate fish history to ~/fish_history via symlink
+mkdir -p "$HOME/.local/share/fish"
+if [ -f "$HOME/.local/share/fish/fish_history" ] && [ ! -L "$HOME/.local/share/fish/fish_history" ]; then
+  mv "$HOME/.local/share/fish/fish_history" "$HOME/fish_history"
+fi
+if [ ! -e "$HOME/fish_history" ]; then
+  touch "$HOME/fish_history"
+  chmod 600 "$HOME/fish_history"
+fi
+ln -snf "$HOME/fish_history" "$HOME/.local/share/fish/fish_history"
 
 log "Installing rustup (if missing)..."
 if ! have rustup-init && ! have rustup; then
@@ -122,6 +134,9 @@ ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
 ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
 log "Linking Neovim config..."
+if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
+  mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%s)"
+fi
 ln -snf "$PWD/nvim" "$HOME/.config/nvim"
 
 log "Installing Node.js LTS for Neovim LSP..."
@@ -161,10 +176,16 @@ log "Linking Zed config..."
 ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
-log "Martillo setup"
-mkdir -p $HOME/.hammerspoon/
-git clone https://github.com/sjdonado/martillo ~/.martillo
-ln -snf "$PWD/martillo/init.lua" "$HOME/.hammerspoon/init.lua"
+log "Setting Zed as default app for code files..."
+if have duti && [ -f "$PWD/macos/zed.duti" ]; then
+  if osascript -e 'id of app "Zed"' >/dev/null 2>&1; then
+    duti "$PWD/macos/zed.duti" || true
+  else
+    echo "Zed not installed; skipping duti bindings."
+  fi
+else
+  echo "duti missing or macos/zed.duti absent; skipping."
+fi
 
 touch "$PWD/.env"
 
