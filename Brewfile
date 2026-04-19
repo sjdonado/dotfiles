@@ -52,10 +52,10 @@ brew "docker"
 brew "docker-buildx"
 # Isolated development environments using Docker
 brew "docker-compose"
-# Select default apps for documents and URL schemes on macOS
-brew "duti"
 # Embeddable SQL OLAP Database Management System
 brew "duckdb"
+# Select default apps for documents and URL schemes on macOS
+brew "duti"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
 # User-friendly command-line shell for UNIX-like operating systems
@@ -124,6 +124,8 @@ brew "p7zip"
 brew "pipx"
 # Fast, disk space efficient package manager
 brew "pnpm"
+# Monitor data's progress through a pipe
+brew "pv"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.12"
 # Ruby version manager
@@ -168,10 +170,6 @@ cask "1password"
 cask "1password-cli"
 # Display management tool
 cask "betterdisplay"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
-# Email client
-cask "fastmail"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
@@ -180,30 +178,21 @@ cask "gcloud-cli"
 cask "ghostty"
 # Chromium-based web browser
 cask "helium-browser"
-# Vector graphics editor
-cask "inkscape"
-# Free cross-platform office suite, fresh version
-cask "libreoffice"
 # App to manage software development and track bugs
 cask "linear-linear"
-# Intercept, modify, replay, save HTTP/S traffic
-cask "mitmproxy"
-# VPN client for secure internet access and private browsing
-cask "nordvpn"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Replacement for Docker Desktop
 cask "orbstack"
+# HTTP proxy
+cask "rockxy"
+# Team communication and collaboration software
+cask "slack"
 # Native database client for many database types
 cask "tablepro"
 # REST, GraphQL and gRPC client
 cask "yaak"
-# OpenJDK distribution from Azul
-cask "zulu@17"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
-go "github.com/grafana/mcp-grafana/cmd/mcp-grafana"
 go "github.com/todaatsushi/twt"
-npm "corepack"
-npm "pinchtab"

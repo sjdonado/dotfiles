@@ -139,29 +139,6 @@ if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
 fi
 ln -snf "$PWD/nvim" "$HOME/.config/nvim"
 
-log "Installing Node.js LTS for Neovim LSP..."
-NODE_DIR="$HOME/.local/share/nvim/node"
-if [ ! -d "$NODE_DIR/bin" ]; then
-  NODE_VERSION=$(curl -fsSL "https://nodejs.org/dist/index.json" | jq -r '[.[] | select(.lts != false)] | first | .version' | sed 's/v//')
-
-  if [ -z "$NODE_VERSION" ]; then
-    echo "Warning: Failed to fetch the latest Node.js LTS version. Skipping Neovim Node.js setup."
-  else
-    NODE_TAR="node-v${NODE_VERSION}-darwin-arm64.tar.gz"
-    NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TAR}"
-
-    mkdir -p "$NODE_DIR"
-    echo "Installing Node.js LTS ($NODE_VERSION) for Neovim on Apple Silicon..."
-    curl -fsSL "$NODE_URL" | tar -xz -C "$NODE_DIR" --strip-components=1
-  fi
-else
-  echo "Node.js LTS already installed in $NODE_DIR"
-fi
-
-log "Linking cmux config..."
-mkdir -p "$HOME/.config/cmux"
-ln -snf "$PWD/cmux/settings.json" "$HOME/.config/cmux/settings.json"
-
 log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
@@ -186,6 +163,26 @@ if have duti && [ -f "$PWD/macos/zed.duti" ]; then
 else
   echo "duti missing or macos/zed.duti absent; skipping."
 fi
+
+log "Applying macOS defaults..."
+if [ -x "$PWD/macos/defaults.sh" ]; then
+  "$PWD/macos/defaults.sh" || true
+fi
+
+log "Applying macOS app shortcuts..."
+if [ -x "$PWD/macos/app-shortcuts.sh" ]; then
+  "$PWD/macos/app-shortcuts.sh" || true
+fi
+
+log "Mapping Caps Lock to Control for all keyboards..."
+mkdir -p "$HOME/Library/LaunchAgents"
+AGENT_SRC="$PWD/macos/com.local.KeyRemapping.plist"
+AGENT_DST="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
+ln -snf "$AGENT_SRC" "$AGENT_DST"
+launchctl unload "$AGENT_DST" 2>/dev/null || true
+launchctl load "$AGENT_DST" 2>/dev/null || true
+# apply now for this session
+hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' >/dev/null 2>&1 || true
 
 touch "$PWD/.env"
 
