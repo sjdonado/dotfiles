@@ -61,10 +61,10 @@ return {
     },
   },
   {
-    'norcalli/nvim-colorizer.lua',
+    'catgoose/nvim-colorizer.lua',
+    event = 'BufReadPre',
     opts = {
-      '*',
-      '!vim',
+      filetypes = { '*', '!vim' },
     },
   },
 }
