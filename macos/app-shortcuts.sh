@@ -22,8 +22,10 @@ defaults write -g NSUserKeyEquivalents -dict-add "Toggle Sidebar"            '@`
 defaults write -g NSUserKeyEquivalents -dict-add "Toggle Left Sidebar"       '@.'
 defaults write -g NSUserKeyEquivalents -dict-add "Expand navigation sidebar" '@`'
 
-# Notes.app
-defaults write com.apple.Notes NSUserKeyEquivalents -dict-add "Note List Search..." '@k'
+# Notes.app (sandboxed — requires Full Disk Access on the running terminal)
+if ! defaults write com.apple.Notes NSUserKeyEquivalents -dict-add "Note List Search..." '@k' 2>/dev/null; then
+  echo "  ! skipped Notes.app shortcut (grant Full Disk Access to terminal, then rerun)"
+fi
 
 # Reload prefs daemon so changes take effect without logout
 killall cfprefsd 2>/dev/null || true

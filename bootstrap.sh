@@ -91,16 +91,20 @@ fi
 ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
 ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
 
-# Relocate fish history to ~/fish_history via symlink
+# Relocate fish history to ~/.fish_history via symlink
 mkdir -p "$HOME/.local/share/fish"
+# migrate legacy non-dotfile location if present
+if [ -f "$HOME/fish_history" ] && [ ! -e "$HOME/.fish_history" ]; then
+  mv "$HOME/fish_history" "$HOME/.fish_history"
+fi
 if [ -f "$HOME/.local/share/fish/fish_history" ] && [ ! -L "$HOME/.local/share/fish/fish_history" ]; then
-  mv "$HOME/.local/share/fish/fish_history" "$HOME/fish_history"
+  mv "$HOME/.local/share/fish/fish_history" "$HOME/.fish_history"
 fi
-if [ ! -e "$HOME/fish_history" ]; then
-  touch "$HOME/fish_history"
-  chmod 600 "$HOME/fish_history"
+if [ ! -e "$HOME/.fish_history" ]; then
+  touch "$HOME/.fish_history"
+  chmod 600 "$HOME/.fish_history"
 fi
-ln -snf "$HOME/fish_history" "$HOME/.local/share/fish/fish_history"
+ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
 
 log "Installing rustup (if missing)..."
 if ! have rustup-init && ! have rustup; then
@@ -153,15 +157,11 @@ log "Linking Zed config..."
 ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
-log "Setting Zed as default app for code files..."
-if have duti && [ -f "$PWD/macos/zed.duti" ]; then
-  if osascript -e 'id of app "Zed"' >/dev/null 2>&1; then
-    duti "$PWD/macos/zed.duti" || true
-  else
-    echo "Zed not installed; skipping duti bindings."
-  fi
+log "Setting default apps for code files and plain text..."
+if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
+  duti "$PWD/macos/default-apps.duti" || true
 else
-  echo "duti missing or macos/zed.duti absent; skipping."
+  echo "duti missing or macos/default-apps.duti absent; skipping."
 fi
 
 log "Applying macOS defaults..."
@@ -183,6 +183,15 @@ launchctl unload "$AGENT_DST" 2>/dev/null || true
 launchctl load "$AGENT_DST" 2>/dev/null || true
 # apply now for this session
 hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' >/dev/null 2>&1 || true
+
+log "Installing Time Machine dev-junk exclusion agent..."
+TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"
+TM_AGENT_DST="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
+ln -snf "$TM_AGENT_SRC" "$TM_AGENT_DST"
+launchctl unload "$TM_AGENT_DST" 2>/dev/null || true
+launchctl load "$TM_AGENT_DST" 2>/dev/null || true
+# run once now to backfill existing dirs
+"$PWD/macos/tm-exclude-dev.sh" || true
 
 touch "$PWD/.env"
 

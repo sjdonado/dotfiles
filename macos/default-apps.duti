@@ -1,7 +1,3 @@
-dev.zed.Zed public.plain-text all
-dev.zed.Zed public.text all
-dev.zed.Zed public.utf8-plain-text all
-
 dev.zed.Zed .c all
 dev.zed.Zed .cc all
 dev.zed.Zed .cpp all
@@ -16,4 +12,10 @@ dev.zed.Zed .rb all
 dev.zed.Zed .toml all
 dev.zed.Zed .ts all
 dev.zed.Zed .tsx all
-dev.zed.Zed .txt all
+
+com.apple.TextEdit public.plain-text viewer
+com.apple.TextEdit public.plain-text editor
+com.apple.TextEdit public.text viewer
+com.apple.TextEdit public.utf8-plain-text viewer
+com.apple.TextEdit .txt viewer
+com.apple.TextEdit .txt editor
