@@ -5,7 +5,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = true
+vim.g.have_nerd_font = false
 
 -- Make line numbers default
 vim.opt.number = true
@@ -419,6 +419,8 @@ require('lazy').setup({
 })
 
 require 'custom.commands'
+
+vim.cmd.colorscheme 'sjdonado_dark'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

@@ -29,19 +29,6 @@ return {
     },
   },
   {
-    'f-person/auto-dark-mode.nvim',
-    priority = 1000,
-    opts = {
-      update_interval = 300,
-      set_dark_mode = function()
-        vim.cmd.colorscheme 'sjdonado_dark'
-      end,
-      set_light_mode = function()
-        vim.cmd.colorscheme 'sjdonado_light'
-      end,
-    },
-  },
-  {
     'folke/todo-comments.nvim',
     event = 'VimEnter',
     dependencies = { 'nvim-lua/plenary.nvim' },
