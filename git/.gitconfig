@@ -6,7 +6,7 @@
   rebase = false
 
 [core]
-  editor = nvim
+  editor = vim
 
 [merge]
   conflictstyle = merge
@@ -32,3 +32,4 @@
 	directory = /opt/homebrew
 	directory = /opt/homebrew/Library/Taps/amberframework/homebrew-micrate
 	directory = /opt/homebrew/Library/Taps/oven-sh/homebrew-bun
+	directory = /opt/homebrew

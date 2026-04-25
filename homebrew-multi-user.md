@@ -68,7 +68,36 @@ sudo install -d -o $(whoami) -g brew /opt/homebrew/Frameworks
 sudo chmod g+w /opt/homebrew/Frameworks
 ```
 
-## 7. Verify (from each user)
+## 7. Casks (Caskroom + `/Applications`)
+
+Cask installs drop subdirs under `/opt/homebrew/Caskroom` and apps under `/Applications`. Both inherit the installer's umask, so other `brew` group members can't replace them on upgrade/uninstall (`Error: Permission denied @ apply2files`).
+
+Fix existing casks (once, any admin):
+
+```bash
+sudo chgrp -R brew /opt/homebrew/Caskroom
+sudo chmod -R g+w /opt/homebrew/Caskroom
+
+# Resolve cask app symlinks → real /Applications paths, fix each
+find /opt/homebrew/Caskroom -maxdepth 3 -name '*.app' -type l -exec readlink {} \; \
+  | while read t; do [ -e "$t" ] && sudo chgrp -R brew "$t" && sudo chmod -R g+w "$t"; done
+```
+
+Prevent recurrence — set `umask 002` in each brew user's shell rc so new files land group-writable:
+
+```fish
+# ~/.config/fish/config.fish
+umask 002
+```
+
+```bash
+# ~/.bashrc or ~/.zshrc
+umask 002
+```
+
+Re-run the `find` block after installing new casks until every user's `umask` is `002`.
+
+## 8. Verify (from each user)
 
 ```bash
 brew update
@@ -81,4 +110,5 @@ Log out and back in after adding users to the group.
 
 - Re-run step 2 if permissions break after `brew update` or after installing new taps. Git operations and `brew update` can reset permissions on `.git` internals, causing "Permission denied" errors for other users.
 - Re-run step 4 after installing new taps. The glob `/opt/homebrew/Library/Taps/*/*` only catches taps that exist at the time it's run — new taps cause `fatal: not in a git directory` errors for other users.
+- Re-run step 7 after any user with `umask 022` installs a cask. Quit the app first if it's running (`osascript -e 'quit app "Name"'`) — `brew` can't replace an in-use binary.
 - Casks requiring system-level install still need admin privileges.
