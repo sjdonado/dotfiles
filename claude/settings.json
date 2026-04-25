@@ -25,6 +25,9 @@
     "mode": "hold"
   },
   "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "theme": "auto",
+  "editorMode": "vim",
+  "verbose": true
 }

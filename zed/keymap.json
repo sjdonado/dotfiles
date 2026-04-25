@@ -8,8 +8,7 @@
   {
     "bindings": {
       "cmd-;": "terminal_panel::ToggleFocus",
-      "cmd-shift-b": "git::BranchDiff",
-      "cmd-shift-g": "git::Diff",
+      "cmd-shift-g": "git_panel::Toggle",
     },
   },
 ]

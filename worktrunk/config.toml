@@ -1,4 +1,5 @@
-[post-create]
+[[pre-start]]
 copy = "wt step copy-ignored"
-claude = '''DIR=$(pwd) && printf 'tell application "Ghostty"\nset w to front window\nset cfg to new surface configuration\nset initial working directory of cfg to "%s"\nset newTab to new tab in w with configuration cfg\nset term1 to focused terminal of newTab\ninput text "claude --dangerously-skip-permissions" to term1\nsend key "enter" to term1\nset cfg2 to new surface configuration\nset initial working directory of cfg2 to "%s"\nset term2 to split term1 direction right with configuration cfg2\nend tell' "$DIR" "$DIR" | osascript'''
 
+[[pre-start]]
+zed = "zed ."

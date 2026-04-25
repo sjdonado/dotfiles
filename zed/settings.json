@@ -1,4 +1,5 @@
 {
+  "cli_default_open_behavior": "existing_window",
   "tabs": {
     "git_status": false
   },
@@ -23,7 +24,13 @@
   },
   "context_servers": {},
   "agent_servers": {
+    "cursor": {
+      "type": "registry"
+    },
     "claude-acp": {
+      "default_config_options": {
+        "mode": "bypassPermissions"
+      },
       "type": "registry",
       "favorite_models": ["sonnet"],
       "favorite_config_option_values": {
@@ -58,8 +65,9 @@
     "enabled_in_text_threads": false,
   },
   "agent": {
+    "show_turn_stats": true,
     "tool_permissions": {
-      "default": "allow",
+      "default": "confirm",
     },
     "default_model": {
       "provider": "copilot_chat",
