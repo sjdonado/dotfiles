@@ -1,5 +1,6 @@
 alias python=/usr/bin/python3
 alias workspace=~/.config/dotfiles/bin/workspace.sh
+umask 002
 
 export HISTSIZE=20000
 setopt HIST_IGNORE_ALL_DUPS

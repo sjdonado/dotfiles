@@ -109,6 +109,8 @@ Log out and back in after adding users to the group.
 ## Notes
 
 - Re-run step 2 if permissions break after `brew update` or after installing new taps. Git operations and `brew update` can reset permissions on `.git` internals, causing "Permission denied" errors for other users.
+- Re-run step 2 if `brew update` fails under `/opt/homebrew/Library/Taps/*/*/.git`, such as `FETCH_HEAD: Permission denied` or `TMP_FETCH_FAILURES: Permission denied`.
 - Re-run step 4 after installing new taps. The glob `/opt/homebrew/Library/Taps/*/*` only catches taps that exist at the time it's run — new taps cause `fatal: not in a git directory` errors for other users.
+- Re-run the lock-directory part of step 3 if you see `Error: Permission denied @ rb_sysopen - /opt/homebrew/var/homebrew/locks/*.formula.lock`. This means a lock file was created without group write permission, usually by a shell with `umask 022`.
 - Re-run step 7 after any user with `umask 022` installs a cask. Quit the app first if it's running (`osascript -e 'quit app "Name"'`) — `brew` can't replace an in-use binary.
 - Casks requiring system-level install still need admin privileges.

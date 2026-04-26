@@ -18,6 +18,7 @@ end
 # General settings
 set -g fish_history fish
 set -g fish_history_max 20000
+umask 002
 
 # Path configurations
 set -x EDITOR "nvim"
