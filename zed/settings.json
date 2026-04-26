@@ -1,4 +1,8 @@
 {
+  "close_on_file_delete": false,
+  "search": {
+    "include_ignored": false
+  },
   "project_panel": {
     "diagnostic_badges": true,
     "git_status_indicator": true,
@@ -64,6 +68,10 @@
   "vim_mode": true,
   "soft_wrap": "editor_width",
   "edit_predictions": {
+    "ollama": {
+      "max_output_tokens": 128,
+      "model": "gemma4:e4b"
+    },
     "provider": "copilot",
     "mode": "subtle",
     "copilot": {
@@ -73,12 +81,15 @@
     "enabled_in_text_threads": false,
   },
   "agent": {
+    "play_sound_when_agent_done": "when_hidden",
+    "thinking_display": "always_expanded",
     "default_width": 360.0,
     "show_turn_stats": true,
     "tool_permissions": {
       "default": "confirm",
     },
     "default_model": {
+      "enable_thinking": true,
       "provider": "copilot_chat",
       "model": "claude-haiku-4.5",
     },

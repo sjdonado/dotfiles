@@ -9,6 +9,7 @@
     "bindings": {
       "cmd-;": "terminal_panel::ToggleFocus",
       "cmd-shift-g": "git_panel::Toggle",
+      "cmd-t": ["workspace::SendKeystrokes", "cmd-n"],
     },
   },
 ]
