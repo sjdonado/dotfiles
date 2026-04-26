@@ -1,4 +1,12 @@
 {
+  "project_panel": {
+    "diagnostic_badges": true,
+    "git_status_indicator": true,
+    "default_width": 360.0
+  },
+  "outline_panel": {
+    "default_width": 360.0
+  },
   "cli_default_open_behavior": "existing_window",
   "tabs": {
     "git_status": false
@@ -65,6 +73,7 @@
     "enabled_in_text_threads": false,
   },
   "agent": {
+    "default_width": 360.0,
     "show_turn_stats": true,
     "tool_permissions": {
       "default": "confirm",

@@ -174,8 +174,6 @@ cask "betterdisplay"
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # Chromium-based web browser
 cask "helium-browser"
 # App to manage software development and track bugs
@@ -184,6 +182,8 @@ cask "linear-linear"
 cask "notion"
 # Replacement for Docker Desktop
 cask "orbstack"
+# Control your tools with a few keystrokes
+cask "raycast"
 # HTTP proxy
 cask "rockxy"
 # Team communication and collaboration software
@@ -192,6 +192,8 @@ cask "slack"
 cask "tablepro"
 # REST, GraphQL and gRPC client
 cask "yaak"
+# Multiplayer code editor
+cask "zed"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
