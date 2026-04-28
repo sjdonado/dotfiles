@@ -36,6 +36,12 @@
   },
   "context_servers": {},
   "agent_servers": {
+    "codex-acp": {
+      "default_config_options": {
+        "model": "gpt-5.5"
+      },
+      "type": "registry"
+    },
     "cursor": {
       "type": "registry"
     },
