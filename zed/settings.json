@@ -1,5 +1,18 @@
 {
   "close_on_file_delete": false,
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.claude",
+    "**/.claude/**"
+  ],
   "search": {
     "include_ignored": false
   },
@@ -87,9 +100,13 @@
     "enabled_in_text_threads": false,
   },
   "agent": {
+    "show_merge_conflict_indicator": false,
+    "default_width": 420.0,
+    "limit_content_width": false,
+    "default_height": 320.0,
+    "flexible": false,
     "play_sound_when_agent_done": "when_hidden",
     "thinking_display": "always_expanded",
-    "default_width": 360.0,
     "show_turn_stats": true,
     "tool_permissions": {
       "default": "confirm",

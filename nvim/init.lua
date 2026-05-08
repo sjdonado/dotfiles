@@ -420,7 +420,5 @@ require('lazy').setup({
 
 require 'custom.commands'
 
-vim.cmd.colorscheme 'sjdonado_dark'
-
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
