@@ -130,7 +130,11 @@ log "Copying custom keyboard layouts..."
 cp -Rp "$PWD/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/" 2>/dev/null || true
 
 log "Linking dotfiles..."
-[ -f "$PWD/.ssh/config" ] && ln -snf "$PWD/.ssh/config" "$HOME/.ssh/config"
+if [ -f "$PWD/.ssh/config" ]; then
+  ln -snf "$PWD/.ssh/config" "$HOME/.ssh/config"
+  chmod 600 "$PWD/.ssh/config"
+  [ -f "$PWD/.ssh/private.conf" ] && chmod 600 "$PWD/.ssh/private.conf"
+fi
 [ -f "$PWD/.mackup.cfg" ] && ln -snf "$PWD/.mackup.cfg" "$HOME/.mackup.cfg"
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
 
