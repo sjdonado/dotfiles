@@ -3,6 +3,8 @@
     "context": "Editor",
     "bindings": {
       "cmd-;": null,
+      "cmd-[": null,
+      "cmd-]": null,
     },
   },
   {
@@ -12,6 +14,8 @@
       "cmd-t": ["workspace::SendKeystrokes", "cmd-n"],
       "cmd-ctrl-o": "projects::OpenRecent",
       "ctrl-w ctrl-n": "agent::NewThread",
+      "cmd-[": "multi_workspace::ToggleWorkspaceSidebar",
+      "cmd-]": "workspace::ToggleRightDock",
     },
   },
 ]
