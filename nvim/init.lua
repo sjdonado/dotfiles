@@ -15,7 +15,9 @@ do
   vim.o.mouse = 'a'
   vim.o.showmode = false
 
-  vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+  vim.schedule(function()
+    vim.o.clipboard = 'unnamedplus'
+  end)
 
   vim.o.tabstop = 2
   vim.o.shiftwidth = 2
@@ -80,7 +82,9 @@ do
   vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
   vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { silent = true, desc = 'Save file in insert mode' })
 
-  vim.keymap.set('n', '<Leader>tc', function() require('mini.bufremove').delete() end, { desc = '[T]ab [C]lose buffer' })
+  vim.keymap.set('n', '<Leader>tc', function()
+    require('mini.bufremove').delete()
+  end, { desc = '[T]ab [C]lose buffer' })
   vim.keymap.set('n', '<Leader>tn', '<cmd>enew<CR>', { desc = '[T]ab [N]ew buffer' })
   vim.keymap.set('n', 'gt', '<cmd>bnext<CR>', { desc = 'Next buffer' })
   vim.keymap.set('n', 'gT', '<cmd>bprev<CR>', { desc = 'Previous buffer' })
@@ -88,12 +92,16 @@ do
   vim.api.nvim_create_autocmd('TextYankPost', {
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-    callback = function() vim.hl.on_yank() end,
+    callback = function()
+      vim.hl.on_yank()
+    end,
   })
 
   vim.api.nvim_create_autocmd('VimResized', {
     group = vim.api.nvim_create_augroup('kickstart-custom-auto-resize', { clear = true }),
-    callback = function() vim.cmd 'tabdo wincmd =' end,
+    callback = function()
+      vim.cmd 'tabdo wincmd ='
+    end,
   })
 end
 
@@ -107,7 +115,9 @@ do
       local stderr = result.stderr or ''
       local stdout = result.stdout or ''
       local output = stderr ~= '' and stderr or stdout
-      if output == '' then output = 'No output from build command.' end
+      if output == '' then
+        output = 'No output from build command.'
+      end
       vim.notify(('Build failed for %s:\n%s'):format(name, output), vim.log.levels.ERROR)
     end
   end
@@ -116,7 +126,9 @@ do
     callback = function(ev)
       local name = ev.data.spec.name
       local kind = ev.data.kind
-      if kind ~= 'install' and kind ~= 'update' then return end
+      if kind ~= 'install' and kind ~= 'update' then
+        return
+      end
 
       if name == 'telescope-fzf-native.nvim' and vim.fn.executable 'make' == 1 then
         run_build(name, { 'make' }, ev.data.path)
@@ -131,7 +143,9 @@ do
       end
 
       if name == 'nvim-treesitter' then
-        if not ev.data.active then vim.cmd.packadd 'nvim-treesitter' end
+        if not ev.data.active then
+          vim.cmd.packadd 'nvim-treesitter'
+        end
         vim.cmd 'TSUpdate'
         return
       end
@@ -141,7 +155,9 @@ end
 
 ---@param repo string
 ---@return string
-local function gh(repo) return 'https://github.com/' .. repo end
+local function gh(repo)
+  return 'https://github.com/' .. repo
+end
 
 -- ============================================================
 -- SECTION 3: UI / CORE UX PLUGINS
@@ -151,7 +167,9 @@ do
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {}
 
-  if vim.g.have_nerd_font then vim.pack.add { gh 'nvim-tree/nvim-web-devicons' } end
+  if vim.g.have_nerd_font then
+    vim.pack.add { gh 'nvim-tree/nvim-web-devicons' }
+  end
 
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -159,9 +177,19 @@ do
     icons = {
       mappings = vim.g.have_nerd_font,
       keys = vim.g.have_nerd_font and {} or {
-        Up = '<Up> ', Down = '<Down> ', Left = '<Left> ', Right = '<Right> ',
-        C = '<C-…> ', M = '<M-…> ', D = '<D-…> ', S = '<S-…> ',
-        CR = '<CR> ', Esc = '<Esc> ', Space = '<Space> ', Tab = '<Tab> ', BS = '<BS> ',
+        Up = '<Up> ',
+        Down = '<Down> ',
+        Left = '<Left> ',
+        Right = '<Right> ',
+        C = '<C-…> ',
+        M = '<M-…> ',
+        D = '<D-…> ',
+        S = '<S-…> ',
+        CR = '<CR> ',
+        Esc = '<Esc> ',
+        Space = '<Space> ',
+        Tab = '<Tab> ',
+        BS = '<BS> ',
       },
     },
     spec = {
@@ -179,8 +207,12 @@ do
   vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
   require('auto-dark-mode').setup {
     update_interval = 300,
-    set_dark_mode = function() vim.cmd.colorscheme 'sjdonado_dark' end,
-    set_light_mode = function() vim.cmd.colorscheme 'sjdonado_light' end,
+    set_dark_mode = function()
+      vim.cmd.colorscheme 'sjdonado_dark'
+    end,
+    set_light_mode = function()
+      vim.cmd.colorscheme 'sjdonado_light'
+    end,
   }
 
   -- Highlight TODO/NOTE/etc. in comments
@@ -227,8 +259,12 @@ do
   vim.pack.add { gh 'folke/zen-mode.nvim' }
   require('zen-mode').setup {
     window = { width = 1 },
-    on_open = function() vim.g.zen_mode_active = true end,
-    on_close = function() vim.g.zen_mode_active = false end,
+    on_open = function()
+      vim.g.zen_mode_active = true
+    end,
+    on_close = function()
+      vim.g.zen_mode_active = false
+    end,
   }
   vim.keymap.set('n', '<C-w>z', '<cmd>ZenMode<CR>', { desc = 'Toggle [Z]en Mode' })
 
@@ -238,7 +274,7 @@ do
 
   -- Auto session
   vim.pack.add { gh 'rmagatti/auto-session' }
-  require('auto-session')
+  require('auto-session').setup()
   vim.keymap.set('n', '<leader>wr', '<cmd>AutoSession search<CR>', { desc = 'Session search' })
   vim.keymap.set('n', '<leader>ws', '<cmd>AutoSession save<CR>', { desc = 'Save session' })
   vim.keymap.set('n', '<leader>wa', '<cmd>AutoSession toggle<CR>', { desc = 'Toggle autosave' })
@@ -279,7 +315,9 @@ do
       },
       layout_config = {
         height = 0.2,
-        width = function(_, max_columns, _) return math.min(max_columns, 110) end,
+        width = function(_, max_columns, _)
+          return math.min(max_columns, 110)
+        end,
       },
       file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/', '*.min' },
     }),
@@ -298,9 +336,15 @@ do
 
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>p', function() builtin.find_files { hidden = true } end, { desc = '[S]earch Files' })
-  vim.keymap.set('n', 'g/', function() builtin.live_grep { additional_args = { '--fixed-strings' } } end, { desc = '[S]earch by [G]rep' })
-  vim.keymap.set('v', 'g/', function() builtin.grep_string { additional_args = { '--hidden', '--fixed-strings' } } end, { desc = '[S]earch current [W]ord' })
+  vim.keymap.set('n', '<leader>p', function()
+    builtin.find_files { hidden = true }
+  end, { desc = '[S]earch Files' })
+  vim.keymap.set('n', 'g/', function()
+    builtin.live_grep { additional_args = { '--fixed-strings' } }
+  end, { desc = '[S]earch by [G]rep' })
+  vim.keymap.set('v', 'g/', function()
+    builtin.grep_string { additional_args = { '--hidden', '--fixed-strings' } }
+  end, { desc = '[S]earch current [W]ord' })
   vim.keymap.set('n', '<leader>sa', function()
     local exclude = { 'node_modules', 'dist', '.astro', '.svelte-kit', '*.min.*', '*lock.*' }
     local args = { '--hidden', '-u', '--fixed-strings' }
@@ -341,7 +385,7 @@ do
 
   -- [[ nvim-tree ]]
   vim.pack.add { gh 'nvim-tree/nvim-tree.lua' }
-  require('kickstart.plugins.nvim-tree')
+  require 'kickstart.plugins.nvim-tree'
 end
 
 -- ============================================================
@@ -465,7 +509,9 @@ do
 
   local ensure_installed = {}
   for _, server in pairs(servers) do
-    if server.package then table.insert(ensure_installed, server.package) end
+    if server.package then
+      table.insert(ensure_installed, server.package)
+    end
   end
   vim.list_extend(ensure_installed, { 'black', 'gofumpt', 'goimports', 'isort', 'prettierd', 'ruff', 'stylua' })
   table.sort(ensure_installed)
@@ -513,10 +559,21 @@ do
 
   -- Filetypes that get format-on-save.
   local format_filetypes = {
-    astro = true, css = true, go = true, html = true,
-    javascript = true, javascriptreact = true, json = true, jsonc = true,
-    lua = true, markdown = true, python = true, svelte = true,
-    typescript = true, typescriptreact = true, yaml = true,
+    astro = true,
+    css = true,
+    go = true,
+    html = true,
+    javascript = true,
+    javascriptreact = true,
+    json = true,
+    jsonc = true,
+    lua = true,
+    markdown = true,
+    python = true,
+    svelte = true,
+    typescript = true,
+    typescriptreact = true,
+    yaml = true,
   }
 
   -- LSP code-action kinds to apply before the formatter runs.
@@ -534,7 +591,9 @@ do
   -- buf_request_sync blocks the editor; safe inside BufWritePre.
   local function apply_lsp_actions(bufnr, kinds)
     local clients = vim.lsp.get_clients { bufnr = bufnr, method = 'textDocument/codeAction' }
-    if #clients == 0 then return end
+    if #clients == 0 then
+      return
+    end
     local encoding = clients[1].offset_encoding or 'utf-8'
     local params = vim.lsp.util.make_range_params(0, encoding)
     params.context = { only = kinds, diagnostics = vim.diagnostic.get(bufnr) }
@@ -555,11 +614,17 @@ do
   vim.api.nvim_create_autocmd('BufWritePre', {
     group = vim.api.nvim_create_augroup('format-on-save', { clear = true }),
     callback = function(args)
-      if vim.g.disable_format_on_save or vim.b[args.buf].disable_format_on_save then return end
+      if vim.g.disable_format_on_save or vim.b[args.buf].disable_format_on_save then
+        return
+      end
       local ft = vim.bo[args.buf].filetype
-      if not format_filetypes[ft] then return end
+      if not format_filetypes[ft] then
+        return
+      end
       local kinds = action_kinds_by_ft[ft]
-      if kinds then apply_lsp_actions(args.buf, kinds) end
+      if kinds then
+        apply_lsp_actions(args.buf, kinds)
+      end
       require('conform').format { bufnr = args.buf, timeout_ms = 2000, lsp_format = 'fallback' }
     end,
   })
@@ -616,11 +681,15 @@ do
   ---@param buf integer
   ---@param language string
   local function treesitter_try_attach(buf, language)
-    if not vim.treesitter.language.add(language) then return end
+    if not vim.treesitter.language.add(language) then
+      return
+    end
     vim.treesitter.start(buf, language)
 
     local has_indent_query = vim.treesitter.query.get(language, 'indents') ~= nil
-    if has_indent_query then vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()" end
+    if has_indent_query then
+      vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
   end
 
   local available_parsers = require('nvim-treesitter').get_available()
@@ -629,14 +698,18 @@ do
       local buf, filetype = args.buf, args.match
 
       local language = vim.treesitter.language.get_lang(filetype)
-      if not language then return end
+      if not language then
+        return
+      end
 
       local installed_parsers = require('nvim-treesitter').get_installed 'parsers'
 
       if vim.tbl_contains(installed_parsers, language) then
         treesitter_try_attach(buf, language)
       elseif vim.tbl_contains(available_parsers, language) then
-        require('nvim-treesitter').install(language):await(function() treesitter_try_attach(buf, language) end)
+        require('nvim-treesitter').install(language):await(function()
+          treesitter_try_attach(buf, language)
+        end)
       else
         treesitter_try_attach(buf, language)
       end

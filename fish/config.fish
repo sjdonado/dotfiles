@@ -43,9 +43,10 @@ fish_add_path "$HOME/Library/Android/sdk/platform-tools"
 
 # Aliases
 alias python=/usr/bin/python3
-alias wtc="wt switch --create --no-cd"
-alias wtr="wt remove -D --force"
-alias wtl="wt list --full"
+alias wm=workmux
+alias wma="workmux add"
+alias wmr="workmux remove"
+alias wml="workmux list"
 
 # Keymaps
 bind \e 'toggle_vi_mode; commandline -f repaint'

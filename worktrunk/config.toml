@@ -1,5 +1,0 @@
-[[pre-start]]
-copy = "wt step copy-ignored"
-
-[[pre-start]]
-notify = 'd=$(basename "$PWD"); b=$(git symbolic-ref --short HEAD 2>/dev/null || echo "?"); osascript -e "display alert \"Worktree ready 🌳\" message \"$d  ·  $b\" as informational"'

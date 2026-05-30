@@ -1,5 +1,6 @@
 tap "amberframework/micrate"
 tap "oven-sh/bun"
+tap "raine/workmux"
 # Run your GitHub Actions locally
 brew "act"
 # Mozilla CA certificate store
@@ -88,6 +89,8 @@ brew "jpeg"
 brew "jsoncpp"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Parser generator tool and incremental parsing library
+brew "tree-sitter"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library
@@ -158,8 +161,8 @@ brew "tree"
 brew "uv"
 # Watch files and take action when they change
 brew "watchman"
-# CLI for Git worktree management, designed for parallel AI agent workflows
-brew "worktrunk"
+# Parallel development in tmux with git worktrees and AI agents
+brew "raine/workmux/workmux"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
 # Programming language designed for robustness, optimality, and clarity
@@ -198,6 +201,8 @@ cask "tablepro"
 cask "yaak"
 # Multiplayer code editor
 cask "zed"
+# Symbols-only Nerd Font for icon glyphs (Menlo fallback in Ghostty)
+cask "font-symbols-only-nerd-font"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
