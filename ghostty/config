@@ -1,6 +1,7 @@
 theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
 
 font-family = Menlo
+font-family = Symbols Nerd Font Mono
 font-thicken = true
 font-size = 13
 

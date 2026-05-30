@@ -113,6 +113,11 @@ if ! have rustup-init && ! have rustup; then
   [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 fi
 
+log "Installing tree-sitter CLI (needed by nvim-treesitter main branch)..."
+if ! have tree-sitter && have cargo; then
+  cargo install tree-sitter-cli
+fi
+
 log "Installing pnpm (if missing)..."
 if ! have pnpm; then
   curl -fsSL https://get.pnpm.io/install.sh | sh -
