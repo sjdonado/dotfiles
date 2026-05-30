@@ -1,0 +1,6 @@
+git:
+  pagers:
+    - colorArg: always
+      pager: delta-themed
+os:
+  editPreset: nvim-remote

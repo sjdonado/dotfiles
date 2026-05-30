@@ -151,6 +151,10 @@ log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 
+log "Linking Lazygit config..."
+mkdir -p "$HOME/Library/Application Support/lazygit"
+ln -snf "$PWD/lazygit/config.yml" "$HOME/Library/Application Support/lazygit/config.yml"
+
 log "Linking Claude Code config..."
 mkdir -p "$HOME/.claude"
 mkdir -p "$HOME/.config/ccstatusline"

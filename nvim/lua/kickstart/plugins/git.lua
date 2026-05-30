@@ -134,16 +134,19 @@ return {
 	},
 { 'akinsho/git-conflict.nvim', version = '*', config = true },
 	{
-		'NeogitOrg/neogit',
+		'kdheepak/lazygit.nvim',
+		lazy = true,
+		cmd = {
+			'LazyGit',
+			'LazyGitConfig',
+			'LazyGitCurrentFile',
+			'LazyGitFilter',
+			'LazyGitFilterCurrentFile',
+		},
 		dependencies = { 'nvim-lua/plenary.nvim' },
 		keys = {
-			{ '<leader>gs', function() require('neogit').open() end, desc = 'Neogit status' },
-			{ '<leader>gl', function() require('neogit').open({ 'log' }) end, desc = 'Neogit log' },
-		},
-		opts = {
-			integrations = {
-				diffview = false,
-			},
+			{ '<leader>gs', '<cmd>LazyGit<cr>', desc = 'LazyGit status' },
+			{ '<leader>gl', '<cmd>LazyGitFilter<cr>', desc = 'LazyGit log' },
 		},
 	},
 }

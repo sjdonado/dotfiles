@@ -70,6 +70,8 @@ brew "gawk"
 brew "gh"
 # Library and utilities for processing GIFs
 brew "giflib"
+# Syntax-highlighting pager for git and diff output
+brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
 # GNU implementation of the famous stream editor
@@ -84,6 +86,8 @@ brew "harfbuzz"
 brew "jpeg"
 # Library for interacting with JSON
 brew "jsoncpp"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library

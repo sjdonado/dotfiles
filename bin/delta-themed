@@ -1,0 +1,31 @@
+#!/bin/sh
+# delta wrapper that syncs colors with the nvim sjdonado_dark/light schemes.
+# Picks --dark/--light from macOS appearance and overrides plus/minus
+# styles with the exact bg colors used by nvim's DiffAdd/DiffDelete/DiffText.
+
+if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
+  mode=--dark
+  minus_bg='#590008'
+  minus_emph_bg='#7a000c'
+  plus_bg='#005523'
+  plus_emph_bg='#007373'
+else
+  mode=--light
+  minus_bg='#ffc0b9'
+  minus_emph_bg='#ff8d80'
+  plus_bg='#b3f6c0'
+  plus_emph_bg='#8cf8f7'
+fi
+
+exec delta \
+  "$mode" \
+  --paging=never \
+  --line-numbers \
+  --syntax-theme=ansi \
+  --minus-style="syntax $minus_bg" \
+  --minus-emph-style="syntax $minus_emph_bg" \
+  --plus-style="syntax $plus_bg" \
+  --plus-emph-style="syntax $plus_emph_bg" \
+  --hyperlinks \
+  --hyperlinks-file-link-format="lazygit-edit://{path}:{line}" \
+  "$@"
