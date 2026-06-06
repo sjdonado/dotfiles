@@ -1,6 +1,9 @@
 tap "amberframework/micrate"
+tap "coder/coder"
+tap "grafana/grafana"
+tap "ory/tap"
 tap "oven-sh/bun"
-tap "raine/workmux"
+tap "tunneltodev/tap"
 # Run your GitHub Actions locally
 brew "act"
 # Mozilla CA certificate store
@@ -19,8 +22,6 @@ brew "bat"
 brew "blueutil"
 # Cross-platform HTTP benchmarking tool
 brew "bombardier"
-# Modern, simple TCP tunnel in Rust that exposes local ports to a remote server
-brew "bore-cli"
 # Powerful, enterprise-ready, open source web server with automatic HTTPS
 brew "caddy"
 # Library for manipulating PNG images
@@ -48,11 +49,11 @@ brew "crystal"
 # Power of curl, ease of use of httpie
 brew "curlie"
 # Pack, ship and run any application as a lightweight container
-brew "docker"
+brew "docker", link: false
 # Docker CLI plugin for extended build capabilities with BuildKit
 brew "docker-buildx"
 # Isolated development environments using Docker
-brew "docker-compose"
+brew "docker-compose", link: false
 # Embeddable SQL OLAP Database Management System
 brew "duckdb"
 # Select default apps for documents and URL schemes on macOS
@@ -81,6 +82,8 @@ brew "gnu-sed"
 brew "gnutls"
 # Fast linters runner for Go
 brew "golangci-lint"
+# Like cURL, but for gRPC
+brew "grpcurl"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Image manipulation library
@@ -89,8 +92,6 @@ brew "jpeg"
 brew "jsoncpp"
 # Simple terminal UI for git commands
 brew "lazygit"
-# Parser generator tool and incremental parsing library
-brew "tree-sitter"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library
@@ -110,7 +111,7 @@ brew "mailpit"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
 # Deep clean and optimize your Mac
-brew "mole"
+brew "mole", link: false
 # Remote terminal application
 brew "mosh"
 # Ambitious Vim-fork focused on extensibility and agility
@@ -119,6 +120,8 @@ brew "neovim"
 brew "nmap"
 # Libraries for security-enabled client and server applications
 brew "nss"
+# Create, run, and share large language models (LLMs)
+brew "ollama"
 # Development kit for the Java programming language
 brew "openjdk"
 # Development kit for the Java programming language
@@ -147,6 +150,8 @@ brew "scc"
 brew "sqlmap"
 # State of the art linter for the Go programming language
 brew "staticcheck"
+# Command-line tool for Stripe
+brew "stripe-cli"
 # SMTP command-line test tool
 brew "swaks"
 # User interface to the TELNET protocol
@@ -161,14 +166,18 @@ brew "tree"
 brew "uv"
 # Watch files and take action when they change
 brew "watchman"
-# Parallel development in tmux with git worktrees and AI agents
-brew "raine/workmux/workmux"
+# CLI for Git worktree management, designed for parallel AI agent workflows
+brew "worktrunk"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
 # Programming language designed for robustness, optimality, and clarity
 brew "zig"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate"
+# Grafana Cloud CLI
+brew "grafana/grafana/gcx"
+# Use Ory from your terminal!
+brew "ory/tap/cli"
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # Password manager that keeps all passwords secure behind one password
@@ -177,14 +186,22 @@ cask "1password"
 cask "1password-cli"
 # Display management tool
 cask "betterdisplay"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
 # Chromium-based web browser
 cask "helium-browser"
 # App to manage software development and track bugs
-cask "linear-linear"
+cask "linear"
+# Reverse proxy, secure introspectable tunnels to localhost
+cask "ngrok"
+# VPN client for secure internet access and private browsing
+cask "nordvpn"
 # App to write, plan, collaborate, and get organised
 cask "notion"
 # Replacement for Docker Desktop
@@ -201,9 +218,9 @@ cask "tablepro"
 cask "yaak"
 # Multiplayer code editor
 cask "zed"
-# Symbols-only Nerd Font for icon glyphs (Menlo fallback in Ghostty)
-cask "font-symbols-only-nerd-font"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 go "github.com/todaatsushi/twt"
+cargo "tree-sitter-cli"
+npm "corepack"
