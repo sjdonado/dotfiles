@@ -45,7 +45,6 @@ mkdir -p "$HOME/.config/bat"
 mkdir -p "$HOME/.config/pgcli"
 mkdir -p "$HOME/.config/zed"
 mkdir -p "$HOME/.config/finicky"
-mkdir -p "$HOME/.config/workmux"
 
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
@@ -153,9 +152,9 @@ if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
 fi
 ln -snf "$PWD/nvim" "$HOME/.config/nvim"
 
-log "Linking workmux config..."
-mkdir -p "$HOME/.config/workmux"
-ln -snf "$PWD/workmux/config.yaml" "$HOME/.config/workmux/config.yaml"
+log "Linking Worktrunk config..."
+mkdir -p "$HOME/.config/worktrunk"
+ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 
 log "Linking Lazygit config..."
 mkdir -p "$HOME/Library/Application Support/lazygit"
