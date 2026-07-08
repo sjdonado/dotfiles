@@ -3,12 +3,20 @@
   "theme": "light/dark",
   "packages": [
     "npm:pi-claude-bridge",
-    "npm:@nukcole-xinluo9510/pi-claude-subs-quota",
     "npm:pi-mcp-adapter",
-    "npm:@jmcombs/pi-notify",
-    "npm:pi-copy-message"
+    "npm:pi-copy-response",
+    "npm:@mjfuertesf/pi-quota-status"
   ],
   "defaultProvider": "claude-bridge",
   "defaultModel": "claude-opus-4-8",
-  "defaultThinkingLevel": "high"
+  "defaultThinkingLevel": "high",
+  "enabledModels": [
+    "claude-bridge/claude-fable-5",
+    "claude-bridge/claude-opus-4-8",
+    "claude-bridge/claude-sonnet-5",
+    "claude-bridge/claude-sonnet-4-6",
+    "claude-bridge/claude-haiku-4-5",
+    "openai-codex/gpt-5.5",
+    "openai-codex/gpt-5.4-mini"
+  ]
 }

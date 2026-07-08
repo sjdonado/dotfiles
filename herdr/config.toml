@@ -1,0 +1,13 @@
+[ui]
+show_agent_labels_on_pane_borders = false
+
+agent_panel_sort = "spaces"
+[theme]
+name = "one-light"
+auto_switch = true
+dark_name = "one-dark"
+light_name = "one-light"
+
+[keys]
+open_worktree = "prefix+shift+o"
+remove_worktree = "prefix+shift+x"
