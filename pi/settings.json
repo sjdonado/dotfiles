@@ -4,7 +4,9 @@
   "packages": [
     "npm:pi-claude-bridge",
     "npm:@nukcole-xinluo9510/pi-claude-subs-quota",
-    "npm:pi-mcp-adapter"
+    "npm:pi-mcp-adapter",
+    "npm:@jmcombs/pi-notify",
+    "npm:pi-copy-message"
   ],
   "defaultProvider": "claude-bridge",
   "defaultModel": "claude-opus-4-8",
