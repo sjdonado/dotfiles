@@ -126,6 +126,11 @@ if ! have pnpm; then
   [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
 fi
 
+log "Installing pi (AI coding agent, if missing)..."
+if ! have pi; then
+  curl -fsSL https://pi.dev/install.sh | sh
+fi
+
 log "Linking Docker/Colima configs..."
 ln -snf "$PWD/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
 ln -snf "$PWD/docker/config.json" "$HOME/.docker/config.json"
@@ -169,6 +174,16 @@ ln -snf "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/set
 log "Linking Zed config..."
 ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
+
+log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
+mkdir -p "$HOME/.pi/agent"
+ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
+# Packages listed in settings.json (pi-claude-bridge, pi-quota-status)
+# auto-install on first launch. To install manually:
+#   pi install npm:pi-claude-bridge
+if have pi; then
+  pi install npm:pi-claude-bridge 2>/dev/null || true
+fi
 
 log "Setting default apps for code files and plain text..."
 if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then

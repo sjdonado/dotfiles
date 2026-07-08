@@ -1,0 +1,12 @@
+{
+  "lastChangelogVersion": "0.80.3",
+  "theme": "light/dark",
+  "packages": [
+    "npm:pi-claude-bridge",
+    "npm:@nukcole-xinluo9510/pi-claude-subs-quota",
+    "npm:pi-mcp-adapter"
+  ],
+  "defaultProvider": "claude-bridge",
+  "defaultModel": "claude-opus-4-8",
+  "defaultThinkingLevel": "high"
+}

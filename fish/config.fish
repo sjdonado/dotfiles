@@ -68,3 +68,6 @@ if not string match -q -- "$PNPM_HOME/bin" $PATH
   set -gx PATH "$PNPM_HOME/bin" $PATH
 end
 # pnpm end
+
+# Pi
+fish_add_path "/Users/juan/Library/pnpm/nodejs/24.15.0/bin"
