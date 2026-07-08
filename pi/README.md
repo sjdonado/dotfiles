@@ -16,6 +16,25 @@ pi install npm:pi-claude-bridge
 
 Extensions in `settings.json` `packages` auto-install on first launch.
 
+## Subagents
+
+`extensions/subagent/` — task delegation to isolated-context `pi` subprocesses
+([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)).
+Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `bootstrap.sh`.
+
+- `agents/` — scout (recon, haiku), planner, reviewer, worker (sonnet).
+- `prompts/` — workflow presets: `/implement`, `/scout-and-plan`,
+  `/implement-and-review`, and `/bugfix`.
+
+`/bugfix <linear-id|url|term>` — fetches the Linear issue, scouts the codebase for
+root cause, and returns fixes with pros/cons (or asks for clarification). Analysis
+only, never implements.
+
+## openspec
+
+[@fission-ai/openspec](https://github.com/Fission-AI/OpenSpec) installed globally
+(`npm i -g @fission-ai/openspec@latest`). Run `openspec init` per project.
+
 ## Auth
 
 Uses the Claude Code subscription OAuth token (shared via the Agent SDK) —

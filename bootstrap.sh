@@ -176,13 +176,22 @@ ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
 log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
-mkdir -p "$HOME/.pi/agent"
+mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
-# Packages listed in settings.json (pi-claude-bridge, pi-quota-status)
-# auto-install on first launch. To install manually:
-#   pi install npm:pi-claude-bridge
+# Subagent extension (isolated-context task delegation) + agents + workflow prompts
+ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
+ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
+for f in "$PWD/pi/agents/"*.md;  do ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
+for f in "$PWD/pi/prompts/"*.md; do ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
+# Packages in settings.json (pi-claude-bridge, pi-claude-subs-quota) auto-install
+# on first launch. Manual: pi install npm:pi-claude-bridge
 if have pi; then
   pi install npm:pi-claude-bridge 2>/dev/null || true
+fi
+
+log "Installing openspec (spec framework, if missing)..."
+if ! have openspec && have npm; then
+  npm install -g @fission-ai/openspec@latest || true
 fi
 
 log "Setting default apps for code files and plain text..."
