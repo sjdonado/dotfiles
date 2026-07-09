@@ -11,3 +11,6 @@ light_name = "one-light"
 [keys]
 open_worktree = "prefix+shift+o"
 remove_worktree = "prefix+shift+x"
+
+[ui.toast]
+delivery = "terminal"
