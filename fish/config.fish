@@ -52,10 +52,10 @@ bind \e 'toggle_vi_mode; commandline -f repaint'
 bind \cf fzf_git_repos
 
 # Source external variables
-. "$HOME/.config/dotfiles/.env"
+test -f "$HOME/.config/dotfiles/.env"; and . "$HOME/.config/dotfiles/.env"
 
-status --is-interactive; and rbenv init - --no-rehash fish | source
-source "$HOME/.cargo/env.fish"
+command -q rbenv; and status --is-interactive; and rbenv init - --no-rehash fish | source
+test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
