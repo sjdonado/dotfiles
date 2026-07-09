@@ -1,90 +1,50 @@
 {
-  "alwaysThinkingEnabled": true,
-  "editorMode": "vim",
-  "effortLevel": "high",
-  "enabledPlugins": {
-    "caveman@caveman": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "repo": "JuliusBrussee/caveman",
-        "source": "github"
-      }
-    }
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "workmux set-window-status waiting",
-            "type": "command"
-          }
-        ],
-        "matcher": "permission_prompt|elicitation_dialog"
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "workmux set-window-status working",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/juan/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "workmux set-window-status done",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "workmux set-window-status working",
-            "type": "command"
-          }
-        ]
-      }
-    ]
-  },
-  "model": "opus[1m]",
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "skipAutoPermissionPrompt": true,
-  "skipDangerousModePermissionPrompt": true,
-  "statusLine": {
-    "command": "bunx -y ccstatusline@latest",
-    "padding": 0,
-    "type": "command"
-  },
-  "theme": "auto",
-  "tui": "fullscreen",
-  "verbose": true,
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  },
-  "voiceEnabled": true
+	"alwaysThinkingEnabled": true,
+	"editorMode": "vim",
+	"effortLevel": "high",
+	"enabledPlugins": {
+		"caveman@caveman": true
+	},
+	"extraKnownMarketplaces": {
+		"caveman": {
+			"source": {
+				"repo": "JuliusBrussee/caveman",
+				"source": "github"
+			}
+		}
+	},
+	"hooks": {
+		"SessionStart": [
+			{
+				"hooks": [
+					{
+						"command": "bash '/Users/juan/.claude/hooks/herdr-agent-state.sh' session",
+						"timeout": 10,
+						"type": "command"
+					}
+				],
+				"matcher": "*"
+			}
+		]
+	},
+	"model": "opus[1m]",
+	"permissions": {
+		"defaultMode": "auto"
+	},
+	"skipAutoPermissionPrompt": true,
+	"skipDangerousModePermissionPrompt": true,
+	"statusLine": {
+		"command": "bunx -y ccstatusline@latest",
+		"padding": 0,
+		"type": "command"
+	},
+	"theme": "auto",
+	"tui": "fullscreen",
+	"verbose": true,
+	"voice": {
+		"enabled": true,
+		"mode": "hold"
+	},
+	"voiceEnabled": true
 }
+

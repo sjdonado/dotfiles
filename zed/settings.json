@@ -59,7 +59,6 @@
 			"enable_lsp_tasks": true
 		}
 	},
-	"context_servers": {},
 	"auto_update": false,
 	"git_panel": {
 		"show_count_badge": true,

@@ -15,6 +15,7 @@ exec delta \
   "$mode" \
   --features="$feature" \
   --paging=never \
+  --side-by-side \
   --line-numbers \
   --hyperlinks \
   --hyperlinks-file-link-format="lazygit-edit://{path}:{line}" \

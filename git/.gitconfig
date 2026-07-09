@@ -36,6 +36,12 @@
 
 [delta]
   navigate = true
+  file-modified-label = ""
+  file-added-label = ""
+  file-removed-label = ""
+  file-renamed-label = ""
+  line-numbers-left-format = "{nm:>3}│"
+  line-numbers-right-format = "{np:>3}│"
   hunk-header-decoration-style = omit
   file-style = bold
   file-decoration-style = ul

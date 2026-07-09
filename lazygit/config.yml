@@ -1,3 +1,7 @@
+gui:
+  expandFocusedSidePanel: true
+  mainPanelSplitMode: vertical
+  showCommandLog: false
 git:
   pagers:
     - colorArg: always

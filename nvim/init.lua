@@ -397,6 +397,7 @@ end
 -- SECTION 5: GIT (gitsigns, git-conflict, lazygit.nvim, blame)
 -- ============================================================
 do
+  vim.g.lazygit_floating_window_scaling_factor = 1.0
   vim.pack.add {
     gh 'lewis6991/gitsigns.nvim',
     gh 'akinsho/git-conflict.nvim',
