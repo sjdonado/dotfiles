@@ -161,15 +161,11 @@ end
 
 -- ============================================================
 -- SECTION 3: UI / CORE UX PLUGINS
--- guess-indent, gitsigns, which-key, colorscheme, todo-comments, mini, devicons
+-- guess-indent, gitsigns, which-key, colorscheme, todo-comments, mini (+icons)
 -- ============================================================
 do
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {}
-
-  if vim.g.have_nerd_font then
-    vim.pack.add { gh 'nvim-tree/nvim-web-devicons' }
-  end
 
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -204,14 +200,18 @@ do
   }
 
   -- [[ Colorscheme ]]
+  vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
+
   vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
   require('auto-dark-mode').setup {
     update_interval = 300,
     set_dark_mode = function()
-      vim.cmd.colorscheme 'sjdonado_dark'
+      vim.o.background = 'dark'
+      vim.cmd.colorscheme 'xcodedark'
     end,
     set_light_mode = function()
-      vim.cmd.colorscheme 'sjdonado_light'
+      vim.o.background = 'light'
+      vim.cmd.colorscheme 'xcodelight'
     end,
   }
 
@@ -221,6 +221,11 @@ do
 
   -- [[ mini.nvim ]]
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
+
+  -- Icon provider (replaces nvim-web-devicons); mock so consumers
+  -- (nvim-tree, telescope, ...) that require 'nvim-web-devicons' still work.
+  require('mini.icons').setup()
+  MiniIcons.mock_nvim_web_devicons()
 
   require('mini.ai').setup {
     mappings = { around_next = 'aa', inside_next = 'ii' },
