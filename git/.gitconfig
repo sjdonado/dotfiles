@@ -33,3 +33,33 @@
 	directory = /opt/homebrew/Library/Taps/amberframework/homebrew-micrate
 	directory = /opt/homebrew/Library/Taps/oven-sh/homebrew-bun
 	directory = /opt/homebrew
+
+[delta]
+  navigate = true
+  hunk-header-decoration-style = omit
+  file-style = bold
+  file-decoration-style = ul
+
+[delta "github-dark"]
+  syntax-theme = Monokai Extended
+  minus-style = syntax "#3c1618"
+  minus-emph-style = syntax "#7a2226"
+  plus-style = syntax "#0f2f1a"
+  plus-emph-style = syntax "#1f6f3f"
+  line-numbers-minus-style = "#f85149"
+  line-numbers-plus-style = "#3fb950"
+  line-numbers-zero-style = "#484f58"
+  hunk-header-style = syntax bold
+  hunk-header-line-number-style = "#58a6ff"
+
+[delta "github-light"]
+  syntax-theme = GitHub
+  minus-style = syntax "#ffebe9"
+  minus-emph-style = syntax "#ffc0bd"
+  plus-style = syntax "#e6ffec"
+  plus-emph-style = syntax "#abf2bc"
+  line-numbers-minus-style = "#cf222e"
+  line-numbers-plus-style = "#1a7f37"
+  line-numbers-zero-style = "#8c959f"
+  hunk-header-style = syntax bold
+  hunk-header-line-number-style = "#0969da"
