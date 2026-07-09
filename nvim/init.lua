@@ -103,7 +103,8 @@ do
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function()
-      vim.hl.on_yank()
+      local hl_op = vim.hl.hl_op or vim.hl.on_yank
+      hl_op()
     end,
   })
 
