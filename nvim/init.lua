@@ -213,11 +213,15 @@ do
   -- [[ Colorscheme ]]
   vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
 
-  -- Default colorscheme. auto-dark-mode overrides when it can detect OS
-  -- appearance; on headless Linux (no dbus/gsettings) detection never fires,
-  -- so without this the scheme would never load.
-  vim.o.background = 'dark'
-  pcall(vim.cmd.colorscheme, 'xcodedark')
+  -- Pick scheme from &background, which Neovim sets from the terminal's
+  -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
+  -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
+  -- and any later terminal theme change.
+  local function apply_xcode()
+    pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
+  end
+  apply_xcode()
+  vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
 
   vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
   require('auto-dark-mode').setup {
