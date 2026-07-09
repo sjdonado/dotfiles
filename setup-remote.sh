@@ -49,14 +49,14 @@ if ! have node; then
   sudo apt-get install -y nodejs
 fi
 
-# --- neovim (nightly: config uses vim.pack / vim.loader, needs >=0.12) -------
+# --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
 if have nvim && nvim --version | head -1 | grep -qE 'v0\.(1[2-9]|[2-9][0-9])'; then NEED_NVIM=0; fi
 if [ "$NEED_NVIM" = 1 ]; then
-  log "Installing Neovim nightly..."
+  log "Installing Neovim stable..."
   tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/nvim.tar.gz" \
-    "https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-${ARCH}.tar.gz"
+    "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${ARCH}.tar.gz"
   sudo rm -rf /opt/nvim
   sudo mkdir -p /opt/nvim
   sudo tar -xzf "$tmp/nvim.tar.gz" -C /opt/nvim --strip-components=1

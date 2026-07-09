@@ -4,5 +4,5 @@
 	"tui.editor.cursorUp": ["up", "ctrl+p"],
 	"tui.editor.cursorDown": ["down", "ctrl+n"],
 	"app.model.cycleForward": "ctrl+shift+m",
-	"app.session.toggleNamedFilter": "alt+n"
+	"app.session.toggleNamedFilter": ""
 }
