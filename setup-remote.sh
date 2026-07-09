@@ -89,6 +89,20 @@ if ! have delta; then
   rm -rf "$tmp"
 fi
 
+# --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
+if ! have tree-sitter; then
+  log "Installing tree-sitter CLI..."
+  case "$ARCH" in x86_64) TSA=x64 ;; arm64) TSA=arm64 ;; esac
+  v="$(curl -fsSL https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest \
+       | grep -oE '"tag_name": *"v[^"]+"' | head -1 | grep -oE '[0-9.]+')"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/ts.gz" \
+    "https://github.com/tree-sitter/tree-sitter/releases/download/v${v}/tree-sitter-linux-${TSA}.gz"
+  gunzip -c "$tmp/ts.gz" > "$BIN/tree-sitter"
+  chmod +x "$BIN/tree-sitter"
+  rm -rf "$tmp"
+fi
+
 # --- herdr -------------------------------------------------------------------
 if ! have herdr; then
   log "Installing herdr..."
@@ -126,6 +140,13 @@ cd "$DOTFILES"
 # --- link configs (Linux paths) ---------------------------------------------
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
+
+# Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
+# so nvim/lazygit/tree-sitter resolve inside herdr too).
+BASHRC="$HOME/.bashrc"
+if [ -f "$BASHRC" ] && ! grep -q 'HOME/.local/bin.*PATH' "$BASHRC"; then
+  printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$BASHRC"
+fi
 
 log "Linking git config..."
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
