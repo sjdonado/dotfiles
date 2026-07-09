@@ -119,12 +119,11 @@ fi
 
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
-  if have cargo; then
-    log "Installing worktrunk via cargo..."
-    cargo install worktrunk && rescan || echo "worktrunk install failed; herdr copy-ignored plugin will no-op"
-  else
-    echo "NOTE: cargo not found — skipping worktrunk (wt). herdr worktree copy-ignored plugin will no-op."
-  fi
+  log "Installing worktrunk (wt)..."
+  # cargo-dist installer: downloads prebuilt musl binary, no rust needed.
+  curl -fsSL https://github.com/max-sixty/worktrunk/releases/latest/download/worktrunk-installer.sh | sh \
+    && rescan \
+    || echo "worktrunk install failed; herdr copy-ignored plugin will no-op"
 fi
 
 # --- clone / update dotfiles -------------------------------------------------

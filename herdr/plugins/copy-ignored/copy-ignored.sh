@@ -22,6 +22,10 @@ ctx="${HERDR_PLUGIN_CONTEXT_JSON:-}"
 dest=$(printf '%s' "$ctx" | sed -n 's/.*"checkout_path":"\([^"]*\)".*/\1/p')
 [ -n "$dest" ] && [ -d "$dest" ] || exit 0
 
+# herdr's server env (spawned over ssh / non-login) may have a minimal PATH
+# that omits where wt lives, so add the common install dirs before lookup.
+PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
+export PATH
 command -v wt >/dev/null 2>&1 || exit 0
 
 cd "$dest" || exit 0
