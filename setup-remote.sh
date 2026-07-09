@@ -197,7 +197,10 @@ FISH="$(command -v fish || true)"
 if [ -n "$FISH" ]; then
   grep -qx "$FISH" /etc/shells || echo "$FISH" | sudo tee -a /etc/shells >/dev/null
   if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$FISH" ]; then
-    chsh -s "$FISH" || echo "chsh failed; set fish manually if wanted"
+    # coder/passwordless users have no password -> chsh PAM fails; use sudo.
+    sudo chsh -s "$FISH" "$USER" 2>/dev/null \
+      || chsh -s "$FISH" 2>/dev/null \
+      || echo "chsh failed; herdr uses [terminal] default_shell from config instead"
   fi
 fi
 
