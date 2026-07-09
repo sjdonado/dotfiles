@@ -8,7 +8,7 @@
     "npm:@mjfuertesf/pi-quota-status"
   ],
   "defaultProvider": "claude-bridge",
-  "defaultModel": "claude-fable-5",
+  "defaultModel": "claude-opus-4-8",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "claude-bridge/claude-fable-5",

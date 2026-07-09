@@ -17,6 +17,16 @@ do
 
   vim.schedule(function()
     vim.o.clipboard = 'unnamedplus'
+    -- Over SSH (e.g. herdr on a remote box) there is no local clipboard tool,
+    -- so route yank/paste through OSC52 to reach the attaching terminal.
+    if vim.env.SSH_TTY or vim.env.SSH_CONNECTION then
+      local osc52 = require 'vim.ui.clipboard.osc52'
+      vim.g.clipboard = {
+        name = 'OSC 52',
+        copy = { ['+'] = osc52.copy '+', ['*'] = osc52.copy '*' },
+        paste = { ['+'] = osc52.paste '+', ['*'] = osc52.paste '*' },
+      }
+    end
   end)
 
   vim.o.tabstop = 2
