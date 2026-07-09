@@ -202,6 +202,12 @@ do
   -- [[ Colorscheme ]]
   vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
 
+  -- Default colorscheme. auto-dark-mode overrides when it can detect OS
+  -- appearance; on headless Linux (no dbus/gsettings) detection never fires,
+  -- so without this the scheme would never load.
+  vim.o.background = 'dark'
+  pcall(vim.cmd.colorscheme, 'xcodedark')
+
   vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
   require('auto-dark-mode').setup {
     update_interval = 300,
@@ -214,6 +220,17 @@ do
       vim.cmd.colorscheme 'xcodelight'
     end,
   }
+
+  -- :ToggleTheme — flip light/dark from the command line.
+  vim.api.nvim_create_user_command('ToggleTheme', function()
+    if vim.o.background == 'dark' then
+      vim.o.background = 'light'
+      vim.cmd.colorscheme 'xcodelight'
+    else
+      vim.o.background = 'dark'
+      vim.cmd.colorscheme 'xcodedark'
+    end
+  end, { desc = 'Toggle light/dark colorscheme' })
 
   -- Highlight TODO/NOTE/etc. in comments
   vim.pack.add { gh 'folke/todo-comments.nvim', gh 'nvim-lua/plenary.nvim' }
