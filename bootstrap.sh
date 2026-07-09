@@ -194,6 +194,7 @@ ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
 mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/extensions/session-name" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
+ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 # Subagent extension (isolated-context task delegation) + agents + workflow prompts
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
 ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
