@@ -1,10 +1,10 @@
 [ui]
 show_agent_labels_on_pane_borders = false
+agent_panel_sort = "spaces"
 
 [ui.toast]
 delivery = "terminal"
 
-agent_panel_sort = "spaces"
 [theme]
 name = "one-light"
 auto_switch = true

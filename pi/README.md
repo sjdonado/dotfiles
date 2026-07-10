@@ -4,8 +4,6 @@
 [pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge).
 
 `settings.json` symlinks to `~/.pi/agent/settings.json` (via `macos.sh`).
-Defaults: provider `claude-bridge`, model `claude-opus-4-8` (1M context),
-thinking `high`.
 
 ## Install
 
@@ -18,14 +16,9 @@ system Node dependency. Update:
   --prefix ~/.local/share/pi-node/current @earendil-works/pi-coding-agent
 ```
 
-Packages in `settings.json` (`pi-claude-bridge`, `pi-mcp-adapter`,
-`pi-copy-response`, `pi-quota-status`) auto-install on first launch.
-
 ## Agents
 
-`extensions/subagent/` — task delegation to isolated-context `pi` subprocesses
-([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)).
-Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `macos.sh`.
+`extensions/subagent/` — task delegation to isolated-context `pi` subprocesses ([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)). Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `macos.sh`.
 
 - `general` — full-capability agent, follows [`ponytail`](skills/ponytail) (laziest working solution).
 - `scout` — fast recon, returns caveman-compressed context for handoff.
@@ -41,13 +34,16 @@ Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `macos.sh`.
 
 ## Global config
 
-`AGENTS.md` symlinks to `~/.pi/agent/AGENTS.md` — appended to the default system
-prompt (not a replacement). Enforces `caveman-commit` style for commit messages.
+`AGENTS.md` symlinks to `~/.pi/agent/AGENTS.md` — appended to the default system prompt (not a replacement). Enforces `caveman-commit` style for commit messages.
 
 Skills live in `skills` (symlinked to `~/.agents/skills`).
 
+## Models
+
+`enabledModels` in `settings.json` lists both Claude (`claude-bridge/*`) and OpenAI Codex (`openai-codex/*`) models. Codex models only appear once the `openai-codex` provider is authenticated (subscription OAuth, ChatGPT Plus/Pro).
+
 ## Auth
 
-Claude subscription OAuth (shared via the Agent SDK) — not versioned.
-`~/.pi/agent/auth.json` + `mcp.json` (MCP tokens, codex token) stay local.
-401 → refresh via `claude` login.
+Claude subscription OAuth (shared via the Agent SDK) — not versioned. `~/.pi/agent/auth.json` + `mcp.json` (MCP tokens, codex token) stay local. 401 → refresh via `claude` login.
+
+OpenAI Codex: manual, per machine. Run `pi`, then `/login` → "ChatGPT Plus/Pro (Codex)".

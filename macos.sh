@@ -239,11 +239,6 @@ if have pi; then
   pi install npm:pi-claude-bridge 2>/dev/null || true
 fi
 
-log "Installing openspec (spec framework, if missing)..."
-if ! have openspec && have npm; then
-  npm install -g @fission-ai/openspec@latest || true
-fi
-
 log "Setting default apps for code files and plain text..."
 if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
   duti "$PWD/macos/default-apps.duti" || true
