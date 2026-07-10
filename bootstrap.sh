@@ -126,10 +126,34 @@ if ! have pnpm; then
   [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
 fi
 
-log "Installing pi (AI coding agent, if missing)..."
-if ! have pi; then
-  curl -fsSL https://pi.dev/install.sh | sh
+log "Installing pi (standalone: private bundled Node, no pnpm)..."
+# pi is a Node app; bundle its own Node under ~/.local/share/pi-node so it
+# never depends on pnpm/system Node. Wrapper in ~/.local/bin hardcodes it.
+PI_NODE_BASE="$HOME/.local/share/pi-node"
+PI_NODE_CUR="$PI_NODE_BASE/current"
+if [ ! -x "$PI_NODE_CUR/bin/pi" ] && [ ! -f "$PI_NODE_CUR/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" ]; then
+  case "$(uname -m)" in
+    arm64|aarch64) NODE_ARCH=arm64 ;;
+    x86_64|amd64) NODE_ARCH=x64 ;;
+    *) NODE_ARCH= ;;
+  esac
+  if [ -n "$NODE_ARCH" ]; then
+    NODE_VER="$(curl -fsSL https://nodejs.org/dist/index.json | tr ',' '\n' | grep -oE '"v22\.[0-9]+\.[0-9]+"' | head -1 | tr -d '\"')"
+    tmp="$(mktemp -d)"
+    curl -fsSL -o "$tmp/node.tar.gz" "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-darwin-$NODE_ARCH.tar.gz"
+    rm -rf "$PI_NODE_BASE"; mkdir -p "$PI_NODE_CUR"
+    tar -xzf "$tmp/node.tar.gz" -C "$PI_NODE_CUR" --strip-components=1
+    rm -rf "$tmp"
+    "$PI_NODE_CUR/bin/npm" install -g --prefix "$PI_NODE_CUR" @earendil-works/pi-coding-agent --no-fund --no-audit --loglevel=error
+  fi
 fi
+cat > "$HOME/.local/bin/pi" <<'PIWRAP'
+#!/bin/sh
+# pi via private bundled Node (independent of pnpm/system Node)
+PI_HOME="$HOME/.local/share/pi-node/current"
+exec "$PI_HOME/bin/node" "$PI_HOME/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" "$@"
+PIWRAP
+chmod +x "$HOME/.local/bin/pi"
 
 log "Linking Docker/Colima configs..."
 ln -snf "$PWD/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
@@ -192,14 +216,13 @@ ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
 ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
 log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
-mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/extensions/session-name" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
+mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 # Subagent extension (isolated-context task delegation) + agents + workflow prompts
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
 ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
-# set_session_name tool
-ln -snf "$PWD/pi/extensions/session-name/index.ts" "$HOME/.pi/agent/extensions/session-name/index.ts"
+
 for f in "$PWD/pi/agents/"*.md;  do ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
 for f in "$PWD/pi/prompts/"*.md; do ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
 # Packages in settings.json (pi-claude-bridge, pi-claude-subs-quota) auto-install

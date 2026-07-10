@@ -69,5 +69,4 @@ if not string match -q -- "$PNPM_HOME/bin" $PATH
 end
 # pnpm end
 
-# Pi
-fish_add_path "/Users/juan/Library/pnpm/nodejs/24.15.0/bin"
+# Pi runs from ~/.local/bin/pi (private bundled node, see setup)
