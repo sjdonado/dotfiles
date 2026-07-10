@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Remote Ubuntu setup for herdr + pi + nvim + lazygit, wired to these dotfiles.
-# Idempotent. Safe to re-run. macOS-only steps from bootstrap.sh are omitted.
+# Idempotent. Safe to re-run. macOS-only steps from macos.sh are omitted.
 #
 # End goal: connect from your local terminal with `herdr --remote <user>@<host>`.
 #
@@ -187,7 +187,7 @@ mkdir -p "$HOME/.agents"
 if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
   mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
 fi
-ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
+ln -snf "$PWD/agents/skills" "$HOME/.agents/skills"
 
 # --- herdr copy-ignored plugin (needs running herdr server) ------------------
 if have herdr; then

@@ -3,13 +3,13 @@
 [pi](https://pi.dev) coding agent, on my Claude subscription via
 [pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge).
 
-`settings.json` symlinks to `~/.pi/agent/settings.json` (via `bootstrap.sh`).
+`settings.json` symlinks to `~/.pi/agent/settings.json` (via `macos.sh`).
 Defaults: provider `claude-bridge`, model `claude-opus-4-8` (1M context),
 thinking `high`.
 
 ## Install
 
-`bootstrap.sh` installs pi as a standalone bundle: private Node under
+`macos.sh` installs pi as a standalone bundle: private Node under
 `~/.local/share/pi-node`, launched by a `~/.local/bin/pi` wrapper. No pnpm or
 system Node dependency. Update:
 
@@ -25,7 +25,7 @@ Packages in `settings.json` (`pi-claude-bridge`, `pi-mcp-adapter`,
 
 `extensions/subagent/` — task delegation to isolated-context `pi` subprocesses
 ([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)).
-Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `bootstrap.sh`.
+Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `macos.sh`.
 
 - `general` — full-capability agent, follows [`ponytail`](skills/ponytail) (laziest working solution).
 - `scout` — fast recon, returns caveman-compressed context for handoff.

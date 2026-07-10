@@ -4,9 +4,10 @@
 
 1. Clone this repo into `~/.config/dotfiles`
 
-### Boostrap
+### Bootstrap
 
-- Run from the dotfiles directory: `./bootstrap.sh`
+- macOS: run from the dotfiles directory: `./macos.sh`
+- Linux (remote/dev box): `./linux.sh`
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
 ### Terminal multiplexer
