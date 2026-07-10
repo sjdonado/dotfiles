@@ -175,11 +175,19 @@ mkdir -p "$HOME/.pi/agent/extensions/subagent" \
          "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json"    "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
+ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
 ln -snf "$PWD/pi/extensions/subagent/agents.ts"  "$HOME/.pi/agent/extensions/subagent/agents.ts"
 ln -snf "$PWD/pi/extensions/session-name/index.ts" "$HOME/.pi/agent/extensions/session-name/index.ts"
 for f in "$PWD/pi/agents/"*.md;  do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
 for f in "$PWD/pi/prompts/"*.md; do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
+
+log "Linking agent skills..."
+mkdir -p "$HOME/.agents"
+if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
+  mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
+fi
+ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
 
 # --- herdr copy-ignored plugin (needs running herdr server) ------------------
 if have herdr; then

@@ -219,12 +219,20 @@ log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
 mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
+ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 # Subagent extension (isolated-context task delegation) + agents + workflow prompts
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
 ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
 
 for f in "$PWD/pi/agents/"*.md;  do ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
 for f in "$PWD/pi/prompts/"*.md; do ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
+
+log "Linking agent skills..."
+mkdir -p "$HOME/.agents"
+if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
+  mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
+fi
+ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
 # Packages in settings.json (pi-claude-bridge, pi-claude-subs-quota) auto-install
 # on first launch. Manual: pi install npm:pi-claude-bridge
 if have pi; then

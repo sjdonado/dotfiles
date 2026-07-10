@@ -1,42 +1,53 @@
 # pi
 
-[pi](https://pi.dev) coding agent, configured to run on my Claude
-subscription via [pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge).
+[pi](https://pi.dev) coding agent, on my Claude subscription via
+[pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge).
 
-`settings.json` symlinks to `~/.pi/agent/settings.json` (done by `bootstrap.sh`).
+`settings.json` symlinks to `~/.pi/agent/settings.json` (via `bootstrap.sh`).
 Defaults: provider `claude-bridge`, model `claude-opus-4-8` (1M context),
-thinking level `high`.
+thinking `high`.
 
-## Install (also automated in bootstrap.sh)
+## Install
+
+`bootstrap.sh` installs pi as a standalone bundle: private Node under
+`~/.local/share/pi-node`, launched by a `~/.local/bin/pi` wrapper. No pnpm or
+system Node dependency. Update:
 
 ```sh
-curl -fsSL https://pi.dev/install.sh | sh
-pi install npm:pi-claude-bridge
+~/.local/share/pi-node/current/bin/npm i -g \
+  --prefix ~/.local/share/pi-node/current @earendil-works/pi-coding-agent
 ```
 
-Extensions in `settings.json` `packages` auto-install on first launch.
+Packages in `settings.json` (`pi-claude-bridge`, `pi-mcp-adapter`,
+`pi-copy-response`, `pi-quota-status`) auto-install on first launch.
 
-## Subagents
+## Agents
 
 `extensions/subagent/` — task delegation to isolated-context `pi` subprocesses
 ([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)).
 Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `bootstrap.sh`.
 
-- `agents/` — scout (recon, haiku), planner, reviewer, worker (sonnet).
-- `prompts/` — workflow presets: `/implement`, `/scout-and-plan`,
-  `/implement-and-review`, and `/bugfix`.
+- `general` — full-capability agent, follows [`ponytail`](skills/ponytail) (laziest working solution).
+- `scout` — fast recon, returns caveman-compressed context for handoff.
 
-`/bugfix <linear-id|url|term>` — fetches the Linear issue, scouts the codebase for
-root cause, and returns fixes with pros/cons (or asks for clarification). Analysis
-only, never implements.
+## Prompts
 
-## openspec
+- `/triage <linear-id|url|paste>` — understand a ticket (bug, feature, or small
+  change), investigate, propose approach with tradeoffs. Analysis only.
+- `/plan <task>` — system-aware plan via [`plan-mode`](skills/plan-mode), smallest coherent solution. No impl.
+- `/yolo <reqs>` — autonomous requirements→PR via [`ponytail`](skills/ponytail): clarify once, then implement and open a PR, no further input.
+- `/address-review <pr>` — fix legit PR comments (reply w/ commit hash), reject
+  others w/ reason, fix red CI + stale branch.
 
-[@fission-ai/openspec](https://github.com/Fission-AI/OpenSpec) installed globally
-(`npm i -g @fission-ai/openspec@latest`). Run `openspec init` per project.
+## Global config
+
+`AGENTS.md` symlinks to `~/.pi/agent/AGENTS.md` — appended to the default system
+prompt (not a replacement). Enforces `caveman-commit` style for commit messages.
+
+Skills live in `skills` (symlinked to `~/.agents/skills`).
 
 ## Auth
 
-Uses the Claude Code subscription OAuth token (shared via the Agent SDK) —
-not versioned here. `~/.pi/agent/auth.json` and Claude creds stay local.
-If runs return 401, refresh the token by logging in with `claude`.
+Claude subscription OAuth (shared via the Agent SDK) — not versioned.
+`~/.pi/agent/auth.json` + `mcp.json` (MCP tokens, codex token) stay local.
+401 → refresh via `claude` login.
