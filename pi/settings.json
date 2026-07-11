@@ -5,7 +5,8 @@
     "npm:pi-claude-bridge",
     "npm:pi-mcp-adapter",
     "npm:pi-copy-response",
-    "npm:@mjfuertesf/pi-quota-status"
+    "npm:@mjfuertesf/pi-quota-status",
+    "npm:pi-search-hub"
   ],
   "defaultProvider": "claude-bridge",
   "defaultModel": "claude-opus-4-8",

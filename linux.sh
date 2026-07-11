@@ -37,10 +37,12 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
-  fish ripgrep fd-find
+  fish ripgrep fd-find bat python3 python3-pip
 
 # fd binary is named fd-find on Debian/Ubuntu; expose as `fd`
 have fd || ln -snf "$(command -v fdfind)" "$BIN/fd" 2>/dev/null || true
+# bat binary is named batcat on Debian/Ubuntu; expose as `bat`
+have bat || ln -snf "$(command -v batcat)" "$BIN/bat" 2>/dev/null || true
 
 # --- node (for pi npm packages) ---------------------------------------------
 if ! have node; then
@@ -117,6 +119,15 @@ if ! have pi; then
   rescan
 fi
 
+# --- ddgs (DuckDuckGo backend for pi-search-hub) -----------------------------
+# search-hub spawns `python3 -c "from ddgs import DDGS"`; ddgs must live in that
+# python3's site-packages. PEP 668 marks system python externally-managed.
+log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
+if have python3; then
+  python3 -c "import ddgs" 2>/dev/null \
+    || python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
+fi
+
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
   log "Installing worktrunk (wt)..."
@@ -150,6 +161,18 @@ fi
 log "Linking git config..."
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
 
+log "Linking bat config + themes (GitHub Dark/Light for delta)..."
+mkdir -p "$HOME/.config/bat/themes"
+[ -e "$PWD/bat/config" ] && ln -snf "$PWD/bat/config" "$HOME/.config/bat/config"
+for f in "$PWD/bat/themes/"*.tmTheme; do
+  [ -e "$f" ] && ln -snf "$f" "$HOME/.config/bat/themes/$(basename "$f")"
+done
+if have bat; then
+  bat cache --build >/dev/null 2>&1 || true
+elif have batcat; then
+  batcat cache --build >/dev/null 2>&1 || true
+fi
+
 log "Linking fish config..."
 mkdir -p "$HOME/.config/fish/functions"
 ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
@@ -174,6 +197,7 @@ mkdir -p "$HOME/.pi/agent/extensions/subagent" \
          "$HOME/.pi/agent/extensions/session-name" \
          "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json"    "$HOME/.pi/agent/settings.json"
+ln -snf "$PWD/pi/models.json"      "$HOME/.pi/agent/models.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"

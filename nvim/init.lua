@@ -46,7 +46,7 @@ do
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
   vim.o.inccommand = 'split'
   vim.o.cursorline = true
-  vim.o.scrolloff = 10
+  vim.o.scrolloff = 0
   vim.o.showtabline = 2
   vim.o.confirm = true
   vim.o.termguicolors = true
@@ -81,8 +81,9 @@ do
   vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
   vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
-  vim.keymap.set('n', '<C-e>', '4j', { desc = 'Scroll down 4 lines' })
-  vim.keymap.set('n', '<C-y>', '4k', { desc = 'Scroll up 4 lines' })
+  -- Scroll viewport without moving the cursor (until scrolloff pushes it).
+  vim.keymap.set('n', '<C-e>', '4<C-e>', { desc = 'Scroll down 4 lines' })
+  vim.keymap.set('n', '<C-y>', '4<C-y>', { desc = 'Scroll up 4 lines' })
 
   for _, mode in ipairs { 'n', 'i', 'v', 'x', 's', 'o', 'c', 't' } do
     vim.keymap.set(mode, '<ScrollWheelLeft>', '<Nop>', {})
@@ -211,41 +212,46 @@ do
   }
 
   -- [[ Colorscheme ]]
-  vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
+  -- TEMPFIX: force built-in dark. Revert (uncomment xcode + auto-dark-mode
+  -- below) once herdr fixes gray pane-selection color.
+  vim.o.background = 'dark'
+  vim.cmd.colorscheme 'default'
 
-  -- Pick scheme from &background, which Neovim sets from the terminal's
-  -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
-  -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
-  -- and any later terminal theme change.
-  local function apply_xcode()
-    pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
-  end
-  apply_xcode()
-  vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
-
-  vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
-  require('auto-dark-mode').setup {
-    update_interval = 300,
-    set_dark_mode = function()
-      vim.o.background = 'dark'
-      vim.cmd.colorscheme 'xcodedark'
-    end,
-    set_light_mode = function()
-      vim.o.background = 'light'
-      vim.cmd.colorscheme 'xcodelight'
-    end,
-  }
-
-  -- :ToggleTheme — flip light/dark from the command line.
-  vim.api.nvim_create_user_command('ToggleTheme', function()
-    if vim.o.background == 'dark' then
-      vim.o.background = 'light'
-      vim.cmd.colorscheme 'xcodelight'
-    else
-      vim.o.background = 'dark'
-      vim.cmd.colorscheme 'xcodedark'
-    end
-  end, { desc = 'Toggle light/dark colorscheme' })
+  -- vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
+  --
+  -- -- Pick scheme from &background, which Neovim sets from the terminal's
+  -- -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
+  -- -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
+  -- -- and any later terminal theme change.
+  -- local function apply_xcode()
+  --   pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
+  -- end
+  -- apply_xcode()
+  -- vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
+  --
+  -- vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
+  -- require('auto-dark-mode').setup {
+  --   update_interval = 300,
+  --   set_dark_mode = function()
+  --     vim.o.background = 'dark'
+  --     vim.cmd.colorscheme 'xcodedark'
+  --   end,
+  --   set_light_mode = function()
+  --     vim.o.background = 'light'
+  --     vim.cmd.colorscheme 'xcodelight'
+  --   end,
+  -- }
+  --
+  -- -- :ToggleTheme — flip light/dark from the command line.
+  -- vim.api.nvim_create_user_command('ToggleTheme', function()
+  --   if vim.o.background == 'dark' then
+  --     vim.o.background = 'light'
+  --     vim.cmd.colorscheme 'xcodelight'
+  --   else
+  --     vim.o.background = 'dark'
+  --     vim.cmd.colorscheme 'xcodedark'
+  --   end
+  -- end, { desc = 'Toggle light/dark colorscheme' })
 
   -- Highlight TODO/NOTE/etc. in comments
   vim.pack.add { gh 'folke/todo-comments.nvim', gh 'nvim-lua/plenary.nvim' }
@@ -289,8 +295,8 @@ do
   require('nvim-autopairs').setup {}
 
   -- Colorizer
-  vim.pack.add { gh 'catgoose/nvim-colorizer.lua' }
-  require('colorizer').setup { filetypes = { '*', '!vim' } }
+  -- vim.pack.add { gh 'catgoose/nvim-colorizer.lua' }
+  -- require('colorizer').setup { filetypes = { '*', '!vim' } }
 
   -- Zen mode
   vim.pack.add { gh 'folke/zen-mode.nvim' }
@@ -753,6 +759,16 @@ do
       end
     end,
   })
+end
+
+-- ============================================================
+-- SECTION 9b: MARKDOWN RENDERING (render-markdown.nvim)
+-- ============================================================
+do
+  vim.pack.add { gh 'MeanderingProgrammer/render-markdown.nvim' }
+  require('render-markdown').setup {
+    completions = { lsp = { enabled = true } },
+  }
 end
 
 -- ============================================================

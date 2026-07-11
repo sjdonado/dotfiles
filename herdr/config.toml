@@ -5,11 +5,11 @@ agent_panel_sort = "spaces"
 [ui.toast]
 delivery = "terminal"
 
+# TEMPFIX: forced dark. Revert to auto_switch=true (name one-light, dark_name
+# one-dark, light_name one-light) once herdr fixes gray pane-selection color.
 [theme]
-name = "one-light"
-auto_switch = true
-dark_name = "one-dark"
-light_name = "one-light"
+name = "one-dark"
+auto_switch = false
 
 [terminal]
 default_shell = "fish"
@@ -17,3 +17,8 @@ default_shell = "fish"
 [keys]
 open_worktree = "prefix+shift+o"
 remove_worktree = "prefix+shift+x"
+
+[experimental]
+# Render inline images (pi image reads) via Kitty graphics; ghostty supports it.
+# Without this, panes show a black gap where the image would be.
+kitty_graphics = true

@@ -175,6 +175,16 @@ ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
 ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
 ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
+# Custom bat themes (GitHub Dark/Light) used by delta; build cache so bat and
+# delta can resolve them by name.
+mkdir -p "$HOME/.config/bat/themes"
+for f in "$PWD/bat/themes/"*.tmTheme; do
+  ln -snf "$f" "$HOME/.config/bat/themes/$(basename "$f")"
+done
+if have bat; then
+  bat cache --build >/dev/null 2>&1 || true
+fi
+
 log "Linking Neovim config..."
 if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
   mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%s)"
@@ -238,6 +248,16 @@ ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
 # on first launch. Manual: pi install npm:pi-claude-bridge
 if have pi; then
   pi install npm:pi-claude-bridge 2>/dev/null || true
+fi
+
+log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
+# search-hub spawns `python3 -c "from ddgs import DDGS"` (no venv/path config),
+# so ddgs must live in that python3's site-packages. Homebrew python is
+# externally-managed; --break-system-packages is required. uv/pipx isolate and
+# stay unimportable here.
+if have python3; then
+  python3 -c "import ddgs" 2>/dev/null || \
+    python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
 fi
 
 log "Setting default apps for code files and plain text..."

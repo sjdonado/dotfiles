@@ -35,6 +35,7 @@
 	directory = /opt/homebrew
 
 [delta]
+  features = github-dark
   navigate = true
   file-modified-label = "~"
   file-added-label = "+"
@@ -47,7 +48,7 @@
   file-decoration-style = ul
 
 [delta "github-dark"]
-  syntax-theme = Monokai Extended
+  syntax-theme = GitHub-Dark
   minus-style = syntax "#3c1618"
   minus-emph-style = syntax "#7a2226"
   plus-style = syntax "#0f2f1a"
@@ -59,7 +60,7 @@
   hunk-header-line-number-style = "#58a6ff"
 
 [delta "github-light"]
-  syntax-theme = GitHub
+  syntax-theme = GitHub-Light
   minus-style = syntax "#ffebe9"
   minus-emph-style = syntax "#ffc0bd"
   plus-style = syntax "#e6ffec"

@@ -1,4 +1,6 @@
-theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
+# TEMPFIX: forced dark. Revert to auto (dark:sjdonado-dark.conf,light:sjdonado-light.conf)
+# once herdr fixes gray pane-selection color. See herdr/config.toml, nvim/init.lua.
+theme = sjdonado-dark.conf
 
 font-family = Menlo
 font-family = Symbols Nerd Font Mono
