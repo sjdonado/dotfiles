@@ -29,6 +29,7 @@ system Node dependency. Update:
   change), investigate, propose approach with tradeoffs. Analysis only.
 - `/create-ticket <request>` — shape a request into a scoped Linear ticket (no
   em-dashes, context + requirements + acceptance), create via MCP after confirm.
+- `/ask <question>` — answer one focused question, read-only, no changes until approved; suggests `/grilling` if the problem is actually broader.
 - `/plan <task>` — system-aware plan via [`plan-mode`](skills/plan-mode), smallest coherent solution. No impl.
 - `/yolo <reqs>` — autonomous requirements→PR via [`ponytail`](skills/ponytail): clarify once, then implement and open a PR, no further input.
 - `/address-review <pr>` — fix legit PR comments (reply w/ commit hash), reject
