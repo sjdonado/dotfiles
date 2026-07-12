@@ -2,7 +2,8 @@ tap "amberframework/micrate"
 tap "coder/coder"
 tap "grafana/grafana"
 tap "ory/tap"
-tap "oven-sh/bun"
+tap "oven-sh/bun", trusted: true
+tap "supabase/tap"
 tap "tunneltodev/tap"
 # Run your GitHub Actions locally
 brew "act"
@@ -86,6 +87,8 @@ brew "golangci-lint"
 brew "grpcurl"
 # OpenType text shaping engine
 brew "harfbuzz"
+# Agent multiplexer that lives in your terminal
+brew "herdr"
 # Image manipulation library
 brew "jpeg"
 # Library for interacting with JSON
@@ -134,6 +137,8 @@ brew "p7zip"
 brew "pipx"
 # Fast, disk space efficient package manager
 brew "pnpm"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Monitor data's progress through a pipe
 brew "pv"
 # Interpreted, interactive, object-oriented programming language
@@ -156,8 +161,6 @@ brew "stripe-cli"
 brew "swaks"
 # User interface to the TELNET protocol
 brew "telnet"
-# Terminal multiplexer
-brew "tmux"
 # Anonymizing overlay network for TCP
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
@@ -173,11 +176,11 @@ brew "xq"
 # Programming language designed for robustness, optimality, and clarity
 brew "zig"
 # Database migration tool written in Crystal
-brew "amberframework/micrate/micrate"
+brew "amberframework/micrate/micrate", trusted: true
 # Grafana Cloud CLI
-brew "grafana/grafana/gcx"
+brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!
-brew "ory/tap/cli"
+brew "ory/tap/cli", trusted: true
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # Password manager that keeps all passwords secure behind one password
@@ -216,11 +219,10 @@ cask "slack"
 cask "tablepro"
 # REST, GraphQL and gRPC client
 cask "yaak"
-# Multiplayer code editor
-cask "zed"
 go "github.com/air-verse/air"
 go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 go "github.com/todaatsushi/twt"
 cargo "tree-sitter-cli"
+npm "@fission-ai/openspec"
 npm "corepack"

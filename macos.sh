@@ -43,7 +43,6 @@ mkdir -p "$HOME/.config/ghostty/themes"
 mkdir -p "$HOME/.config/fish/functions"
 mkdir -p "$HOME/.config/bat"
 mkdir -p "$HOME/.config/pgcli"
-mkdir -p "$HOME/.config/zed"
 mkdir -p "$HOME/.config/finicky"
 
 log "Linking local bin..."
@@ -62,11 +61,6 @@ log "Setting up Ghostty config..."
 ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
 ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
-log "Setting up tmux..."
-if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
-  git clone --depth=1 https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-fi
-ln -snf "$PWD/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
 log "Installing/setting fish shell..."
 if ! have fish; then
@@ -221,9 +215,6 @@ mkdir -p "$HOME/.config/ccstatusline"
 ln -snf "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
 ln -snf "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
 
-log "Linking Zed config..."
-ln -snf "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
-ln -snf "$PWD/zed/keymap.json"   "$HOME/.config/zed/keymap.json"
 
 log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
 mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"

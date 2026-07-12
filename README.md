@@ -10,11 +10,6 @@
 - Linux (remote/dev box): `./linux.sh`
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
-### Terminal multiplexer
-
-- Init run `tmux`
-- Install plugins: Press `prefix` + `I` (capital i, as in Install)
-
 ### Text editor
 
 - Run `nvim .`
