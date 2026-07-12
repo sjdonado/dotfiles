@@ -161,7 +161,7 @@ fi
 log "Linking git config..."
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
 
-log "Linking bat config + themes (GitHub Dark/Light for delta)..."
+log "Linking bat config + themes (VSCode Dark/Light for delta)..."
 mkdir -p "$HOME/.config/bat/themes"
 [ -e "$PWD/bat/config" ] && ln -snf "$PWD/bat/config" "$HOME/.config/bat/config"
 for f in "$PWD/bat/themes/"*.tmTheme; do

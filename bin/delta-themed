@@ -1,15 +1,19 @@
 #!/bin/sh
-# delta wrapper: pick GitHub-flavored feature + --dark/--light from macOS
-# appearance. Feature styles live in ~/.gitconfig ([delta "github-*"]).
-# Keep hyperlinks for click-to-jump in lazygit.
+# delta wrapper: VSCode-flavored feature (matches pi code render) + --dark/
+# --light. Feature styles live in ~/.gitconfig ([delta "vscode-*"]). Keep
+# hyperlinks for click-to-jump in lazygit.
 
-if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
-  mode=--dark
-  feature=github-dark
-else
-  mode=--light
-  feature=github-light
-fi
+# TEMPFIX: forced dark. Revert to macOS-appearance switch (below) once herdr
+# fixes gray pane-selection color.
+mode=--dark
+feature=vscode-dark
+# if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
+#   mode=--dark
+#   feature=vscode-dark
+# else
+#   mode=--light
+#   feature=vscode-light
+# fi
 
 exec delta \
   "$mode" \
