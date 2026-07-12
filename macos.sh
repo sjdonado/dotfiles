@@ -229,6 +229,8 @@ log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
 mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/models.json" "$HOME/.pi/agent/models.json"
+mkdir -p "$HOME/.pi/agent/extensions"
+ln -snf "$PWD/pi/extensions/search.json" "$HOME/.pi/agent/extensions/search.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 # Subagent extension (isolated-context task delegation) + agents + workflow prompts

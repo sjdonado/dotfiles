@@ -198,6 +198,7 @@ mkdir -p "$HOME/.pi/agent/extensions/subagent" \
          "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json"    "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/models.json"      "$HOME/.pi/agent/models.json"
+ln -snf "$PWD/pi/extensions/search.json" "$HOME/.pi/agent/extensions/search.json"
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
