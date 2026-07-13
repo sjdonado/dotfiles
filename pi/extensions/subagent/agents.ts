@@ -12,7 +12,8 @@ export interface AgentConfig {
 	name: string;
 	description: string;
 	tools?: string[];
-	model?: string;
+	models?: Record<string, string>;
+	selectedModel?: string;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -49,7 +50,12 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			continue;
 		}
 
-		const { frontmatter, body } = parseFrontmatter<Record<string, string>>(content);
+		const { frontmatter, body } = parseFrontmatter<{
+			name?: string;
+			description?: string;
+			tools?: string;
+			models?: Record<string, unknown>;
+		}>(content);
 
 		if (!frontmatter.name || !frontmatter.description) {
 			continue;
@@ -59,12 +65,19 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			?.split(",")
 			.map((t: string) => t.trim())
 			.filter(Boolean);
+		const models = frontmatter.models
+			? Object.fromEntries(
+					Object.entries(frontmatter.models).filter(
+						(entry): entry is [string, string] => typeof entry[1] === "string",
+					),
+				)
+			: undefined;
 
 		agents.push({
 			name: frontmatter.name,
 			description: frontmatter.description,
 			tools: tools && tools.length > 0 ? tools : undefined,
-			model: frontmatter.model,
+			models: models && Object.keys(models).length > 0 ? models : undefined,
 			systemPrompt: body,
 			source,
 			filePath,

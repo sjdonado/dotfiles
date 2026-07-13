@@ -14,8 +14,14 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 3. Once requirements are clear, proceed fully autonomously. No further questions. If a minor decision is ambiguous, pick the most reasonable minimal option and note it in the PR body.
 
-4. Implement on a branch off the current base. Keep it minimal per ponytail. Run the project's checks (typecheck, lint, tests, build — whatever exists) and fix failures.
+4. Create a live progress checklist before changing code:
+   - Resolve the repository root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
+   - Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore` for this.
+   - Write `PI_PROGRESS.md` in the repository root with Markdown checkboxes for: understand requirements, investigate existing code, define the minimal implementation, implement, run checks, review the diff, commit, push, and open the PR. Add task-specific substeps where useful.
+   - Update the file immediately after each step completes. Record failures, assumptions, or skipped checks beneath the relevant item. Leave the completed file in place.
 
-5. Commit with conventional messages, push, and open a PR (`gh pr create`) summarizing what changed, why, and any assumptions. Do not merge — leave open for human review.
+5. Implement on a branch off the current base. Keep it minimal per ponytail. Run the project's checks (typecheck, lint, tests, build — whatever exists) and fix failures.
+
+6. Commit with conventional messages, push, and open a PR (`gh pr create`) summarizing what changed, why, and any assumptions. Do not merge — leave open for human review.
 
 Use subagents only if the task genuinely benefits (large recon, parallel work); otherwise do it directly. Do not force-push shared branches.
