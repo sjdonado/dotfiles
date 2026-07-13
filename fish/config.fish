@@ -70,3 +70,9 @@ end
 # pnpm end
 
 # Pi runs from ~/.local/bin/pi (private bundled node, see setup)
+
+# Fish pager: readable selected row on dark bg (theme leaves it low-contrast)
+set -g fish_pager_color_selected_background --background=blue
+set -g fish_pager_color_selected_prefix white --bold
+set -g fish_pager_color_selected_completion white
+set -g fish_pager_color_selected_description white

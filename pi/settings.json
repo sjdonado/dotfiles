@@ -8,17 +8,20 @@
     "npm:@mjfuertesf/pi-quota-status",
     "npm:pi-search-hub"
   ],
-  "defaultProvider": "claude-bridge",
-  "defaultModel": "claude-opus-4-8",
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
   "enabledModels": [
     "claude-bridge/claude-fable-5",
     "claude-bridge/claude-sonnet-5",
     "claude-bridge/claude-sonnet-4-6",
     "claude-bridge/claude-opus-4-8",
+    "ollama/gemma4:e4b",
     "openai-codex/gpt-5.6-sol",
     "openai-codex/gpt-5.6-luna",
     "openai-codex/gpt-5.6-terra",
-    "ollama/gemma4:e4b"
+    "openai/gpt-5.6-luna",
+    "openai/gpt-5.6-sol",
+    "openai/gpt-5.6-terra"
   ]
 }

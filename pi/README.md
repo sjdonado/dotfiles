@@ -3,7 +3,7 @@
 [pi](https://pi.dev) coding agent, on my Claude subscription via
 [pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge).
 
-`settings.json` symlinks to `~/.pi/agent/settings.json` (via `macos.sh`).
+`settings.json` and `models.json` symlink to `~/.pi/agent/` via `macos.sh` and `linux.sh`.
 
 ## Install
 
