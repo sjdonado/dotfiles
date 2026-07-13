@@ -1,12 +1,13 @@
 {
-  "defaultBackend": "auto",
-  "reader": "jina",
-  "showStatus": true,
-  "compact": false,
-  "backends": {
-    "brave": { "enabled": true },
-    "firecrawl": { "enabled": true },
-    "duckduckgo": { "enabled": true },
-    "jina": { "enabled": true }
-  }
+	"defaultBackend": "exa",
+	"reader": "exa",
+	"showStatus": false,
+	"compact": false,
+	"backends": {
+		"exa": { "enabled": true },
+		"brave": { "enabled": true },
+		"firecrawl": { "enabled": true },
+		"duckduckgo": { "enabled": true },
+		"jina": { "enabled": true }
+	}
 }

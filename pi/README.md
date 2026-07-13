@@ -32,6 +32,7 @@ system Node dependency. Update:
 - `/ask <question>` — answer one focused question, read-only, no changes until approved; suggests `/grilling` if the problem is actually broader.
 - `/plan <task>` — system-aware plan via [`plan-mode`](skills/plan-mode), smallest coherent solution. No impl.
 - `/yolo <reqs>` — autonomous requirements→PR via [`ponytail`](skills/ponytail): clarify once, then implement and open a PR, no further input.
+- `/feedback <bullets>` — apply implementation feedback, commit and push, then optionally run one final PR review.
 - `/address-review <pr>` — fix legit PR comments (reply w/ commit hash), reject
   others w/ reason, fix red CI + stale branch.
 

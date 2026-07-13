@@ -12,8 +12,10 @@ Steps:
 2. Create a live progress checklist before changing code:
    - Resolve the repository root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
    - Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore` for this.
-   - Write `PI_PROGRESS.md` in the repository root with Markdown checkboxes for: load the PR, assess comments, fix accepted feedback, inspect and fix CI, update the branch if needed, review the result, await approval, push, reply to threads, and finish. Add one task-specific item per review thread and failing check.
-   - Update the file immediately after each step completes. Record verdicts, commit hashes, failures, or skipped work beneath the relevant item. Leave the completed file in place.
+   - Write `PI_PROGRESS.md` with `## Current run` and `## Gotchas` sections. Reset only `## Current run`; preserve relevant existing gotchas and discard old checklist history.
+   - Under `## Current run`, add Markdown checkboxes for: load the PR, assess comments, fix accepted feedback, inspect and fix CI, update the branch if needed, review the result, await approval, push, reply to threads, and finish. Add one task-specific item per review thread and failing check.
+   - Update the file immediately after each step completes and before starting the next step. Never begin the next checklist item while the completed item is still unchecked. Record verdicts and commit hashes beneath the relevant item.
+   - Keep `## Gotchas` concise and current. Add only durable assumptions, known risks, skipped checks, environment blockers, non-obvious decisions, or failed approaches worth avoiding. Prefix new entries with `[address-review]`, remove resolved or obsolete entries, and update gotchas before moving to the next checklist item. Leave the completed file in place.
 
 3. For EACH review comment, judge it:
    - **Legit** — the reviewer is right. Make the fix in code. Keep one focused commit per comment (or per tightly-related cluster). After committing, capture the short hash.

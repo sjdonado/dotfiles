@@ -17,8 +17,10 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 4. Create a live progress checklist before changing code:
    - Resolve the repository root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
    - Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore` for this.
-   - Write `PI_PROGRESS.md` in the repository root with Markdown checkboxes for: understand requirements, investigate existing code, define the minimal implementation, implement, run checks, review the diff, commit, push, and open the PR. Add task-specific substeps where useful.
-   - Update the file immediately after each step completes. Record failures, assumptions, or skipped checks beneath the relevant item. Leave the completed file in place.
+   - Write `PI_PROGRESS.md` with `## Current run` and `## Gotchas` sections. Reset only `## Current run`; preserve relevant existing gotchas and discard old checklist history.
+   - Under `## Current run`, add Markdown checkboxes for: understand requirements, investigate existing code, define the minimal implementation, implement, run checks, review the diff, commit, push, and open the PR. Add task-specific substeps where useful.
+   - Update the file immediately after each step completes and before starting the next step. Never begin the next checklist item while the completed item is still unchecked.
+   - Keep `## Gotchas` concise and current. Add only durable assumptions, known risks, skipped checks, environment blockers, non-obvious decisions, or failed approaches worth avoiding. Prefix new entries with `[yolo]`, remove resolved or obsolete entries, and update gotchas before moving to the next checklist item. Leave the completed file in place.
 
 5. Implement on a branch off the current base. Keep it minimal per ponytail. Run the project's checks (typecheck, lint, tests, build — whatever exists) and fix failures.
 
