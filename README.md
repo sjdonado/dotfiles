@@ -8,6 +8,7 @@
 
 - macOS: run from the dotfiles directory: `./macos.sh`
 - Linux (remote/dev box): `./linux.sh`
+- Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
 ### Text editor

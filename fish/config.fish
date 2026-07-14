@@ -22,7 +22,12 @@ umask 002
 
 # Path configurations
 set -x EDITOR "nvim"
-set -x PNPM_HOME "$HOME/Library/pnpm"
+if test (uname) = Darwin
+  set -gx PNPM_HOME "$HOME/Library/pnpm"
+else
+  set -gx PNPM_HOME "$HOME/.local/share/pnpm"
+  set -gx COREPACK_HOME "$HOME/.cache/corepack"
+end
 set -x PATH $HOME/.cargo/bin $PATH
 
 # Add custom man pages
@@ -61,13 +66,6 @@ test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 
-
-# pnpm
-set -gx PNPM_HOME "/Users/juan/Library/pnpm"
-if not string match -q -- "$PNPM_HOME/bin" $PATH
-  set -gx PATH "$PNPM_HOME/bin" $PATH
-end
-# pnpm end
 
 # Pi runs from ~/.local/bin/pi (private bundled node, see setup)
 

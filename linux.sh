@@ -15,6 +15,17 @@ BIN="$HOME/.local/bin"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
+usage() { echo "Usage: $0 [--install]"; }
+
+INSTALL=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --install) INSTALL=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+  shift
+done
 
 case "$(uname -m)" in
   x86_64|amd64) ARCH=x86_64; DARCH=amd64; GARCH=x86_64 ;;
@@ -22,27 +33,26 @@ case "$(uname -m)" in
   *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;;
 esac
 
-mkdir -p "$BIN" "$HOME/.config"
+COREPACK_HOME="$HOME/.cache/corepack"
+PNPM_HOME="$HOME/.local/share/pnpm"
+export COREPACK_HOME PNPM_HOME
+mkdir -p "$BIN" "$HOME/.config" "$COREPACK_HOME" "$PNPM_HOME"
 # Ensure dirs where installers drop binaries are on PATH, so re-runs detect
 # already-installed tools (idempotency) and post-install `have` checks pass.
-for d in "$BIN" "$HOME/.cargo/bin" "$HOME/.pi/bin" "$HOME/.local/share/pi/bin"; do
+for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.pi/bin" "$HOME/.local/share/pi/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
 rescan() { hash -r 2>/dev/null || true; }
 
-# --- base packages -----------------------------------------------------------
+# --- dependencies (opt-in) ---------------------------------------------------
+if [ "$INSTALL" = 1 ]; then
 log "apt base packages..."
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat python3 python3-pip
-
-# fd binary is named fd-find on Debian/Ubuntu; expose as `fd`
-have fd || ln -snf "$(command -v fdfind)" "$BIN/fd" 2>/dev/null || true
-# bat binary is named batcat on Debian/Ubuntu; expose as `bat`
-have bat || ln -snf "$(command -v batcat)" "$BIN/bat" 2>/dev/null || true
 
 # --- node (for pi npm packages) ---------------------------------------------
 if ! have node; then
@@ -136,6 +146,14 @@ if ! have wt; then
     && rescan \
     || echo "worktrunk install failed; herdr copy-ignored plugin will no-op"
 fi
+else
+  log "Skipping dependency installation (use --install to enable)."
+fi
+
+# fd and bat use different binary names on Debian/Ubuntu; keep these symlinks
+# current even when dependency installation is skipped.
+have fd || { have fdfind && ln -snf "$(command -v fdfind)" "$BIN/fd"; } || true
+have bat || { have batcat && ln -snf "$(command -v batcat)" "$BIN/bat"; } || true
 
 # --- clone / update dotfiles -------------------------------------------------
 if [ -d "$DOTFILES/.git" ]; then
@@ -156,6 +174,15 @@ ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
 BASHRC="$HOME/.bashrc"
 if [ -f "$BASHRC" ] && ! grep -q 'HOME/.local/bin.*PATH' "$BASHRC"; then
   printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$BASHRC"
+fi
+if [ -f "$BASHRC" ] && ! grep -q 'COREPACK_HOME.*\.cache/corepack' "$BASHRC"; then
+  cat >> "$BASHRC" <<'EOF'
+
+# dotfiles: user-writable package-manager caches
+export COREPACK_HOME="$HOME/.cache/corepack"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+EOF
 fi
 
 log "Linking git config..."
@@ -194,7 +221,6 @@ ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
 log "Linking pi config..."
 mkdir -p "$HOME/.pi/agent/extensions/subagent" \
-         "$HOME/.pi/agent/extensions/session-name" \
          "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
 ln -snf "$PWD/pi/settings.json"    "$HOME/.pi/agent/settings.json"
 ln -snf "$PWD/pi/models.json"      "$HOME/.pi/agent/models.json"
@@ -202,8 +228,7 @@ ln -snf "$PWD/pi/extensions/search.json" "$HOME/.pi/agent/extensions/search.json
 ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
 ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
-ln -snf "$PWD/pi/extensions/subagent/agents.ts"  "$HOME/.pi/agent/extensions/subagent/agents.ts"
-ln -snf "$PWD/pi/extensions/session-name/index.ts" "$HOME/.pi/agent/extensions/session-name/index.ts"
+ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
 for f in "$PWD/pi/agents/"*.md;  do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
 for f in "$PWD/pi/prompts/"*.md; do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
 
@@ -212,7 +237,7 @@ mkdir -p "$HOME/.agents"
 if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
   mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
 fi
-ln -snf "$PWD/agents/skills" "$HOME/.agents/skills"
+ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
 
 # --- herdr copy-ignored plugin (needs running herdr server) ------------------
 if have herdr; then

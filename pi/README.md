@@ -7,7 +7,7 @@
 
 ## Install
 
-`macos.sh` installs pi as a standalone bundle: private Node under
+`macos.sh --install` installs pi as a standalone bundle: private Node under
 `~/.local/share/pi-node`, launched by a `~/.local/bin/pi` wrapper. No pnpm or
 system Node dependency. Update:
 

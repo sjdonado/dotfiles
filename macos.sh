@@ -4,18 +4,33 @@ set -euo pipefail
 # helpers
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
+usage() { echo "Usage: $0 [--install]"; }
 
-# Xcode CLT (needed for Homebrew)
-if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1 \
-   && ! xcode-select -p >/dev/null 2>&1; then
-  log "Installing Xcode Command Line Tools..."
-  xcode-select --install || true
-  log "If a GUI prompt appeared, finish it, then re-run this script if needed."
-fi
+INSTALL=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --install) INSTALL=1 ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+  shift
+done
 
-if ! have brew; then
-  log "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if [ "$INSTALL" = 1 ]; then
+  # Xcode CLT (needed for Homebrew)
+  if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1 \
+     && ! xcode-select -p >/dev/null 2>&1; then
+    log "Installing Xcode Command Line Tools..."
+    xcode-select --install || true
+    log "If a GUI prompt appeared, finish it, then re-run this script if needed."
+  fi
+
+  if ! have brew; then
+    log "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+else
+  log "Skipping dependency installation (use --install to enable)."
 fi
 
 # Make brew available in THIS shell (Apple Silicon uses /opt/homebrew)
@@ -25,8 +40,8 @@ elif [ -x /usr/local/bin/brew ]; then
   eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# Sanity check
-if ! have brew; then
+# Sanity check when dependency installation was requested.
+if [ "$INSTALL" = 1 ] && ! have brew; then
   echo "brew not found on PATH after install. Aborting." >&2
   exit 1
 fi
@@ -48,13 +63,14 @@ mkdir -p "$HOME/.config/finicky"
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
 
-# Install dependencies from Brewfile
-if [ -f "$PWD/Brewfile" ]; then
-  log "Installing dependencies from Brewfile..."
-  # 'brew bundle' auto-detects Brewfile in CWD; use explicit path:
-  brew bundle --file="$PWD/Brewfile" || true
-else
-  log "No Brewfile found, skipping."
+# Install dependencies from Brewfile only when requested.
+if [ "$INSTALL" = 1 ]; then
+  if [ -f "$PWD/Brewfile" ]; then
+    log "Installing dependencies from Brewfile..."
+    brew bundle --file="$PWD/Brewfile" || true
+  else
+    log "No Brewfile found, skipping."
+  fi
 fi
 
 log "Setting up Ghostty config..."
@@ -62,23 +78,25 @@ ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
 ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
 
-log "Installing/setting fish shell..."
-if ! have fish; then
+log "Setting fish shell..."
+if [ "$INSTALL" = 1 ] && ! have fish; then
   brew install fish
 fi
 
-# ensure fish is listed in /etc/shells
-FISH_PATH="$(brew --prefix)/bin/fish"
-if ! grep -qx "$FISH_PATH" /etc/shells; then
-  echo "Adding $FISH_PATH to /etc/shells (requires sudo)..."
-  echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
-fi
+FISH_PATH="$(command -v fish || true)"
+if [ -n "$FISH_PATH" ]; then
+  # ensure fish is listed in /etc/shells
+  if ! grep -qx "$FISH_PATH" /etc/shells; then
+    echo "Adding $FISH_PATH to /etc/shells (requires sudo)..."
+    echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+  fi
 
-# change default shell if not already fish (check dscl, not $SHELL subshell var)
-CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
-if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
-  echo "Changing login shell to fish (requires your password)..."
-  chsh -s "$FISH_PATH"
+  # change default shell if not already fish (check dscl, not $SHELL subshell var)
+  CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
+  if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
+    echo "Changing login shell to fish (requires your password)..."
+    chsh -s "$FISH_PATH"
+  fi
 fi
 
 # link fish config
@@ -100,45 +118,46 @@ if [ ! -e "$HOME/.fish_history" ]; then
 fi
 ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
 
-log "Installing rustup (if missing)..."
-if ! have rustup-init && ! have rustup; then
-  curl -fsSL https://sh.rustup.rs | sh -s -- -y
-  # shell will pick up cargo on next login; try to add for current run:
-  [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-fi
-
-log "Installing tree-sitter CLI (needed by nvim-treesitter main branch)..."
-if ! have tree-sitter && have cargo; then
-  cargo install tree-sitter-cli
-fi
-
-log "Installing pnpm (if missing)..."
-if ! have pnpm; then
-  curl -fsSL https://get.pnpm.io/install.sh | sh -
-  # add PNPM_HOME for current shell if installer wrote it
-  PNPM_RC="$HOME/.zshrc"
-  [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
-fi
-
-log "Installing pi (standalone: private bundled Node, no pnpm)..."
-# pi is a Node app; bundle its own Node under ~/.local/share/pi-node so it
-# never depends on pnpm/system Node. Wrapper in ~/.local/bin hardcodes it.
+# pi wrapper is refreshed on every run; dependency binaries install only with --install.
 PI_NODE_BASE="$HOME/.local/share/pi-node"
 PI_NODE_CUR="$PI_NODE_BASE/current"
-if [ ! -x "$PI_NODE_CUR/bin/pi" ] && [ ! -f "$PI_NODE_CUR/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" ]; then
-  case "$(uname -m)" in
-    arm64|aarch64) NODE_ARCH=arm64 ;;
-    x86_64|amd64) NODE_ARCH=x64 ;;
-    *) NODE_ARCH= ;;
-  esac
-  if [ -n "$NODE_ARCH" ]; then
-    NODE_VER="$(curl -fsSL https://nodejs.org/dist/index.json | tr ',' '\n' | grep -oE '"v22\.[0-9]+\.[0-9]+"' | head -1 | tr -d '\"')"
-    tmp="$(mktemp -d)"
-    curl -fsSL -o "$tmp/node.tar.gz" "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-darwin-$NODE_ARCH.tar.gz"
-    rm -rf "$PI_NODE_BASE"; mkdir -p "$PI_NODE_CUR"
-    tar -xzf "$tmp/node.tar.gz" -C "$PI_NODE_CUR" --strip-components=1
-    rm -rf "$tmp"
-    "$PI_NODE_CUR/bin/npm" install -g --prefix "$PI_NODE_CUR" @earendil-works/pi-coding-agent --no-fund --no-audit --loglevel=error
+if [ "$INSTALL" = 1 ]; then
+  log "Installing rustup (if missing)..."
+  if ! have rustup-init && ! have rustup; then
+    curl -fsSL https://sh.rustup.rs | sh -s -- -y
+    [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+  fi
+
+  log "Installing tree-sitter CLI (needed by nvim-treesitter main branch)..."
+  if ! have tree-sitter && have cargo; then
+    cargo install tree-sitter-cli
+  fi
+
+  log "Installing pnpm (if missing)..."
+  if ! have pnpm; then
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    PNPM_RC="$HOME/.zshrc"
+    [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
+  fi
+
+  log "Installing pi (standalone: private bundled Node, no pnpm)..."
+  # pi is a Node app; bundle its own Node under ~/.local/share/pi-node so it
+  # never depends on pnpm/system Node. Wrapper in ~/.local/bin hardcodes it.
+  if [ ! -x "$PI_NODE_CUR/bin/pi" ] && [ ! -f "$PI_NODE_CUR/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" ]; then
+    case "$(uname -m)" in
+      arm64|aarch64) NODE_ARCH=arm64 ;;
+      x86_64|amd64) NODE_ARCH=x64 ;;
+      *) NODE_ARCH= ;;
+    esac
+    if [ -n "$NODE_ARCH" ]; then
+      NODE_VER="$(curl -fsSL https://nodejs.org/dist/index.json | tr ',' '\n' | grep -oE '"v22\.[0-9]+\.[0-9]+"' | head -1 | tr -d '\"')"
+      tmp="$(mktemp -d)"
+      curl -fsSL -o "$tmp/node.tar.gz" "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-darwin-$NODE_ARCH.tar.gz"
+      rm -rf "$PI_NODE_BASE"; mkdir -p "$PI_NODE_CUR"
+      tar -xzf "$tmp/node.tar.gz" -C "$PI_NODE_CUR" --strip-components=1
+      rm -rf "$tmp"
+      "$PI_NODE_CUR/bin/npm" install -g --prefix "$PI_NODE_CUR" @earendil-works/pi-coding-agent --no-fund --no-audit --loglevel=error
+    fi
   fi
 fi
 cat > "$HOME/.local/bin/pi" <<'PIWRAP'
@@ -237,20 +256,20 @@ if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
   mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
 fi
 ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
-# Packages in settings.json (pi-claude-bridge, pi-claude-subs-quota) auto-install
-# on first launch. Manual: pi install npm:pi-claude-bridge
-if have pi; then
-  pi install npm:pi-claude-bridge 2>/dev/null || true
-fi
+# Packages in settings.json auto-install on first launch. Preinstall optional
+# dependencies only when dependency installation was requested.
+if [ "$INSTALL" = 1 ]; then
+  if have pi; then
+    pi install npm:pi-claude-bridge 2>/dev/null || true
+  fi
 
-log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
-# search-hub spawns `python3 -c "from ddgs import DDGS"` (no venv/path config),
-# so ddgs must live in that python3's site-packages. Homebrew python is
-# externally-managed; --break-system-packages is required. uv/pipx isolate and
-# stay unimportable here.
-if have python3; then
-  python3 -c "import ddgs" 2>/dev/null || \
-    python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
+  log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
+  # search-hub imports ddgs from python3's site-packages. Homebrew Python is
+  # externally managed, so --break-system-packages is required.
+  if have python3; then
+    python3 -c "import ddgs" 2>/dev/null || \
+      python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
+  fi
 fi
 
 log "Setting default apps for code files and plain text..."
