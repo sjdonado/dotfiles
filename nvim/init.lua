@@ -35,6 +35,7 @@ do
 
   vim.o.breakindent = true
   vim.o.undofile = true
+  vim.o.autoread = true
   vim.o.ignorecase = true
   vim.o.smartcase = true
   vim.o.signcolumn = 'yes'
@@ -114,6 +115,12 @@ do
     callback = function()
       vim.cmd 'tabdo wincmd ='
     end,
+  })
+
+  vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHoldI' }, {
+    desc = 'Reload files changed outside Neovim',
+    group = vim.api.nvim_create_augroup('kickstart-checktime', { clear = true }),
+    command = 'checktime',
   })
 end
 

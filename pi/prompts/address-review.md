@@ -18,9 +18,11 @@ Steps:
 2. Create a live progress checklist before changing code:
    - Resolve the repository root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
    - Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore` for this.
-   - Overwrite `PI_PROGRESS.md` with a Markdown checklist for the current run: load the PR, assess comments, fix accepted feedback, inspect and fix CI, prepare a branch-update plan if needed, review the result, await approval, update the branch if approved, push, rerun remote CI if needed, reply to threads, and finish. Add one task-specific item per review thread and failing check; do not retain previous-run content.
+   - Maintain `PI_PROGRESS.md` with `# PI Progress`, `## Current run`, and `## History` sections.
+   - Before starting, move the existing `## Current run` to the top of `## History`, preserving its checklist and notes. Use a heading like `### <previous workflow> — <recorded commit hashes>` plus its final status. If the file uses the old unsectioned format, archive the whole old checklist. If no commit was recorded, label it `interrupted, no commit`; never associate it with the new run's commit. Preserve existing history newest-first.
+   - Create a fresh `## Current run` with `Workflow: address-review`, `Status: in progress`, and checkboxes for: load the PR, assess comments, fix accepted feedback, inspect and fix CI, prepare a branch-update plan if needed, review the result, await approval, update the branch if approved, push, rerun remote CI if needed, reply to threads, and finish. Add one task-specific item per review thread and failing check.
    - Add concise indented notes beneath the relevant checklist item for verdicts, commit hashes, evidence, decisions, files changed, failures, assumptions, or skipped work.
-   - Update each checkbox immediately after completion and before starting the next item. Never begin the next checklist item while the completed item is still unchecked. Update its notes at the same time. Leave the completed file in place.
+   - Update each checkbox immediately after completion and before starting the next item. Never begin the next checklist item while the completed item is still unchecked. Update its notes at the same time. Record each fixing commit under its thread item before moving on. After pushing and replying, set the current run status to `completed`. Leave the completed file in place.
 
 3. For EACH unresolved existing review thread, judge the requested change:
    - **Legit** — the reviewer is right. Make the fix in code. Keep one focused commit per comment (or per tightly-related cluster). After committing, capture the short hash.

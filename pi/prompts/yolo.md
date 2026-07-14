@@ -25,10 +25,12 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 5. Create a live progress checklist before changing code:
    - Resolve the repository root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
    - Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore` for this.
-   - Overwrite `PI_PROGRESS.md` with a Markdown checklist for the current run: understand requirements, investigate existing code, prepare a safe branch, define the minimal implementation, implement, run checks, audit the diff against requirements, commit, push, and open the PR. Add task-specific substeps where useful; do not retain previous-run content.
+   - Maintain `PI_PROGRESS.md` with `# PI Progress`, `## Current run`, and `## History` sections.
+   - Before starting, move the existing `## Current run` to the top of `## History`, preserving its checklist and notes. Use a heading like `### <previous workflow> — <recorded commit hashes>` plus its final status. If the file uses the old unsectioned format, archive the whole old checklist. If no commit was recorded, label it `interrupted, no commit`; never associate it with the new run's commit.
+   - Create a fresh `## Current run` with `Workflow: yolo`, `Status: in progress`, and checkboxes for: understand requirements, investigate existing code, prepare a safe branch, define the minimal implementation, implement, run checks, audit the diff against requirements, commit, push, and open the PR. Add task-specific substeps where useful. Preserve existing history newest-first.
    - Initialize understand requirements, investigate existing code, and prepare a safe branch as completed, with concise notes showing what was established. Leave remaining items unchecked.
    - Add concise indented notes beneath the relevant checklist item for evidence, decisions, files changed, failures, assumptions, or skipped checks.
-   - Update each checkbox immediately after completion and before starting the next item. Never begin the next checklist item while the completed item is still unchecked. Update its notes at the same time. Leave the completed file in place.
+   - Update each checkbox immediately after completion and before starting the next item. Never begin the next checklist item while the completed item is still unchecked. Update its notes at the same time. Record every commit hash under the commit item before starting push. After opening the PR, set the current run status to `PR opened` and record its URL. Leave the completed file in place.
 
 6. Implement the smallest sufficient change per ponytail. Run the project's checks (typecheck, lint, tests, build — whatever exists) and fix failures.
 
