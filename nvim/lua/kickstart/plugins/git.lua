@@ -121,6 +121,33 @@ require('gitsigns').setup {
 -- git-conflict
 require('git-conflict').setup {}
 
+-- lazygit.nvim opens remote edits in a temporary tab, then restores the old
+-- window on exit. Move the edited buffer back into that window instead.
+local lazygit_tabs = {}
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'lazygit',
+  group = vim.api.nvim_create_augroup('lazygit-remote-edit', { clear = true }),
+  callback = function()
+    lazygit_tabs = {}
+    for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+      lazygit_tabs[tab] = true
+    end
+  end,
+})
+
+vim.g.lazygit_on_exit_callback = function()
+  for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+    if not lazygit_tabs[tab] then
+      local win = vim.api.nvim_tabpage_get_win(tab)
+      local buf = vim.api.nvim_win_get_buf(win)
+      vim.api.nvim_win_close(win, true)
+      vim.api.nvim_win_set_buf(0, buf)
+      break
+    end
+  end
+  lazygit_tabs = {}
+end
+
 -- lazygit.nvim keymaps
 vim.keymap.set('n', '<leader>gs', '<cmd>LazyGit<cr>', { desc = 'LazyGit status' })
 vim.keymap.set('n', '<leader>gl', '<cmd>LazyGitFilter<cr>', { desc = 'LazyGit log' })

@@ -70,3 +70,10 @@
   line-numbers-zero-style = "#8c959f"
   hunk-header-style = syntax bold
   hunk-header-line-number-style = "#0969da"
+
+[credential "https://github.com"]
+	helper =
+	helper = !/usr/bin/env gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/usr/bin/env gh auth git-credential

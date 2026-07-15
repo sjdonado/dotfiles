@@ -9,3 +9,7 @@ git:
       pager: delta-themed
 os:
   editPreset: nvim-remote
+keybinding:
+  universal:
+    edit: [e, o]
+    openFile: O

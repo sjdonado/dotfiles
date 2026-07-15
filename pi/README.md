@@ -21,6 +21,8 @@ system Node dependency. Update:
 `extensions/subagent/` — task delegation to isolated-context `pi` subprocesses ([example](https://github.com/earendil-works/pi/tree/main/packages/coding-agent/examples/extensions/subagent)). Symlinked into `~/.pi/agent/{extensions/subagent,agents,prompts}` by `macos.sh`.
 
 - `general` — full-capability agent, follows [`ponytail`](skills/ponytail) (laziest working solution).
+- `planner` — read-only system analysis and concrete implementation plans.
+- `reviewer` — read-only, findings-first code and PR review.
 - `scout` — fast recon, returns caveman-compressed context for handoff.
 
 ## Prompts
