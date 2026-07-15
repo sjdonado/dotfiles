@@ -65,12 +65,3 @@ test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
-
-
-# Pi runs from ~/.local/bin/pi (private bundled node, see setup)
-
-# Fish pager: readable selected row on dark bg (theme leaves it low-contrast)
-set -g fish_pager_color_selected_background --background=blue
-set -g fish_pager_color_selected_prefix white --bold
-set -g fish_pager_color_selected_completion white
-set -g fish_pager_color_selected_description white

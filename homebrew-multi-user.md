@@ -18,6 +18,8 @@ sudo chgrp -R brew /opt/homebrew
 sudo chmod -R g+w /opt/homebrew
 ```
 
+Group write covers normal file changes but not owner-only metadata operations such as preserving timestamps and extended attributes. See [Troubleshooting metadata permission errors](#9-troubleshooting-metadata-permission-errors) if upgrades fail with `utimensat`, `apply2files`, or `rb_file_s_rename`.
+
 ## 3. Run `brew doctor` from each user account
 
 Log in as each user in the `brew` group and run `brew doctor`. It will report directories with incorrect ownership:
@@ -105,6 +107,47 @@ brew install hello && brew uninstall hello
 ```
 
 Log out and back in after adding users to the group.
+
+## 9. Troubleshooting metadata permission errors
+
+Errors such as these mean the formula or staging directory belongs to another Homebrew user:
+
+```text
+Permission denied @ rb_file_s_rename
+Permission denied @ apply2files
+cp: utimensat: ... Permission denied
+```
+
+`chgrp brew` and `chmod g+w` are not enough for these operations. Homebrew preserves timestamps and extended attributes, which require ownership or the macOS ACL permissions `writeattr` and `writeextattr`.
+
+Stop other Homebrew processes, then paste this Fish function. Pass the failing formula name, for example `brew_repair_permissions fontconfig`. It repairs existing entries, adds inheritable permissions for future entries, removes only that formula's failed staging directory, and retries the upgrade.
+
+```fish
+function brew_repair_permissions
+    if test (count $argv) -ne 1
+        echo "usage: brew_repair_permissions FORMULA" >&2
+        return 2
+    end
+
+    set -l formula $argv[1]
+    set -l prefix (brew --prefix)
+    set -l dir_acl 'group:brew allow add_file,add_subdirectory,delete_child,writeattr,writeextattr,file_inherit,directory_inherit'
+    set -l file_acl 'group:brew allow writeattr,writeextattr'
+
+    sudo chgrp -R brew $prefix
+    sudo chmod -R g+rwX $prefix
+    sudo find $prefix -type d -exec chmod +a $dir_acl '{}' +
+    sudo find $prefix -type f -exec chmod +a $file_acl '{}' +
+
+    rm -rf "$prefix/var/homebrew/tmp/.cellar/$formula"
+    brew upgrade $formula
+end
+
+brew_repair_permissions fontconfig
+functions --erase brew_repair_permissions
+```
+
+The ACL applies only to members of the trusted `brew` group. The directory ACL inherits into newly created files and subdirectories, avoiding ownership changes between Homebrew users.
 
 ## Notes
 

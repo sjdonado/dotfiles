@@ -23,4 +23,4 @@ Rules:
 - If the question is ambiguous, ask one sharp clarifying question before answering. Do not guess.
 - If a fix or change is the natural next step, describe it and STOP. Wait for explicit approval before touching anything.
 
-Scope check: this is for a single, bounded question. If answering reveals the real problem is broader — multiple valid approaches, unclear requirements, design tradeoffs, or several iterations needed to refine — say so and suggest a `/grilling` session (grill-me skill) to sharpen it properly instead of answering shallowly here.
+Scope check: this is for a single, bounded question. If it remains one question but needs deep tracing, multiple sources, or evidence triangulation, suggest `/research`. If the real problem is unclear requirements, design tradeoffs, multiple valid approaches, or several iterations to refine intent, suggest a `/grilling` session instead of answering shallowly here.
