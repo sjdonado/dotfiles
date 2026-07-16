@@ -45,6 +45,16 @@ system Node dependency. Update:
 
 Skills live in `skills` (symlinked to `~/.agents/skills`).
 
+## Transfer a Coder session
+
+Fork a remote session into a new local Worktrunk checkout:
+
+```sh
+pi-fork-coder-session /home/coder/.pi/agent/sessions/<project>/<session>.jsonl
+```
+
+Defaults: host `sjdonado.coder`, repositories under `~/Developer`. Pass a second argument to choose the local branch name. Remote uncommitted changes are reported but not transferred.
+
 ## Models
 
 `enabledModels` in `settings.json` lists both Claude (`claude-bridge/*`) and OpenAI Codex (`openai-codex/*`) models. Codex models only appear once the `openai-codex` provider is authenticated (subscription OAuth, ChatGPT Plus/Pro).

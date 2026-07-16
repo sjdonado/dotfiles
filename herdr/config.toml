@@ -3,7 +3,7 @@ onboarding = false
 show_agent_labels_on_pane_borders = false
 agent_panel_sort = "spaces"
 mouse_capture = true
-copy_on_select = false
+copy_on_select = true
 
 [ui.toast]
 delivery = "terminal"
