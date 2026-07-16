@@ -1,0 +1,18 @@
+id = "link-router"
+name = "Link Router"
+version = "0.1.0"
+min_herdr_version = "0.7.4"
+description = "Open GitHub pull requests in Linear Reviews."
+platforms = ["macos", "linux"]
+
+[[actions]]
+id = "open-linear-review"
+title = "Open pull request in Linear Reviews"
+contexts = ["pane"]
+command = ["/bin/sh", "open-linear-review.sh"]
+
+[[link_handlers]]
+id = "github-pr-linear"
+title = "Open GitHub pull request in Linear Reviews"
+pattern = "^https://github\\.com/[^/]+/[^/]+/pull/[0-9]+(?:[/?#].*)?$"
+action = "open-linear-review"

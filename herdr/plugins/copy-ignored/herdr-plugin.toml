@@ -1,6 +1,6 @@
 id = "copy-ignored"
 name = "copy-ignored"
-version = "0.1.0"
+version = "0.1.1"
 min_herdr_version = "0.7.0"
 description = "Seed new git worktrees with gitignored files (.env, build caches, deps) using worktrunk's clonefile-based copy-ignored."
 platforms = ["macos", "linux"]

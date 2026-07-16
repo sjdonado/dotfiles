@@ -239,14 +239,18 @@ if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
 fi
 ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
 
-# --- herdr copy-ignored plugin (needs running herdr server) ------------------
+# --- local Herdr plugins (need running Herdr server) -------------------------
 if have herdr; then
-  herdr plugin unlink copy-ignored >/dev/null 2>&1 || true
-  if herdr plugin link "$PWD/herdr/plugins/copy-ignored" >/dev/null 2>&1; then
-    log "linked herdr copy-ignored plugin"
-  else
-    log "herdr server not running; later: herdr plugin link $PWD/herdr/plugins/copy-ignored"
-  fi
+  for plugin_dir in "$PWD/herdr/plugins/"*; do
+    [ -f "$plugin_dir/herdr-plugin.toml" ] || continue
+    plugin_id="$(basename "$plugin_dir")"
+    herdr plugin unlink "$plugin_id" >/dev/null 2>&1 || true
+    if herdr plugin link "$plugin_dir" >/dev/null 2>&1; then
+      log "linked Herdr plugin: $plugin_id"
+    else
+      log "Herdr server not running; later: herdr plugin link $plugin_dir"
+    fi
+  done
 fi
 
 # --- default shell to fish (optional) ----------------------------------------

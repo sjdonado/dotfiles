@@ -212,16 +212,18 @@ log "Linking Herdr config..."
 # NOTE: only symlink config.toml; herdr keeps sockets/logs/session.json in this dir.
 mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
-# Worktree seeding plugin: on worktree.created, copy gitignored files
-# (.env, caches, deps) from the main worktree via `wt step copy-ignored`.
-# Requires a running herdr server; re-run this or link manually otherwise.
+# Link local Herdr workflow plugins. Requires a running Herdr server.
 if have herdr; then
-  herdr plugin unlink copy-ignored >/dev/null 2>&1 || true
-  if herdr plugin link "$PWD/herdr/plugins/copy-ignored" >/dev/null 2>&1; then
-    log "  linked copy-ignored worktree plugin"
-  else
-    log "  herdr not running; later run: herdr plugin link $PWD/herdr/plugins/copy-ignored"
-  fi
+  for plugin_dir in "$PWD/herdr/plugins/"*; do
+    [ -f "$plugin_dir/herdr-plugin.toml" ] || continue
+    plugin_id="$(basename "$plugin_dir")"
+    herdr plugin unlink "$plugin_id" >/dev/null 2>&1 || true
+    if herdr plugin link "$plugin_dir" >/dev/null 2>&1; then
+      log "  linked Herdr plugin: $plugin_id"
+    else
+      log "  Herdr not running; later run: herdr plugin link $plugin_dir"
+    fi
+  done
 fi
 
 log "Linking Lazygit config..."

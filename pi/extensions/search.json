@@ -4,7 +4,7 @@
 	"showStatus": false,
 	"compact": false,
 	"backends": {
-		"exa": { "enabled": true },
+		"exa": { "enabled": true, "apiKey": "EXA_API_KEY" },
 		"brave": { "enabled": true },
 		"firecrawl": { "enabled": true },
 		"duckduckgo": { "enabled": true },
