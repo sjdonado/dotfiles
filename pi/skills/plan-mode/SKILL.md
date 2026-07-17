@@ -16,7 +16,13 @@ For non-trivial implementation tasks, plan before you code. Treat every change a
 
 ## Plan File
 
-Write your plan to a `PLAN.md` file in the project root. Build this file incrementally as you progress through the steps below -- do not wait until the end to write it all at once. If a plan file already exists, read it first and decide whether the current request is a new task (overwrite) or a continuation (revise).
+Write your plan to `PLAN.md` in the Git repository root. Before writing:
+
+1. Resolve the root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
+2. Add `/PLAN.md` to that exclude file if absent. Never modify `.gitignore`.
+3. Never stage or commit `PLAN.md`.
+
+Build the file incrementally as you progress through the steps below; do not wait until the end. If it already exists, read it first and decide whether the current request is a new task (overwrite) or a continuation (revise).
 
 ## Step 1: Explore
 
