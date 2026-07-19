@@ -2,7 +2,7 @@ id = "link-router"
 name = "Link Router"
 version = "0.1.0"
 min_herdr_version = "0.7.4"
-description = "Open GitHub pull requests in Linear Reviews."
+description = "Route links: GitHub PRs to Linear Reviews, localhost to Helium."
 platforms = ["macos", "linux"]
 
 [[actions]]
@@ -11,8 +11,20 @@ title = "Open pull request in Linear Reviews"
 contexts = ["pane"]
 command = ["/bin/sh", "open-linear-review.sh"]
 
+[[actions]]
+id = "open-localhost-helium"
+title = "Open localhost link in Helium"
+contexts = ["pane"]
+command = ["/bin/sh", "open-localhost-helium.sh"]
+
 [[link_handlers]]
 id = "github-pr-linear"
 title = "Open GitHub pull request in Linear Reviews"
 pattern = "^https://github\\.com/[^/]+/[^/]+/pull/[0-9]+(?:[/?#].*)?$"
 action = "open-linear-review"
+
+[[link_handlers]]
+id = "localhost-helium"
+title = "Open localhost link in Helium"
+pattern = "^https?://(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\]|[^/:]+\\.localhost)(:[0-9]+)?([/?#].*)?$"
+action = "open-localhost-helium"

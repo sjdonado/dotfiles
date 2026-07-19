@@ -1,18 +1,18 @@
 #!/bin/sh
-# delta wrapper: VSCode-flavored feature (matches agent TUI code render) + --dark/
-# --light. Feature styles live in ~/.gitconfig ([delta "vscode-*"]). Keep
+# delta wrapper: GitHub syntax palette (matches agent TUI code render) + --dark/
+# --light. Feature styles live in ~/.gitconfig ([delta "github-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
 
 # TEMPFIX: forced dark. Revert to macOS-appearance switch (below) once herdr
 # fixes gray pane-selection color.
 mode=--dark
-feature=vscode-dark
+feature=github-dark
 # if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
 #   mode=--dark
-#   feature=vscode-dark
+#   feature=github-dark
 # else
 #   mode=--light
-#   feature=vscode-light
+#   feature=github-light
 # fi
 
 exec delta \

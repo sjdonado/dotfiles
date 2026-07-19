@@ -3,22 +3,22 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>VSCode Dark</string>
+	<string>GitHub Dark</string>
 	<key>settings</key>
 	<array>
 		<dict>
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#1e1e1e</string>
+				<string>#0d1117</string>
 				<key>foreground</key>
-				<string>#d4d4d4</string>
+				<string>#e6edf3</string>
 				<key>caret</key>
-				<string>#d4d4d4</string>
+				<string>#2f81f7</string>
 				<key>lineHighlight</key>
-				<string>#2a2d2e</string>
+				<string>#6e76811a</string>
 				<key>selection</key>
-				<string>#264f78</string>
+				<string>#2f81f733</string>
 			</dict>
 		</dict>
 		<dict>
@@ -29,7 +29,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#6A9955</string>
+				<string>#8b949e</string>
 			</dict>
 		</dict>
 		<dict>
@@ -40,18 +40,18 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#569CD6</string>
+				<string>#ff7b72</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
-			<string>Operator, Punctuation</string>
+			<string>Operator, Embedded Punctuation</string>
 			<key>scope</key>
-			<string>keyword.operator, punctuation</string>
+			<string>keyword.operator, punctuation.section.embedded</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d4d4d4</string>
+				<string>#ff7b72</string>
 			</dict>
 		</dict>
 		<dict>
@@ -62,7 +62,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#CE9178</string>
+				<string>#a5d6ff</string>
 			</dict>
 		</dict>
 		<dict>
@@ -73,18 +73,29 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#B5CEA8</string>
+				<string>#79c0ff</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Variable, Attribute</string>
 			<key>scope</key>
-			<string>variable, variable.other, meta.definition.variable, variable.parameter, entity.other.attribute-name</string>
+			<string>variable, meta.definition.variable, entity.other.attribute-name</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#9CDCFE</string>
+				<string>#ffa657</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Default Variable</string>
+			<key>scope</key>
+			<string>variable.other, variable.parameter.function, meta.tag.attributes, meta.object.member</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#e6edf3</string>
 			</dict>
 		</dict>
 		<dict>
@@ -95,29 +106,40 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#DCDCAA</string>
+				<string>#d2a8ff</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Type, Class</string>
 			<key>scope</key>
-			<string>entity.name.type, entity.name.class, support.type, support.class, entity.other.inherited-class</string>
+			<string>entity.name.type, entity.name.class, entity.other.inherited-class</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#4EC9B0</string>
+				<string>#ffa657</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Support</string>
+			<key>scope</key>
+			<string>support, support.type, support.class</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#79c0ff</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Tag</string>
 			<key>scope</key>
-			<string>entity.name.tag, punctuation.definition.tag</string>
+			<string>entity.name.tag, support.class.component</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#569CD6</string>
+				<string>#7ee787</string>
 			</dict>
 		</dict>
 		<dict>
@@ -128,7 +150,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#569CD6</string>
+				<string>#79c0ff</string>
 				<key>fontStyle</key>
 				<string>bold</string>
 			</dict>
@@ -141,11 +163,13 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#f44747</string>
+				<string>#ffa198</string>
+				<key>fontStyle</key>
+				<string>italic</string>
 			</dict>
 		</dict>
 	</array>
 	<key>uuid</key>
-	<string>2b1e9a7c-0d11-4b17-9d0d-vscode-dark001</string>
+	<string>2b1e9a7c-0d11-4b17-9d0d-6172646b0001</string>
 </dict>
 </plist>

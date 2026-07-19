@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>VSCode Light</string>
+	<string>GitHub Light</string>
 	<key>settings</key>
 	<array>
 		<dict>
@@ -14,11 +14,11 @@
 				<key>foreground</key>
 				<string>#1f2328</string>
 				<key>caret</key>
-				<string>#1f2328</string>
+				<string>#0969da</string>
 				<key>lineHighlight</key>
-				<string>#f0f0f0</string>
+				<string>#eaeef280</string>
 				<key>selection</key>
-				<string>#add6ff</string>
+				<string>#0969da33</string>
 			</dict>
 		</dict>
 		<dict>
@@ -29,7 +29,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#008000</string>
+				<string>#6e7781</string>
 			</dict>
 		</dict>
 		<dict>
@@ -40,18 +40,18 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#0000FF</string>
+				<string>#cf222e</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
-			<string>Operator, Punctuation</string>
+			<string>Operator, Embedded Punctuation</string>
 			<key>scope</key>
-			<string>keyword.operator, punctuation</string>
+			<string>keyword.operator, punctuation.section.embedded</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#000000</string>
+				<string>#cf222e</string>
 			</dict>
 		</dict>
 		<dict>
@@ -62,7 +62,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#A31515</string>
+				<string>#0a3069</string>
 			</dict>
 		</dict>
 		<dict>
@@ -73,18 +73,29 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#098658</string>
+				<string>#0550ae</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Variable, Attribute</string>
 			<key>scope</key>
-			<string>variable, variable.other, meta.definition.variable, variable.parameter, entity.other.attribute-name</string>
+			<string>variable, meta.definition.variable, entity.other.attribute-name</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#001080</string>
+				<string>#953800</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Default Variable</string>
+			<key>scope</key>
+			<string>variable.other, variable.parameter.function, meta.tag.attributes, meta.object.member</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#1f2328</string>
 			</dict>
 		</dict>
 		<dict>
@@ -95,29 +106,40 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#795E26</string>
+				<string>#8250df</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Type, Class</string>
 			<key>scope</key>
-			<string>entity.name.type, entity.name.class, support.type, support.class, entity.other.inherited-class</string>
+			<string>entity.name.type, entity.name.class, entity.other.inherited-class</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#267F99</string>
+				<string>#953800</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Support</string>
+			<key>scope</key>
+			<string>support, support.type, support.class</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#0550ae</string>
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
 			<string>Tag</string>
 			<key>scope</key>
-			<string>entity.name.tag, punctuation.definition.tag</string>
+			<string>entity.name.tag, support.class.component</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#0000FF</string>
+				<string>#116329</string>
 			</dict>
 		</dict>
 		<dict>
@@ -128,7 +150,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#0000FF</string>
+				<string>#0550ae</string>
 				<key>fontStyle</key>
 				<string>bold</string>
 			</dict>
@@ -141,11 +163,13 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#cd3131</string>
+				<string>#82071e</string>
+				<key>fontStyle</key>
+				<string>italic</string>
 			</dict>
 		</dict>
 	</array>
 	<key>uuid</key>
-	<string>3c2f1d4e-1e22-4c28-8e1e-vscode-light01</string>
+	<string>3c2f1d4e-1e22-4c28-8e1e-676874000001</string>
 </dict>
 </plist>

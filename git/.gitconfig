@@ -35,7 +35,7 @@
 	directory = /opt/homebrew
 
 [delta]
-  features = vscode-dark
+  features = github-dark
   navigate = true
   file-modified-label = "~"
   file-added-label = "+"
@@ -47,29 +47,29 @@
   file-style = bold
   file-decoration-style = ul
 
-[delta "vscode-dark"]
-  syntax-theme = VSCode-Dark
-  minus-style = syntax "#3c1618"
-  minus-emph-style = syntax "#7a2226"
-  plus-style = syntax "#0f2f1a"
-  plus-emph-style = syntax "#1f6f3f"
+[delta "github-dark"]
+  syntax-theme = GitHub-Dark
+  minus-style = syntax "#490202"
+  minus-emph-style = syntax "#67060c"
+  plus-style = syntax "#04260f"
+  plus-emph-style = syntax "#033a16"
   line-numbers-minus-style = "#f85149"
   line-numbers-plus-style = "#3fb950"
-  line-numbers-zero-style = "#484f58"
+  line-numbers-zero-style = "#6e7681"
   hunk-header-style = syntax bold
-  hunk-header-line-number-style = "#58a6ff"
+  hunk-header-line-number-style = "#79c0ff"
 
-[delta "vscode-light"]
-  syntax-theme = VSCode-Light
+[delta "github-light"]
+  syntax-theme = GitHub-Light
   minus-style = syntax "#ffebe9"
-  minus-emph-style = syntax "#ffc0bd"
-  plus-style = syntax "#e6ffec"
-  plus-emph-style = syntax "#abf2bc"
+  minus-emph-style = syntax "#ffcecb"
+  plus-style = syntax "#dafbe1"
+  plus-emph-style = syntax "#aceebb"
   line-numbers-minus-style = "#cf222e"
   line-numbers-plus-style = "#1a7f37"
   line-numbers-zero-style = "#8c959f"
   hunk-header-style = syntax bold
-  hunk-header-line-number-style = "#0969da"
+  hunk-header-line-number-style = "#0550ae"
 
 [credential "https://github.com"]
 	helper =
