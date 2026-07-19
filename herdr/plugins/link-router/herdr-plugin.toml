@@ -1,30 +1,30 @@
 id = "link-router"
 name = "Link Router"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.7.4"
-description = "Route links: GitHub PRs to Linear Reviews, localhost to Helium."
+description = "Open GitHub pull requests and Linear links in the Linear app."
 platforms = ["macos", "linux"]
 
 [[actions]]
-id = "open-linear-review"
-title = "Open pull request in Linear Reviews"
+id = "open-in-linear"
+title = "Open in Linear app"
 contexts = ["pane"]
-command = ["/bin/sh", "open-linear-review.sh"]
-
-[[actions]]
-id = "open-localhost-helium"
-title = "Open localhost link in Helium"
-contexts = ["pane"]
-command = ["/bin/sh", "open-localhost-helium.sh"]
+command = ["/bin/sh", "open-in-linear.sh"]
 
 [[link_handlers]]
-id = "github-pr-linear"
-title = "Open GitHub pull request in Linear Reviews"
+id = "github-pr"
+title = "Open GitHub pull request in Linear"
 pattern = "^https://github\\.com/[^/]+/[^/]+/pull/[0-9]+(?:[/?#].*)?$"
-action = "open-linear-review"
+action = "open-in-linear"
 
 [[link_handlers]]
-id = "localhost-helium"
-title = "Open localhost link in Helium"
-pattern = "^https?://(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\]|[^/:]+\\.localhost)(:[0-9]+)?([/?#].*)?$"
-action = "open-localhost-helium"
+id = "linear-app"
+title = "Open Linear link in Linear app"
+pattern = "^https://linear\\.app/[^/].*$"
+action = "open-in-linear"
+
+[[link_handlers]]
+id = "linear-review"
+title = "Open Linear review in Linear app"
+pattern = "^https://linear\\.review/[^/].*$"
+action = "open-in-linear"
