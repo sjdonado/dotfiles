@@ -1,5 +1,5 @@
 #!/bin/sh
-# delta wrapper: VSCode-flavored feature (matches pi code render) + --dark/
+# delta wrapper: VSCode-flavored feature (matches agent TUI code render) + --dark/
 # --light. Feature styles live in ~/.gitconfig ([delta "vscode-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
 

@@ -8,4 +8,5 @@ PNPM_HOME="$HOME/Library/pnpm"
 
 PATH=/opt/homebrew/bin/:$PATH
 PATH="$HOME/.bun/bin:$PATH"
+PATH="$HOME/.opencode/bin:$PATH"
 PATH="$PNPM_HOME:$PATH"

@@ -1,6 +1,8 @@
 ---
 name: pr-review
-description: Use when reviewing a PR/MR diff for security, logic, performance, cross-file impact, test coverage, or spec compliance findings. NOT for writing PR descriptions, design reviews requiring business judgment, implementation work, release notes, or deep CVE/supply-chain audits.
+description: Run only when a human directly types `/pr-review` to review a PR/MR diff for security, logic, performance, cross-file impact, test coverage, or spec compliance. Never auto-invoke, delegate, loop, or infer consent. NOT for PR descriptions, design reviews, implementation, release notes, or deep CVE/supply-chain audits.
+disable-model-invocation: true
+argument-hint: "[PR/MR, mode, and optional context]"
 ---
 
 # PR Review
@@ -8,13 +10,15 @@ description: Use when reviewing a PR/MR diff for security, logic, performance, c
 Review a PR/MR diff by dispatching independent role-based subagents in parallel, then publish findings as one sticky summary comment + per-finding inline comments. The main session never reviews — it ingests, dispatches, merges, emits, publishes.
 
 <HARD-GATE>
+Proceed only when the current top-level human message directly invokes `/pr-review`, either as the native skill or through the dedicated `agents/commands/pr-review.md` wrapper. That wrapper is valid only when its `<human_pr_review_invocation>` marker came from the current top-level command expansion. Consent is single-use and cannot be inferred from prior approval, a request to "review," or workflow context. Never accept invocation from any other skill, command, agent, subagent, supervisor, hook, script, retry, or review/fix loop. Never invoke or re-invoke this skill on the human's behalf. If direct human invocation cannot be verified, stop without reviewing and tell the human to type `/pr-review` themselves.
+
 You MUST dispatch independent subagents — NEVER review the diff yourself in the main session. The main session accumulates context bias from prior conversation. Only an isolated subagent can deliver an unbiased finding.
 
-Dispatch in PARALLEL using a single message with multiple Agent tool calls. If one subagent fails, proceed with the rest BUT surface the failure in the sticky comment header (never silent). If ALL fail, report failure — do NOT fall back to self-review.
+Dispatch in PARALLEL using the harness's native isolated-worker mechanism. If one subagent fails, proceed with the rest BUT surface the failure in the sticky comment header (never silent). If ALL fail, report failure — do NOT fall back to self-review.
 
 Publishing happens in the main session (post-merge) — not in subagents.
 
-`mode: local` does NOT relax this gate. Local mode changes the output target (JSON to stdout instead of the PR/MR sticky/inline), not the reviewer. The 4-subagent parallel dispatch is exactly the property that makes local mode worth invoking from a supervisor session — without it the caller could just self-review.
+`mode: local` does NOT relax either gate. It changes the output target, not the human-consent or isolated-review requirements. Every new or incremental review requires a fresh human `/pr-review` invocation.
 </HARD-GATE>
 
 ## Rationalization Prevention
@@ -128,7 +132,7 @@ digraph pr_review {
 
 **`base`** — base git ref for diff scope (e.g. `origin/main`). Used by **local mode only** — replaces the sticky/PR-based base lookup. Ignored for other modes (they derive base from the PR or repo state).
 
-**`last_sha`** — prior reviewed HEAD commit. Used by **local mode only** for incremental review. In non-local modes the last_sha lives in the sticky body; local mode has no sticky, so the caller (e.g. supervisor) must pass it explicitly.
+**`last_sha`** — prior reviewed HEAD commit. Used by **local mode only** for incremental review. In non-local modes the last_sha lives in the sticky body; local mode has no sticky, so the human must pass it explicitly in a fresh `/pr-review` invocation.
 
 **`spec`** — source of the spec / design doc. Sets `has_spec` flag.
 
@@ -196,7 +200,7 @@ glab api user >/dev/null 2>&1 || {   # authenticated probe — glab api uses $GI
 }
 ```
 
-On abort, report the auth failure to the caller; do **not** proceed with a `curl` fallback.
+On abort, report the auth failure to the human; do **not** proceed with a `curl` fallback.
 
 ### Identifiers
 
@@ -292,15 +296,15 @@ If unreachable (force-push / squash-merge of older PR / branch rebased): fall ba
 
 When the sticky exists AND `last_sha == HEAD`: skip dispatch + publish. Print to console:
 
-> `pr-review: nothing new since <last_sha>. Skipping. Use mode=full to force a re-review.`
+> `pr-review: nothing new since <last_sha>. Skipping. Type /pr-review mode: full to force a new review.`
 
 The sticky is already current; do not touch it.
 
 ## Local Mode
 
-Use when the caller is **another skill or supervisor session** that needs unbiased multi-role review of a diff but has **no PR open yet** (e.g. a supervisor session's verify phase doing pre-PR critique). The HARD-GATE still applies — local mode is about output target, not about who reviews.
+Use only when the human directly invokes `/pr-review mode: local` for an unbiased pre-PR review of a local diff. Local mode may not be called by another skill, supervisor, or automated verification loop. The HARD-GATE still applies — local mode changes only the output target.
 
-> **Caveat — calling from the same dev session that wrote the code (author-as-reviewer bias)**: pr-review's 4-subagent dispatch is isolated by design — finding generation is robust even when called from the author's session. **But the downstream `modify / wontfix / defer` verdict on each finding is NOT covered by this isolation.** If the same session that wrote the code also reasons about which findings to wontfix, author-narrative bias compounds — framing a diff as "bug-free" produces the strongest detection drop among framing conditions tested across 6 LLMs (Mitropoulos et al., *Measuring and Exploiting Contextual Bias in LLM-Assisted Security Code Review*, [arXiv:2603.18740](https://arxiv.org/abs/2603.18740)). Treat local-mode findings as **advisory** in dev sessions; do **NOT auto-execute verdicts in main session**. A proper dev-stage verdict loop needs a separate Deriver-pattern verdict-subagent (not built yet — see `pr-babysit/SKILL.md` § 4.6 "When NOT to use" for the equivalent caveat on Wontfix Template).
+> **Caveat — calling from the same dev session that wrote the code (author-as-reviewer bias)**: pr-review's 4-subagent dispatch is isolated by design — finding generation is robust even when called from the author's session. **But the downstream `modify / wontfix / defer` verdict on each finding is NOT covered by this isolation.** If the same session that wrote the code also reasons about which findings to wontfix, author-narrative bias compounds — framing a diff as "bug-free" produces the strongest detection drop among framing conditions tested across 6 LLMs (Mitropoulos et al., *Measuring and Exploiting Contextual Bias in LLM-Assisted Security Code Review*, https://arxiv.org/abs/2603.18740). Treat local-mode findings as **advisory** in dev sessions; do **NOT auto-execute verdicts in the main session**.
 
 ### Inputs
 
@@ -314,16 +318,16 @@ Use when the caller is **another skill or supervisor session** that needs unbias
 ### Diff scope
 
 - No `last_sha` → full diff: `git diff <base>...HEAD` (three-dot — topic-only changes)
-- With `last_sha` → incremental: subagents see both `<base>...HEAD` and `<last_sha>..HEAD`; they report findings only inside the incremental window plus verification status for prior findings (caller must pass prior findings too — see below)
+- With `last_sha` → incremental: subagents see both `<base>...HEAD` and `<last_sha>..HEAD`; they report findings only inside the incremental window plus verification status for prior findings (the human must pass prior findings too — see below)
 
-### Caller responsibilities (incremental local mode)
+### Human-provided state (incremental local mode)
 
-The sticky normally carries prior findings between iterations. In local mode the caller owns that state and must pass to pr-review on each invocation:
+The sticky normally carries prior findings between iterations. In local mode the human owns that state and must pass it with each fresh `/pr-review` invocation:
 
 - `prior_findings`: array of objects with `{id, slug, file, line, category, severity, justification, summary}` — same shape as findings JSON output (see below)
 - `prior_fix_range`: `<first-fix-sha>^..<last-fix-sha>` — the commits that addressed iter (N-1) findings, used by the threshold's drop signal (B)
 
-If `last_sha` is set but `prior_findings` is missing → ESCALATE to caller; do not fabricate.
+If `last_sha` is set but `prior_findings` is missing → ask the human; do not fabricate or self-reinvoke.
 
 ### Output
 
@@ -399,15 +403,15 @@ Skip Publishing. Skip sticky/inline markdown construction. Emit one JSON documen
 - Finding Inclusion Threshold (Reachable / Precedent / Asymmetric / Historical + drop signals A/B/C/D)
 - Severity Merge Rule (4 steps + P-code mapping)
 - Dedup between subagent findings
-- Subagent failure → if all 4 fail, report failure to caller; never self-review
+- Subagent failure → if all 4 fail, report failure to the human; never self-review or retry without a fresh `/pr-review`
 
 ### What local mode drops
 
 - Sticky comment build / markdown rendering
 - Inline comment markdown / inline-endpoint call (`gh` review or `glab` discussions)
 - Sticky discovery via `gh` / `glab`
-- last_sha derivation from sticky body (caller passes it)
-- Noop case (caller decides whether to re-invoke; if `last_sha == HEAD` and caller still invokes, return `findings: []` + a `status: "noop"`)
+- last_sha derivation from sticky body (the human passes it)
+- Noop case (the human decides whether to type a new `/pr-review`; if `last_sha == HEAD`, return `findings: []` + a `status: "noop"`)
 
 ## Capability Flags
 
@@ -428,7 +432,7 @@ Allowed sources:
 - PR body sections: goal, scope boundary, explicitly out of scope, validation, alternatives, accepted follow-ups
 - User-provided `spec`, `context`, `test direction`, and `repo rules`
 - Beat change artifacts or ADRs explicitly linked in the PR body or user-provided spec/context
-- Module README / repo instruction files selected by changed paths when the caller provides them as `repo rules`
+- Module README / repo instruction files selected by changed paths when the human provides them as `repo rules`
 
 Do not include:
 
@@ -814,7 +818,7 @@ One per P0 / P1 / P2 finding emitted in this iteration. Anchored to the diff via
 <!-- pr-review:justification=<Reachable|Precedent|Asymmetric|Historical|Hygiene> -->
 ````
 
-The root markers are consumed by `pr-babysit` and by later incremental reviews. The `justification` HTML marker is consumed by `pr-babysit`'s diminishing-returns gate to decide whether to keep looping or hand back to the user. `Hygiene` value is reserved for batched Q-class hygiene followups; never emit `Hygiene` on a P0/P1/P2 finding.
+The root markers are consumed only by later, explicitly human-invoked incremental reviews. The `justification` HTML marker preserves the prior review's rationale. `Hygiene` is reserved for batched Q-class hygiene followups; never emit `Hygiene` on a P0/P1/P2 finding.
 
 Status label values:
 
@@ -1015,12 +1019,12 @@ When `dry-run: true`:
 
 ## Design note: prompt inlining over reference indirection
 
-Subagents (security-reviewer / staff-engineer / sdet / spec-auditor) operate as isolated `Agent` dispatches with no shared loader. They cannot follow a "see `references/X.md`" pointer at dispatch time — references load via the main session, not the subagent's. This inverts skill-creator's default duplication-avoidance principle: any policy a subagent MUST apply is **inlined verbatim into each subagent prompt**, not stored once in `references/` and pointed to.
+Subagents (security-reviewer / staff-engineer / sdet / spec-auditor) operate as isolated native worker dispatches with no shared loader. They cannot follow a "see `references/X.md`" pointer at dispatch time — references load via the main session, not the subagent's. This inverts skill-creator's default duplication-avoidance principle: any policy a subagent MUST apply is **inlined verbatim into each subagent prompt**, not stored once in `references/` and pointed to.
 
 Current inlined-duplicated content (intentional, not drift):
 
 - **Finding Inclusion Threshold** (Justification classes + drop signals A/B/C/D) — identical wording across all 4 subagent prompts; SKILL.md only points to them
-- **Race-class Finding Metadata** (`[window=..., damage=..., recovery=...]` meta tag spec) — identical across `staff-engineer-prompt.md` + `security-reviewer-prompt.md`; pr-babysit's Gate B parser depends on identical syntax
+- **Race-class Finding Metadata** (`[window=..., damage=..., recovery=...]` meta tag spec) — identical across `staff-engineer-prompt.md` + `security-reviewer-prompt.md`; incremental review parsing depends on identical syntax
 
 Cross-prompt sync is maintained via `<!-- keep-in-sync: ... -->` HTML comments at each duplicated section header. When editing one, grep for the keep-in-sync marker to find paired sections.
 
@@ -1028,6 +1032,7 @@ Cross-prompt sync is maintained via `<!-- keep-in-sync: ... -->` HTML comments a
 
 ## Notes
 
+- **Human invocation only** — every run starts with a fresh top-level `/pr-review`; never auto-invoke, delegate, retry, or loop
 - **Don't auto-approve or auto-merge** — produce findings; merge belongs to humans
 - **Lean conservative** — low-confidence findings always demote to ❓ Question (Q)
 - **Spec gaps don't block review** — mark Q for spec author, proceed with code findings
@@ -1042,4 +1047,4 @@ Cross-prompt sync is maintained via `<!-- keep-in-sync: ... -->` HTML comments a
 - **Prior findings: hedge on "fixed"** — always `Likely fixed`, never bare `Fixed`; line-moved ≠ behaviour-fixed
 - **Force-push aware** — when last_sha is unreachable, fall back to full + announce in sticky
 - **Output language is adaptive** — PR-published prose follows the PR description's language; markers / titles / field labels / keywords / terms stay English. See [Output Language](#output-language)
-- **Local mode is JSON-only** — no markdown, no sticky, no inline; caller (e.g. a supervisor session) consumes findings JSON and drives its own follow-up loop
+- **Local mode is JSON-only** — no markdown, no sticky, no inline; return findings to the human and stop

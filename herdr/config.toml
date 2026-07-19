@@ -22,6 +22,6 @@ open_worktree = "prefix+shift+o"
 remove_worktree = "prefix+shift+x"
 
 [experimental]
-# Render inline images (pi image reads) via Kitty graphics; ghostty supports it.
+# Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.
 kitty_graphics = true

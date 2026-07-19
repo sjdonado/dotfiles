@@ -1,59 +1,50 @@
 {
-  "alwaysThinkingEnabled": true,
-  "editorMode": "vim",
-  "effortLevel": "high",
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bunx -y ccstatusline@latest",
+    "padding": 0
+  },
   "enabledPlugins": {
     "caveman@caveman": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
-        "repo": "JuliusBrussee/caveman",
-        "source": "github"
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
       }
     }
   },
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/juan/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      },
-      {
-        "hooks": [
-          {
-            "command": "bash '/Users/sjdonado/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10,
-            "type": "command"
-          }
-        ],
-        "matcher": "*"
-      }
-    ]
-  },
-  "model": "opus[1m]",
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "skipAutoPermissionPrompt": true,
-  "skipDangerousModePermissionPrompt": true,
-  "statusLine": {
-    "command": "bunx -y ccstatusline@latest",
-    "padding": 0,
-    "type": "command"
-  },
-  "theme": "auto",
+  "syntaxHighlightingDisabled": false,
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
   "tui": "fullscreen",
-  "verbose": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "editorMode": "vim",
+  "verbose": true,
+  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true
 }

@@ -1,20 +1,20 @@
 ---
 name: progress-tracking
-description: Maintain PI_PROGRESS.md for long-running mutating workflows with a current run, commit-linked history, notes, and strict step transitions. Use only when a prompt explicitly requests progress tracking.
+description: Maintain AGENT_PROGRESS.md for long-running mutating workflows with a current run, commit-linked history, notes, and strict step transitions. Use only when a prompt explicitly requests progress tracking.
 ---
 
 # Progress Tracking
 
-The caller supplies a workflow name, checklist, optional initially completed items, and terminal status. Maintain `PI_PROGRESS.md` in the Git repository root.
+The caller supplies a workflow name, checklist, optional initially completed items, and terminal status. Maintain `AGENT_PROGRESS.md` in the Git repository root.
 
 ## Setup
 
 1. Resolve the root with `git rev-parse --show-toplevel` and the local exclude file with `git rev-parse --git-path info/exclude`.
-2. Add `/PI_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore`.
+2. Add `/AGENT_PROGRESS.md` to that exclude file if absent. Never modify `.gitignore`.
 3. Use this structure:
 
 ```markdown
-# PI Progress
+# Agent Progress
 
 ## Current run
 

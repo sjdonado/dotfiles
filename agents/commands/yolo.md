@@ -6,7 +6,7 @@ argument-hint: "[requirements or approved plan]"
 Autonomous implementation of:
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:

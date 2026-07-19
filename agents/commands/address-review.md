@@ -7,7 +7,7 @@ Address review feedback on a pull request. Use the `gh` CLI for all PR interacti
 Input (a PR number, URL, or branch name; if omitted, resolve the PR for the current branch via `gh pr view`):
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:
@@ -31,7 +31,7 @@ Steps:
    - **Not legit** — the change is wrong, out of scope, or already handled. Do not change code. Draft a concise reason to reject.
    - **Needs clarification** — the request is ambiguous or requires a product decision. Do not guess or contact the reviewer yet. Draft the clarifying reply for the approval summary.
 
-   Prefer to handle straightforward fixes directly. For a wide or risky change, scout first (use the "scout" subagent) before editing.
+   Prefer to handle straightforward fixes directly. For a wide or risky change, use native read-only delegation before editing.
 
 4. Commit fixes locally as you go. Do not push or reply yet — batch external actions for step 8 after approval.
 

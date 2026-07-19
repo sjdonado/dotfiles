@@ -6,7 +6,7 @@ argument-hint: "[question]"
 Answer the question. Nothing else.
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:

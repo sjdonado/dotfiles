@@ -3,7 +3,7 @@ description: Plan a non-trivial change — understand the system, clarify once i
 argument-hint: "[task, ticket, or prior workflow]"
 ---
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:

@@ -1,4 +1,4 @@
-# Global pi conventions
+# Global agent conventions
 
 ## Commit messages
 

@@ -6,7 +6,7 @@ argument-hint: "[request]"
 Turn a request into a well-formed Linear ticket. Draft first, create only after the user confirms.
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:
@@ -32,7 +32,7 @@ The input is a raw request: a bug, a feature, or an adjustment. It may be terse,
 
 2. If the request is ambiguous or missing something load-bearing (no repro for a bug, unclear scope for a feature, no acceptance signal), STOP and ask specific questions. Do not invent requirements.
 
-3. Investigate code only as much as needed to ground scope and cite `path:line`. Use the "scout" subagent only for a broad search.
+3. Investigate code only as much as needed to ground scope and cite `path:line`. Use native read-only delegation only for a broad search.
 
 4. Draft the ticket in this shape (omit a section if it truly adds nothing):
 

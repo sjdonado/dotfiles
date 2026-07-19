@@ -1,0 +1,11 @@
+{
+  "sidebar": "auto",
+  "thinking_mode": "show",
+  "timestamps": "show",
+  "tool_details_visibility": true,
+  "assistant_metadata_visibility": true,
+  "scrollbar_visible": false,
+  "diff_wrap_mode": "word",
+  "animations_enabled": true,
+  "generic_tool_output_visibility": false
+}

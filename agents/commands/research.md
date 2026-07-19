@@ -6,7 +6,7 @@ argument-hint: "[question or statement]"
 Research this question or statement:
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:

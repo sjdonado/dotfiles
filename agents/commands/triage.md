@@ -6,7 +6,7 @@ argument-hint: "[Linear issue, URL, or pasted ticket]"
 Triage a Linear ticket. This is analysis ONLY: no file writes, code edits, tests, commits, or other side-effecting commands. Read-only inspection is allowed.
 
 <user_input>
-$@
+$ARGUMENTS
 </user_input>
 
 Resolve the effective input:
@@ -26,7 +26,7 @@ Steps:
 
 3. If the request is ambiguous or underspecified — no repro, vague symptom, unclear scope — STOP and ask specific questions. Do not guess.
 
-4. Investigate the relevant code to ground the analysis. Cite evidence as `path:line`. Use the "scout" subagent only if the search is large or spans several areas; for a focused ticket, look directly.
+4. Investigate the relevant code to ground the analysis. Cite evidence as `path:line`. Use native read-only delegation only if the search is large or spans several areas; for a focused ticket, look directly.
 
 5. Output:
    - **Summary** — one line: what the ticket asks + your read of it.

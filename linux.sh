@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Remote Ubuntu setup for herdr + pi + nvim + lazygit, wired to these dotfiles.
+# Remote Ubuntu setup for herdr + Claude Code + OpenCode + nvim + lazygit, wired to these dotfiles.
 # Idempotent. Safe to re-run. macOS-only steps from macos.sh are omitted.
 #
 # End goal: connect from your local terminal with `herdr --remote <user>@<host>`.
 #
 # NOT handled here (sensitive — do manually, see notes printed at the end):
-#   - pi Claude auth (claude-bridge login)
+#   - Claude Code, OpenCode provider, and MCP authentication
 #   - any secrets in .env / ~/.ssh
 set -euo pipefail
 
@@ -16,6 +16,15 @@ BIN="$HOME/.local/bin"
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
 usage() { echo "Usage: $0 [--install]"; }
+link_managed() {
+  src=$1 dst=$2
+  mkdir -p "$(dirname "$dst")"
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then return; fi
+    mv "$dst" "$dst.backup.$(date +%s)"
+  fi
+  ln -snf "$src" "$dst"
+}
 
 INSTALL=0
 while [ "$#" -gt 0 ]; do
@@ -39,7 +48,7 @@ export COREPACK_HOME PNPM_HOME
 mkdir -p "$BIN" "$HOME/.config" "$COREPACK_HOME" "$PNPM_HOME"
 # Ensure dirs where installers drop binaries are on PATH, so re-runs detect
 # already-installed tools (idempotency) and post-install `have` checks pass.
-for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.pi/bin" "$HOME/.local/share/pi/bin"; do
+for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
@@ -53,13 +62,6 @@ sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat python3 python3-pip
-
-# --- node (for pi npm packages) ---------------------------------------------
-if ! have node; then
-  log "Installing Node.js 22 (NodeSource)..."
-  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-fi
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
@@ -122,20 +124,16 @@ if ! have herdr; then
   rescan
 fi
 
-# --- pi ----------------------------------------------------------------------
-if ! have pi; then
-  log "Installing pi..."
-  curl -fsSL https://pi.dev/install.sh | sh
+# --- AI coding harnesses -----------------------------------------------------
+if ! have claude; then
+  log "Installing Claude Code..."
+  curl -fsSL https://claude.ai/install.sh | bash
   rescan
 fi
-
-# --- ddgs (DuckDuckGo backend for pi-search-hub) -----------------------------
-# search-hub spawns `python3 -c "from ddgs import DDGS"`; ddgs must live in that
-# python3's site-packages. PEP 668 marks system python externally-managed.
-log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
-if have python3; then
-  python3 -c "import ddgs" 2>/dev/null \
-    || python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
+if ! have opencode; then
+  log "Installing OpenCode..."
+  curl -fsSL https://opencode.ai/install | bash
+  rescan
 fi
 
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
@@ -174,6 +172,12 @@ ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
 BASHRC="$HOME/.bashrc"
 if [ -f "$BASHRC" ] && ! grep -q 'HOME/.local/bin.*PATH' "$BASHRC"; then
   printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$BASHRC"
+fi
+if [ -f "$BASHRC" ] && ! grep -q 'HOME/.opencode/bin.*PATH' "$BASHRC"; then
+  printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$BASHRC"
+fi
+if [ -f "$BASHRC" ]; then
+  sed -i '\|^export OPENCODE_CONFIG="$HOME/.config/dotfiles/agents/opencode.json"$|d' "$BASHRC"
 fi
 if [ -f "$BASHRC" ] && ! grep -q 'COREPACK_HOME.*\.cache/corepack' "$BASHRC"; then
   cat >> "$BASHRC" <<'EOF'
@@ -219,25 +223,17 @@ log "Linking herdr config..."
 mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
-log "Linking pi config..."
-mkdir -p "$HOME/.pi/agent/extensions/subagent" \
-         "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
-ln -snf "$PWD/pi/settings.json"    "$HOME/.pi/agent/settings.json"
-ln -snf "$PWD/pi/models.json"      "$HOME/.pi/agent/models.json"
-ln -snf "$PWD/pi/extensions/search.json" "$HOME/.pi/agent/extensions/search.json"
-ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
-ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
-ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
-ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
-for f in "$PWD/pi/agents/"*.md;  do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
-for f in "$PWD/pi/prompts/"*.md; do [ -e "$f" ] && ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
-
-log "Linking agent skills..."
-mkdir -p "$HOME/.agents"
-if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
-  mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
-fi
-ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
+log "Linking Claude Code and OpenCode config..."
+mkdir -p "$HOME/.claude" "$HOME/.config/opencode"
+link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
+link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
+link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
+link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"
+link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+mkdir -p "$HOME/.local/state/opencode"
+link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
 # --- local Herdr plugins (need running Herdr server) -------------------------
 if have herdr; then
@@ -271,9 +267,10 @@ cat <<'NOTE'
 
 MANUAL STEPS (sensitive — not scripted):
 
-  1. pi Claude auth (required before pi works):
-       pi            # then follow claude-bridge login prompt
-     pi packages (pi-claude-bridge, etc.) auto-install on first launch.
+  1. Authenticate the coding harnesses:
+       claude
+       opencode auth login
+     Add MCP servers separately with Claude Code and `opencode mcp add`.
 
   2. Secrets / env (only if your workflow needs them):
        - Copy any private .env values by hand.

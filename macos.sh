@@ -5,6 +5,15 @@ set -euo pipefail
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
 usage() { echo "Usage: $0 [--install]"; }
+link_managed() {
+  src=$1 dst=$2
+  mkdir -p "$(dirname "$dst")"
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then return; fi
+    mv "$dst" "$dst.backup.$(date +%s)"
+  fi
+  ln -snf "$src" "$dst"
+}
 
 INSTALL=0
 while [ "$#" -gt 0 ]; do
@@ -59,6 +68,8 @@ mkdir -p "$HOME/.config/fish/functions"
 mkdir -p "$HOME/.config/bat"
 mkdir -p "$HOME/.config/pgcli"
 mkdir -p "$HOME/.config/finicky"
+PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+export PATH
 
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
@@ -118,9 +129,7 @@ if [ ! -e "$HOME/.fish_history" ]; then
 fi
 ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
 
-# pi wrapper is refreshed on every run; dependency binaries install only with --install.
-PI_NODE_BASE="$HOME/.local/share/pi-node"
-PI_NODE_CUR="$PI_NODE_BASE/current"
+# Agent binaries install only with --install and manage their own updates.
 if [ "$INSTALL" = 1 ]; then
   log "Installing rustup (if missing)..."
   if ! have rustup-init && ! have rustup; then
@@ -140,33 +149,15 @@ if [ "$INSTALL" = 1 ]; then
     [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
   fi
 
-  log "Installing pi (standalone: private bundled Node, no pnpm)..."
-  # pi is a Node app; bundle its own Node under ~/.local/share/pi-node so it
-  # never depends on pnpm/system Node. Wrapper in ~/.local/bin hardcodes it.
-  if [ ! -x "$PI_NODE_CUR/bin/pi" ] && [ ! -f "$PI_NODE_CUR/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" ]; then
-    case "$(uname -m)" in
-      arm64|aarch64) NODE_ARCH=arm64 ;;
-      x86_64|amd64) NODE_ARCH=x64 ;;
-      *) NODE_ARCH= ;;
-    esac
-    if [ -n "$NODE_ARCH" ]; then
-      NODE_VER="$(curl -fsSL https://nodejs.org/dist/index.json | tr ',' '\n' | grep -oE '"v22\.[0-9]+\.[0-9]+"' | head -1 | tr -d '\"')"
-      tmp="$(mktemp -d)"
-      curl -fsSL -o "$tmp/node.tar.gz" "https://nodejs.org/dist/$NODE_VER/node-$NODE_VER-darwin-$NODE_ARCH.tar.gz"
-      rm -rf "$PI_NODE_BASE"; mkdir -p "$PI_NODE_CUR"
-      tar -xzf "$tmp/node.tar.gz" -C "$PI_NODE_CUR" --strip-components=1
-      rm -rf "$tmp"
-      "$PI_NODE_CUR/bin/npm" install -g --prefix "$PI_NODE_CUR" @earendil-works/pi-coding-agent --no-fund --no-audit --loglevel=error
-    fi
+  if ! have claude; then
+    log "Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+  fi
+  if ! have opencode; then
+    log "Installing OpenCode..."
+    curl -fsSL https://opencode.ai/install | bash
   fi
 fi
-cat > "$HOME/.local/bin/pi" <<'PIWRAP'
-#!/bin/sh
-# pi via private bundled Node (independent of pnpm/system Node)
-PI_HOME="$HOME/.local/share/pi-node/current"
-exec "$PI_HOME/bin/node" "$PI_HOME/lib/node_modules/@earendil-works/pi-coding-agent/dist/cli.js" "$@"
-PIWRAP
-chmod +x "$HOME/.local/bin/pi"
 
 log "Linking Docker/Colima configs..."
 ln -snf "$PWD/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
@@ -188,7 +179,7 @@ ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
 ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
 ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
-# Custom bat themes (VSCode Dark/Light, match pi render) used by delta; build cache so bat and
+# Custom bat themes (VSCode Dark/Light, match agent TUI render) used by delta; build cache so bat and
 # delta can resolve them by name.
 mkdir -p "$HOME/.config/bat/themes"
 for f in "$PWD/bat/themes/"*.tmTheme; do
@@ -230,49 +221,19 @@ log "Linking Lazygit config..."
 mkdir -p "$HOME/Library/Application Support/lazygit"
 ln -snf "$PWD/lazygit/config.yml" "$HOME/Library/Application Support/lazygit/config.yml"
 
-log "Linking Claude Code config..."
-mkdir -p "$HOME/.claude"
-mkdir -p "$HOME/.config/ccstatusline"
-ln -snf "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
-ln -snf "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
-
-
-log "Linking pi config (uses Claude subscription via pi-claude-bridge)..."
-mkdir -p "$HOME/.pi/agent/extensions/subagent" "$HOME/.pi/agent/agents" "$HOME/.pi/agent/prompts"
-ln -snf "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
-ln -snf "$PWD/pi/models.json" "$HOME/.pi/agent/models.json"
-mkdir -p "$HOME/.pi/agent/extensions"
-ln -snf "$PWD/pi/extensions/search.json" "$HOME/.pi/agent/extensions/search.json"
-ln -snf "$PWD/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
-ln -snf "$PWD/pi/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
-# Subagent extension (isolated-context task delegation) + agents + workflow prompts
-ln -snf "$PWD/pi/extensions/subagent/index.ts"  "$HOME/.pi/agent/extensions/subagent/index.ts"
-ln -snf "$PWD/pi/extensions/subagent/agents.ts" "$HOME/.pi/agent/extensions/subagent/agents.ts"
-
-for f in "$PWD/pi/agents/"*.md;  do ln -snf "$f" "$HOME/.pi/agent/agents/$(basename "$f")";  done
-for f in "$PWD/pi/prompts/"*.md; do ln -snf "$f" "$HOME/.pi/agent/prompts/$(basename "$f")"; done
-
-log "Linking agent skills..."
-mkdir -p "$HOME/.agents"
-if [ -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]; then
-  mv "$HOME/.agents/skills" "$HOME/.agents/skills.backup.$(date +%s)"
-fi
-ln -snf "$PWD/pi/skills" "$HOME/.agents/skills"
-# Packages in settings.json auto-install on first launch. Preinstall optional
-# dependencies only when dependency installation was requested.
-if [ "$INSTALL" = 1 ]; then
-  if have pi; then
-    pi install npm:pi-claude-bridge 2>/dev/null || true
-  fi
-
-  log "Installing ddgs (DuckDuckGo backend for pi-search-hub)..."
-  # search-hub imports ddgs from python3's site-packages. Homebrew Python is
-  # externally managed, so --break-system-packages is required.
-  if have python3; then
-    python3 -c "import ddgs" 2>/dev/null || \
-      python3 -m pip install --break-system-packages ddgs 2>/dev/null || true
-  fi
-fi
+log "Linking Claude Code and OpenCode config..."
+mkdir -p "$HOME/.claude" "$HOME/.config/opencode" "$HOME/.config/ccstatusline"
+link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
+link_managed "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
+link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
+link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
+link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
+link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"
+link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+mkdir -p "$HOME/.local/state/opencode"
+link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
 log "Setting default apps for code files and plain text..."
 if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
