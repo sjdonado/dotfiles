@@ -2,13 +2,10 @@
 	"$schema": "https://opencode.ai/config.json",
 	"autoupdate": true,
 	"permission": {
+		"external_directory": "allow",
 		"bash": {
 			"opencode *": "deny",
 			"*/opencode *": "deny"
-		},
-		"skill": {
-			"*": "allow",
-			"pr-review": "deny"
 		}
 	},
 	"provider": {

@@ -4,13 +4,27 @@ Shared Claude Code and OpenCode commands, skills, and instructions.
 
 ## Layout
 
-- `commands/` - shared `/address-review`, `/ask`, `/create-ticket`, `/feedback`, `/plan`, `/pr-review`, `/research`, `/triage`, and `/yolo` commands
+- `commands/` - shared `/address-review`, `/ask`, `/create-ticket`, `/feedback`, `/research`, `/triage`, and `/yolo` commands
 - `skills/` - Agent Skills loaded on demand by both harnesses
 - `AGENTS.md` - global instructions, linked as Claude Code's `CLAUDE.md` and OpenCode's `AGENTS.md`
 
 The setup scripts link the same command and skill directories into both harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins; the only custom agent is the OpenCode Ollama primary profile.
 
-`pr-review` is human-only. Claude Code disables model invocation for the skill, while OpenCode denies automatic skill loading and exposes it only through the `/pr-review` command wrapper.
+Planning uses each harness's native plan mode so permission, approval, and plan-storage behavior improve with harness updates. Shared planning principles live in `AGENTS.md`; no custom `/plan` command or plan skill shadows native behavior.
+
+Agent-initiated reviews and review loops use `caveman-review`. The upstream `code-review` skill is reserved for explicit human review requests.
+
+## Skill updates
+
+Upstream skills are tracked in `skills-lock.json`. The `.agents/skills` link exposes the existing shared skill directory to `skills.sh`; Claude Code and OpenCode continue loading that directory through their setup links.
+
+Review upstream changes before committing them, then update project skills with:
+
+```sh
+npx skills@1 update --project --yes
+```
+
+`progress-tracking` is maintained locally and is not included in the lock file.
 
 ## Authentication
 

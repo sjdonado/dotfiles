@@ -18,7 +18,7 @@ MCP server definitions added to `opencode.json` are shared. Keep credentials out
 
 Agent-issued `opencode ...` shell commands are denied. Use OpenCode's native task/subagent mechanism instead of recursively spawning CLI processes. This prevents review workflows from leaving large trees of orphaned `opencode run` workers.
 
-The `pr-review` skill is denied to automatic model invocation and is exposed through the human-only `/pr-review` command wrapper.
+Shared review-selection policy lives in `AGENTS.md`; upstream skill files remain unmodified.
 
 ## Setup
 

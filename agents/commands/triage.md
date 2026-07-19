@@ -32,6 +32,6 @@ Steps:
    - **Summary** — one line: what the ticket asks + your read of it.
    - **Findings** — for a bug: root cause mechanism with `file:line` and confidence (confirmed / likely / unclear). For a feature/adjustment: where it fits and what it touches.
    - **Options** — 1-4 genuinely viable approaches. For each: what changes, **Pros**, **Cons**, risk/blast radius. Do not invent alternatives to fill the count.
-   - **Recommendation** — preferred option and why, plus the ownership boundary, affected surfaces, and verification concerns `/plan` must carry forward. If uncertain, state the exact open questions instead.
+   - **Recommendation** — preferred option and why, plus the ownership boundary, affected surfaces, and verification concerns a subsequent plan must carry forward. If uncertain, state the exact open questions instead.
 
 Constraints: no code edits, no file writes, no commits. If unclear after investigating, say so and list what's needed.
