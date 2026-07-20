@@ -1,30 +1,17 @@
 id = "link-router"
 name = "Link Router"
-version = "0.2.0"
+version = "0.3.0"
 min_herdr_version = "0.7.4"
-description = "Open GitHub pull requests and Linear links in the Linear app."
+description = "Rewrite GitHub pull request links to Linear reviews."
 platforms = ["macos", "linux"]
 
 [[actions]]
 id = "open-in-linear"
-title = "Open in Linear app"
-contexts = ["pane"]
+title = "Rewrite GitHub pull request to Linear"
 command = ["/bin/sh", "open-in-linear.sh"]
 
 [[link_handlers]]
 id = "github-pr"
 title = "Open GitHub pull request in Linear"
 pattern = "^https://github\\.com/[^/]+/[^/]+/pull/[0-9]+(?:[/?#].*)?$"
-action = "open-in-linear"
-
-[[link_handlers]]
-id = "linear-app"
-title = "Open Linear link in Linear app"
-pattern = "^https://linear\\.app/[^/].*$"
-action = "open-in-linear"
-
-[[link_handlers]]
-id = "linear-review"
-title = "Open Linear review in Linear app"
-pattern = "^https://linear\\.review/[^/].*$"
 action = "open-in-linear"

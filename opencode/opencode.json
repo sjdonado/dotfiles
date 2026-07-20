@@ -27,6 +27,43 @@
 			}
 		}
 	},
+	"mcp": {
+		"linear": {
+			"type": "remote",
+			"url": "https://mcp.linear.app/mcp",
+			"enabled": true
+		},
+		"posthog": {
+			"type": "remote",
+			"url": "https://mcp-eu.posthog.com/mcp",
+			"enabled": true,
+			"headers": {
+				"Authorization": "Bearer {env:MCP_POSTHOG_API_KEY}"
+			}
+		},
+		"grafana": {
+			"type": "local",
+			"command": ["uvx", "mcp-grafana"],
+			"enabled": true,
+			"environment": {
+				"GRAFANA_URL": "https://autarc.grafana.net",
+				"GRAFANA_SERVICE_ACCOUNT_TOKEN": "{env:MCP_GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+			}
+		},
+		"sentry": {
+			"type": "local",
+			"command": ["npx", "@sentry/mcp-server"],
+			"enabled": true,
+			"environment": {
+				"SENTRY_ACCESS_TOKEN": "{env:MCP_SENTRY_ACCESS_TOKEN}"
+			}
+		},
+		"supabase": {
+			"type": "remote",
+			"url": "https://mcp.supabase.com/mcp?read_only=true",
+			"enabled": true
+		}
+	},
 	"agent": {
 		"ollama": {
 			"description": "Local Ollama profile without MCP or delegated agents",
