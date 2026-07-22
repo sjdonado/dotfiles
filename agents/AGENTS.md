@@ -12,6 +12,10 @@ Use `caveman-review` for agent-initiated reviews and review loops. Use `code-rev
 
 When writing any git commit message, follow the `caveman-commit` skill: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. No AI attribution, no filler, no emoji.
 
+## Writing
+
+Never use em-dashes (—) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
+
 ## Links
 
 When rendering a link, always show the complete absolute URL as the visible text, including the scheme and host (for example, `https://example.com/path`). Never hide a URL behind Markdown alias text such as `[test](https://example.com/path)`. Never render relative URLs or bare paths as links.

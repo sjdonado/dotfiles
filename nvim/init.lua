@@ -219,46 +219,41 @@ do
   }
 
   -- [[ Colorscheme ]]
-  -- TEMPFIX: force built-in dark. Revert (uncomment xcode + auto-dark-mode
-  -- below) once herdr fixes gray pane-selection color.
-  vim.o.background = 'dark'
-  vim.cmd.colorscheme 'default'
+  vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
 
-  -- vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
-  --
-  -- -- Pick scheme from &background, which Neovim sets from the terminal's
-  -- -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
-  -- -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
-  -- -- and any later terminal theme change.
-  -- local function apply_xcode()
-  --   pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
-  -- end
-  -- apply_xcode()
-  -- vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
-  --
-  -- vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
-  -- require('auto-dark-mode').setup {
-  --   update_interval = 300,
-  --   set_dark_mode = function()
-  --     vim.o.background = 'dark'
-  --     vim.cmd.colorscheme 'xcodedark'
-  --   end,
-  --   set_light_mode = function()
-  --     vim.o.background = 'light'
-  --     vim.cmd.colorscheme 'xcodelight'
-  --   end,
-  -- }
-  --
-  -- -- :ToggleTheme — flip light/dark from the command line.
-  -- vim.api.nvim_create_user_command('ToggleTheme', function()
-  --   if vim.o.background == 'dark' then
-  --     vim.o.background = 'light'
-  --     vim.cmd.colorscheme 'xcodelight'
-  --   else
-  --     vim.o.background = 'dark'
-  --     vim.cmd.colorscheme 'xcodedark'
-  --   end
-  -- end, { desc = 'Toggle light/dark colorscheme' })
+  -- Pick scheme from &background, which Neovim sets from the terminal's
+  -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
+  -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
+  -- and any later terminal theme change.
+  local function apply_xcode()
+    pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
+  end
+  apply_xcode()
+  vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
+
+  vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
+  require('auto-dark-mode').setup {
+    update_interval = 300,
+    set_dark_mode = function()
+      vim.o.background = 'dark'
+      vim.cmd.colorscheme 'xcodedark'
+    end,
+    set_light_mode = function()
+      vim.o.background = 'light'
+      vim.cmd.colorscheme 'xcodelight'
+    end,
+  }
+
+  -- :ToggleTheme — flip light/dark from the command line.
+  vim.api.nvim_create_user_command('ToggleTheme', function()
+    if vim.o.background == 'dark' then
+      vim.o.background = 'light'
+      vim.cmd.colorscheme 'xcodelight'
+    else
+      vim.o.background = 'dark'
+      vim.cmd.colorscheme 'xcodedark'
+    end
+  end, { desc = 'Toggle light/dark colorscheme' })
 
   -- Highlight TODO/NOTE/etc. in comments
   vim.pack.add { gh 'folke/todo-comments.nvim', gh 'nvim-lua/plenary.nvim' }

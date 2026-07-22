@@ -3,17 +3,13 @@
 # --light. Feature styles live in ~/.gitconfig ([delta "github-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
 
-# TEMPFIX: forced dark. Revert to macOS-appearance switch (below) once herdr
-# fixes gray pane-selection color.
-mode=--dark
-feature=github-dark
-# if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
-#   mode=--dark
-#   feature=github-dark
-# else
-#   mode=--light
-#   feature=github-light
-# fi
+if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
+  mode=--dark
+  feature=github-dark
+else
+  mode=--light
+  feature=github-light
+fi
 
 exec delta \
   "$mode" \

@@ -1,18 +1,19 @@
 onboarding = false
+
 [ui]
 show_agent_labels_on_pane_borders = false
 agent_panel_sort = "spaces"
 mouse_capture = true
-copy_on_select = true
+copy_on_select = false
 
 [ui.toast]
 delivery = "terminal"
 
-# TEMPFIX: forced dark. Revert to auto_switch=true (name one-light, dark_name
-# one-dark, light_name one-light) once herdr fixes gray pane-selection color.
 [theme]
-name = "one-dark"
-auto_switch = false
+name = "one-light"
+auto_switch = true
+dark_name = "one-dark"
+light_name = "one-light"
 
 [terminal]
 default_shell = "fish"
