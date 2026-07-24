@@ -168,26 +168,25 @@ log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
 
 # Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
-# so nvim/lazygit/tree-sitter resolve inside herdr too).
-BASHRC="$HOME/.bashrc"
-if [ -f "$BASHRC" ] && ! grep -q 'HOME/.local/bin.*PATH' "$BASHRC"; then
-  printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$BASHRC"
-fi
-if [ -f "$BASHRC" ] && ! grep -q 'HOME/.opencode/bin.*PATH' "$BASHRC"; then
-  printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$BASHRC"
-fi
-if [ -f "$BASHRC" ]; then
-  sed -i '\|^export OPENCODE_CONFIG="$HOME/.config/dotfiles/agents/opencode.json"$|d' "$BASHRC"
-fi
-if [ -f "$BASHRC" ] && ! grep -q 'COREPACK_HOME.*\.cache/corepack' "$BASHRC"; then
-  cat >> "$BASHRC" <<'EOF'
+# so nvim/lazygit/tree-sitter resolve inside herdr too). Configure both bash and
+# zsh: Coder workspaces default to zsh, so a bash-only setup leaves herdr/fish
+# off PATH. Create the rc file if missing (a zsh box may ship no ~/.bashrc).
+SHELL_RCS="$HOME/.bashrc $HOME/.zshrc"
+for RC in $SHELL_RCS; do
+  [ -e "$RC" ] || touch "$RC"
+  grep -q 'HOME/.local/bin.*PATH' "$RC" \
+    || printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$RC"
+  grep -q 'HOME/.opencode/bin.*PATH' "$RC" \
+    || printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$RC"
+  sed -i '\|^export OPENCODE_CONFIG="$HOME/.config/dotfiles/agents/opencode.json"$|d' "$RC"
+  grep -q 'COREPACK_HOME.*\.cache/corepack' "$RC" || cat >> "$RC" <<'EOF'
 
 # dotfiles: user-writable package-manager caches
 export COREPACK_HOME="$HOME/.cache/corepack"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 EOF
-fi
+done
 
 log "Linking git config..."
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
@@ -262,6 +261,22 @@ if [ -n "$FISH" ]; then
       || chsh -s "$FISH" 2>/dev/null \
       || echo "chsh failed; herdr uses [terminal] default_shell from config instead"
   fi
+  # Guarantee interactive shells land in fish even when chsh is blocked (common
+  # on Coder: passwordless user, or the login shell resets on workspace rebuild).
+  # Covers bash and zsh (Coder defaults to zsh); the guard is portable to both.
+  # Appended last so the PATH/env exports above are inherited by the exec'd fish.
+  for RC in $SHELL_RCS; do
+    [ -e "$RC" ] || touch "$RC"
+    grep -q 'dotfiles: exec fish' "$RC" || cat >> "$RC" <<'EOF'
+
+# dotfiles: exec fish for interactive shells (chsh unreliable on Coder)
+if command -v fish >/dev/null 2>&1 && [ -z "$EXECED_FISH" ]; then
+  case $- in
+    *i*) export EXECED_FISH=1; exec fish ;;
+  esac
+fi
+EOF
+  done
 fi
 
 cat <<'NOTE'
