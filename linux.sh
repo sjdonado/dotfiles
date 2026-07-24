@@ -251,26 +251,21 @@ if have herdr; then
   done
 fi
 
-# --- default shell to fish (optional) ----------------------------------------
+# --- interactive shell to fish (login shell stays POSIX) ---------------------
+# Do NOT chsh the login shell to fish. Coder runs its agent/metadata scripts
+# through the login shell, and fish rejects POSIX/bash syntax (e.g. the Home
+# Disk metric fails with "Variables cannot be bracketed"). Keep the login shell
+# POSIX and exec into fish only for interactive human terminals via an rc guard.
+# The `[ -t 1 ]` TTY test keeps non-interactive agent scripts out of fish.
 FISH="$(command -v fish || true)"
 if [ -n "$FISH" ]; then
-  grep -qx "$FISH" /etc/shells || echo "$FISH" | sudo tee -a /etc/shells >/dev/null
-  if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$FISH" ]; then
-    # coder/passwordless users have no password -> chsh PAM fails; use sudo.
-    sudo chsh -s "$FISH" "$USER" 2>/dev/null \
-      || chsh -s "$FISH" 2>/dev/null \
-      || echo "chsh failed; herdr uses [terminal] default_shell from config instead"
-  fi
-  # Guarantee interactive shells land in fish even when chsh is blocked (common
-  # on Coder: passwordless user, or the login shell resets on workspace rebuild).
-  # Covers bash and zsh (Coder defaults to zsh); the guard is portable to both.
-  # Appended last so the PATH/env exports above are inherited by the exec'd fish.
   for RC in $SHELL_RCS; do
     [ -e "$RC" ] || touch "$RC"
     grep -q 'dotfiles: exec fish' "$RC" || cat >> "$RC" <<'EOF'
 
-# dotfiles: exec fish for interactive shells (chsh unreliable on Coder)
-if command -v fish >/dev/null 2>&1 && [ -z "$EXECED_FISH" ]; then
+# dotfiles: exec fish for interactive terminals only (Coder-safe: never for
+# non-interactive agent/metadata scripts, which must stay POSIX).
+if command -v fish >/dev/null 2>&1 && [ -z "$EXECED_FISH" ] && [ -t 1 ]; then
   case $- in
     *i*) export EXECED_FISH=1; exec fish ;;
   esac
