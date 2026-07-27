@@ -60,6 +60,20 @@ bind \cf fzf_git_repos
 # Source external variables
 test -f "$HOME/.config/dotfiles/.env"; and . "$HOME/.config/dotfiles/.env"
 
+# Coder writes the workspace session env (STRIPE_API_KEY, OP_SERVICE_ACCOUNT_TOKEN,
+# GIT_ASKPASS, …) as POSIX sh for shells its agent did not spawn. herdr panes
+# start fish directly, so ~/.zshrc never sources it and those vars go missing:
+# `stripe listen` then silently falls back to its interactive login flow. The
+# file is real script (loops, case), so run it in sh and import the result.
+if test -f "$HOME/.config/coder/env.sh"
+    for line in (sh -c '. "$HOME/.config/coder/env.sh" >/dev/null 2>&1; env' 2>/dev/null)
+        set -l kv (string split -m 1 -- = $line)
+        test (count $kv) -eq 2; or continue
+        contains -- $kv[1] PWD OLDPWD SHLVL _; and continue
+        set -gx $kv[1] $kv[2]
+    end
+end
+
 command -q rbenv; and status --is-interactive; and rbenv init - --no-rehash fish | source
 test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 

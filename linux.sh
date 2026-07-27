@@ -226,7 +226,17 @@ mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
 log "Linking Claude Code and OpenCode config..."
-mkdir -p "$HOME/.claude" "$HOME/.config/opencode"
+mkdir -p "$HOME/.claude" "$HOME/.config/opencode" "$HOME/.config/ccstatusline"
+# claude/settings.json declares a SessionStart hook running herdr's agent-state
+# script, and herdr owns that script. Install it BEFORE the symlink: the
+# installer also rewrites settings.json, so running it afterwards would write
+# a duplicate hook straight into the tracked dotfiles copy. Skip once present.
+if have herdr && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
+  herdr integration install claude >/dev/null 2>&1 \
+    || log "herdr integration install claude failed; SessionStart hook will no-op"
+fi
+link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
+link_managed "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
 link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
 link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
