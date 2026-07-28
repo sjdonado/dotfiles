@@ -48,7 +48,7 @@ export COREPACK_HOME PNPM_HOME
 mkdir -p "$BIN" "$HOME/.config" "$COREPACK_HOME" "$PNPM_HOME"
 # Ensure dirs where installers drop binaries are on PATH, so re-runs detect
 # already-installed tools (idempotency) and post-install `have` checks pass.
-for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin"; do
+for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin" "$HOME/.bun/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
@@ -136,6 +136,20 @@ if ! have opencode; then
   rescan
 fi
 
+# --- uv/uvx (MCP servers launched with `uvx`, e.g. grafana's mcp-grafana) -----
+if ! have uv; then
+  log "Installing uv..."
+  curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$BIN" sh
+  rescan
+fi
+
+# --- bun (claude/settings.json statusLine runs `bunx ccstatusline`) -----------
+if ! have bun; then
+  log "Installing bun..."
+  curl -fsSL https://bun.sh/install | bash
+  rescan
+fi
+
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
   log "Installing worktrunk (wt)..."
@@ -178,6 +192,10 @@ for RC in $SHELL_RCS; do
     || printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$RC"
   grep -q 'HOME/.opencode/bin.*PATH' "$RC" \
     || printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$RC"
+  # bun's own installer appends a `$BUN_INSTALL/bin` block to the rc of the
+  # shell it detects; only add ours when neither form is present.
+  grep -qE 'BUN_INSTALL|HOME/\.bun/bin' "$RC" \
+    || printf 'export PATH="$HOME/.bun/bin:$PATH"\n' >> "$RC"
   sed -i '\|^export OPENCODE_CONFIG="$HOME/.config/dotfiles/agents/opencode.json"$|d' "$RC"
   grep -q 'COREPACK_HOME.*\.cache/corepack' "$RC" || cat >> "$RC" <<'EOF'
 
