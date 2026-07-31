@@ -124,6 +124,16 @@ do
   })
 end
 
+if not vim.pack then
+  vim.notify(
+    'This config requires Neovim >= 0.12 for vim.pack (currently '
+      .. tostring(vim.version()) .. '). Run linux.sh --install (Linux) or the '
+      .. 'macOS setup to fetch a current Neovim; skipping plugin setup.',
+    vim.log.levels.ERROR
+  )
+  return
+end
+
 -- ============================================================
 -- SECTION 2: PLUGIN MANAGER (vim.pack) BUILD HOOKS
 -- ============================================================

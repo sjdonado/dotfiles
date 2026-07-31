@@ -28,6 +28,24 @@ else
   set -gx PNPM_HOME "$HOME/.local/share/pnpm"
   set -gx COREPACK_HOME "$HOME/.cache/corepack"
 end
+
+# bat/delta color scheme: follow macOS appearance locally; default to dark on
+# Linux (e.g. Coder), which has no system light/dark and is used through an
+# already-dark terminal/herdr. delta-themed reads this same variable so both
+# tools always agree.
+if test (uname) = Darwin
+  # In light mode the AppleInterfaceStyle key does not exist, so the substitution
+  # is empty. Capture it first: an unquoted empty substitution would leave test(1)
+  # with a missing argument, and fish does not expand (cmd) inside double quotes.
+  set -l macos_appearance (defaults read -g AppleInterfaceStyle 2>/dev/null)
+  if test "$macos_appearance" = Dark
+    set -gx BAT_THEME GitHub-Dark
+  else
+    set -gx BAT_THEME GitHub-Light
+  end
+else
+  set -gx BAT_THEME GitHub-Dark
+end
 set -x PATH $HOME/.cargo/bin $PATH
 
 # Add custom man pages

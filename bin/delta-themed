@@ -2,13 +2,18 @@
 # delta wrapper: GitHub syntax palette (matches agent TUI code render) + --dark/
 # --light. Feature styles live in ~/.gitconfig ([delta "github-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
-
-if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
-  mode=--dark
-  feature=github-dark
-else
+#
+# Follows BAT_THEME (set in fish/config.fish) so delta and bat always agree:
+# macOS appearance locally, dark by default on Linux (e.g. Coder), which has
+# no system light/dark and is always used through an already-dark terminal.
+# defaults(1) is macOS-only, so a direct AppleInterfaceStyle check here always
+# fell through to light on Linux regardless of the actual terminal theme.
+if [ "$BAT_THEME" = "GitHub-Light" ]; then
   mode=--light
   feature=github-light
+else
+  mode=--dark
+  feature=github-dark
 fi
 
 exec delta \
