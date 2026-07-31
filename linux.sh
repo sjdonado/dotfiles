@@ -61,7 +61,7 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
-  fish ripgrep fd-find bat python3 python3-pip
+  fish ripgrep fd-find bat mosh python3 python3-pip
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
