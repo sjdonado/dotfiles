@@ -3,12 +3,28 @@
 # --light. Feature styles live in ~/.gitconfig ([delta "github-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
 #
-# Follows BAT_THEME (set in fish/config.fish) so delta and bat always agree:
-# macOS appearance locally, dark by default on Linux (e.g. Coder), which has
-# no system light/dark and is always used through an already-dark terminal.
-# defaults(1) is macOS-only, so a direct AppleInterfaceStyle check here always
-# fell through to light on Linux regardless of the actual terminal theme.
-if [ "$BAT_THEME" = "GitHub-Light" ]; then
+# Resolve appearance on every invocation, not from an environment variable.
+# BAT_THEME is exported once at shell startup, so it goes stale the moment macOS
+# appearance changes, and it is absent entirely for anything not launched from an
+# interactive shell (nvim's terminal, lazygit, an agent), which would silently
+# pick the wrong palette.
+if [ "$(uname)" = Darwin ]; then
+  # defaults(1) prints nothing and exits nonzero in light mode.
+  if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ]; then
+    light=0
+  else
+    light=1
+  fi
+else
+  # Linux has no system light/dark, and is reached through an already-dark
+  # terminal, so default to dark. An explicit BAT_THEME still wins.
+  case "${BAT_THEME:-}" in
+    *Light*|*light*) light=1 ;;
+    *) light=0 ;;
+  esac
+fi
+
+if [ "$light" = 1 ]; then
   mode=--light
   feature=github-light
 else
