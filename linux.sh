@@ -150,6 +150,16 @@ if ! have bun; then
   rescan
 fi
 
+# --- openspec (the openspec-* agent skills shell out to this CLI) ------------
+# Installed with bun because ~/.bun/bin is already on PATH, while `npm -g` lands
+# in a version-pinned Node prefix that is not. Must follow the bun block above.
+if ! have openspec; then
+  log "Installing OpenSpec CLI..."
+  bun add -g @fission-ai/openspec@latest \
+    || echo "openspec install failed; openspec-* skills will no-op"
+  rescan
+fi
+
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
   log "Installing worktrunk (wt)..."

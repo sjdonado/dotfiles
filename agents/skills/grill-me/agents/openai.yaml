@@ -1,5 +1,5 @@
 interface:
   display_name: "Grill Me"
-  short_description: "Sharpen a plan through interview"
+  short_description: "Attack a plan's load-bearing assumptions before implementing"
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

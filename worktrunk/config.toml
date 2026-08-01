@@ -1,2 +1,11 @@
 [[pre-start]]
 copy = "wt step copy-ignored"
+
+# Reap worktrees already merged into the default branch. Runs in the background
+# after a merge, so it costs nothing at the call site, and merges are frequent
+# enough to keep the count bounded without a scheduler.
+[[post-merge]]
+prune = "wt step prune --min-age 7d"
+
+[list]
+json-schema = 1

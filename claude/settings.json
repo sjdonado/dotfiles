@@ -1,5 +1,19 @@
 {
   "permissions": {
+    "deny": [
+      "Bash(git stash:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git reset --keep:*)",
+      "Bash(git clean:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git checkout -f:*)",
+      "Bash(git restore:*)",
+      "Bash(git worktree:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(wt merge:*)",
+      "Bash(gh pr merge:*)"
+    ],
     "defaultMode": "auto"
   },
   "model": "opus[1m]",

@@ -82,6 +82,15 @@ if [ "$INSTALL" = 1 ]; then
   else
     log "No Brewfile found, skipping."
   fi
+
+  # The openspec-* agent skills shell out to this CLI; it is not in Homebrew.
+  # Installed with bun because ~/.bun/bin is already on PATH, while `npm -g`
+  # lands in a version-pinned Node prefix that is not.
+  if ! have openspec; then
+    log "Installing OpenSpec CLI..."
+    bun add -g @fission-ai/openspec@latest \
+      || echo "openspec install failed; openspec-* skills will no-op"
+  fi
 fi
 
 log "Setting up Ghostty config..."
