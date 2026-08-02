@@ -4,64 +4,69 @@ Shared Claude Code and OpenCode commands, skills, and instructions.
 
 ## Lifecycle
 
-```
-                     ┌─────────────────────── input ───────────────────────┐
+```mermaid
+flowchart TD
+    subgraph INPUT["input"]
+        ask_in["a bounded question"] --> ask["/ask"]
+        ask -.->|escalates when bigger than one answer| ask
 
-  a bounded question ──► /ask
-                            └─ escalates when it is bigger than one answer
+        research_in["a question or claim"] --> research["/research"]
+        research --> ledger["finding ledger (F1, F2, ...)"]
+        ledger --> ticket["/create-ticket (batch, one confirm)"]
 
-  a question or claim ──► /research ──► finding ledger ──► /create-ticket
-                                          (F1, F2, ...)     (batch, one confirm)
+        triage_in["a ticket or an error"] --> triage["/triage"]
+        triage --> brief["plan brief"]
+        brief -.->|evidence: kill query first, then confirm or refute| brief
 
-  a ticket or an error ──► /triage ──► plan brief
-                             evidence: kill query first, then confirm or refute
+        idea_in["an idea worth documenting"] --> explore["openspec-explore"]
+        explore --> propose["openspec-propose / openspec-new-change"]
+        propose --> change["openspec/changes/&lt;id&gt;/"]
+        change --> grill["grill-me
+        interactive, or self-grill:
+        resolve what evidence can settle,
+        surface only survivors"]
+        grill --> updatechange["openspec-update-change
+        folds the answers into the artifacts"]
+        updatechange --> change
 
-  an idea worth documenting ──► openspec-explore ──► openspec-propose
-                                                     openspec-new-change
-                                                          │
-                                                    openspec/changes/<id>/
-                                                          │
-                     ┌──────────── grill-me ──────────────┤
-                     │   interactive, or self-grill:      │
-                     │   resolve what evidence can        │
-                     │   settle, surface only survivors   │
-                     │              │                     │
-                     │      openspec-update-change  ◄─────┘
-                     │      folds the answers into the artifacts
-                     └────────────────────────────────────┐
-                                                          │
-  everything else ──► native plan mode ───────────────────┤
-                      (never both: an approved change is  │
-                       already the contract)              │
-                                                          ▼
-                                                      approval
-                                                          │
-                     └─────────────────────── build ──────┼──────────────────┘
-                                                          ▼
-                                                        /yolo
-      resolve oracle ladder ──► implement ──► local rungs green
-        └ project AGENTS.md, else task runner, else toolchain
-                                   │
-                          audit diff vs requirements
-                                   │
-                          adversarial-review
-                            2 blind subagents, told the diff is wrong
-                                   │
-                          commit ──► push ──► open PR
-                            body: Assumptions / Refuted evidence /
-                                  Rejected review findings
-                                   │
-                          remote required checks green   ◄── terminal state
-                                   │
-                     ┌─────────────────────── after ──────┼──────────────────┐
-                                                          ▼
-                     openspec-verify-change   does the code match the spec
-                     /feedback                a bullet list from you
-                     /address-review          review threads, red CI
-                     openspec-sync-specs      fold deltas into specs
-                     openspec-archive-change  keep it as institutional memory
-                                                          │
-                                                    human merges
+        else_in["everything else"] --> planmode["native plan mode"]
+        planmode -.->|never both: an approved change is already the contract| planmode
+
+        change --> approval["approval"]
+        planmode --> approval
+    end
+
+    subgraph BUILD["build"]
+        approval --> yolo["/yolo"]
+        yolo --> ladder["resolve oracle ladder
+        project AGENTS.md, else task runner, else toolchain"]
+        ladder --> implement["implement"]
+        implement --> rungs["local rungs green"]
+        rungs --> audit["audit diff vs requirements"]
+        audit --> review["adversarial-review
+        2 blind subagents, told the diff is wrong"]
+        review --> commit["commit"] --> push["push"] --> pr["open PR
+        body: Assumptions / Refuted evidence / Rejected review findings"]
+        pr --> checks(["remote required checks green
+        terminal state"])
+    end
+
+    subgraph AFTER["after"]
+        checks --> verify["openspec-verify-change
+        does the code match the spec"]
+        checks --> feedback["/feedback
+        a bullet list from you"]
+        checks --> addressreview["/address-review
+        review threads, red CI"]
+        checks --> sync["openspec-sync-specs
+        fold deltas into specs"]
+        sync --> archive["openspec-archive-change
+        keep it as institutional memory"]
+        verify --> merge["human merges"]
+        feedback --> merge
+        addressreview --> merge
+        archive --> merge
+    end
 ```
 
 At any point the escalation contract can stop the run: three failures under three
@@ -145,22 +150,6 @@ https://code.claude.com/docs/en/mcp
 
 ## Ollama
 
-Select the `ollama` primary profile instead of only switching the model. The profile uses `ollama/gemma4:e4b`, blocks delegation, and denies the current `linear_*` and `posthog_*` MCP tools so their schemas do not consume the local model's context.
+Select the `ollama` primary profile instead of only switching the model. The profile uses `ollama/qwen3.5:4b-mlx`, blocks delegation, and denies the current `linear_*` and `posthog_*` MCP tools so their schemas do not consume the local model's context.
 
 When adding another OpenCode MCP server, also add its `<server-name>_*` deny rule to the `ollama` profile in `opencode/opencode.json`.
-
-## Remove Pi
-
-After Claude Code and OpenCode pass smoke tests, run:
-
-```sh
-~/.config/dotfiles/bin/cleanup-pi.sh
-```
-
-The cleanup keeps `~/.pi/agent/sessions` and other Pi user data by default. Remove all Pi data only when it is no longer needed:
-
-```sh
-~/.config/dotfiles/bin/cleanup-pi.sh --purge-data
-```
-
-Rollback before purging by restoring any timestamped command, skill, or instruction backups created by the setup script and reinstalling Pi with its original package manager.

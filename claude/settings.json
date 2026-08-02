@@ -48,8 +48,7 @@
     }
   },
   "syntaxHighlightingDisabled": false,
-  "alwaysThinkingEnabled": true,
-  "effortLevel": "medium",
+  "effortLevel": "high",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,

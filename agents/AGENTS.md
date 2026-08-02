@@ -38,6 +38,8 @@ Every change needs an agreed contract before implementation. There are two ways 
 
 **A written spec, for work worth documenting.** Use the `openspec-*` skills: explore to think it through, then propose or new-change to produce the artifacts, then update-change to fold in what grilling or evidence changes. The change directory under `openspec/changes/<id>/` is the contract, it is durable, and it is reviewable by a teammate. Prefer this for a large feature, anything touching several surfaces, or anything whose reasoning is worth keeping after the PR merges.
 
+Never run `openspec init`. The `openspec-*` skills are installed globally and are already available in every repository, so init only scaffolds redundant per-project command files. Create `openspec/changes/<id>/` directly when a change needs it.
+
 **Native plan mode, for everything else.** Cheaper, in-conversation, nothing to archive. Trace the relevant system end to end, identify the source of truth and lifecycle implications, clarify only load-bearing ambiguity, and recommend the smallest coherent change with specific files and verification steps.
 
 Do not do both. An approved OpenSpec change is already the implementation contract, so re-entering plan mode to restate it adds a second approval gate over the same decisions. Go straight from the approved change to `/yolo`.

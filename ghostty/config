@@ -19,7 +19,7 @@ shell-integration-features = no-cursor
 
 # Left Option sends Alt/Meta so alt+... bindings reach the shell and TUIs;
 # right Option keeps macOS Unicode input (option+n for ñ, option+e for accents).
-macos-option-as-alt = left
+macos-option-as-alt = right
 
 keybind = cmd+s=text:\x13
 keybind = shift+enter=text:\x1b\r

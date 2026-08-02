@@ -306,10 +306,6 @@ do
   vim.pack.add { gh 'windwp/nvim-autopairs' }
   require('nvim-autopairs').setup {}
 
-  -- Colorizer
-  -- vim.pack.add { gh 'catgoose/nvim-colorizer.lua' }
-  -- require('colorizer').setup { filetypes = { '*', '!vim' } }
-
   -- Zen mode
   vim.pack.add { gh 'folke/zen-mode.nvim' }
   require('zen-mode').setup {

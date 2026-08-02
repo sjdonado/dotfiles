@@ -16,8 +16,16 @@
 				"baseURL": "http://localhost:11434/v1"
 			},
 			"models": {
-				"gemma4:e4b": {
-					"name": "Gemma 4 e4b (local)",
+				"qwen3.5:35b-mlx": {
+					"name": "Qwen 3.5 35b MLX (local)",
+					"tool_call": true,
+					"limit": {
+						"context": 256000,
+						"output": 8192
+					}
+				},
+				"gemma4:e4b-mlx": {
+					"name": "Gemma 4 e4b MLX (local)",
 					"tool_call": true,
 					"limit": {
 						"context": 128000,
@@ -36,42 +44,41 @@
 		"posthog": {
 			"type": "remote",
 			"url": "https://mcp-eu.posthog.com/mcp",
-			"enabled": true,
-			"headers": {
-				"Authorization": "Bearer {env:MCP_POSTHOG_API_KEY}"
-			}
-		},
-		"grafana": {
-			"type": "local",
-			"command": ["uvx", "mcp-grafana"],
-			"enabled": true,
-			"environment": {
-				"GRAFANA_URL": "https://autarc.grafana.net",
-				"GRAFANA_SERVICE_ACCOUNT_TOKEN": "{env:MCP_GRAFANA_SERVICE_ACCOUNT_TOKEN}"
-			}
-		},
-		"sentry": {
-			"type": "local",
-			"command": ["npx", "@sentry/mcp-server"],
-			"enabled": true,
-			"environment": {
-				"SENTRY_ACCESS_TOKEN": "{env:MCP_SENTRY_ACCESS_TOKEN}"
-			}
+			"enabled": true
 		},
 		"supabase": {
 			"type": "remote",
 			"url": "https://mcp.supabase.com/mcp?read_only=true",
 			"enabled": true
+		},
+		"chrome-devtools": {
+			"type": "local",
+			"command": ["npx", "-y", "chrome-devtools-mcp@latest"],
+			"enabled": true
 		}
 	},
 	"agent": {
 		"ollama": {
-			"description": "Local Ollama profile without MCP or delegated agents",
+			"description": "Local Ollama profile without MCP or delegated agents, max power",
 			"mode": "primary",
-			"model": "ollama/gemma4:e4b",
+			"model": "ollama/qwen3.5:35b-mlx",
 			"permission": {
 				"linear_*": "deny",
 				"posthog_*": "deny",
+				"supabase_*": "deny",
+				"chrome-devtools_*": "deny",
+				"task": "deny"
+			}
+		},
+		"gemma": {
+			"description": "Local Ollama profile without MCP or delegated agents, quick checks and summaries",
+			"mode": "primary",
+			"model": "ollama/gemma4:e4b-mlx",
+			"permission": {
+				"linear_*": "deny",
+				"posthog_*": "deny",
+				"supabase_*": "deny",
+				"chrome-devtools_*": "deny",
 				"task": "deny"
 			}
 		}

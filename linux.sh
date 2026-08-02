@@ -206,7 +206,6 @@ for RC in $SHELL_RCS; do
   # shell it detects; only add ours when neither form is present.
   grep -qE 'BUN_INSTALL|HOME/\.bun/bin' "$RC" \
     || printf 'export PATH="$HOME/.bun/bin:$PATH"\n' >> "$RC"
-  sed -i '\|^export OPENCODE_CONFIG="$HOME/.config/dotfiles/agents/opencode.json"$|d' "$RC"
   grep -q 'COREPACK_HOME.*\.cache/corepack' "$RC" || cat >> "$RC" <<'EOF'
 
 # dotfiles: user-writable package-manager caches
