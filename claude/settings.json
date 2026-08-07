@@ -48,14 +48,14 @@
     }
   },
   "syntaxHighlightingDisabled": false,
-  "effortLevel": "high",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "skipDangerousModePermissionPrompt": true,
-  "theme": "light",
+  "theme": "auto",
   "editorMode": "vim",
   "verbose": true,
   "skipAutoPermissionPrompt": true,
