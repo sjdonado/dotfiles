@@ -55,7 +55,7 @@
     "mode": "hold"
   },
   "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
+  "theme": "light",
   "editorMode": "vim",
   "verbose": true,
   "skipAutoPermissionPrompt": true,

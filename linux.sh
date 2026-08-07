@@ -252,6 +252,13 @@ log "Linking herdr config..."
 mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 
+# Parity with macos.sh. Without this link the tracked worktrunk config never
+# applies on Linux, so copy-ignored, the post-merge prune, and the herdr
+# open/focus hook all silently no-op.
+log "Linking Worktrunk config..."
+mkdir -p "$HOME/.config/worktrunk"
+ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
+
 log "Linking Claude Code and OpenCode config..."
 mkdir -p "$HOME/.claude" "$HOME/.config/opencode" "$HOME/.config/ccstatusline"
 # claude/settings.json declares a SessionStart hook running herdr's agent-state

@@ -7,5 +7,106 @@ copy = "wt step copy-ignored"
 [[post-merge]]
 prune = "wt step prune --min-age 7d"
 
+# On create/switch: open the worktree in herdr and — when an agent is the one
+# driving — start that same kind of agent in the new pane. Runs in addition to a
+# repo's committed hooks, so project provisioning (and any tmux session it sets
+# up) is untouched.
+#
+# Deliberately --no-focus: spinning up a worktree is a background act, usually
+# fired by an orchestrator that is mid-task, and yanking the view away from
+# whatever the human is reading is the wrong default. The new workspace is
+# reported instead, so switching stays a decision.
+#
+# Parent workspace: herdr rejects worktree actions that do not start from the
+# repo parent ("linked_worktree_source"), and with no --cwd it resolves the repo
+# from whatever workspace is *focused* — so a switch fired while another repo has
+# focus looks the path up in the wrong repo and fails. Deriving the parent root
+# from git makes it deterministic and repo-agnostic, and attaches the worktree
+# under the existing repo workspace rather than creating a new workspace root.
+#
+# Agent kind is asked of herdr rather than sniffed from env vars, so this stays
+# agnostic: orchestrate from claude-code and children are claude-code, from
+# opencode and they are opencode.
+#
+# Agent kind resolves as: WT_AGENT_KIND if set (how `wtn --agent` lets a plain
+# SSH shell force a spawn, since a shell has no agent to detect), else whatever
+# is driving this pane, else nothing.
+#
+# Agent name: herdr enforces 1-32 chars, leading lowercase letter, and only
+# [a-z0-9_-]. A sanitized branch is routinely longer than that (an owner prefix
+# plus a Linear-slugged title is 60-80 chars), so the raw value loses to
+# "invalid_agent_name" and the pane is left as a bare shell. Truncating keeps the
+# owner and ticket id, which is the part that makes the name unique.
+#
+# Pane readiness: `agent start` refuses a pane whose shell has any live child
+# ("agent_pane_busy"), and herdr's own claude-hook probe leaves a python3 zombie
+# parented to the fresh pane's fish, so the pane can stay "busy" indefinitely
+# rather than for a few milliseconds. Retry that error briefly in case it really
+# is transient, then type the command into the pane the way a human would: herdr
+# detects the agent from the process either way, and the name is reattached
+# afterwards. Every other error is terminal, so retrying it only delays the log.
+#
+# Guards: already_open -> leave it alone rather than stacking a second agent; no
+# kind resolved -> open the worktree only, never spawn. Failures never break the switch
+# (herdr is absent under plain ssh, CI, headless) but they are appended to a log
+# instead of discarded, because a silently unspawned agent looks identical to a
+# working one until someone opens the pane. Command output stays off stdout
+# because worktrunk captures hook stdout and these commands return JSON.
+[[post-switch]]
+herdr = '''
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/worktrunk/hook.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+note() { printf '%s post-switch/herdr %s\n' "$(date -Is)" "$1" >>"$LOG" 2>/dev/null || true; }
+ROOT=$(dirname "$(git -C "{{ worktree_path }}" rev-parse --path-format=absolute --git-common-dir)") || exit 0
+OUT=$(herdr worktree open --cwd "$ROOT" --path "{{ worktree_path }}" --no-focus 2>&1) || {
+  note "worktree open failed: $OUT"
+  exit 0
+}
+[ "$(printf '%s' "$OUT" | jq -r '.result.already_open')" = "false" ] || exit 0
+KIND="${WT_AGENT_KIND:-}"
+[ -n "$KIND" ] || KIND=$(herdr agent get "${HERDR_PANE_ID:-}" 2>/dev/null | jq -r '.result.agent.agent // empty')
+[ -n "$KIND" ] || exit 0
+PANE=$(printf '%s' "$OUT" | jq -r '.result.root_pane.pane_id')
+NAME=$(printf '%s' "{{ branch | sanitize }}" |
+  tr '[:upper:]' '[:lower:]' |
+  sed -E 's/[^a-z0-9_-]+/-/g; s/^[^a-z]+//; s/-{2,}/-/g' |
+  cut -c1-32 |
+  sed -E 's/[-_]+$//')
+[ -n "$NAME" ] || NAME="agent"
+TRY=0
+while :; do
+  case "$KIND" in
+    claude) ERR=$(herdr agent start "$NAME" --kind claude --pane "$PANE" -- --dangerously-skip-permissions 2>&1) && { ERR=""; break; } ;;
+    *)      ERR=$(herdr agent start "$NAME" --kind "$KIND" --pane "$PANE" 2>&1) && { ERR=""; break; } ;;
+  esac
+  case "$ERR" in *agent_pane_busy*) ;; *) break ;; esac
+  TRY=$((TRY + 1))
+  [ "$TRY" -lt 3 ] || break
+  sleep 1
+done
+[ -z "$ERR" ] || {
+  note "agent start failed name=$NAME kind=$KIND pane=$PANE tries=$TRY: $ERR"
+  case "$KIND" in
+    claude) CMD="claude --dangerously-skip-permissions" ;;
+    *)      CMD="$KIND" ;;
+  esac
+  if herdr pane send-text "$PANE" "$CMD" >/dev/null 2>&1 &&
+    herdr pane send-keys "$PANE" Enter >/dev/null 2>&1; then
+    TRY=0
+    while [ "$TRY" -lt 20 ]; do
+      if herdr agent get "$PANE" >/dev/null 2>&1; then
+        herdr agent rename "$PANE" "$NAME" >/dev/null 2>&1 || true
+        break
+      fi
+      TRY=$((TRY + 1))
+      sleep 1
+    done
+    [ "$TRY" -lt 20 ] || note "typed '$CMD' into $PANE but no agent was detected"
+  else
+    note "could not type '$CMD' into pane=$PANE"
+  fi
+}
+'''
+
 [list]
 json-schema = 1
