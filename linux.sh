@@ -281,7 +281,9 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
-# --- local Herdr plugins (need running Herdr server) -------------------------
+# --- Herdr plugins (need running Herdr server) -------------------------------
+# Remote ones are pinned like skills-lock.json so a rebuild is reproducible;
+# bump a ref deliberately after reviewing upstream.
 if have herdr; then
   for plugin_dir in "$PWD/herdr/plugins/"*; do
     [ -f "$plugin_dir/herdr-plugin.toml" ] || continue
@@ -293,6 +295,23 @@ if have herdr; then
       log "Herdr server not running; later: herdr plugin link $plugin_dir"
     fi
   done
+  herdr plugin install persiyanov/herdr-reviewr \
+    --ref 42ccaaa72176937181c82a91484f97466fb5ed59 -y >/dev/null 2>&1 \
+    && log "installed Herdr plugin: persiyanov.reviewr" \
+    || log "Herdr server not running; later: herdr plugin install persiyanov/herdr-reviewr"
+  # Bundles its own pinned lazygit + fzf runtime, so no system lazygit needed.
+  # The local side-panel plugin binds this and reviewr as one exclusive pair.
+  herdr plugin install Crokily/herdr-lazygit \
+    --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
+    && log "installed Herdr plugin: herdr-lazygit" \
+    || log "Herdr server not running; later: herdr plugin install Crokily/herdr-lazygit"
+  # Collie only installs here; it stays stopped until `herdr plugin action
+  # invoke start --plugin herdr.collie`, because starting it publishes your
+  # panes on the tailnet and needs .env set first.
+  herdr plugin install AltanS/collie \
+    --ref f7b692b00a4c81d5c3a63766d6c0f15ac56836da -y >/dev/null 2>&1 \
+    && log "installed Herdr plugin: herdr.collie" \
+    || log "Herdr server not running; later: herdr plugin install AltanS/collie"
 fi
 
 # --- interactive shell to fish (login shell stays POSIX) ---------------------
