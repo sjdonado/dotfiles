@@ -1,0 +1,29 @@
+# herdr-plugin.toml — manifest for the side-panel plugin.
+#
+# reviewr and herdr-lazygit each own an independent toggle, so both side panels
+# can end up open at once and the work pane gets squeezed to nothing. herdr has
+# no notion of a mutually exclusive pane group, so this plugin wraps the two
+# toggles: open the requested panel, close the other one first.
+#
+# Bind these actions instead of the upstream ones (see herdr/config.toml).
+
+id = "side-panel"
+name = "Side Panel"
+version = "0.1.0"
+description = "Mutually exclusive side panels: opening reviewr closes lazygit, and vice versa."
+min_herdr_version = "0.7.0"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "diff"
+title = "Side panel: reviewr"
+description = "Toggle the reviewr diff panel, closing the lazygit panel first."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/switch.sh", "diff"]
+
+[[actions]]
+id = "lazygit"
+title = "Side panel: lazygit"
+description = "Toggle the lazygit panel, closing the reviewr panel first."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/switch.sh", "lazygit"]

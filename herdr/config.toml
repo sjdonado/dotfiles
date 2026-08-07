@@ -24,6 +24,19 @@ default_shell = "fish"
 open_worktree = "prefix+shift+o"
 remove_worktree = "prefix+shift+x"
 
+# Side panels, via the local side-panel plugin so only one is ever open: it
+# closes the other before toggling the requested one. Bind the wrappers, not
+# persiyanov.reviewr.toggle / herdr-lazygit.open directly.
+[[keys.command]]
+key = "prefix+d"
+type = "plugin_action"
+command = "side-panel.diff"
+
+[[keys.command]]
+key = "prefix+l"
+type = "plugin_action"
+command = "side-panel.lazygit"
+
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.
