@@ -1,17 +1,6 @@
--- Yank file location (Cmd+Shift+Y via Ghostty: \x01\x19)
-local function yank_location(visual)
-  local path = vim.fn.fnamemodify(vim.fn.expand '%', ':~:.')
-  local location
-  if visual then
-    local start = vim.fn.line 'v'
-    local finish = vim.fn.line '.'
-    location = path .. ':' .. start .. '-' .. finish
-  else
-    location = path .. ':' .. vim.fn.line '.'
-  end
-  vim.fn.setreg('+', location)
-  vim.notify(location)
-end
+local reference = require 'custom.copy-reference'
 
-vim.keymap.set('n', '\x01\x19', function() yank_location(false) end, { desc = 'Yank file location' })
-vim.keymap.set('v', '\x01\x19', function() yank_location(true) end, { desc = 'Yank file location' })
+-- Yank file location (Cmd+Shift+Y via Ghostty: \x01\x19), alongside the
+-- <leader>y maps the module registers.
+vim.keymap.set('n', '\x01\x19', reference.line, { desc = 'Yank file location' })
+vim.keymap.set('x', '\x01\x19', reference.range, { desc = 'Yank file location' })
