@@ -117,6 +117,21 @@ if ! have tree-sitter; then
   rm -rf "$tmp"
 fi
 
+# --- difftastic (lazygit's default pager; gitconfig references difft-themed) -
+if ! have difft; then
+  log "Installing difftastic..."
+  case "$ARCH" in x86_64) DFA=x86_64 ;; arm64) DFA=aarch64 ;; esac
+  v="$(curl -fsSL https://api.github.com/repos/Wilfred/difftastic/releases/latest \
+       | grep -oE '"tag_name": *"[^"]+"' | head -1 | grep -oE '[0-9.]+')"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/difft.tar.gz" \
+    "https://github.com/Wilfred/difftastic/releases/download/${v}/difft-${DFA}-unknown-linux-gnu.tar.gz"
+  tar -xzf "$tmp/difft.tar.gz" -C "$tmp"
+  install -m755 "$(find "$tmp" -type f -name difft -perm -u+x | head -1)" "$BIN/difft" \
+    || log "difftastic install failed; lazygit falls back to its delta pagers"
+  rm -rf "$tmp"
+fi
+
 # --- herdr -------------------------------------------------------------------
 if ! have herdr; then
   log "Installing herdr..."

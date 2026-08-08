@@ -4,9 +4,20 @@ gui:
   mainPanelSplitMode: vertical
   showCommandLog: false
 git:
+  # Cycle with `|`. Side-by-side is the default, but an added or deleted file has
+  # no content on one side, so it renders in half the width; flip to the inline
+  # entry for those.
+  # difftastic compares parse trees rather than lines: it wraps under its own
+  # gutter and gives an added file the full width, because side-by-side collapses
+  # to one column when there is no "before" content. delta could only ever do one
+  # of those at a time.
+  #
+  # No --width here. lazygit substitutes {{columnWidth}} for `pager` only, never
+  # for externalDiffCommand, so the placeholder would arrive literally and difft
+  # would exit with `invalid digit found in string`. Piped, difft defaults to 80
+  # columns, which fits the panel; export DFT_WIDTH to override.
   pagers:
-    - colorArg: always
-      pager: delta-themed
+    - externalDiffCommand: difft-themed --display=side-by-side
 os:
   editPreset: nvim-remote
 keybinding:

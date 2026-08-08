@@ -87,6 +87,8 @@ brew "golangci-lint"
 brew "grpcurl"
 # OpenType text shaping engine
 brew "harfbuzz"
+# Syntax-aware structural diff; lazygit's pager
+brew "difftastic"
 # Agent multiplexer that lives in your terminal
 brew "herdr"
 # Image manipulation library

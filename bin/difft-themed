@@ -1,0 +1,44 @@
+#!/bin/sh
+# difftastic wrapper: structural diff with light/dark following the system
+# appearance, mirroring bin/delta-themed.
+#
+# Used as lazygit's externalDiffCommand. difftastic compares parse trees rather
+# than lines, so an added file renders at full width (no empty "before" column)
+# and it wraps to its own width instead of letting the terminal wrap at column 0
+# — the two things delta cannot do at once.
+#
+# --syntax-highlight=off: difftastic maps each language's tree-sitter node types
+# onto one small ANSI palette, so the same colour means a string in JSON and
+# something else in YAML, and the result reads as noise rather than information.
+# Turning it off leaves exactly the colours that describe the diff: red and green
+# for removed and added, underline for the changed span within a line, dim for
+# context line numbers, yellow for the file header. It does not affect structural
+# matching, only how tokens are painted. There is no theme or palette option to
+# align it with the GitHub colours delta uses.
+#
+# Resolve appearance on every invocation, not from an environment variable.
+# BAT_THEME is exported once at shell startup, so it goes stale the moment macOS
+# appearance changes, and it is absent entirely for anything not launched from an
+# interactive shell (nvim's terminal, lazygit, an agent), which would silently
+# pick the wrong palette.
+if [ "$(uname)" = Darwin ]; then
+  # defaults(1) prints nothing and exits nonzero in light mode.
+  if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ]; then
+    background=dark
+  else
+    background=light
+  fi
+else
+  # Linux has no system light/dark, and is reached through an already-dark
+  # terminal, so default to dark. An explicit BAT_THEME still wins.
+  case "${BAT_THEME:-}" in
+    *Light*|*light*) background=light ;;
+    *) background=dark ;;
+  esac
+fi
+
+exec difft \
+  --color=always \
+  --background="$background" \
+  --syntax-highlight=off \
+  "$@"
