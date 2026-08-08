@@ -310,12 +310,8 @@ if have herdr; then
       log "Herdr server not running; later: herdr plugin link $plugin_dir"
     fi
   done
-  herdr plugin install persiyanov/herdr-reviewr \
-    --ref 42ccaaa72176937181c82a91484f97466fb5ed59 -y >/dev/null 2>&1 \
-    && log "installed Herdr plugin: persiyanov.reviewr" \
-    || log "Herdr server not running; later: herdr plugin install persiyanov/herdr-reviewr"
   # Bundles its own pinned lazygit + fzf runtime, so no system lazygit needed.
-  # The local side-panel plugin binds this and reviewr as one exclusive pair.
+  # The local side-panel plugin binds this as one of its exclusive panels.
   herdr plugin install Crokily/herdr-lazygit \
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "installed Herdr plugin: herdr-lazygit" \
