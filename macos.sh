@@ -228,20 +228,13 @@ if have herdr; then
     fi
   done
   # Remote Herdr plugins, pinned like skills-lock.json so a rebuild is
-  # reproducible. Bump the ref deliberately after reviewing upstream.
-  # Bundles its own pinned lazygit + fzf runtime, so no system lazygit needed.
-  # The local side-panel plugin binds this as one of its exclusive panels.
+  # reproducible. Bump the ref deliberately after reviewing upstream. Bundles its
+  # own pinned lazygit + fzf runtime, so no system lazygit needed; the local
+  # side-panel plugin binds it as one of its exclusive panels.
   herdr plugin install Crokily/herdr-lazygit \
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "  installed Herdr plugin: herdr-lazygit" \
     || log "  Herdr not running; later run: herdr plugin install Crokily/herdr-lazygit"
-  # Collie only installs here; it stays stopped until `herdr plugin action
-  # invoke start --plugin herdr.collie`, because starting it publishes your
-  # panes on the tailnet and needs .env set first.
-  herdr plugin install AltanS/collie \
-    --ref f7b692b00a4c81d5c3a63766d6c0f15ac56836da -y >/dev/null 2>&1 \
-    && log "  installed Herdr plugin: herdr.collie" \
-    || log "  Herdr not running; later run: herdr plugin install AltanS/collie"
 fi
 
 log "Linking Lazygit config..."

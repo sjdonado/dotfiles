@@ -316,13 +316,6 @@ if have herdr; then
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "installed Herdr plugin: herdr-lazygit" \
     || log "Herdr server not running; later: herdr plugin install Crokily/herdr-lazygit"
-  # Collie only installs here; it stays stopped until `herdr plugin action
-  # invoke start --plugin herdr.collie`, because starting it publishes your
-  # panes on the tailnet and needs .env set first.
-  herdr plugin install AltanS/collie \
-    --ref f7b692b00a4c81d5c3a63766d6c0f15ac56836da -y >/dev/null 2>&1 \
-    && log "installed Herdr plugin: herdr.collie" \
-    || log "Herdr server not running; later: herdr plugin install AltanS/collie"
 fi
 
 # --- interactive shell to fish (login shell stays POSIX) ---------------------
