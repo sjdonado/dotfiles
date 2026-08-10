@@ -14,7 +14,7 @@
       "Bash(wt merge:*)",
       "Bash(gh pr merge:*)"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",
   "hooks": {

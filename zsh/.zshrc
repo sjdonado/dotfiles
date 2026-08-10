@@ -47,3 +47,21 @@ bindkey '^F' workspace-open-widget
 export MANPATH="$HOME/.local/share/man:$MANPATH"
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
+# dotfiles: local bin on PATH
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/.bun/bin:$PATH"
+
+# dotfiles: user-writable package-manager caches
+export COREPACK_HOME="$HOME/.cache/corepack"
+export PNPM_HOME="$HOME/.local/share/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+
+# dotfiles: exec fish for interactive terminals only (Coder-safe: never for
+# non-interactive agent/metadata scripts, which must stay POSIX).
+if command -v fish >/dev/null 2>&1 && [ -z "$EXECED_FISH" ] && [ -t 1 ]; then
+  case $- in
+    *i*) export EXECED_FISH=1; exec fish ;;
+  esac
+fi
