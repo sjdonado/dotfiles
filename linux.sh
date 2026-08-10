@@ -228,6 +228,15 @@ export COREPACK_HOME="$HOME/.cache/corepack"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 EOF
+  # Coder injects a git identity into every process it spawns, and env beats
+  # ~/.gitconfig, so commits made here ignored the tracked user.name/user.email.
+  # Unset after the rc sources ~/.config/coder/env.sh, which sets them again.
+  # GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
+  grep -q 'dotfiles: git identity from gitconfig' "$RC" || cat >> "$RC" <<'EOF'
+
+# dotfiles: git identity from gitconfig, not Coder's injected env
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+EOF
 done
 
 log "Linking git config..."
