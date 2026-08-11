@@ -2,6 +2,7 @@ tap "amberframework/micrate"
 tap "coder/coder"
 tap "grafana/grafana"
 tap "ory/tap"
+tap "rjyo/moshi"
 tap "oven-sh/bun", trusted: true
 tap "supabase/tap"
 tap "tunneltodev/tap"
@@ -91,6 +92,8 @@ brew "harfbuzz"
 brew "difftastic"
 # Agent multiplexer that lives in your terminal
 brew "herdr"
+# Reports agent events to the Moshi iOS app
+brew "rjyo/moshi/moshi-hook"
 # Image manipulation library
 brew "jpeg"
 # Library for interacting with JSON

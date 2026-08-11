@@ -296,6 +296,28 @@ launchctl load "$TM_AGENT_DST" 2>/dev/null || true
 
 touch "$PWD/.env"
 
+# --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
+# The device token is a secret, so it lives in the gitignored .env as
+# MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
+# a fresh machine still finishes setup; re-run this script after adding it.
+# NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
+# breaking the symlink into this repo. Re-link it afterwards, or the tracked
+# settings silently stop applying. Same for ~/.config/opencode/plugins.
+if have moshi-hook; then
+  # shellcheck disable=SC1091
+  [ -f "$PWD/.env" ] && . "$PWD/.env"
+  if [ -n "${MOSHI_DEVICE_TOKEN:-}" ]; then
+    log "Pairing moshi-hook..."
+    moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
+      && moshi-hook install >/dev/null 2>&1 \
+      && brew services start moshi-hook >/dev/null 2>&1 \
+      && log "  moshi-hook paired and running" \
+      || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
+  else
+    log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."
+  fi
+fi
+
 touch "$HOME/.hushlogin"
 
 log "Done. Open a new terminal session so PATH and shells are consistent."

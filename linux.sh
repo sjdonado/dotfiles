@@ -132,6 +132,13 @@ if ! have difft; then
   rm -rf "$tmp"
 fi
 
+# --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
+if ! have moshi-hook; then
+  log "Installing moshi-hook..."
+  curl -fsSL https://getmoshi.app/install.sh | sh
+  rescan
+fi
+
 # --- herdr -------------------------------------------------------------------
 if ! have herdr; then
   log "Installing herdr..."
@@ -353,6 +360,27 @@ EOF
   done
 fi
 
+# --- moshi-hook pairing ------------------------------------------------------
+# The device token is a secret, so it lives in the gitignored .env as
+# MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
+# a fresh box still finishes setup; re-run this script after adding it.
+# NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
+# breaking the symlink into this repo. Re-link it afterwards, or the tracked
+# settings silently stop applying. Same for ~/.config/opencode/plugins.
+if have moshi-hook; then
+  # shellcheck disable=SC1091
+  [ -f "$PWD/.env" ] && . "$PWD/.env"
+  if [ -n "${MOSHI_DEVICE_TOKEN:-}" ]; then
+    log "Pairing moshi-hook..."
+    moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
+      && moshi-hook install >/dev/null 2>&1 \
+      && log "  moshi-hook paired; start it with: moshi-hook serve" \
+      || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
+  else
+    log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."
+  fi
+fi
+
 cat <<'NOTE'
 
 ==> Base setup done.
@@ -366,6 +394,9 @@ MANUAL STEPS (sensitive — not scripted):
 
   2. Secrets / env (only if your workflow needs them):
        - Copy any private .env values by hand.
+       - Moshi push: add `export MOSHI_DEVICE_TOKEN=<token>` to .env (token from
+         Settings -> Hooks in the iOS app), re-run this script, then start the
+         daemon with `moshi-hook serve`.
        - SSH keys / ~/.ssh/config: create or copy manually if you push over SSH
          (dotfiles cloned over public HTTPS, so clone itself needs nothing).
 
