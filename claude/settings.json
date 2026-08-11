@@ -58,6 +58,5 @@
   "theme": "auto",
   "editorMode": "vim",
   "verbose": true,
-  "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "skipAutoPermissionPrompt": true
 }
