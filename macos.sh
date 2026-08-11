@@ -301,8 +301,9 @@ touch "$PWD/.env"
 # MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
 # a fresh machine still finishes setup; re-run this script after adding it.
 # NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
-# breaking the symlink into this repo. Re-link it afterwards, or the tracked
-# settings silently stop applying. Same for ~/.config/opencode/plugins.
+# breaking the symlink into this repo, so re-link right after. The hooks it
+# writes are tracked in claude/settings.json, which is why re-linking keeps them
+# instead of dropping them. Same for ~/.config/opencode/plugins.
 if have moshi-hook; then
   # shellcheck disable=SC1091
   [ -f "$PWD/.env" ] && . "$PWD/.env"
@@ -310,6 +311,7 @@ if have moshi-hook; then
     log "Pairing moshi-hook..."
     moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
       && moshi-hook install >/dev/null 2>&1 \
+      && link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json" \
       && brew services start moshi-hook >/dev/null 2>&1 \
       && log "  moshi-hook paired and running" \
       || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'

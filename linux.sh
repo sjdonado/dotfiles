@@ -385,8 +385,13 @@ fi
 # MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
 # a fresh box still finishes setup; re-run this script after adding it.
 # NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
-# breaking the symlink into this repo. Re-link it afterwards, or the tracked
-# settings silently stop applying. Same for ~/.config/opencode/plugins.
+# breaking the symlink into this repo, so re-link right after. The hooks it
+# writes are tracked in claude/settings.json, which is why re-linking keeps them
+# instead of dropping them. Same for ~/.config/opencode/plugins.
+#
+# No systemd user bus in a Coder workspace, so `moshi-hook service` cannot run
+# the daemon: start it here, and fish/config.fish restarts it on the first shell
+# after a workspace rebuild.
 if have moshi-hook; then
   # shellcheck disable=SC1091
   [ -f "$PWD/.env" ] && . "$PWD/.env"
@@ -394,7 +399,9 @@ if have moshi-hook; then
     log "Pairing moshi-hook..."
     moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
       && moshi-hook install >/dev/null 2>&1 \
-      && log "  moshi-hook paired; start it with: moshi-hook serve" \
+      && link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json" \
+      && { pgrep -x moshi-hook >/dev/null 2>&1 || (nohup moshi-hook serve >/dev/null 2>&1 &); } \
+      && log "  moshi-hook paired and running" \
       || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
   else
     log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."

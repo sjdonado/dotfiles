@@ -108,6 +108,18 @@ set -e GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
 # 5.3G core.<pid> sitting in the repo it was started from.
 ulimit -c 0
 
+# The Claude and OpenCode hooks report to this daemon over a Unix socket; with
+# it down they write into nothing and the phone stays silent. macOS runs it via
+# `brew services`, but a Coder workspace has no systemd user bus, so the first
+# interactive shell after a rebuild brings it up. disown keeps it alive when the
+# pane that started it closes.
+if status is-interactive; and command -q moshi-hook
+    if not pgrep -x moshi-hook >/dev/null 2>&1
+        moshi-hook serve >/dev/null 2>&1 &
+        disown
+    end
+end
+
 command -q rbenv; and status --is-interactive; and rbenv init - --no-rehash fish | source
 test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 
