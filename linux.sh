@@ -249,6 +249,18 @@ done
 log "Linking git config..."
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
 
+# ~/.zshrc alone is not enough: non-interactive zsh never reads it, so hooks and
+# agent shells kept the injected identity. ~/.zshenv is read by every zsh. The
+# ~/.zshrc block stays too, since it sources ~/.config/coder/env.sh, which sets
+# the vars again after this file has run. Appended rather than symlinked from
+# zsh/.zshenv: that file is the macOS one, full of homebrew paths.
+[ -e "$HOME/.zshenv" ] || touch "$HOME/.zshenv"
+grep -q 'dotfiles: git identity from gitconfig' "$HOME/.zshenv" || cat >> "$HOME/.zshenv" <<'EOF'
+
+# dotfiles: git identity from gitconfig, not Coder's injected env
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+EOF
+
 log "Linking bat config + themes (GitHub Dark/Light for delta)..."
 mkdir -p "$HOME/.config/bat/themes"
 [ -e "$PWD/bat/config" ] && ln -snf "$PWD/bat/config" "$HOME/.config/bat/config"
