@@ -43,10 +43,11 @@ Report a kill result loudly. "Zero occurrences in 30 days" outranks any amount o
 Name tools as server plus bare tool name, per `AGENTS.md`. Skip a capability entirely when the project has none configured; that is a normal state, not a blocker.
 
 - **Error tracking.** Issue search for frequency, first seen, and last seen. Event aggregation for counts grouped by release or environment, and for timeseries. Issue detail for the stack. Automated root-cause analysis is a **hypothesis to verify in code**, never a finding on its own.
-- **Product analytics.** Affected-person counts and funnel step conversion. Respect the project's test-account filtering. Where person properties are recorded at ingest time rather than queried live, never write a query whose conclusion depends on a person's current property value.
+- **Product analytics.** Affected-person counts and funnel step conversion. Session replays when the claim is about what a user actually saw or did; one replay confirming the reproduction outranks inference from event counts. Respect the project's test-account filtering. Where person properties are recorded at ingest time rather than queried live, never write a query whose conclusion depends on a person's current property value.
 - **Metrics, logs, and traces.** Rate and percentile latency from metrics. Log search for confirmation and for failure modes that were never instrumented as errors. Trace search for where the time actually goes. Incident and alert history for whether this has paged before. Always produce deep links with the tool's own link generator; never hand-assemble a dashboard URL.
 - **Database.** Confirm a table, column, or constraint exists before asserting it. Row counts for blast radius. Advisors for security and performance warnings touching the changed surface. Migration history before proposing a migration.
 - **Tracker.** Search for prior art before treating something as new. Duplicate detection is evidence.
+- **Version history.** `git log` and `git blame` for when a behavior changed and what shipped alongside it; release or deploy history to correlate a telemetry inflection with a commit range; PR discussion as prior art on why the code is the way it is. A regression claim ("this got slower recently") is checked against history the same way an impact claim is checked against telemetry.
 
 ## No-fabrication guard
 
