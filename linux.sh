@@ -299,6 +299,9 @@ link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
 link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+# Separate file by design: opencode deprecated theme/keybinds/tui keys inside
+# opencode.json. `theme: system` is what follows the terminal's light/dark switch.
+link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
 link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
 link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"
 link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
