@@ -103,6 +103,11 @@ end
 # GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
 set -e GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
 
+# No core dumps. kernel.core_pattern is the bare name `core`, so a crash writes
+# the dump into the process's cwd: a SIGABRT in the Sentry MCP server left a
+# 5.3G core.<pid> sitting in the repo it was started from.
+ulimit -c 0
+
 command -q rbenv; and status --is-interactive; and rbenv init - --no-rehash fish | source
 test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 

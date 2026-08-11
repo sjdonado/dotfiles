@@ -243,6 +243,10 @@ EOF
 
 # dotfiles: git identity from gitconfig, not Coder's injected env
 unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+
+# dotfiles: no core dumps. core_pattern is the bare name `core`, so a crash
+# writes the dump into the process's cwd, i.e. straight into a repo.
+ulimit -c 0
 EOF
 done
 
@@ -259,6 +263,10 @@ grep -q 'dotfiles: git identity from gitconfig' "$HOME/.zshenv" || cat >> "$HOME
 
 # dotfiles: git identity from gitconfig, not Coder's injected env
 unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+
+# dotfiles: no core dumps. core_pattern is the bare name `core`, so a crash
+# writes the dump into the process's cwd, i.e. straight into a repo.
+ulimit -c 0
 EOF
 
 log "Linking bat config + themes (GitHub Dark/Light for delta)..."
