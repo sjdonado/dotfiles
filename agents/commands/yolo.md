@@ -49,6 +49,8 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 10. Drive the remote required checks to green. Watch them to completion; a red required check is a failure to fix, not a result to report. Re-run a flake once before counting it as an attempt. Where a repository has no remote CI, the ladder ends at the local rungs plus the PR open.
 
+    While watching, also check the PR's merge state (`gh pr view --json mergeable,mergeStateStatus`). A conflicting PR is a failure to fix on the same footing as a red check: rebase onto the base, resolve, and `git push --force-with-lease` (the task branch this run created is not a shared branch). Resolve mechanical conflicts autonomously: adjacent-line collisions, regenerated lockfiles, import order. Escalate a semantic conflict, where both sides changed the same logic and resolution requires choosing between intents; resolving one silently would redesign someone else's concurrent change.
+
     Do not wait for review threads. A PR you just opened has none, and any that appear later arrive after this run has finished. `/address-review` owns them, and its approval gate is a deliberate human handoff, not a step to drive through.
 
 **Terminal state is every resolved oracle green, not "PR opened."** Report the PR URL and the final state of each rung. If a rung cannot go green, escalate with what each attempt disproved rather than handing back a red PR.

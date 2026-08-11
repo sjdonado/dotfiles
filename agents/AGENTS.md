@@ -99,7 +99,7 @@ These are irreversible or shared across every other concurrent stream, so touchi
 
 ### Do not escalate for
 
-Flaky or timed-out CI (re-run once; only a second failure counts as an attempt). Lint or format failures (auto-fix them). A branch behind its base (rebase and continue). Type errors in code you just wrote (that is the loop working). Dependency install, cache, or port collisions (re-run the project's provisioning). "I am not sure this design is optimal" (pick the minimal option, record it, continue).
+Flaky or timed-out CI (re-run once; only a second failure counts as an attempt). Lint or format failures (auto-fix them). A branch behind or mechanically conflicting with its base (rebase, resolve, continue; only a semantic conflict, where both sides changed the same logic, escalates). Type errors in code you just wrote (that is the loop working). Dependency install, cache, or port collisions (re-run the project's provisioning). "I am not sure this design is optimal" (pick the minimal option, record it, continue).
 
 ## Oracle ladder
 
