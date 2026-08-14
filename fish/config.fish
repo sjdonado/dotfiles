@@ -29,9 +29,22 @@ else
   set -gx COREPACK_HOME "$HOME/.cache/corepack"
 end
 
-# Herdr is the source of truth inside panes. Its OSC 11 answer provides Claude
-# with a correct startup fallback while its live semantic mode updates keep
-# Claude, OpenCode, and Neovim synchronized afterwards.
+# Herdr is the source of truth inside panes, and herdr-theme-mode reads its OSC 11
+# answer. This variable is startup-only for both agents, so a theme flip needs a
+# new pane; only Neovim follows one live.
+#
+# Claude Code has no other input: its binary contains no OSC 11 sequence at all, so
+# `theme: auto` is a read of this variable rather than terminal detection, and with
+# no response handler either it cannot be told about a later change. It resolves
+# once at exec and keeps that palette for the life of the process. `/theme dark`
+# is the only way to correct a running session.
+#
+# OpenCode queries OSC 11 itself and treats this variable as the fallback, which is
+# what saves it when the query goes unanswered (mosh does not carry the response).
+# Nothing suggests it re-queries afterwards.
+#
+# Neovim is the exception: it queries at startup and handles unsolicited responses
+# via TermResponse, and nvim/init.lua re-queries on FocusGained.
 set -l herdr_theme_mode
 if set -q HERDR_ENV
   set herdr_theme_mode ("$HOME/.config/dotfiles/bin/herdr-theme-mode" 2>/dev/null)
