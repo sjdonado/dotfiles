@@ -30,14 +30,14 @@ else
 end
 
 # Herdr is the source of truth inside panes, and herdr-theme-mode reads its OSC 11
-# answer. Herdr exposes no theme event and no way to report its current mode, so a
-# shell start is the only moment this can be resolved: asking means querying the
-# terminal, which needs a tty.
+# answer. This variable is startup-only for both agents, so a theme flip needs a
+# new pane; only Neovim follows one live.
 #
 # Claude Code has no other input: its binary contains no OSC 11 sequence at all, so
 # `theme: auto` is a read of this variable rather than terminal detection, and with
-# no response handler either it cannot be told about a later change. Hence the
-# explicit theme written by claude-theme-sync below, which does reach open sessions.
+# no response handler either it cannot be told about a later change. It resolves
+# once at exec and keeps that palette for the life of the process. `/theme dark`
+# is the only way to correct a running session.
 #
 # OpenCode queries OSC 11 itself and treats this variable as the fallback, which is
 # what saves it when the query goes unanswered (mosh does not carry the response).
@@ -54,14 +54,6 @@ if set -q HERDR_ENV
     set -gx COLORFGBG "0;15"
   else
     set -e COLORFGBG
-  end
-
-  # COLORFGBG above only reaches the next process to start. Claude Code re-reads
-  # settings.json in already-running sessions, so writing the resolved mode there is
-  # what makes open sessions follow a flip. It writes only when the value actually
-  # changes, so this is a no-op on almost every shell start.
-  if contains -- "$herdr_theme_mode" dark light
-    "$HOME/.config/dotfiles/bin/claude-theme-sync" $herdr_theme_mode 2>/dev/null
   end
 end
 
