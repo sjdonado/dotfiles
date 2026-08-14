@@ -1,0 +1,24 @@
+# herdr-plugin.toml — manifest for the edit-tab plugin.
+#
+# nvim lives in its own tab rather than a side panel: a full-width tab is what an
+# editor wants, and lazygit is the only thing left that earns a narrow pane.
+# herdr-lazygit owns that panel directly now, so nothing here arbitrates between
+# them and there is no exclusivity to enforce.
+#
+# The toggle needs a script because herdr has no create-or-focus primitive:
+# `tab create` always makes a new tab, so finding the existing one by label and
+# remembering which tab to return to has to happen outside herdr.
+
+id = "edit-tab"
+name = "Edit Tab"
+version = "1.0.0"
+description = "Toggle a dedicated nvim tab, creating it on first use."
+min_herdr_version = "0.7.0"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "toggle"
+title = "Toggle the nvim tab"
+description = "Focus the nvim tab, creating it when absent; return to the previous tab when it already has focus."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/toggle.sh"]

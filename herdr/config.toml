@@ -25,18 +25,17 @@ open_worktree = "prefix+shift+o"
 remove_worktree = "prefix+shift+x"
 settings = "prefix+,"
 
-# Side panels, via the local side-panel plugin so only one is ever open: it
-# closes the other before toggling the requested one. Bind the wrappers, not
-# herdr-lazygit.open directly.
+# lazygit is the only side panel, so herdr-lazygit's own toggle is enough; nvim
+# moved to a tab of its own and no longer competes for the panel.
 [[keys.command]]
 key = "prefix+s"
 type = "plugin_action"
-command = "side-panel.lazygit"
+command = "herdr-lazygit.open"
 
 [[keys.command]]
 key = "prefix+."
 type = "plugin_action"
-command = "side-panel.edit"
+command = "edit-tab.toggle"
 
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.

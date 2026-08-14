@@ -22,85 +22,85 @@
       {
         "hooks": [
           {
-            "async": false,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": false
           }
         ]
       }
     ],
     "PostToolUse": [
       {
+        "matcher": "AskUserQuestion",
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
-        ],
-        "matcher": "AskUserQuestion"
+        ]
       },
       {
+        "matcher": "ExitPlanMode",
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
-        ],
-        "matcher": "ExitPlanMode"
+        ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "AskUserQuestion",
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
-        ],
-        "matcher": "AskUserQuestion"
+        ]
       },
       {
+        "matcher": "ExitPlanMode",
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
-        ],
-        "matcher": "ExitPlanMode"
+        ]
       }
     ],
     "SessionEnd": [
       {
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
         ]
       }
     ],
     "SessionStart": [
       {
+        "matcher": "*",
         "hooks": [
           {
+            "type": "command",
             "command": "bash \"$HOME/.claude/hooks/herdr-agent-state.sh\" session",
-            "timeout": 10,
-            "type": "command"
+            "timeout": 10
           }
-        ],
-        "matcher": "*"
+        ]
       },
       {
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
         ]
       }
@@ -109,9 +109,9 @@
       {
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
         ]
       }
@@ -120,9 +120,9 @@
       {
         "hooks": [
           {
-            "async": true,
+            "type": "command",
             "command": "moshi-hook claude-hook",
-            "type": "command"
+            "async": true
           }
         ]
       }

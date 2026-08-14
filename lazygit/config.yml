@@ -1,5 +1,4 @@
 gui:
-  portraitMode: "always"
   expandFocusedSidePanel: true
   mainPanelSplitMode: vertical
   showCommandLog: false

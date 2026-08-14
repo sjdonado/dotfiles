@@ -217,6 +217,8 @@ cask "gcloud-cli"
 cask "ghostty"
 # Chromium-based web browser
 cask "helium-browser"
+# App to manage software development and track bugs
+cask "linear"
 # Reverse proxy, secure introspectable tunnels to localhost
 cask "ngrok"
 # VPN client for secure internet access and private browsing
@@ -240,8 +242,4 @@ go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 go "github.com/pressly/goose/v3/cmd/goose"
 go "zen-habit/server"
-go "github.com/sqlc-dev/sqlc/cmd/sqlc"
-go "github.com/todaatsushi/twt"
 cargo "tree-sitter-cli"
-npm "@dokploy/cli"
-npm "@fission-ai/openspec"
