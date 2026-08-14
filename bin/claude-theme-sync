@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""Point Claude Code's configured theme at an already-resolved light/dark mode.
+
+Claude Code cannot follow the terminal on its own: its binary carries no OSC 11
+sequence, so `theme: auto` is a read of COLORFGBG at exec time rather than terminal
+detection, and with no response handler it cannot be told about a later change
+either. It resolves once and keeps that palette for the life of the process.
+
+settings.json, however, is re-read by running sessions, so writing the resolved mode
+there re-themes every live session at once. That is the only lever available without
+restarting them or typing /theme in each.
+
+The mode has to come from a caller that owns a tty, since resolving it means asking
+the terminal: see herdr-theme-mode, which config.fish runs at pane start.
+"""
+
+import json
+import os
+import sys
+import tempfile
+
+MODES = ("dark", "light")
+SETTINGS = os.path.expanduser("~/.config/dotfiles/claude/settings.json")
+
+
+def main() -> int:
+    mode = sys.argv[1].strip() if len(sys.argv) > 1 else ""
+    if mode not in MODES:
+        print(f"usage: {os.path.basename(sys.argv[0])} <{'|'.join(MODES)}>", file=sys.stderr)
+        return 2
+
+    try:
+        with open(SETTINGS) as handle:
+            settings = json.load(handle)
+    except (OSError, ValueError) as error:
+        print(f"claude-theme-sync: {SETTINGS}: {error}", file=sys.stderr)
+        return 1
+
+    # Every write re-themes every running session, so a no-op write is not free.
+    if settings.get("theme") == mode:
+        return 0
+    settings["theme"] = mode
+
+    # Replace atomically: a session re-reading the file mid-write would otherwise
+    # see truncated JSON. json.dump(indent=2) reproduces the file's own formatting,
+    # so the only line this ever changes is the theme.
+    directory = os.path.dirname(SETTINGS)
+    descriptor, temporary = tempfile.mkstemp(dir=directory, prefix=".settings-")
+    try:
+        with os.fdopen(descriptor, "w") as handle:
+            json.dump(settings, handle, indent=2)
+            handle.write("\n")
+        os.replace(temporary, SETTINGS)
+    except OSError as error:
+        os.unlink(temporary)
+        print(f"claude-theme-sync: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
