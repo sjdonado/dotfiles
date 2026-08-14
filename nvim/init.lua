@@ -776,11 +776,12 @@ do
   -- The default code border is `hide`, which deletes the fence rows outright on
   -- nvim 0.11+. That desynchronizes relativenumber from the file: the closing ```
   -- kept its number while occupying no row, so the gutter appeared to skip a line.
-  -- `thin` keeps both fences on screen, and `language` drops the filled background
-  -- in favour of just the language label.
+  -- `none` keeps both fences on screen without drawing a fill on them, which `thin`
+  -- did: those rows then rendered as dark bars that survived a switch to the light
+  -- colorscheme. `language` keeps the language label and drops the block background.
   require('render-markdown').setup {
     completions = { lsp = { enabled = true } },
-    code = { style = 'language', border = 'thin' },
+    code = { style = 'language', border = 'none' },
   }
 end
 
