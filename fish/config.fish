@@ -30,18 +30,17 @@ else
 end
 
 # Herdr is the source of truth inside panes, and herdr-theme-mode reads its OSC 11
-# answer. This variable is startup-only for both agents, so a theme flip needs a
-# new pane; only Neovim follows one live.
+# answer. This gives every process started in the pane a correct value to begin with.
 #
-# Claude Code has no other input: its binary contains no OSC 11 sequence at all, so
-# `theme: auto` is a read of this variable rather than terminal detection, and with
-# no response handler either it cannot be told about a later change. It resolves
-# once at exec and keeps that palette for the life of the process. `/theme dark`
-# is the only way to correct a running session.
+# It is not the whole story. Claude Code, OpenCode and Neovim all follow a flip in an
+# already-running session when toggling from the Moshi client, observed directly. For
+# Claude that has no explanation in terms of this variable, since no OSC 11 sequence
+# appears anywhere in its binary. The same flip under Ghostty does not propagate, so
+# the gap is on the client side rather than here. Do not add a settings.json writer
+# for it; that was tried and reverted.
 #
 # OpenCode queries OSC 11 itself and treats this variable as the fallback, which is
-# what saves it when the query goes unanswered (mosh does not carry the response).
-# Nothing suggests it re-queries afterwards.
+# what saves it when the query goes unanswered.
 #
 # Neovim is the exception: it queries at startup and handles unsolicited responses
 # via TermResponse, and nvim/init.lua re-queries on FocusGained.
