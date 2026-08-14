@@ -3,12 +3,17 @@
 # --light. Feature styles live in ~/.gitconfig ([delta "github-*"]). Keep
 # hyperlinks for click-to-jump in lazygit.
 #
-# Resolve appearance on every invocation, not from an environment variable.
-# BAT_THEME is exported once at shell startup, so it goes stale the moment macOS
-# appearance changes, and it is absent entirely for anything not launched from an
-# interactive shell (nvim's terminal, lazygit, an agent), which would silently
-# pick the wrong palette.
-if [ "$(uname)" = Darwin ]; then
+# Herdr owns the pane palette, including a remote Moshi session. Fall back to
+# the local system only when no Herdr pane is present or its query fails.
+theme=
+if [ "${HERDR_ENV:-}" = 1 ]; then
+  theme="$("$HOME/.config/dotfiles/bin/herdr-theme-mode" 2>/dev/null || :)"
+fi
+if [ "$theme" = light ]; then
+  light=1
+elif [ "$theme" = dark ]; then
+  light=0
+elif [ "$(uname)" = Darwin ]; then
   # defaults(1) prints nothing and exits nonzero in light mode.
   if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = Dark ]; then
     light=0

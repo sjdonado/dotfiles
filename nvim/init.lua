@@ -231,39 +231,27 @@ do
   -- [[ Colorscheme ]]
   vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
 
-  -- Pick scheme from &background, which Neovim sets from the terminal's
-  -- OSC 11 background-color reply (works over ssh/herdr where auto-dark-mode
-  -- can't reach dbus/gsettings). OptionSet catches the async OSC 11 result
-  -- and any later terminal theme change.
+  -- Herdr reports its resolved pane background over OSC 11 and updates
+  -- &background when the host appearance changes. Outside Herdr this remains
+  -- the terminal's own resolved background.
   local function apply_xcode()
     pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
   end
+  local xcode_theme = vim.api.nvim_create_augroup('xcode-theme', { clear = true })
   apply_xcode()
-  vim.api.nvim_create_autocmd('OptionSet', { pattern = 'background', callback = apply_xcode })
-
-  vim.pack.add { gh 'f-person/auto-dark-mode.nvim' }
-  require('auto-dark-mode').setup {
-    update_interval = 300,
-    set_dark_mode = function()
-      vim.o.background = 'dark'
-      vim.cmd.colorscheme 'xcodedark'
+  vim.api.nvim_create_autocmd('TermResponse', {
+    group = xcode_theme,
+    callback = function(ev)
+      local red, green, blue = ev.data.sequence:match('^\027%]11;rgb:(%x+)/(%x+)/(%x+)$')
+      if not red then return end
+      local function channel(value)
+        return tonumber(value, 16) / (16 ^ #value - 1)
+      end
+      local luminance = 0.299 * channel(red) + 0.587 * channel(green) + 0.114 * channel(blue)
+      vim.o.background = luminance < 0.5 and 'dark' or 'light'
+      apply_xcode()
     end,
-    set_light_mode = function()
-      vim.o.background = 'light'
-      vim.cmd.colorscheme 'xcodelight'
-    end,
-  }
-
-  -- :ToggleTheme — flip light/dark from the command line.
-  vim.api.nvim_create_user_command('ToggleTheme', function()
-    if vim.o.background == 'dark' then
-      vim.o.background = 'light'
-      vim.cmd.colorscheme 'xcodelight'
-    else
-      vim.o.background = 'dark'
-      vim.cmd.colorscheme 'xcodedark'
-    end
-  end, { desc = 'Toggle light/dark colorscheme' })
+  })
 
   -- Highlight TODO/NOTE/etc. in comments
   vim.pack.add { gh 'folke/todo-comments.nvim', gh 'nvim-lua/plenary.nvim' }

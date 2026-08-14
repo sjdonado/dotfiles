@@ -29,43 +29,38 @@ else
   set -gx COREPACK_HOME "$HOME/.cache/corepack"
 end
 
-# bat/delta color scheme: follow macOS appearance locally; default to dark on
-# Linux (e.g. Coder), which has no system light/dark and is used through an
-# already-dark terminal/herdr. delta-themed reads this same variable so both
-# tools always agree.
-#
-# COLORFGBG mirrors the same appearance lookup for the agent TUIs. opencode's
-# theme:system and Claude Code's theme:auto detect the palette from this var
-# at process start (last component is the background index, low <=6 indexes
-# read as dark), and neither ghostty nor herdr exports it. Without it, a pane
-# launched from a Moshi/phone session carries the phone's dark-mode COLORFGBG
-# into the Mac and both tools render the wrong scheme until the pane restarts.
-#
-# The appearance lookup only describes a pane rendered on the Mac's own screen.
-# A session reached from the phone renders on Moshi's dark terminal instead, so
-# with the Mac in light mode those panes drew a light scheme onto a dark
-# terminal. Treat every remote session as dark, the same assumption already made
-# for Linux, and keep the lookup for local panes only.
-# SSH_CONNECTION and MOSH_SERVER_NETWORK_TMOUT are set per session by sshd and
-# mosh-server. MOSHI_DEVICE_TOKEN is not a session marker: it is a pairing secret
-# in .env, exported into every shell including local ones.
-set -l color_scheme dark
-if test (uname) = Darwin; and not set -q SSH_CONNECTION; and not set -q MOSH_SERVER_NETWORK_TMOUT
+# Herdr is the source of truth inside panes. Its OSC 11 answer provides Claude
+# with a correct startup fallback while its live semantic mode updates keep
+# Claude, OpenCode, and Neovim synchronized afterwards.
+set -l herdr_theme_mode
+if set -q HERDR_ENV
+  set herdr_theme_mode ("$HOME/.config/dotfiles/bin/herdr-theme-mode" 2>/dev/null)
+  if test "$herdr_theme_mode" = dark
+    set -gx COLORFGBG "15;0"
+  else if test "$herdr_theme_mode" = light
+    set -gx COLORFGBG "0;15"
+  else
+    set -e COLORFGBG
+  end
+end
+
+# bat follows Herdr inside a pane and the local system elsewhere.
+if test "$herdr_theme_mode" = dark
+  set -gx BAT_THEME GitHub-Dark
+else if test "$herdr_theme_mode" = light
+  set -gx BAT_THEME GitHub-Light
+else if test (uname) = Darwin
   # In light mode the AppleInterfaceStyle key does not exist, so the substitution
   # is empty. Capture it first: an unquoted empty substitution would leave test(1)
   # with a missing argument, and fish does not expand (cmd) inside double quotes.
   set -l macos_appearance (defaults read -g AppleInterfaceStyle 2>/dev/null)
-  if test "$macos_appearance" != Dark
-    set color_scheme light
+  if test "$macos_appearance" = Dark
+    set -gx BAT_THEME GitHub-Dark
+  else
+    set -gx BAT_THEME GitHub-Light
   end
-end
-
-if test "$color_scheme" = dark
-  set -gx BAT_THEME GitHub-Dark
-  set -gx COLORFGBG "15;0"
 else
-  set -gx BAT_THEME GitHub-Light
-  set -gx COLORFGBG "0;15"
+  set -gx BAT_THEME GitHub-Dark
 end
 set -x PATH $HOME/.cargo/bin $PATH
 

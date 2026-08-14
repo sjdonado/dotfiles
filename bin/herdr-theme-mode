@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Print Herdr's effective pane background mode from its OSC 11 response."""
+
+import os
+import re
+import select
+import signal
+import sys
+import termios
+import time
+import tty
+
+
+def theme_from_response(response: bytes) -> str | None:
+    match = re.search(rb"\x1b]11;rgb:([0-9a-f]+)/([0-9a-f]+)/([0-9a-f]+)(?:\x07|\x1b\\)", response, re.I)
+    if not match:
+        return None
+    channels = [int(value, 16) / (16 ** len(value) - 1) for value in match.groups()]
+    return "light" if 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] > 0.5 else "dark"
+
+
+def main() -> int:
+    if os.environ.get("HERDR_ENV") != "1":
+        return 1
+    try:
+        fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+        previous = termios.tcgetattr(fd)
+    except OSError:
+        return 1
+    try:
+        def terminate(signum: int, _frame: object) -> None:
+            termios.tcsetattr(fd, termios.TCSADRAIN, previous)
+            os._exit(128 + signum)
+
+        def suspend(_signum: int, _frame: object) -> None:
+            termios.tcsetattr(fd, termios.TCSADRAIN, previous)
+            signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+            os.kill(os.getpid(), signal.SIGTSTP)
+            signal.signal(signal.SIGTSTP, suspend)
+            tty.setcbreak(fd)
+
+        for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGQUIT):
+            signal.signal(signum, terminate)
+        signal.signal(signal.SIGTSTP, suspend)
+        tty.setcbreak(fd)
+        os.write(fd, b"\x1b]11;?\x07")
+        response = bytearray()
+        deadline = time.monotonic() + 0.25
+        while time.monotonic() < deadline:
+            readable, _, _ = select.select([fd], [], [], max(0, deadline - time.monotonic()))
+            if not readable:
+                break
+            response.extend(os.read(fd, 256))
+            if b"\x07" in response or b"\x1b\\" in response:
+                break
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, previous)
+        os.close(fd)
+    mode = theme_from_response(bytes(response))
+    if not mode:
+        return 1
+    print(mode)
+    return 0
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["--self-test"]:
+        assert theme_from_response(b"\x1b]11;rgb:ffff/ffff/ffff\x07") == "light"
+        assert theme_from_response(b"\x1b]11;rgb:0000/0000/0000\x1b\\") == "dark"
+    else:
+        raise SystemExit(main())
