@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Toggle a dedicated nvim tab in the current workspace.
 #
-# Three states, keyed off the tab label: absent means create it and start nvim,
-# present but unfocused means focus it, already focused means go back to wherever
-# the last jump came from. herdr has no "previous tab", so that origin is recorded
-# here per workspace; without it, a second press would leave you parked on the
-# editor with no way back except the tab bar.
+# Three states: absent means open the nvim entrypoint in a new tab, present but
+# unfocused means focus that tab, pressed from inside it means go back to wherever
+# the jump came from. herdr has no "previous tab", so that origin is recorded here
+# per workspace; without it, a second press would leave you parked on the editor
+# with no way back except the tab bar.
 set -euo pipefail
 
 # herdr runs plugin commands with the server's PATH, which is whatever started the
@@ -14,37 +14,45 @@ set -euo pipefail
 # resolves it the same way.
 herdr_bin="${HERDR_BIN_PATH:-herdr}"
 
+# The pane title from the manifest. herdr labels plugin-owned panes with it, which
+# is what makes the tab findable on later presses.
 LABEL=nvim
 
-current=$("$herdr_bin" pane current 2>/dev/null || true)
-workspace=${HERDR_WORKSPACE_ID:-$(printf '%s' "$current" | jq -r '.result.pane.workspace_id // empty')}
+# herdr describes the invocation in the environment: the workspace, and the tab the
+# key was pressed in. HERDR_TAB_ID is what makes the toggle exact. The `focused`
+# flag in `tab list` is not usable for this: it only reads true in the workspace the
+# client is currently displaying, so a press in any other workspace would see no
+# focused tab at all and never take the way-back branch.
+context=${HERDR_PLUGIN_CONTEXT_JSON:-}
+workspace=${HERDR_WORKSPACE_ID:-$(printf '%s' "$context" | jq -r '.workspace_id // empty')}
+origin_tab=${HERDR_TAB_ID:-$(printf '%s' "$context" | jq -r '.tab_id // empty')}
 [ -n "$workspace" ] || { echo "no workspace to toggle the $LABEL tab in" >&2; exit 1; }
 
-tabs=$("$herdr_bin" tab list --workspace "$workspace" 2>/dev/null)
-tab_id=$(printf '%s' "$tabs" | jq -r --arg l "$LABEL" \
-  'first(.result.tabs[]? | select(.label == $l) | .tab_id) // empty')
-focused=$(printf '%s' "$tabs" | jq -r 'first(.result.tabs[]? | select(.focused) | .tab_id) // empty')
+# Locate the tab by its pane, not by tab label: the tab's own label is whatever
+# herdr numbered it, while the pane carries the manifest title.
+tab_id=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg ws "$workspace" --arg l "$LABEL" \
+  'first(.result.panes[]? | select(.workspace_id == $ws and .label == $l) | .tab_id) // empty')
 
-# Per workspace, so two workspaces toggling at once do not overwrite each other.
-state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/herdr-edit-tab"
-state_file="$state_dir/$workspace"
+state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/edit-tab}
+state_file="$state_dir/origin-$workspace"
 
-# Second press: back to the origin tab. A stale id (that tab was closed while nvim
-# had focus) falls back to any other tab, so the toggle never strands the user.
-if [ -n "$tab_id" ] && [ "$tab_id" = "$focused" ]; then
+# Pressed from inside the editor: go back. A stale id (that tab was closed while
+# nvim had focus) falls back to any other tab, so the toggle never strands the user.
+if [ -n "$tab_id" ] && [ "$origin_tab" = "$tab_id" ]; then
+  tabs=$("$herdr_bin" tab list --workspace "$workspace" 2>/dev/null)
   previous=$(cat "$state_file" 2>/dev/null || true)
-  if [ -z "$previous" ] \
+  if [ -z "$previous" ] || [ "$previous" = "$tab_id" ] \
     || ! printf '%s' "$tabs" | jq -e --arg t "$previous" 'any(.result.tabs[]?; .tab_id == $t)' >/dev/null; then
-    previous=$(printf '%s' "$tabs" | jq -r --arg l "$LABEL" \
-      'first(.result.tabs[]? | select(.label != $l) | .tab_id) // empty')
+    previous=$(printf '%s' "$tabs" | jq -r --arg t "$tab_id" \
+      'first(.result.tabs[]? | select(.tab_id != $t) | .tab_id) // empty')
   fi
   [ -n "$previous" ] || exit 0
   exec "$herdr_bin" tab focus "$previous"
 fi
 
-if [ -n "$focused" ]; then
+if [ -n "$origin_tab" ] && [ "$origin_tab" != "$tab_id" ]; then
   mkdir -p "$state_dir"
-  printf '%s' "$focused" >"$state_file"
+  printf '%s' "$origin_tab" >"$state_file"
 fi
 
 if [ -n "$tab_id" ]; then
@@ -53,14 +61,27 @@ fi
 
 # First press in this workspace. The repo root, not the pane's cwd: a pane sitting
 # in a subdirectory should still open the whole project.
-pane_cwd=$(printf '%s' "$current" | jq -r '.result.pane.cwd // .result.pane.foreground_cwd // empty')
+pane_cwd=$(printf '%s' "$context" | jq -r '.focused_pane_cwd // .workspace_cwd // empty')
 [ -n "$pane_cwd" ] || pane_cwd=$PWD
 root=$(git -C "$pane_cwd" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$pane_cwd")
 
-created=$("$herdr_bin" tab create --workspace "$workspace" --cwd "$root" --label "$LABEL" --focus 2>/dev/null)
-pane_id=$(printf '%s' "$created" | jq -r '.result.root_pane.pane_id // empty')
-[ -n "$pane_id" ] || { echo "failed to create the $LABEL tab" >&2; exit 1; }
+# herdr spawns the entrypoint as the pane's process, so nvim owns the pty from the
+# first frame and quitting it closes the tab. `pane run` cannot be used here: it
+# writes into the pty and races the shell's startup, which left `exec nvim` echoed
+# above a bare fish prompt.
+opened=$("$herdr_bin" plugin pane open \
+  --plugin edit-tab \
+  --entrypoint "$LABEL" \
+  --placement tab \
+  --workspace "$workspace" \
+  --cwd "$root" \
+  --focus 2>/dev/null)
 
-# `exec` replaces the tab's shell, so quitting nvim closes the tab instead of
-# leaving an empty prompt behind, and the next press builds a fresh one.
-exec "$herdr_bin" pane run "$pane_id" "exec nvim"
+# `plugin pane open` labels the pane from the manifest title but leaves the tab on
+# herdr's running number, so the tab bar read "5" instead of "nvim". Only the tab
+# carries a visible title here, the pane being alone in it, so name it after the
+# fact. The pane label is what the lookup above keys on, so a failure here costs
+# the title and nothing else.
+new_tab=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.tab_id // empty')
+[ -n "$new_tab" ] || exit 0
+exec "$herdr_bin" tab rename "$new_tab" "$LABEL"

@@ -5,16 +5,28 @@
 # herdr-lazygit owns that panel directly now, so nothing here arbitrates between
 # them and there is no exclusivity to enforce.
 #
-# The toggle needs a script because herdr has no create-or-focus primitive:
-# `tab create` always makes a new tab, so finding the existing one by label and
-# remembering which tab to return to has to happen outside herdr.
+# The toggle still needs a script because herdr has no create-or-focus primitive:
+# finding the existing tab and remembering which one to return to happens outside
+# herdr.
 
 id = "edit-tab"
 name = "Edit Tab"
-version = "1.0.0"
+version = "1.1.0"
 description = "Toggle a dedicated nvim tab, creating it on first use."
 min_herdr_version = "0.7.0"
 platforms = ["linux", "macos"]
+
+# nvim is declared as a plugin pane rather than started with `pane run` in a
+# freshly created tab: `pane run` writes into the pty, which races the shell's own
+# startup, and fish discarded the line as it initialized, leaving `exec nvim`
+# echoed above a bare prompt. An entrypoint is spawned by herdr as the pane's own
+# process, so there is no shell and nothing to race. herdr runs it with cwd set to
+# the launcher's --cwd, not the plugin root, so the tab opens on the repo.
+[[panes]]
+id = "nvim"
+title = "nvim"
+placement = "tab"
+command = ["nvim"]
 
 [[actions]]
 id = "toggle"
