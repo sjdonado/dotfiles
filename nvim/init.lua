@@ -253,6 +253,17 @@ do
     end,
   })
 
+  -- &background is otherwise resolved once, at startup, so a window opened while
+  -- the pane was light stayed light after Herdr switched to dark: nothing re-asks.
+  -- Re-issue the OSC 11 query on focus and let the handler above do the rest.
+  -- Written to stderr rather than stdout so it does not interleave with the TUI's
+  -- own output stream; both reach the terminal.
+  local function query_background()
+    pcall(vim.api.nvim_chan_send, vim.v.stderr, '\27]11;?\7')
+  end
+  vim.api.nvim_create_autocmd('FocusGained', { group = xcode_theme, callback = query_background })
+  vim.api.nvim_create_user_command('ThemeSync', query_background, { desc = 'Re-query the terminal background' })
+
   -- Highlight TODO/NOTE/etc. in comments
   vim.pack.add { gh 'folke/todo-comments.nvim', gh 'nvim-lua/plenary.nvim' }
   require('todo-comments').setup { signs = false }
