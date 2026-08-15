@@ -4,11 +4,15 @@
 <dict>
   <key>Label</key>
   <string>com.local.TMExcludeDev</string>
+  <!-- Login Items names a background item after the executable it launches, so
+       running this through `sh -c` listed it as a bare "sh" with no hint of what
+       it does. The script has its own shebang and is executable, so naming it
+       directly makes the row read tm-exclude-dev.sh. launchd does not expand
+       $HOME, which is what the shell was for, so macos.sh substitutes the real
+       path when it installs this file. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/bin/sh</string>
-    <string>-c</string>
-    <string>$HOME/.config/dotfiles/macos/tm-exclude-dev.sh</string>
+    <string>__TM_EXCLUDE_SCRIPT__</string>
   </array>
   <key>StartCalendarInterval</key>
   <dict>

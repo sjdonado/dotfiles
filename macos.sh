@@ -288,7 +288,11 @@ hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x70
 log "Installing Time Machine dev-junk exclusion agent..."
 TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"
 TM_AGENT_DST="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
-ln -snf "$TM_AGENT_SRC" "$TM_AGENT_DST"
+# Generated rather than symlinked: the plist names the script directly so Login
+# Items shows tm-exclude-dev.sh instead of a bare "sh", and launchd does not
+# expand $HOME, so the path has to be baked in here.
+rm -f "$TM_AGENT_DST"
+sed "s|__TM_EXCLUDE_SCRIPT__|$PWD/macos/tm-exclude-dev.sh|" "$TM_AGENT_SRC" > "$TM_AGENT_DST"
 launchctl unload "$TM_AGENT_DST" 2>/dev/null || true
 launchctl load "$TM_AGENT_DST" 2>/dev/null || true
 # run once now to backfill existing dirs
