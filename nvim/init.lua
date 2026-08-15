@@ -779,9 +779,16 @@ do
   -- `none` keeps both fences on screen without drawing a fill on them, which `thin`
   -- did: those rows then rendered as dark bars that survived a switch to the light
   -- colorscheme. `language` keeps the language label and drops the block background.
+  -- language_border is the `█` run that pads the language label to full width. It
+  -- is drawn as virtual text in RenderMarkdown_RenderMarkdownCodeBorder_bg_as_fg,
+  -- a group the plugin derives from the border background. `:colorscheme` clears
+  -- every highlight and the plugin only recreates the groups still in its cache,
+  -- so after a light/dark switch that one resolves to nothing and the glyphs fall
+  -- back to Normal's foreground: a solid black bar across each fence row. Empty
+  -- keeps the label and draws no run.
   require('render-markdown').setup {
     completions = { lsp = { enabled = true } },
-    code = { style = 'language', border = 'none' },
+    code = { style = 'language', border = 'none', language_border = '' },
   }
 end
 
