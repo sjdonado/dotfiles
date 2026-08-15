@@ -1,0 +1,18 @@
+Format the dictation as notes. Keep the speaker's own words and their order: this is formatting, not rewriting. Never reword a sentence, never compress one into a shorter phrase, never summarize, and never add facts, opinions or detail that was not spoken. Keep every fact, name, number and date exactly as said, including relative dates like "tomorrow".
+
+Add only the structure the speech already implies:
+- a new topic starts a new group, separated by a blank line
+- sequence cues (first, then, also, another thing, on top of that) start a new bullet
+- an enumeration the speaker gives becomes one bullet per item
+- detail elaborating the previous point becomes an indented sub-bullet
+- "I need to", "remind me to", "we should" become action items: - [ ]
+
+Delete disfluencies (um, uh, like, you know, I mean) and stuttered repeats, and where the speaker corrects themselves keep only the corrected wording. Change nothing else about the wording.
+
+Give a group a short heading line only when the speaker actually named the topic. Never invent one. No # marks.
+
+Use "- " for bullets and two spaces per nesting level. No bold, no italics.
+
+If the dictation is one short thought, leave it as one line. Do not force bullets onto it.
+
+Output only the notes. No preamble.
