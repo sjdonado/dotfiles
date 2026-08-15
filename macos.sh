@@ -279,11 +279,15 @@ log "Mapping Caps Lock to Control for all keyboards..."
 mkdir -p "$HOME/Library/LaunchAgents"
 AGENT_SRC="$PWD/macos/com.local.KeyRemapping.plist"
 AGENT_DST="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
-ln -snf "$AGENT_SRC" "$AGENT_DST"
+# Generated rather than symlinked, as with the Time Machine agent below: the
+# plist names caps-to-control.sh directly so Login Items shows that rather than a
+# bare "hidutil", and launchd does not expand $HOME.
+rm -f "$AGENT_DST"
+sed "s|__CAPS_TO_CONTROL_SCRIPT__|$PWD/macos/caps-to-control.sh|" "$AGENT_SRC" > "$AGENT_DST"
 launchctl unload "$AGENT_DST" 2>/dev/null || true
 launchctl load "$AGENT_DST" 2>/dev/null || true
 # apply now for this session
-hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' >/dev/null 2>&1 || true
+"$PWD/macos/caps-to-control.sh" || true
 
 log "Installing Time Machine dev-junk exclusion agent..."
 TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"

@@ -4,12 +4,13 @@
 <dict>
   <key>Label</key>
   <string>com.local.KeyRemapping</string>
+  <!-- The hidutil call lives in caps-to-control.sh: Login Items names a
+       background item after the executable it launches, so passing the mapping
+       as arguments here listed the row as a bare "hidutil". macos.sh substitutes
+       the real path, since launchd does not expand $HOME. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/bin/hidutil</string>
-    <string>property</string>
-    <string>--set</string>
-    <string>{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}</string>
+    <string>__CAPS_TO_CONTROL_SCRIPT__</string>
   </array>
   <key>RunAtLoad</key>
   <true/>
