@@ -9,24 +9,6 @@
 		}
 	},
 	"provider": {
-		"hetzner": {
-			"npm": "@ai-sdk/openai-compatible",
-			"name": "Hetzner AI",
-			"options": {
-				"baseURL": "https://inference.hetzner.com/api/v1",
-				"apiKey": "{env:HETZNER_INFERENCE_API_KEY}"
-			},
-			"models": {
-				"DeepSeek-V4-Flash-0731": {
-					"name": "DeepSeek V4 Flash",
-					"tool_call": true,
-					"limit": {
-						"context": 512000,
-						"output": 8192
-					}
-				}
-			}
-		},
 		"ollama": {
 			"npm": "@ai-sdk/openai-compatible",
 			"name": "Ollama (local)",
@@ -34,8 +16,8 @@
 				"baseURL": "http://localhost:11434/v1"
 			},
 			"models": {
-				"qwen3.5:35b-mlx": {
-					"name": "Qwen 3.5 35b MLX (local)",
+				"qwen3.8:27b-mlx": {
+					"name": "Qwen 3.8 27b MLX (local)",
 					"tool_call": true,
 					"limit": {
 						"context": 256000,
@@ -79,7 +61,7 @@
 		"ollama": {
 			"description": "Local Ollama profile without MCP or delegated agents, max power",
 			"mode": "primary",
-			"model": "ollama/qwen3.5:35b-mlx",
+			"model": "ollama/qwen3.8:27b-mlx",
 			"permission": {
 				"linear_*": "deny",
 				"posthog_*": "deny",
