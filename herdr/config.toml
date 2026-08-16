@@ -12,17 +12,37 @@ copy_on_select = true
 [ui.toast]
 delivery = "terminal"
 
+# Catppuccin, deliberately not matching ghostty's Terminal Basic pair.
+#
+# "terminal" is the theme that would match, since it builds herdr's UI from the
+# host's ANSI palette. It is unusable on a light palette: a correct light theme
+# still keeps a dark slot 0, so programs printing "black" stay readable on
+# white, and herdr paints its panels from that slot — dark chrome under a light
+# terminal, with the selected row landing on bright black under the accent at
+# 1.58:1. https://github.com/herdrdev/herdr/issues/1731, open, no fix. It also
+# reproduces on dark palettes, contrary to what that issue says.
+#
+# [theme.custom] does compose with it, but only exposes the two ends of that
+# pair (accent, subtext0) and not the selected-row foreground itself, so no
+# override reaches the actual defect.
+#
+# Catppuccin is the nearest thing that renders correctly in both modes, and is
+# what the issue reporter settled on too. It costs palette tracking: a ghostty
+# theme change no longer carries over. Switch back to name = "terminal" once
+# 1731 lands.
 [theme]
 auto_switch = true
-dark_name = "one-dark"
-light_name = "one-light"
-
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"
 [terminal]
 default_shell = "fish"
 
+# Worktree keys go to the worktrunk plugin rather than herdr's built-ins: the
+# built-in dialogs create a checkout directly, so nothing in worktrunk/config.toml
+# runs — no copy-ignored pre-start, no post-switch agent spawn. The plugin drives
+# `wt switch` instead, which fires those hooks, and its fzf picker offers existing
+# branches (local and remote-tracking) as well as a typed-new name.
 [keys]
-open_worktree = "prefix+shift+o"
-remove_worktree = "prefix+shift+x"
 settings = "prefix+,"
 
 # lazygit is the only side panel, so herdr-lazygit's own toggle is enough; nvim
