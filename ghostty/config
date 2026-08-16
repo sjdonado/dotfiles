@@ -1,9 +1,4 @@
-# Ghostty's bundled capture of Terminal.app's default Basic profile, rather
-# than a hand-rolled palette: #ffffff/#000000 light, #1d1e1d/#ffffff dark, and
-# the classic muted ANSI set (red #990000, blue #0000b2) that Terminal has
-# shipped for years. "Apple System Colors" is the other Apple-derived pair here
-# and uses the modern AppKit palette (#ff453a, #0a84ff) instead.
-theme = dark:Terminal Basic Dark,light:Terminal Basic
+theme = dark:Apple System Colors,light:Apple System Colors Light
 
 font-family = Menlo
 font-family = Symbols Nerd Font Mono
