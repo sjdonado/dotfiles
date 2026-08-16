@@ -1,0 +1,59 @@
+# herdr-plugin.toml — manifest for the worktree-agent plugin.
+#
+# A worktree created from the keyboard used to land as a bare shell, while the
+# same worktree created by `wtn` came up with an agent already in it. Both go
+# through `wt switch` and the same post-switch hook, so the difference was only
+# in what the hook could see.
+#
+# The hook resolves the agent kind from WT_AGENT_KIND, else by asking herdr what
+# is running in $HERDR_PANE_ID. Inside the worktrunk plugin's picker pane that id
+# is the picker itself — a plugin pane, never an agent — so the lookup comes back
+# empty and the hook exits before spawning. The kind is not missing, it is just
+# out of reach by the time `wt` runs.
+#
+# herdr does hand it to the *action*: the injected context carries
+# focused_pane_agent, naming whatever is running in the pane the key was pressed
+# from. So these actions read it there and inject it into the environment of the
+# picker pane they open. `wt switch` inherits it, and the hook's existing
+# WT_AGENT_KIND branch takes over. Nothing downstream needs to change.
+#
+# Delegating to the worktrunk plugin's own panes rather than vendoring its picker
+# keeps the fzf logic, branch resolution, and workspace registration upstream —
+# this manifest holds no copy of any of it, and an upstream bump is still just a
+# --ref change in macos.sh. `--cwd` is carried over from upstream's manifest for
+# the same reason it exists there: plugin panes default to the plugin root, so
+# without it `wt` would run in the plugin directory instead of the repo.
+#
+# With nothing agentic focused — the lazygit panel, the nvim tab, a plain fish
+# pane — focused_pane_agent is absent and the worktree comes up as a plain shell.
+# That is the same thing `wtn` does at a bare prompt: nothing to inherit, so
+# nothing is invented. The key therefore does depend on what is focused.
+
+id = "worktree-agent"
+name = "Worktree Agent"
+version = "1.0.0"
+description = "Open the worktrunk picker with the focused pane's agent kind, so the new worktree comes up with that agent running."
+min_herdr_version = "0.7.0"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "open"
+title = "Worktree: switch / create from default branch, with agent"
+description = "Pick or name a branch, then open its worktree with the focused pane's agent already running."
+contexts = ["workspace"]
+command = [
+  "bash",
+  "-c",
+  'cwd=$(jq -r ".workspace_cwd // .focused_pane_cwd" <<<"$HERDR_PLUGIN_CONTEXT_JSON"); kind=$(jq -r ".focused_pane_agent // empty" <<<"$HERDR_PLUGIN_CONTEXT_JSON"); exec "$HERDR_BIN_PATH" plugin pane open --plugin worktrunk --entrypoint picker-default --placement split --direction down --cwd "$cwd" --env "WT_AGENT_KIND=$kind" --focus',
+]
+
+[[actions]]
+id = "open-current"
+title = "Worktree: switch / create from current branch, with agent"
+description = "Same as open, but a newly created branch is based on the current one rather than the default branch."
+contexts = ["workspace"]
+command = [
+  "bash",
+  "-c",
+  'cwd=$(jq -r ".workspace_cwd // .focused_pane_cwd" <<<"$HERDR_PLUGIN_CONTEXT_JSON"); kind=$(jq -r ".focused_pane_agent // empty" <<<"$HERDR_PLUGIN_CONTEXT_JSON"); exec "$HERDR_BIN_PATH" plugin pane open --plugin worktrunk --entrypoint picker-current --placement split --direction down --cwd "$cwd" --env "WT_AGENT_KIND=$kind" --focus',
+]

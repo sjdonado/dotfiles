@@ -37,6 +37,23 @@ key = "prefix+."
 type = "plugin_action"
 command = "edit-tab.toggle"
 
+# worktree-agent rather than worktrunk directly: it opens the same picker, but
+# passes the focused pane's agent kind down so the new worktree comes up with
+# that agent running instead of a bare shell.
+#
+# Default branch is the base that matters for the common case (start work from
+# main); creating off the current branch is rarer and stays in the command
+# palette as worktree-agent.open-current rather than burning a chord.
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "worktree-agent.open"
+
+[[keys.command]]
+key = "prefix+shift+x"
+type = "plugin_action"
+command = "worktrunk.remove"
+
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.
