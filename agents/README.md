@@ -150,6 +150,6 @@ https://code.claude.com/docs/en/mcp
 
 ## Ollama
 
-Select the `ollama` primary profile instead of only switching the model. The profile uses `ollama/qwen3.8:27b-mlx`, blocks delegation, and denies the current `linear_*` and `posthog_*` MCP tools so their schemas do not consume the local model's context.
+Select the `ollama` primary profile instead of only switching the model. The profile uses `ollama/gemma4:e4b-mlx`, blocks delegation, and denies the current `linear_*` and `posthog_*` MCP tools so their schemas do not consume the local model's context.
 
 When adding another OpenCode MCP server, also add its `<server-name>_*` deny rule to the `ollama` profile in `opencode/opencode.json`.
