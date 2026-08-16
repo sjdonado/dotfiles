@@ -213,6 +213,8 @@ cask "codex"
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
+# Always open the right browser
+cask "finicky"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Chromium-based web browser

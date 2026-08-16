@@ -97,6 +97,34 @@ log "Setting up Ghostty config..."
 ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
 ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
+# Finicky routes every link the system opens. It only takes effect once macOS
+# names it the default browser, which is a prompt on first launch, not something
+# a script can set.
+log "Setting up Finicky config..."
+mkdir -p "$HOME/.config/finicky"
+ln -snf "$PWD/finicky/finicky.js" "$HOME/.config/finicky/finicky.js"
+
+# SafariTab is what Finicky opens instead of Safari, so links land in a tab. It
+# has to be an app bundle declaring http/https: only that receives the Apple Event
+# carrying the URL. It is compiled rather than an AppleScript applet because the
+# applet stub shows AppleScript's startup screen when another app launches it,
+# which made every link wait on a dialog. Editing Info.plist invalidates a
+# signature, so the bundle is signed after it is assembled, not before.
+log "Building the SafariTab URL handler..."
+SAFARI_TAB_APP="$HOME/Applications/SafariTab.app"
+rm -rf "$SAFARI_TAB_APP"
+mkdir -p "$SAFARI_TAB_APP/Contents/MacOS"
+if xcrun swiftc -O -framework AppKit \
+  -o "$SAFARI_TAB_APP/Contents/MacOS/SafariTab" "$PWD/macos/safari-tab/main.swift" 2>/dev/null; then
+  cp "$PWD/macos/safari-tab/Info.plist" "$SAFARI_TAB_APP/Contents/Info.plist"
+  codesign --force --sign - "$SAFARI_TAB_APP" >/dev/null 2>&1 || true
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+    -f "$SAFARI_TAB_APP" >/dev/null 2>&1 || true
+  log "  built $SAFARI_TAB_APP (allow it to control Safari when macOS asks)"
+else
+  log "  swiftc failed; links will open in a new Safari window instead of a tab"
+fi
+
 
 log "Setting fish shell..."
 if [ "$INSTALL" = 1 ] && ! have fish; then
