@@ -23,10 +23,6 @@ macos-option-as-alt = right
 
 keybind = cmd+s=text:\x13
 keybind = shift+enter=text:\x1b\r
-keybind = cmd+shift+y=text:\x01\x19
-keybind = global:ctrl+]=toggle_quick_terminal
-quick-terminal-position = right
-quick-terminal-size = 40%,100%
 # Known upstream bug: macOS window-state restoration can freeze the quick
 # terminal's width to a cached frame, ignoring quick-terminal-size changes.
 # https://github.com/ghostty-org/ghostty/discussions/8525
