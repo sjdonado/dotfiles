@@ -23,7 +23,3 @@ macos-option-as-alt = right
 
 keybind = cmd+s=text:\x13
 keybind = shift+enter=text:\x1b\r
-# Known upstream bug: macOS window-state restoration can freeze the quick
-# terminal's width to a cached frame, ignoring quick-terminal-size changes.
-# https://github.com/ghostty-org/ghostty/discussions/8525
-# window-save-state = never
