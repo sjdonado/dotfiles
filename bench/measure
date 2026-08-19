@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+"""Harness performance from real Claude Code session transcripts.
+
+  bench/measure <session.jsonl | session-id>          one session, JSON
+  bench/measure --all [--since D] [--until D]         every session, JSONL rows
+  bench/measure --report [--since D] [--split DATE]   aggregate by cohort
+
+Sessions under ~/.claude/projects are the ground truth: real flows, personal
+and work, no synthetic tasks. A harness change is validated by splitting the
+real population at the change's commit date (--split) and comparing cohorts
+before and after. Deterministic: the same transcripts always produce the same
+numbers. Quality stays a human judgment; these are the cost and friction
+signals only.
+
+Cohorts come from bench/cohorts.json: {"work": ["pattern", ...]} matched
+against the project directory name; anything unmatched is personal.
+"""
+
+import collections
+import glob
+import json
+import os
+import statistics
+import sys
+from datetime import datetime, timezone
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def config():
+    for name in ("cohorts.json", "cohorts.example.json"):
+        try:
+            with open(os.path.join(HERE, name)) as f:
+                return json.load(f)
+        except OSError:
+            continue
+    return {}
+
+
+def roots():
+    paths = config().get("roots") or ["~/.claude/projects"]
+    return [os.path.expanduser(p) for p in paths]
+
+
+def ts(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def cohort_patterns():
+    return config().get("work", [])
+
+
+def analyze(path):
+    tools = collections.Counter()
+    usage = collections.Counter()
+    commands = collections.Counter()
+    tool_names = {}
+    models = collections.Counter()
+    prompts = assistant = sidechain = interrupts = denials = errors = 0
+    result_bytes = 0
+    first = last = None
+
+    with open(path) as f:
+        for line in f:
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            kind = entry.get("type")
+            if kind not in ("user", "assistant"):
+                continue
+            stamp = entry.get("timestamp")
+            if stamp:
+                t = ts(stamp)
+                first = first or t
+                last = t
+            if entry.get("isSidechain"):
+                sidechain += 1
+            message = entry.get("message") or {}
+            content = message.get("content")
+
+            if kind == "assistant":
+                assistant += 1
+                if message.get("model"):
+                    models[message["model"]] += 1
+                for key, val in (message.get("usage") or {}).items():
+                    if isinstance(val, (int, float)):
+                        usage[key] += val
+                if isinstance(content, list):
+                    for item in content:
+                        if item.get("type") == "tool_use":
+                            tools[item.get("name", "?")] += 1
+                            tool_names[item.get("id")] = item.get("name", "?")
+                continue
+
+            def scan_text(text):
+                nonlocal prompts, interrupts
+                if "[Request interrupted by user" in text:
+                    interrupts += 1
+                    return
+                if "<command-name>" in text:
+                    for part in text.split("<command-name>")[1:]:
+                        commands[part.split("</command-name>")[0].strip()] += 1
+                    return
+                if "<local-command" in text or "<system-reminder>" in text[:20]:
+                    return
+                prompts += 1
+
+            if isinstance(content, str):
+                scan_text(content)
+            elif isinstance(content, list):
+                for item in content:
+                    if item.get("type") == "text":
+                        scan_text(item.get("text", ""))
+                    elif item.get("type") == "tool_result":
+                        blob = json.dumps(item.get("content", ""), default=str)
+                        result_bytes += len(blob)
+                        if item.get("is_error") or "has been denied" in blob[:2000]:
+                            if "has been denied" in blob[:2000]:
+                                denials += 1
+                            else:
+                                errors += 1
+
+    project = os.path.basename(os.path.dirname(path))
+    work = any(p in project for p in cohort_patterns())
+    return {
+        "session": os.path.basename(path).removesuffix(".jsonl"),
+        "project": project,
+        "cohort": "work" if work else "personal",
+        "start": first.date().isoformat() if first else None,
+        "wall_minutes": round((last - first).total_seconds() / 60, 1) if first else 0,
+        "user_prompts": prompts,
+        "assistant_messages": assistant,
+        "sidechain_messages": sidechain,
+        "interrupts": interrupts,
+        "denials": denials,
+        "error_results": errors,
+        "tokens": dict(usage),
+        "tool_calls": dict(tools.most_common()),
+        "tool_calls_total": sum(tools.values()),
+        "tool_result_bytes_total": result_bytes,
+        "commands": dict(commands.most_common()),
+        "model": models.most_common(1)[0][0] if models else None,
+    }
+
+
+def all_sessions(since=None, until=None):
+    files = []
+    for root in roots():
+        if not os.access(root, os.R_OK):
+            print(f"unreadable root, run this from its owning account: {root}", file=sys.stderr)
+            continue
+        files.extend(glob.glob(os.path.join(root, "*", "*.jsonl")))
+    for path in sorted(files):
+        row = analyze(path)
+        if not row["start"] or row["user_prompts"] == 0:
+            continue
+        if since and row["start"] < since:
+            continue
+        if until and row["start"] > until:
+            continue
+        yield row
+
+
+def med(rows, fn):
+    vals = [fn(r) for r in rows]
+    return round(statistics.median(vals), 1) if vals else 0
+
+
+def report(rows, split=None):
+    groups = collections.defaultdict(list)
+    for r in rows:
+        period = ""
+        if split:
+            period = " before" if r["start"] < split else " after"
+        groups[r["cohort"] + period].append(r)
+
+    header = f"{'group':<18}{'n':>4}{'med_out_tok':>12}{'med_tools':>10}{'med_min':>9}{'intr/sess':>10}{'deny/sess':>10}{'side%':>7}"
+    print(header)
+    for name in sorted(groups):
+        g = groups[name]
+        side = sum(r["sidechain_messages"] for r in g)
+        total = sum(r["assistant_messages"] for r in g) or 1
+        print(
+            f"{name:<18}{len(g):>4}"
+            f"{med(g, lambda r: r['tokens'].get('output_tokens', 0)):>12}"
+            f"{med(g, lambda r: r['tool_calls_total']):>10}"
+            f"{med(g, lambda r: r['wall_minutes']):>9}"
+            f"{med(g, lambda r: r['interrupts']):>10}"
+            f"{med(g, lambda r: r['denials']):>10}"
+            f"{100 * side // total:>6}%"
+        )
+
+
+def main():
+    args = sys.argv[1:]
+
+    def opt(name):
+        if name in args:
+            i = args.index(name)
+            val = args[i + 1]
+            del args[i : i + 2]
+            return val
+
+    since, until, split = opt("--since"), opt("--until"), opt("--split")
+
+    if "--all" in args:
+        for row in all_sessions(since, until):
+            print(json.dumps(row))
+        return
+    if "--report" in args:
+        report(list(all_sessions(since, until)), split)
+        return
+    if len(args) != 1:
+        sys.exit(__doc__.strip())
+
+    path = args[0]
+    if not os.path.isfile(path):
+        hits = []
+        for root in roots():
+            hits.extend(glob.glob(os.path.join(root, "*", f"{path}*.jsonl")))
+        if len(hits) != 1:
+            sys.exit(f"expected one transcript for {path!r}, found {len(hits)}")
+        path = hits[0]
+    print(json.dumps(analyze(path), indent=2))
+
+
+if __name__ == "__main__":
+    main()
