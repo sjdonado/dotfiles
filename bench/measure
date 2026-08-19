@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""Extract harness performance metrics from a Claude Code session transcript.
+
+Usage:
+  bench/measure <session.jsonl | session-id> [--save runs/<label>.json]
+
+The point is before/after comparison when tuning commands and instructions:
+capture a labeled run, change the harness, capture again, diff the JSON.
+Quality is judged by a human against the task's success criteria; this tool
+only makes the cost side objective.
+"""
+
+import collections
+import glob
+import json
+import os
+import sys
+from datetime import datetime
+
+PROJECTS = os.path.expanduser("~/.claude/projects")
+
+
+def resolve(arg):
+    if os.path.isfile(arg):
+        return arg
+    hits = glob.glob(os.path.join(PROJECTS, "*", f"{arg}*.jsonl"))
+    if len(hits) == 1:
+        return hits[0]
+    sys.exit(f"expected one transcript for {arg!r}, found {len(hits)}")
+
+
+def ts(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def main():
+    args = sys.argv[1:]
+    save = None
+    if "--save" in args:
+        i = args.index("--save")
+        save = args[i + 1]
+        del args[i : i + 2]
+    if len(args) != 1:
+        sys.exit(__doc__.strip())
+
+    path = resolve(args[0])
+    tools = collections.Counter()
+    usage = collections.Counter()
+    result_bytes = collections.Counter()  # per tool name
+    tool_names = {}  # tool_use_id -> name
+    largest = []  # (bytes, tool, preview)
+    prompts = 0
+    assistant_msgs = 0
+    sidechain_msgs = 0
+    first = last = None
+
+    with open(path) as f:
+        for line in f:
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            kind = entry.get("type")
+            if kind not in ("user", "assistant"):
+                continue
+            stamp = entry.get("timestamp")
+            if stamp:
+                t = ts(stamp)
+                first = first or t
+                last = t
+            message = entry.get("message") or {}
+            content = message.get("content")
+            if entry.get("isSidechain"):
+                sidechain_msgs += 1
+
+            if kind == "assistant":
+                assistant_msgs += 1
+                for key, val in (message.get("usage") or {}).items():
+                    if isinstance(val, (int, float)):
+                        usage[key] += val
+                if isinstance(content, list):
+                    for item in content:
+                        if item.get("type") == "tool_use":
+                            tools[item.get("name", "?")] += 1
+                            tool_names[item.get("id")] = item.get("name", "?")
+                continue
+
+            # user entries: real prompts vs tool results
+            if isinstance(content, str):
+                prompts += 1
+                continue
+            if isinstance(content, list):
+                had_text = False
+                for item in content:
+                    if item.get("type") == "text":
+                        had_text = True
+                    if item.get("type") == "tool_result":
+                        name = tool_names.get(item.get("tool_use_id"), "?")
+                        size = len(json.dumps(item.get("content", ""), default=str))
+                        result_bytes[name] += size
+                        largest.append((size, name))
+                if had_text:
+                    prompts += 1
+
+    largest.sort(reverse=True)
+    out = {
+        "session": os.path.basename(path).removesuffix(".jsonl"),
+        "wall_minutes": round((last - first).total_seconds() / 60, 1) if first else None,
+        "user_prompts": prompts,
+        "assistant_messages": assistant_msgs,
+        "sidechain_messages": sidechain_msgs,
+        "tokens": dict(usage),
+        "tool_calls": dict(tools.most_common()),
+        "tool_calls_total": sum(tools.values()),
+        "tool_result_bytes_by_tool": dict(result_bytes.most_common(10)),
+        "tool_result_bytes_total": sum(result_bytes.values()),
+        "largest_tool_results": [
+            {"bytes": b, "tool": n} for b, n in largest[:5]
+        ],
+    }
+    text = json.dumps(out, indent=2)
+    print(text)
+    if save:
+        os.makedirs(os.path.dirname(save) or ".", exist_ok=True)
+        with open(save, "w") as f:
+            f.write(text + "\n")
+        print(f"\nsaved: {save}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

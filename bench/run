@@ -1,0 +1,35 @@
+#!/bin/sh
+# Run the fixed task battery in fresh headless sessions and save metrics.
+#
+#   bench/run <label>            # e.g. bench/run baseline
+#
+# Each task runs in its own session via `claude -p`, so nothing bleeds between
+# tasks and nothing joins this repo's interactive history. Cost: five real
+# sessions on the account. Quality is judged by a human against the `expect`
+# comment at the top of each task file; metrics land in bench/runs/<label>/.
+set -eu
+
+label=${1:?usage: bench/run <label>}
+dir="$(cd "$(dirname "$0")" && pwd)"
+out="$dir/runs/$label"
+mkdir -p "$out"
+
+for task in "$dir"/tasks/*.md; do
+  name=$(basename "$task" .md)
+  echo "==> $name"
+  # Strip the expect comment so the criteria never steer the model.
+  prompt=$(sed '/^<!--/,/-->$/d' "$task")
+  result=$(claude -p "$prompt" --output-format json 2>"$out/$name.stderr" || true)
+  printf '%s\n' "$result" > "$out/$name.result.json"
+  session=$(printf '%s' "$result" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("session_id",""))' 2>/dev/null || true)
+  if [ -n "$session" ]; then
+    "$dir/measure" "$session" --save "$out/$name.metrics.json" >/dev/null
+    echo "    session $session measured"
+  else
+    echo "    FAILED to get a session id (see $out/$name.stderr)"
+  fi
+done
+
+echo
+echo "Saved to $out. Compare with:"
+echo "  diff <(jq .tokens bench/runs/<a>/<task>.metrics.json) <(jq .tokens bench/runs/<b>/<task>.metrics.json)"
