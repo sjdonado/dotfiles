@@ -1,0 +1,47 @@
+{
+  "session": "85987d6e-52b8-4b91-9ce5-33b48dce904e",
+  "wall_minutes": 0.6,
+  "user_prompts": 2,
+  "assistant_messages": 15,
+  "sidechain_messages": 0,
+  "tokens": {
+    "input_tokens": 2157,
+    "cache_creation_input_tokens": 42877,
+    "cache_read_input_tokens": 466148,
+    "output_tokens": 7995
+  },
+  "tool_calls": {
+    "Read": 5,
+    "Skill": 1,
+    "Bash": 1
+  },
+  "tool_calls_total": 7,
+  "tool_result_bytes_by_tool": {
+    "Read": 7818,
+    "Bash": 147,
+    "Skill": 25
+  },
+  "tool_result_bytes_total": 7990,
+  "largest_tool_results": [
+    {
+      "bytes": 3462,
+      "tool": "Read"
+    },
+    {
+      "bytes": 2494,
+      "tool": "Read"
+    },
+    {
+      "bytes": 1334,
+      "tool": "Read"
+    },
+    {
+      "bytes": 421,
+      "tool": "Read"
+    },
+    {
+      "bytes": 147,
+      "tool": "Bash"
+    }
+  ]
+}

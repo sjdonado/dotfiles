@@ -1,0 +1,18 @@
+{
+  "session": "3c1ddf40-3d56-441e-be59-3eb474d8bd4b",
+  "wall_minutes": 0.1,
+  "user_prompts": 1,
+  "assistant_messages": 2,
+  "sidechain_messages": 0,
+  "tokens": {
+    "input_tokens": 20,
+    "cache_creation_input_tokens": 16988,
+    "cache_read_input_tokens": 45274,
+    "output_tokens": 466
+  },
+  "tool_calls": {},
+  "tool_calls_total": 0,
+  "tool_result_bytes_by_tool": {},
+  "tool_result_bytes_total": 0,
+  "largest_tool_results": []
+}

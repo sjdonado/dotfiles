@@ -1,0 +1,33 @@
+{
+  "session": "a6a5c9f4-7a05-47d7-b818-f3bfecf657a9",
+  "wall_minutes": 0.4,
+  "user_prompts": 2,
+  "assistant_messages": 6,
+  "sidechain_messages": 0,
+  "tokens": {
+    "input_tokens": 50,
+    "cache_creation_input_tokens": 41252,
+    "cache_read_input_tokens": 163780,
+    "output_tokens": 3350
+  },
+  "tool_calls": {
+    "Bash": 1,
+    "Read": 1
+  },
+  "tool_calls_total": 2,
+  "tool_result_bytes_by_tool": {
+    "Read": 17657,
+    "Bash": 43
+  },
+  "tool_result_bytes_total": 17700,
+  "largest_tool_results": [
+    {
+      "bytes": 17657,
+      "tool": "Read"
+    },
+    {
+      "bytes": 43,
+      "tool": "Bash"
+    }
+  ]
+}
