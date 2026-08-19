@@ -15,6 +15,7 @@ The workflows in `commands/` are reachable only as `/name`. Skills are auto-invo
 | "implement this", "go build it", an approved plan | `/yolo` |
 | a bullet list of changes to work already in a PR | `/feedback` |
 | "address the review comments", "CI is red on my PR" | `/address-review` |
+| "the PR merged", "archive the change", "clean up the spec" | `/land` |
 | "poke holes in this", "challenge this design" | `grill-me` |
 | "think this through", "let's explore", an idea with no shape yet | `openspec-explore` |
 | "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
@@ -29,6 +30,8 @@ Do not route when the request is conversational or a one-line lookup where the w
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `/address-review`.
 
 Implementation always goes through `/yolo`, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `/yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `/yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+
+A change archives after its PR merges, through `/land`, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
 
 When a request matches a workflow but omits something the workflow needs, follow the workflow and let its own steps handle the gap. Do not fall back to an ad-hoc answer.
 

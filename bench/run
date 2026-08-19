@@ -25,11 +25,18 @@ printf '{"label":"%s","model":"%s","date":"%s","dotfiles":"%s"}\n' \
 for task in "$dir"/tasks/*.md; do
   name=$(basename "$task" .md)
   echo "==> $name"
-  # Strip the expect comment so the criteria never steer the model.
-  prompt=$(sed '/^<!--/,/-->$/d' "$task")
+  # Strip the expect comment so the criteria never steer the model. The one-line
+  # form is handled first: a same-line open/close otherwise starts a sed range
+  # whose end is only searched from the next line, deleting the whole file.
+  prompt=$(sed '/^<!--.*-->$/d; /^<!--/,/-->$/d' "$task")
   result=$(claude -p "$prompt" --model "$model" --output-format json 2>"$out/$name.stderr" || true)
   printf '%s\n' "$result" > "$out/$name.result.json"
-  session=$(printf '%s' "$result" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("session_id",""))' 2>/dev/null || true)
+  # --output-format json yields an array of events; the init event carries the id.
+  session=$(printf '%s' "$result" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+for e in (d if isinstance(d,list) else [d]):
+    if e.get("session_id"): print(e["session_id"]); break' 2>/dev/null || true)
   if [ -n "$session" ]; then
     "$dir/measure" "$session" --save "$out/$name.metrics.json" >/dev/null
     echo "    session $session measured"
