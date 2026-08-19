@@ -22,6 +22,16 @@ Quality stays a human judgment against each task's `expect` line. The tool only 
 
 The battery is deliberately read-only: an implementation task would mutate the repo and make runs incomparable. When a /yolo benchmark is worth its cost, it needs a fixture repo of its own.
 
+## Model
+
+The battery always runs on the cheap tier: `haiku` under Claude Code (the runner's default, `BENCH_MODEL` overrides it), `luna` when driving it through opencode on the OpenAI side. Two reasons. The battery exists to be run often, before and after every harness change, and five sessions on a frontier model would make that a decision instead of a habit. And absolute numbers are model-dependent anyway: a delta only means something between two runs on the same model, so the daily-driver model buys nothing here. Never compare runs across models; `runs/<label>/meta.json` records which model produced a run so a cross-model diff is visible when it happens.
+
+The tradeoff is real and accepted: a cheap model fails quality criteria a frontier model would pass, so a quality miss on the battery is a signal to check, not proof the harness change is bad. Cost deltas transfer across tiers much better than quality does.
+
+## Subagents
+
+`measure` reports `sidechain_messages`: messages produced by subagents rather than the main loop. Harness changes that delegate recon (the `/triage` delegation default, `/research` parallel tracks) show up as this number rising while main-loop context, and with it `cache_read_input_tokens`, falls. That is the shape of a successful delegation change. Subagent traffic lands in the same transcript, so its cost is already included in the totals; nothing extra to add up.
+
 ## Interpreting the numbers
 
 Output tokens are the spend that tracks model effort. `cache_read_input_tokens` grows with session length and context size and is the main cost of long sessions, which the first measured datapoint made concrete: one 8-day interactive session read 345M cached tokens while all tool results combined were only ~288KB. Instructions that trim tool output help less than instructions that end loops sooner or delegate recon to sidechains (`sidechain_messages` counts those).

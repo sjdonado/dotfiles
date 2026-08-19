@@ -7,19 +7,27 @@
 # tasks and nothing joins this repo's interactive history. Cost: five real
 # sessions on the account. Quality is judged by a human against the `expect`
 # comment at the top of each task file; metrics land in bench/runs/<label>/.
+#
+# Always the cheap tier: haiku here, luna when driving the battery through
+# opencode. Absolute numbers are model-dependent, so a delta only means
+# something between runs on the same model; see bench/README.md.
 set -eu
 
 label=${1:?usage: bench/run <label>}
+model=${BENCH_MODEL:-haiku}
 dir="$(cd "$(dirname "$0")" && pwd)"
 out="$dir/runs/$label"
 mkdir -p "$out"
+printf '{"label":"%s","model":"%s","date":"%s","dotfiles":"%s"}\n' \
+  "$label" "$model" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  "$(git -C "$dir/.." rev-parse --short HEAD 2>/dev/null || echo '?')" > "$out/meta.json"
 
 for task in "$dir"/tasks/*.md; do
   name=$(basename "$task" .md)
   echo "==> $name"
   # Strip the expect comment so the criteria never steer the model.
   prompt=$(sed '/^<!--/,/-->$/d' "$task")
-  result=$(claude -p "$prompt" --output-format json 2>"$out/$name.stderr" || true)
+  result=$(claude -p "$prompt" --model "$model" --output-format json 2>"$out/$name.stderr" || true)
   printf '%s\n' "$result" > "$out/$name.result.json"
   session=$(printf '%s' "$result" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("session_id",""))' 2>/dev/null || true)
   if [ -n "$session" ]; then

@@ -125,6 +125,12 @@ Resolving review threads is deliberately **not** a rung. Threads only exist afte
 
 A claim about runtime behavior, impact, frequency, or performance is load-bearing only if being wrong about it changes the decision. Check load-bearing runtime claims against production telemetry via the `evidence` skill, or mark them explicitly unchecked. Never state a number without its source deep link and timeframe. Where a telemetry capability is not configured for a project, say so and move on; absence of data is never a reason to block or to invent one.
 
+## Validating harness changes
+
+These instructions, the commands, and the skills are themselves a surface with an oracle. A change to any of them (the `agents/` tree in the dotfiles repo, or a plugin that alters agent behavior) is validated with the bench battery in that repo: capture a labeled run before the change and another after, on the pinned cheap model, and compare the metrics instead of impressions. Quality is judged against each task's stated criteria; a run that got cheaper by answering worse is a regression. Model choice, subagent accounting, and how to read the numbers live in `bench/README.md`, next to the battery.
+
+Do not validate a harness change by re-reading it and judging it plausible. Plausible is what the failed versions looked like too.
+
 ## Code reviews
 
 Agent-initiated review is adversarial and uses the `adversarial-review` skill as its protocol, rendering findings in `caveman-review`'s one-line format. `caveman-review` is a comment format, not a review procedure. Agent-initiated review never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
