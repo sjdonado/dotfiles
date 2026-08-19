@@ -13,3 +13,13 @@ martillo/init.lua
 
 core
 core.*
+
+__pycache__/
+*.py[cod]
+
+# Raw bench outputs carry full model responses and the session init event,
+# which lists every connected MCP server: an inventory of the whole SaaS
+# stack, unfit for a public repo. The metrics JSONs are the shareable part.
+bench/runs/**/*.result.json
+bench/runs/**/*.stderr
+bench/runs/**/*.session
