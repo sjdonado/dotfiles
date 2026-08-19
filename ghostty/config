@@ -1,4 +1,11 @@
-theme = dark:Apple System Colors,light:Apple System Colors Light
+# TEMPFIX: pinned to dark, no light variant. Light/dark syncing is broken for the
+# agents -- an already-running Claude or OpenCode keeps whatever palette it started
+# with, so a flip leaves them mismatched against the terminal. Staying on one side
+# means nothing can drift. Neovim is unaffected; it tracks a flip on its own.
+#
+# To restore the pair, the light theme is "Apple System Colors Light":
+#   theme = dark:Apple System Colors,light:Apple System Colors Light
+theme = Apple System Colors
 
 font-family = Menlo
 font-family = Symbols Nerd Font Mono

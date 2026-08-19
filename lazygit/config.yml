@@ -8,15 +8,21 @@ git:
   # entry for those.
   # difftastic compares parse trees rather than lines: it wraps under its own
   # gutter and gives an added file the full width, because side-by-side collapses
-  # to one column when there is no "before" content. delta could only ever do one
-  # of those at a time.
+  # to one column when there is no "before" content.
+  #
+  # --syntax-highlight=off leaves only the colours that describe the diff -- red,
+  # green, underline for the changed span, dim for context -- all straight from the
+  # terminal palette. difftastic's own highlighting maps each language's node types
+  # onto one small palette, so the same colour means different things per language.
+  # No --background either: nothing here has to know whether the terminal is light
+  # or dark.
   #
   # No --width here. lazygit substitutes {{columnWidth}} for `pager` only, never
   # for externalDiffCommand, so the placeholder would arrive literally and difft
   # would exit with `invalid digit found in string`. Piped, difft defaults to 80
   # columns, which fits the panel; export DFT_WIDTH to override.
   diffRenderers:
-    - command: difft-themed --display=side-by-side
+    - command: difft --color=always --syntax-highlight=off --display=side-by-side
       type: extDiff
 os:
   editPreset: nvim-remote

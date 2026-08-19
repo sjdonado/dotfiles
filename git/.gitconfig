@@ -34,43 +34,6 @@
 	directory = /opt/homebrew/Library/Taps/oven-sh/homebrew-bun
 	directory = /opt/homebrew
 
-[delta]
-  features = github-dark
-  navigate = true
-  file-modified-label = "~"
-  file-added-label = "+"
-  file-removed-label = "-"
-  file-renamed-label = "→"
-  line-numbers-left-format = "{nm:>3}│"
-  line-numbers-right-format = "{np:>3}│"
-  hunk-header-decoration-style = omit
-  file-style = bold
-  file-decoration-style = ul
-
-[delta "github-dark"]
-  syntax-theme = GitHub-Dark
-  minus-style = syntax "#490202"
-  minus-emph-style = syntax "#67060c"
-  plus-style = syntax "#04260f"
-  plus-emph-style = syntax "#033a16"
-  line-numbers-minus-style = "#f85149"
-  line-numbers-plus-style = "#3fb950"
-  line-numbers-zero-style = "#6e7681"
-  hunk-header-style = syntax bold
-  hunk-header-line-number-style = "#79c0ff"
-
-[delta "github-light"]
-  syntax-theme = GitHub-Light
-  minus-style = syntax "#ffebe9"
-  minus-emph-style = syntax "#ffcecb"
-  plus-style = syntax "#dafbe1"
-  plus-emph-style = syntax "#aceebb"
-  line-numbers-minus-style = "#cf222e"
-  line-numbers-plus-style = "#1a7f37"
-  line-numbers-zero-style = "#8c959f"
-  hunk-header-style = syntax bold
-  hunk-header-line-number-style = "#0550ae"
-
 [credential "https://github.com"]
 	helper =
 	helper = !/usr/bin/env gh auth git-credential

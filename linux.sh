@@ -92,18 +92,6 @@ if ! have lazygit; then
   rm -rf "$tmp"
 fi
 
-# --- git-delta (gitconfig references delta features) -------------------------
-if ! have delta; then
-  log "Installing git-delta..."
-  v="$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest \
-       | grep -oE '"tag_name": *"[^"]+"' | head -1 | grep -oE '[0-9.]+')"
-  tmp="$(mktemp -d)"
-  curl -fsSL -o "$tmp/delta.deb" \
-    "https://github.com/dandavison/delta/releases/download/${v}/git-delta_${v}_${DARCH}.deb"
-  sudo dpkg -i "$tmp/delta.deb" || sudo apt-get install -f -y
-  rm -rf "$tmp"
-fi
-
 # --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
 if ! have tree-sitter; then
   log "Installing tree-sitter CLI..."
@@ -118,7 +106,7 @@ if ! have tree-sitter; then
   rm -rf "$tmp"
 fi
 
-# --- difftastic (lazygit's default pager; gitconfig references difft-themed) -
+# --- difftastic (lazygit's external diff command) ----------------------------
 if ! have difft; then
   log "Installing difftastic..."
   case "$ARCH" in x86_64) DFA=x86_64 ;; arm64) DFA=aarch64 ;; esac
@@ -129,7 +117,7 @@ if ! have difft; then
     "https://github.com/Wilfred/difftastic/releases/download/${v}/difft-${DFA}-unknown-linux-gnu.tar.gz"
   tar -xzf "$tmp/difft.tar.gz" -C "$tmp"
   install -m755 "$(find "$tmp" -type f -name difft -perm -u+x | head -1)" "$BIN/difft" \
-    || log "difftastic install failed; lazygit falls back to its delta pagers"
+    || log "difftastic install failed; lazygit falls back to git diff"
   rm -rf "$tmp"
 fi
 
@@ -270,7 +258,7 @@ unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
 ulimit -c 0
 EOF
 
-log "Linking bat config + themes (GitHub Dark/Light for delta)..."
+log "Linking bat config + themes (GitHub Dark/Light, chosen by BAT_THEME_*)..."
 mkdir -p "$HOME/.config/bat/themes"
 [ -e "$PWD/bat/config" ] && ln -snf "$PWD/bat/config" "$HOME/.config/bat/config"
 for f in "$HOME/.config/bat/themes/VSCode-Dark.tmTheme" "$HOME/.config/bat/themes/VSCode-Light.tmTheme"; do

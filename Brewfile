@@ -80,7 +80,6 @@ brew "gh"
 # Library and utilities for processing GIFs
 brew "giflib"
 # Syntax-highlighting pager for git and diff output
-brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
 # GNU implementation of the famous stream editor

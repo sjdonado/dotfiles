@@ -215,8 +215,8 @@ ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
 ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
 ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
-# Custom bat themes (GitHub Dark/Light, match agent TUI render) used by delta; build cache so bat and
-# delta can resolve them by name.
+# Custom bat themes (GitHub Dark/Light, match agent TUI render); build the cache so
+# bat can resolve them by name for BAT_THEME_DARK / BAT_THEME_LIGHT.
 mkdir -p "$HOME/.config/bat/themes"
 for f in "$HOME/.config/bat/themes/VSCode-Dark.tmTheme" "$HOME/.config/bat/themes/VSCode-Light.tmTheme"; do
   [ -L "$f" ] && rm -f "$f"

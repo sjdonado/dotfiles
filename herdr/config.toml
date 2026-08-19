@@ -31,9 +31,9 @@ delivery = "terminal"
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
 [theme]
-auto_switch = true
-dark_name = "catppuccin"
-light_name = "catppuccin-latte"
+auto_switch = false
+name = "catppuccin"
+
 [terminal]
 default_shell = "fish"
 

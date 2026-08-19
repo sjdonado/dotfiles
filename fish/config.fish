@@ -29,51 +29,13 @@ else
   set -gx COREPACK_HOME "$HOME/.cache/corepack"
 end
 
-# Herdr is the source of truth inside panes, and herdr-theme-mode reads its OSC 11
-# answer. This gives every process started in the pane a correct value to begin with.
-#
-# It is not the whole story. Claude Code, OpenCode and Neovim all follow a flip in an
-# already-running session when toggling from the Moshi client, observed directly. For
-# Claude that has no explanation in terms of this variable, since no OSC 11 sequence
-# appears anywhere in its binary. The same flip under Ghostty does not propagate, so
-# the gap is on the client side rather than here. Do not add a settings.json writer
-# for it; that was tried and reverted.
-#
-# OpenCode queries OSC 11 itself and treats this variable as the fallback, which is
-# what saves it when the query goes unanswered.
-#
-# Neovim is the exception: it queries at startup and handles unsolicited responses
-# via TermResponse, and nvim/init.lua re-queries on FocusGained.
-set -l herdr_theme_mode
-if set -q HERDR_ENV
-  set herdr_theme_mode ("$HOME/.config/dotfiles/bin/herdr-theme-mode" 2>/dev/null)
-  if test "$herdr_theme_mode" = dark
-    set -gx COLORFGBG "15;0"
-  else if test "$herdr_theme_mode" = light
-    set -gx COLORFGBG "0;15"
-  else
-    set -e COLORFGBG
-  end
-end
-
-# bat follows Herdr inside a pane and the local system elsewhere.
-if test "$herdr_theme_mode" = dark
-  set -gx BAT_THEME GitHub-Dark
-else if test "$herdr_theme_mode" = light
-  set -gx BAT_THEME GitHub-Light
-else if test (uname) = Darwin
-  # In light mode the AppleInterfaceStyle key does not exist, so the substitution
-  # is empty. Capture it first: an unquoted empty substitution would leave test(1)
-  # with a missing argument, and fish does not expand (cmd) inside double quotes.
-  set -l macos_appearance (defaults read -g AppleInterfaceStyle 2>/dev/null)
-  if test "$macos_appearance" = Dark
-    set -gx BAT_THEME GitHub-Dark
-  else
-    set -gx BAT_THEME GitHub-Light
-  end
-else
-  set -gx BAT_THEME GitHub-Dark
-end
+# bat resolves light/dark itself: BAT_THEME=auto asks the terminal, and these two
+# name which theme to use on each side. Deliberately no shell logic and no
+# subprocess -- the previous version shelled out to bin/herdr-theme-mode on every
+# interactive start, which cost a Python spawn plus a tty round trip per prompt.
+set -gx BAT_THEME auto
+set -gx BAT_THEME_DARK GitHub-Dark
+set -gx BAT_THEME_LIGHT GitHub-Light
 set -x PATH $HOME/.cargo/bin $PATH
 
 # Add custom man pages
