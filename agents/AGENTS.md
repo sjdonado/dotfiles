@@ -15,6 +15,7 @@ The workflows in `commands/` are reachable only as `/name`. Skills are auto-invo
 | "implement this", "go build it", an approved plan | `/yolo` |
 | a bullet list of changes to work already in a PR | `/feedback` |
 | "address the review comments", "CI is red on my PR" | `/address-review` |
+| "the PR merged", "archive the change", "clean up the spec" | `/land` |
 | "poke holes in this", "challenge this design" | `grill-me` |
 | "think this through", "let's explore", an idea with no shape yet | `openspec-explore` |
 | "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
@@ -29,6 +30,8 @@ Do not route when the request is conversational or a one-line lookup where the w
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `/address-review`.
 
 Implementation always goes through `/yolo`, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `/yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `/yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+
+A change archives after its PR merges, through `/land`, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
 
 When a request matches a workflow but omits something the workflow needs, follow the workflow and let its own steps handle the gap. Do not fall back to an ad-hoc answer.
 
@@ -57,6 +60,8 @@ On approval, follow the `yolo` workflow without being asked. Treat the plan's fi
 Stop early only when implementation reveals that the plan is invalid against repository evidence, a load-bearing decision is genuinely unresolvable, or pre-existing unrelated changes cannot be safely separated. Otherwise pick the most reasonable minimal option, record it in the PR body, and continue.
 
 Never merge the PR. Leave it open for human review.
+
+Never commit implementation to the default branch, in any mode. `/yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `/land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
 
 ## When to ask, and when to decide
 
@@ -124,6 +129,12 @@ Resolving review threads is deliberately **not** a rung. Threads only exist afte
 ## Production evidence
 
 A claim about runtime behavior, impact, frequency, or performance is load-bearing only if being wrong about it changes the decision. Check load-bearing runtime claims against production telemetry via the `evidence` skill, or mark them explicitly unchecked. Never state a number without its source deep link and timeframe. Where a telemetry capability is not configured for a project, say so and move on; absence of data is never a reason to block or to invent one.
+
+## Validating harness changes
+
+These instructions, the commands, and the skills are themselves a surface with an oracle: the real sessions they produce. Every session leaves a transcript, and every harness change has a commit date, so a change to the `agents/` tree is validated by comparing the real session population before and after that date, per cohort, with the dotfiles `bench/measure` tool. Cost and friction (interrupts, denials, delegation share) are the measured part; quality stays a human judgment made by reading sessions. Populations, not pairs: a single session proves nothing, and a delta that would not survive a hard week of unrelated work is noise.
+
+Do not validate a harness change by re-reading it and judging it plausible. Plausible is what the failed versions looked like too.
 
 ## Code reviews
 
