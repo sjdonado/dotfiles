@@ -61,6 +61,8 @@ Stop early only when implementation reveals that the plan is invalid against rep
 
 Never merge the PR. Leave it open for human review.
 
+Never commit implementation to the default branch, in any mode. `/yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `/land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
+
 ## When to ask, and when to decide
 
 Asking is not caution, it is a cost transfer. Ask only when both of these hold:
