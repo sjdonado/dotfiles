@@ -7,7 +7,7 @@ show_agent_labels_on_pane_borders = false
 # need a human.
 agent_panel_sort = "spaces"
 mouse_capture = true
-copy_on_select = true
+copy_on_select = false
 
 [ui.toast]
 delivery = "terminal"
@@ -31,8 +31,9 @@ delivery = "terminal"
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
 [theme]
-auto_switch = false
-name = "catppuccin"
+auto_switch = true
+dark_name = "catppuccin"
+light_name = "catppuccin-latte"
 
 [terminal]
 default_shell = "fish"

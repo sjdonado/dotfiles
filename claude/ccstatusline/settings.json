@@ -37,13 +37,13 @@
   ],
   "flexMode": "full",
   "compactThreshold": 60,
-  "colorLevel": 2,
+  "colorLevel": 1,
   "inheritSeparatorColors": false,
   "globalBold": false,
   "powerline": {
     "enabled": false,
     "separators": [
-      ""
+      "\ue0b0"
     ],
     "separatorInvertBackground": [
       false

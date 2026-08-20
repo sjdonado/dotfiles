@@ -4,8 +4,8 @@
 # means nothing can drift. Neovim is unaffected; it tracks a flip on its own.
 #
 # To restore the pair, the light theme is "Apple System Colors Light":
-#   theme = dark:Apple System Colors,light:Apple System Colors Light
-theme = Apple System Colors
+#   theme = dark:Apple System Colors,light:sjdonado-light.conf
+theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
 
 font-family = Menlo
 font-family = Symbols Nerd Font Mono

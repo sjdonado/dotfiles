@@ -63,7 +63,7 @@ mkdir -p "$HOME/.ssh"
 mkdir -p "$HOME/.docker"
 mkdir -p "$HOME/.colima/default"
 mkdir -p "$HOME/Library/Keyboard Layouts"
-mkdir -p "$HOME/.config/ghostty"
+mkdir -p "$HOME/.config/ghostty/themes"
 mkdir -p "$HOME/.config/fish/functions"
 mkdir -p "$HOME/.config/bat"
 mkdir -p "$HOME/.config/pgcli"
@@ -95,6 +95,7 @@ fi
 
 log "Setting up Ghostty config..."
 ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
+ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
 # Finicky routes every link the system opens. It only takes effect once macOS
 # names it the default browser, which is a prompt on first launch, not something
