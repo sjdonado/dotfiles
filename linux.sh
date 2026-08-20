@@ -344,13 +344,6 @@ if have herdr; then
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "installed Herdr plugin: herdr-lazygit" \
     || log "Herdr server not running; later: herdr plugin install Crokily/herdr-lazygit"
-  # Worktree keys are bound to this in herdr/config.toml. Default open_mode
-  # ("workspace") drives `wt switch`, so worktrunk's own hooks still run. Needs
-  # system fzf and jq — herdr-lazygit's bundled fzf is not on PATH.
-  herdr plugin install devashish2203/herdr-worktrunk \
-    --ref a3107ca566bafcd463bc138007a0c01051970784 -y >/dev/null 2>&1 \
-    && log "installed Herdr plugin: worktrunk" \
-    || log "Herdr server not running; later: herdr plugin install devashish2203/herdr-worktrunk"
 fi
 
 # --- interactive shell to fish (login shell stays POSIX) ---------------------

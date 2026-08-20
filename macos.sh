@@ -263,15 +263,6 @@ if have herdr; then
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "  installed Herdr plugin: herdr-lazygit" \
     || log "  Herdr not running; later run: herdr plugin install Crokily/herdr-lazygit"
-  # Worktree keys are bound to this in herdr/config.toml. Left in its default
-  # open_mode ("workspace"): it runs `wt switch --no-cd`, so worktrunk's
-  # post-switch hook registers the workspace and the plugin only focuses it.
-  # open_mode = "tab" would stack a tab on top of that same workspace.
-  # Needs fzf and jq on PATH; both come from the Brewfile.
-  herdr plugin install devashish2203/herdr-worktrunk \
-    --ref a3107ca566bafcd463bc138007a0c01051970784 -y >/dev/null 2>&1 \
-    && log "  installed Herdr plugin: worktrunk" \
-    || log "  Herdr not running; later run: herdr plugin install devashish2203/herdr-worktrunk"
 fi
 
 log "Linking Lazygit config..."

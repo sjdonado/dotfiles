@@ -60,7 +60,7 @@ brew "docker", link: false
 # Docker CLI plugin for extended build capabilities with BuildKit
 brew "docker-buildx"
 # Isolated development environments using Docker
-brew "docker-compose", link: false
+brew "docker-compose"
 # Embeddable SQL OLAP Database Management System
 brew "duckdb"
 # Select default apps for documents and URL schemes on macOS
@@ -75,11 +75,12 @@ brew "flyctl"
 brew "fzf"
 # GNU awk utility
 brew "gawk"
-# GitHub command-line tool
-brew "gh"
 # Library and utilities for processing GIFs
 brew "giflib"
+# GitHub command-line tool
+brew "gh"
 # Syntax-highlighting pager for git and diff output
+brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
 # GNU implementation of the famous stream editor
@@ -94,6 +95,8 @@ brew "grpcurl"
 brew "harfbuzz"
 # Agent multiplexer that lives in your terminal
 brew "herdr"
+# Improved top (interactive process viewer)
+brew "htop"
 # Image manipulation library
 brew "jpeg"
 # Library for interacting with JSON
@@ -119,7 +122,7 @@ brew "mailpit"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
 # Deep clean and optimize your Mac
-brew "mole", link: false
+brew "mole"
 # Remote terminal application
 brew "mosh"
 # Ambitious Vim-fork focused on extensibility and agility
@@ -206,14 +209,12 @@ cask "1password-cli"
 cask "android-commandlinetools"
 # Display management tool
 cask "betterdisplay"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
+# Utility for customizing which browser to start
+cask "finicky"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Always open the right browser
-cask "finicky"
 # Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
 # Chromium-based web browser
@@ -236,6 +237,8 @@ cask "slack"
 cask "tablepro"
 # Mesh VPN based on WireGuard
 cask "tailscale-app"
+# Desktop client for Telegram messenger
+cask "telegram-desktop"
 # REST, GraphQL and gRPC client
 cask "yaak"
 go "github.com/air-verse/air"

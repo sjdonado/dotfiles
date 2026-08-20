@@ -7,6 +7,11 @@ show_agent_labels_on_pane_borders = false
 # need a human.
 agent_panel_sort = "spaces"
 mouse_capture = true
+# Window title without herdr's default {hostname} prefix: the hostname is
+# DHCP-derived (the router hands out a domain, so it reads "Mac.vodafone.ultrahub"
+# and changes with the network), and every pane runs locally anyway. The workspace
+# name is the part worth reading in the macOS titlebar and the app switcher.
+window_title = "{workspace}"
 copy_on_select = false
 
 [ui.toast]
@@ -38,11 +43,14 @@ light_name = "catppuccin-latte"
 [terminal]
 default_shell = "fish"
 
-# Worktree keys go to the worktrunk plugin rather than herdr's built-ins: the
-# built-in dialogs create a checkout directly, so nothing in worktrunk/config.toml
-# runs — no copy-ignored pre-start, no post-switch agent spawn. The plugin drives
-# `wt switch` instead, which fires those hooks, and its fzf picker offers existing
-# branches (local and remote-tracking) as well as a typed-new name.
+# Worktree keys are herdr's built-in dialogs (prefix+shift+g to create; remove
+# lives in the command palette, unbound by default) rather than the worktrunk
+# plugin's picker: the picker existed to spawn an agent in the new worktree, and
+# that is not wanted. The dialogs create the checkout directly, so nothing in
+# worktrunk/config.toml runs — no copy-ignored pre-start. The local copy-ignored
+# plugin covers that instead: it subscribes to herdr's worktree.created event and
+# runs `wt step copy-ignored` in the fresh checkout, which is the only part of
+# the worktrunk hooks the keyboard path needed.
 [keys]
 settings = "prefix+,"
 
@@ -57,23 +65,6 @@ command = "herdr-lazygit.open"
 key = "prefix+."
 type = "plugin_action"
 command = "edit-tab.toggle"
-
-# worktree-agent rather than worktrunk directly: it opens the same picker, but
-# passes the focused pane's agent kind down so the new worktree comes up with
-# that agent running instead of a bare shell.
-#
-# Default branch is the base that matters for the common case (start work from
-# main); creating off the current branch is rarer and stays in the command
-# palette as worktree-agent.open-current rather than burning a chord.
-[[keys.command]]
-key = "prefix+shift+o"
-type = "plugin_action"
-command = "worktree-agent.open"
-
-[[keys.command]]
-key = "prefix+shift+x"
-type = "plugin_action"
-command = "worktrunk.remove"
 
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.
