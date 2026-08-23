@@ -258,9 +258,8 @@ unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
 ulimit -c 0
 EOF
 
-log "Linking bat config + themes (GitHub Dark/Light, chosen by BAT_THEME_*)..."
+log "Linking bat themes (GitHub Dark/Light, chosen by BAT_THEME_*)..."
 mkdir -p "$HOME/.config/bat/themes"
-[ -e "$PWD/bat/config" ] && ln -snf "$PWD/bat/config" "$HOME/.config/bat/config"
 for f in "$HOME/.config/bat/themes/VSCode-Dark.tmTheme" "$HOME/.config/bat/themes/VSCode-Light.tmTheme"; do
   [ -L "$f" ] && rm -f "$f"
 done
@@ -359,7 +358,8 @@ if have herdr; then
   done
   # Bundles its own pinned lazygit + fzf runtime; panel.conf above overrides the
   # lazygit half with the system one, since the bundled 0.63.0 cannot read
-  # git.diffRenderers. The local side-panel plugin binds this as an exclusive panel.
+  # git.diffRenderers. The local lazygit-panel plugin is what prefix+s calls, and
+  # it delegates the actual toggle to this plugin.
   herdr plugin install Crokily/herdr-lazygit \
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "installed Herdr plugin: herdr-lazygit" \

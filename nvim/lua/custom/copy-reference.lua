@@ -26,15 +26,6 @@ local function copy(ref)
   vim.notify(ref)
 end
 
---- Copy `path`, with no line information.
-function M.file()
-  local path = relative_path()
-  if not path then
-    return vim.notify('buffer has no file', vim.log.levels.WARN)
-  end
-  copy(path)
-end
-
 --- Copy `path:12` for the cursor line.
 function M.line()
   local path = relative_path()
@@ -63,8 +54,9 @@ function M.range()
   copy(('%s:%d-%d'):format(path, first, last))
 end
 
-vim.keymap.set('n', '<leader>yf', M.file, { desc = 'Yank file reference' })
-vim.keymap.set('n', '<leader>yy', M.line, { desc = 'Yank line reference' })
-vim.keymap.set('x', '<leader>yy', M.range, { desc = 'Yank range reference' })
+-- No path-only mapping: nvim-tree's `Y` already copies a relative path, so the
+-- line and range forms are the only ones that add anything.
+vim.keymap.set('n', '<leader>y', M.line, { desc = 'Yank line reference' })
+vim.keymap.set('x', '<leader>y', M.range, { desc = 'Yank range reference' })
 
 return M

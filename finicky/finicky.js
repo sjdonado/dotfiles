@@ -22,22 +22,6 @@ export default {
 
   defaultBrowser: { name: "co.donado.safaritab", appType: "bundleId" },
 
-  rewrite: [
-    {
-      // A pull request belongs in Linear's review UI. linear.review keeps the
-      // owner/repo/pull/number path and redirects to linear.app/review, so
-      // swapping the host is the whole rewrite.
-      //
-      // It has to go through the browser rather than straight to the Linear app:
-      // handing the app a bare URL skips the redirect that resolves which
-      // workspace the review belongs to, and it fails with "Authentication error,
-      // this workspace does not exist". Opened in the browser, the redirect runs
-      // and Linear hands off to the app itself.
-      match: /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/,
-      url: (url) => `https://linear.review${url.pathname}${url.search}${url.hash}`,
-    },
-  ],
-
   handlers: [
     {
       // Local dev servers and Cloudflare preview deployments go to Helium, keeping

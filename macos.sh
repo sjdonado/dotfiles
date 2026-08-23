@@ -61,12 +61,10 @@ mkdir -p "$HOME/.local/bin"
 mkdir -p "$HOME/.config"
 mkdir -p "$HOME/.ssh"
 mkdir -p "$HOME/.docker"
-mkdir -p "$HOME/.colima/default"
 mkdir -p "$HOME/Library/Keyboard Layouts"
 mkdir -p "$HOME/.config/ghostty/themes"
 mkdir -p "$HOME/.config/fish/functions"
 mkdir -p "$HOME/.config/bat"
-mkdir -p "$HOME/.config/pgcli"
 mkdir -p "$HOME/.config/finicky"
 PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 export PATH
@@ -196,10 +194,8 @@ if [ "$INSTALL" = 1 ]; then
   fi
 fi
 
-log "Linking Docker/Colima configs..."
-ln -snf "$PWD/docker/colima.yaml" "$HOME/.colima/default/colima.yaml"
+log "Linking Docker config..."
 ln -snf "$PWD/docker/config.json" "$HOME/.docker/config.json"
-# NOTE: Do not auto-start colima here. User can run: colima start
 
 log "Copying custom keyboard layouts..."
 cp -Rp "$PWD/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/" 2>/dev/null || true
@@ -210,11 +206,7 @@ if [ -f "$PWD/.ssh/config" ]; then
   chmod 600 "$PWD/.ssh/config"
   [ -f "$PWD/.ssh/private.conf" ] && chmod 600 "$PWD/.ssh/private.conf"
 fi
-[ -f "$PWD/.mackup.cfg" ] && ln -snf "$PWD/.mackup.cfg" "$HOME/.mackup.cfg"
 ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig" 2>/dev/null || true
-
-ln -snf "$PWD/bat/config"   "$HOME/.config/bat/config"     2>/dev/null || true
-ln -snf "$PWD/pgcli/config" "$HOME/.config/pgcli/config"   2>/dev/null || true
 
 # Custom bat themes (GitHub Dark/Light, match agent TUI render); build the cache so
 # bat can resolve them by name for BAT_THEME_DARK / BAT_THEME_LIGHT.
@@ -258,8 +250,8 @@ if have herdr; then
   # Remote Herdr plugins, pinned like skills-lock.json so a rebuild is
   # reproducible. Bump the ref deliberately after reviewing upstream. Bundles its
   # own pinned lazygit + fzf runtime; panel.conf below overrides the lazygit half
-  # with the system one, and the local side-panel plugin binds this as one of its
-  # exclusive panels.
+  # with the system one. The local lazygit-panel plugin is what prefix+s calls,
+  # and it delegates the actual toggle to this plugin.
   herdr plugin install Crokily/herdr-lazygit \
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "  installed Herdr plugin: herdr-lazygit" \
@@ -291,6 +283,15 @@ fi
 
 log "Linking Claude Code and OpenCode config..."
 mkdir -p "$HOME/.claude" "$HOME/.config/opencode" "$HOME/.config/ccstatusline"
+# Parity with linux.sh. claude/settings.json declares a SessionStart hook running
+# herdr's agent-state script, and herdr owns that script. Install it BEFORE the
+# symlink: the installer also rewrites settings.json, so running it afterwards
+# writes a duplicate hook straight into the tracked dotfiles copy, with an
+# absolute path baked in. Skip once present.
+if have herdr && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
+  herdr integration install claude >/dev/null 2>&1 \
+    || log "  herdr integration install claude failed; SessionStart hook will no-op"
+fi
 link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
 link_managed "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
 link_managed "$PWD/agents/commands" "$HOME/.claude/commands"

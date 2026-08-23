@@ -27,19 +27,43 @@ decides what to ask. Do not start solving the ticket.
    Keep it under ~60 characters. Ask nothing; pick the obvious name and say what
    you picked.
 
-2. Run `wtn <branch>` from the repository root.
+2. Create the worktree with herdr, from the repository root:
 
-   `wtn` creates the worktree via worktrunk, which provisions it per that repo's
-   own hooks, then opens it in herdr and starts an agent of the same kind as the
-   one running this command. It does not focus the new workspace, so reporting
-   its id in step 3 is what makes it findable. Do not reimplement any of that
-   here, and
-   do not call `wt`, `herdr`, or any project provisioning command directly — if
-   `wtn` is missing, say so and stop.
+   ```
+   herdr worktree create --cwd <repo-root> --branch <branch> --base <default-branch> --no-focus
+   ```
 
-3. Report, in three lines: the branch, the worktree path, and the herdr workspace
-   id to switch to. `wtn` prints all three; pass them through rather than
-   re-deriving them.
+   herdr checks out the worktree itself and emits `worktree.created`, which is
+   what runs the local `copy-ignored` plugin, so the new checkout gets the
+   gitignored files (`.env`, dependency trees, build caches) it needs. Pass
+   `--cwd` explicitly: with no `--cwd` herdr resolves the repo from whatever
+   workspace is *focused*, so a create fired while another repo has focus fails
+   with `linked_worktree_source`. `--no-focus` is deliberate, the human switches
+   when they choose.
+
+   The command returns JSON. Keep `result.workspace.workspace_id`,
+   `result.worktree.path`, and `result.root_pane.pane_id`.
+
+3. Start an idle agent in that pane, of the same kind as the one running this
+   command:
+
+   ```
+   herdr agent get "$HERDR_PANE_ID"            # .result.agent.agent -> the kind
+   herdr agent start <name> --kind <kind> --pane <pane-id>
+   ```
+
+   For `claude`, append `-- --dangerously-skip-permissions`. The name must be
+   1-32 characters, start with a lowercase letter, and contain only
+   `[a-z0-9_-]`, so truncate the branch rather than passing it raw: a longer
+   value loses to `invalid_agent_name` and leaves a bare shell. If the kind
+   cannot be resolved, leave the pane as a shell and say so; never invent one.
+
+   `agent_pane_busy` means the pane's shell still has a live child. Retry a
+   couple of times, and if it persists, report it rather than typing into the
+   pane.
+
+4. Report, in three lines: the branch, the worktree path, and the herdr workspace
+   id to switch to. All three come from step 2's JSON; do not re-derive them.
 
 ## Constraints
 

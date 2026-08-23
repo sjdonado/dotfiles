@@ -959,8 +959,11 @@ do
 end
 
 -- ============================================================
--- SECTION 10: CUSTOM COMMANDS & FINAL TOUCHES
+-- SECTION 10: CODE REFERENCES
 -- ============================================================
-require 'custom.commands'
+-- Required here rather than through a custom.commands module: that module only
+-- existed to hold a Ghostty-sent shortcut for the same functions, and the
+-- terminal never delivered it.
+require 'custom.copy-reference'
 
 -- vim: ts=2 sts=2 sw=2 et
