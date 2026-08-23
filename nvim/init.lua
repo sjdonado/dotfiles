@@ -164,13 +164,6 @@ do
         return
       end
 
-      if name == 'LuaSnip' then
-        if vim.fn.has 'win32' ~= 1 and vim.fn.executable 'make' == 1 then
-          run_build(name, { 'make', 'install_jsregexp' }, ev.data.path)
-        end
-        return
-      end
-
       if name == 'nvim-treesitter' then
         if not ev.data.active then
           vim.cmd.packadd 'nvim-treesitter'
@@ -301,22 +294,44 @@ do
     scope = { show_start = false, show_end = false },
   }
 
+  -- Per-buffer opt-outs for a file too big to be worth decorating. Indent guides
+  -- are drawn per visible line and the scope lookup walks the buffer; treesitter
+  -- highlighting starts on its own for the parsers Neovim bundles, so Section 9's
+  -- guard is not enough to keep a parse off a 5MB Lua dump. Scheduled because this
+  -- has to run after whichever FileType handler started them.
+  vim.api.nvim_create_autocmd('FileType', {
+    group = vim.api.nvim_create_augroup('kickstart-bigfile', { clear = true }),
+    callback = function(args)
+      if not require('custom.bigfile').is_big(args.buf) then
+        return
+      end
+      vim.schedule(function()
+        pcall(vim.treesitter.stop, args.buf)
+        pcall(require('ibl').setup_buffer, args.buf, { enabled = false })
+      end)
+    end,
+  })
+
   -- Autopairs
   vim.pack.add { gh 'windwp/nvim-autopairs' }
   require('nvim-autopairs').setup {}
 
   -- Zen mode
+  -- Configured on the first toggle rather than at startup: nothing about zen mode
+  -- is observable until the key is pressed.
   vim.pack.add { gh 'folke/zen-mode.nvim' }
-  require('zen-mode').setup {
-    window = { width = 1 },
-    on_open = function()
-      vim.g.zen_mode_active = true
-    end,
-    on_close = function()
-      vim.g.zen_mode_active = false
-    end,
-  }
-  vim.keymap.set('n', '<C-w>z', '<cmd>ZenMode<CR>', { desc = 'Toggle [Z]en Mode' })
+  vim.keymap.set('n', '<C-w>z', function()
+    require('zen-mode').setup {
+      window = { width = 1 },
+      on_open = function()
+        vim.g.zen_mode_active = true
+      end,
+      on_close = function()
+        vim.g.zen_mode_active = false
+      end,
+    }
+    require('zen-mode').toggle()
+  end, { desc = 'Toggle [Z]en Mode' })
 
   -- Various text objects
   vim.pack.add { gh 'chrisgrieser/nvim-various-textobjs' }
@@ -352,37 +367,81 @@ do
   end
   vim.pack.add(telescope_plugins)
 
-  require('telescope').setup {
-    defaults = vim.tbl_extend('force', require('telescope.themes').get_dropdown(), {
-      mappings = {
-        i = {
-          ['<esc>'] = require('telescope.actions').close,
-          ['<C-y>'] = require('telescope.actions').preview_scrolling_up,
-          ['<C-e>'] = require('telescope.actions').preview_scrolling_down,
-          ['<C-t>'] = require('telescope.actions').delete_buffer,
-          ['<C-q>'] = require('telescope.actions').send_to_qflist + require('telescope.actions').open_qflist,
+  -- Telescope, plenary and the two extensions are the heaviest require in this
+  -- config (~8ms) and none of it is observable until a picker opens, so setup runs
+  -- on first use. Every entry point below reaches load(), which is idempotent: the
+  -- keymaps, the LSP pickers and vim.ui.select.
+  --
+  -- Only the require is deferred, not the runtimepath entry: vim.pack.add's `load`
+  -- option is already false while init.lua is sourcing, and the plugin/ files are
+  -- sourced by the normal startup pass either way, so passing load = false
+  -- measured identically and only added packadd calls.
+  local telescope_loaded = false
+  local function load()
+    if telescope_loaded then
+      return
+    end
+    telescope_loaded = true
+    local actions = require 'telescope.actions'
+    local themes = require 'telescope.themes'
+    require('telescope').setup {
+      defaults = vim.tbl_extend('force', themes.get_dropdown(), {
+        mappings = {
+          i = {
+            ['<esc>'] = actions.close,
+            ['<C-y>'] = actions.preview_scrolling_up,
+            ['<C-e>'] = actions.preview_scrolling_down,
+            ['<C-t>'] = actions.delete_buffer,
+            ['<C-q>'] = actions.send_to_qflist + actions.open_qflist,
+          },
         },
+        layout_config = {
+          height = 0.2,
+          width = function(_, max_columns, _)
+            return math.min(max_columns, 110)
+          end,
+        },
+        file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/', '*.min' },
+      }),
+      pickers = {
+        find_files = { hidden = true },
       },
-      layout_config = {
-        height = 0.2,
-        width = function(_, max_columns, _)
-          return math.min(max_columns, 110)
-        end,
+      extensions = {
+        ['ui-select'] = { themes.get_dropdown() },
       },
-      file_ignore_patterns = { '.git/', 'node_modules/', 'build/', 'dist/', '*.min' },
-    }),
-    pickers = {
-      find_files = { hidden = true },
-    },
-    extensions = {
-      ['ui-select'] = { require('telescope.themes').get_dropdown() },
-    },
-  }
+    }
 
-  pcall(require('telescope').load_extension, 'fzf')
-  pcall(require('telescope').load_extension, 'ui-select')
+    pcall(require('telescope').load_extension, 'fzf')
+    pcall(require('telescope').load_extension, 'ui-select')
+  end
 
-  local builtin = require 'telescope.builtin'
+  -- Stands in for telescope.builtin: indexing it loads telescope and forwards to
+  -- the real picker, so the call sites below read as they did when the module was
+  -- required at startup.
+  local builtin = setmetatable({}, {
+    __index = function(_, key)
+      return function(...)
+        load()
+        return require('telescope.builtin')[key](...)
+      end
+    end,
+  })
+
+  -- The ui-select extension replaces vim.ui.select when it loads, which is now
+  -- later than the first code action might arrive. Route through load() and then
+  -- call whatever is installed, falling back to the native picker if the
+  -- extension failed to load at all.
+  local native_select = vim.ui.select
+  local lazy_select
+  lazy_select = function(...)
+    load()
+    local impl = vim.ui.select
+    if impl == lazy_select then
+      impl = native_select
+    end
+    return impl(...)
+  end
+  vim.ui.select = lazy_select
 
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
@@ -416,6 +475,7 @@ do
   vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files' })
   vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
   vim.keymap.set('n', '<leader>/', function()
+    load()
     builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown { winblend = 10, previewer = false })
   end, { desc = '[/] Fuzzily search in current buffer' })
 
@@ -434,19 +494,22 @@ do
   })
 
   -- [[ nvim-tree ]]
+  -- Also first-use: the tree has no effect until it is opened, and netrw is
+  -- already disabled in Section 1 rather than by the plugin.
   vim.pack.add { gh 'nvim-tree/nvim-tree.lua' }
-  require 'kickstart.plugins.nvim-tree'
+  vim.keymap.set('n', '<leader>e', function()
+    require 'kickstart.plugins.nvim-tree'
+    vim.cmd 'NvimTreeFindFileToggle'
+  end, { desc = 'Toggle Nvim Tree' })
 end
 
 -- ============================================================
--- SECTION 5: GIT (gitsigns, git-conflict, lazygit.nvim, blame)
+-- SECTION 5: GIT (gitsigns, git-conflict, blame)
 -- ============================================================
 do
-  vim.g.lazygit_floating_window_scaling_factor = 1.0
   vim.pack.add {
     gh 'lewis6991/gitsigns.nvim',
     gh 'akinsho/git-conflict.nvim',
-    gh 'kdheepak/lazygit.nvim',
   }
   require 'kickstart.plugins.git'
 end
@@ -461,12 +524,29 @@ do
     gh 'folke/lazydev.nvim',
     gh 'neovim/nvim-lspconfig',
     gh 'mason-org/mason.nvim',
-    gh 'mason-org/mason-lspconfig.nvim',
     gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
   }
 
-  require('fidget').setup {}
+  -- fidget renders LSP progress, and no progress can arrive before a client
+  -- attaches, so it loads on the first attach instead of at startup.
+  vim.api.nvim_create_autocmd('LspAttach', {
+    once = true,
+    group = vim.api.nvim_create_augroup('kickstart-fidget-lazy', { clear = true }),
+    callback = function()
+      require('fidget').setup {}
+    end,
+  })
   require('lazydev').setup {}
+
+  -- Servers advertise file watching by default and then register watchers across
+  -- the whole workspace, which is the documented CPU sink on large trees
+  -- (neovim/neovim#23291). Dropping the capability leaves a server reading the
+  -- editor's own didChange notifications. The cost is that edits made outside nvim
+  -- go unnoticed until :LspRestart, which is cheap here: a branch switch means a
+  -- new worktree directory and a new nvim.
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities.workspace.didChangeWatchedFiles = nil
+  vim.lsp.config('*', { capabilities = capabilities })
 
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
@@ -483,6 +563,24 @@ do
       map('<leader>K', vim.lsp.buf.signature_help, 'Display signature')
 
       local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+      -- Nothing a server computes is worth the wait on a minified bundle or a
+      -- dumped fixture, so detach instead of indexing it.
+      if client and require('custom.bigfile').is_big(event.buf) then
+        vim.schedule(function()
+          vim.lsp.buf_detach_client(event.buf, client.id)
+        end)
+        return
+      end
+
+      -- Treesitter already colours these buffers, so semantic tokens buy a second
+      -- opinion on the same text at the price of a request and a redraw per
+      -- change. Only the two servers that send them for every token are turned
+      -- off; the rest keep theirs, where they mark what a parser cannot know.
+      if client and (client.name == 'vtsls' or client.name == 'eslint') then
+        client.server_capabilities.semanticTokensProvider = nil
+      end
+
       if client and client:supports_method('textDocument/documentHighlight', event.buf) then
         local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
         vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
@@ -567,8 +665,21 @@ do
   vim.list_extend(ensure_installed, { 'black', 'gofumpt', 'goimports', 'isort', 'prettierd', 'ruff', 'stylua' })
   table.sort(ensure_installed)
 
-  require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-  require('mason-lspconfig').setup { ensure_installed = {}, automatic_installation = false }
+  -- mason-tool-installer requires mason-registry at module level, and the registry
+  -- is the expensive half of mason: loading it diffs every package above against
+  -- the GitHub source list on each launch. The tool list only changes when this
+  -- file changes, so the whole thing waits behind a command.
+  --
+  -- mason-lspconfig is deliberately absent. Its jobs are mapping mason package
+  -- names to server names, which the `package` fields above already do by hand,
+  -- and enabling installed servers automatically, which the vim.lsp.enable loop
+  -- below does explicitly. Keeping it would only pull the registry back into
+  -- startup. Servers still resolve because mason.setup puts its bin directory on
+  -- PATH.
+  vim.api.nvim_create_user_command('MasonToolsSync', function()
+    require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
+    vim.cmd 'MasonToolsInstall'
+  end, { desc = 'Install every Mason tool this config declares' })
 
   for name, server in pairs(servers) do
     server.package = nil
@@ -694,15 +805,12 @@ do
 end
 
 -- ============================================================
--- SECTION 8: AUTOCOMPLETE & SNIPPETS (blink.cmp + LuaSnip)
+-- SECTION 8: AUTOCOMPLETE & SNIPPETS (blink.cmp)
 -- ============================================================
 do
   vim.pack.add {
-    { src = gh 'L3MON4D3/LuaSnip', version = vim.version.range '2.*' },
     { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' },
   }
-
-  require('luasnip').setup {}
 
   require('blink.cmp').setup {
     keymap = { preset = 'enter' },
@@ -714,8 +822,15 @@ do
         lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
       },
     },
-    snippets = { preset = 'luasnip' },
-    fuzzy = { implementation = 'lua' },
+    -- Native vim.snippet rather than LuaSnip: no snippet is defined anywhere in
+    -- this config and no snippet collection is installed, so LuaSnip was only an
+    -- expansion engine, costing ~16ms of startup, 7MB on disk and a
+    -- make install_jsregexp build step for expansions nothing produces.
+    snippets = { preset = 'default' },
+    -- The Rust matcher, downloaded prebuilt for the pinned tag. The Lua fallback
+    -- re-ranks every candidate in interpreted Lua on each keystroke, which is the
+    -- slow path once the list is long.
+    fuzzy = { implementation = 'prefer_rust_with_warning' },
     signature = { enabled = true },
   }
 end
@@ -747,6 +862,10 @@ do
   vim.api.nvim_create_autocmd('FileType', {
     callback = function(args)
       local buf, filetype = args.buf, args.match
+
+      if require('custom.bigfile').is_big(buf) then
+        return
+      end
 
       local language = vim.treesitter.language.get_lang(filetype)
       if not language then
@@ -786,10 +905,22 @@ do
   -- so after a light/dark switch that one resolves to nothing and the glyphs fall
   -- back to Normal's foreground: a solid black bar across each fence row. Empty
   -- keeps the label and draws no run.
-  require('render-markdown').setup {
-    completions = { lsp = { enabled = true } },
-    code = { style = 'language', border = 'none', language_border = '' },
-  }
+  --
+  -- Loaded on the first markdown buffer rather than at startup: it renders only
+  -- markdown, and FileType has already fired for that buffer by then, so the
+  -- event is re-fired once for it.
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'markdown',
+    once = true,
+    group = vim.api.nvim_create_augroup('kickstart-render-markdown-lazy', { clear = true }),
+    callback = function(args)
+      require('render-markdown').setup {
+        completions = { lsp = { enabled = true } },
+        code = { style = 'language', border = 'none', language_border = '' },
+      }
+      vim.api.nvim_exec_autocmds('FileType', { buffer = args.buf })
+    end,
+  })
 end
 
 -- ============================================================

@@ -288,6 +288,25 @@ log "Linking lazygit config..."
 mkdir -p "$HOME/.config/lazygit"
 ln -snf "$PWD/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
 
+# Point the herdr-lazygit pane at the lazygit installed above instead of the
+# 0.63.0 the plugin bundles. git.diffRenderers, the key lazygit/config.yml uses
+# to route diffs through difftastic, only exists in 0.64+, so under the bundled
+# binary that key is silently ignored and the pane falls back to `git diff`.
+# Upstream HEAD is the ref pinned below and still pins 0.63.0.
+#
+# Upstream calls the override unsupported and warns on stderr about version skew:
+# its generated keybinding layer is only tested against 0.63.0. Drop this file
+# once the plugin bumps its own pin.
+if have lazygit; then
+  lg_panel_dir="$HOME/.config/herdr/plugins/config/herdr-lazygit"
+  mkdir -p "$lg_panel_dir"
+  cat > "$lg_panel_dir/panel.conf" <<EOF
+# Managed by dotfiles (linux.sh). Edits here are overwritten.
+RUNTIME_LAZYGIT_BIN=$(command -v lazygit)
+EOF
+  log "herdr-lazygit pane pinned to $(command -v lazygit)"
+fi
+
 log "Linking herdr config..."
 mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
@@ -338,8 +357,9 @@ if have herdr; then
       log "Herdr server not running; later: herdr plugin link $plugin_dir"
     fi
   done
-  # Bundles its own pinned lazygit + fzf runtime, so no system lazygit needed.
-  # The local side-panel plugin binds this as one of its exclusive panels.
+  # Bundles its own pinned lazygit + fzf runtime; panel.conf above overrides the
+  # lazygit half with the system one, since the bundled 0.63.0 cannot read
+  # git.diffRenderers. The local side-panel plugin binds this as an exclusive panel.
   herdr plugin install Crokily/herdr-lazygit \
     --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
     && log "installed Herdr plugin: herdr-lazygit" \

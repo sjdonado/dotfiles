@@ -53,4 +53,4 @@ require('nvim-tree').setup {
   end,
 }
 
-vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeFindFileToggle<CR>', { desc = 'Toggle Nvim Tree' })
+-- <leader>e lives in init.lua's Section 4: it is what loads this module.
