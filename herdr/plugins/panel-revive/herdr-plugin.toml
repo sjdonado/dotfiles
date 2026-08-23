@@ -1,0 +1,33 @@
+# herdr-plugin.toml — manifest for the panel-revive plugin.
+#
+# herdr restores the session's shape, not its processes: a pane that "cannot use a
+# stronger restore path" comes back as a shell in its saved directory, and only
+# agents have such a path (resume_agents_on_restore). So the nvim tab and the
+# lazygit sidebar come back labelled but empty, sitting at a fish prompt.
+#
+# Restore itself is silent. A probe plugin subscribed to pane.created, tab.created
+# and workspace.created logged nothing across a stop/start cycle, then logged two
+# of them for the next real pane, so there is no event at the moment of restore to
+# hang a repair on.
+#
+# pane.focused is the next best trigger, and it is better than a keybinding:
+# clicking the tab in the tab bar, walking panes with prefix+direction and pressing
+# the panel's own toggle all end in a focus change, whereas only the last of those
+# runs a plugin action. That is why the nvim tab could look unrepaired even though
+# edit-tab knew how to repair it: reaching the tab with the mouse never invoked it.
+#
+# The handler stays cheap on the overwhelmingly common path: it drops out on the
+# context alone for a pane that has an agent, then costs one `pane get` (~5ms,
+# server-side, off the UI path) to read the label, and only looks at processes for a
+# pane labelled by one of the two panel plugins.
+
+id = "panel-revive"
+name = "Panel Revive"
+version = "1.0.0"
+description = "Restart the program a restored plugin pane lost, the first time that pane is focused."
+min_herdr_version = "0.7.0"
+platforms = ["linux", "macos"]
+
+[[events]]
+on = "pane.focused"
+command = ["/bin/sh", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/revive.sh\""]

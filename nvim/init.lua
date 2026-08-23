@@ -137,6 +137,41 @@ end
 -- ============================================================
 -- SECTION 2: PLUGIN MANAGER (vim.pack) BUILD HOOKS
 -- ============================================================
+
+-- vim.pack ships no user commands, so updating means typing
+-- `:lua vim.pack.update()`. These are the two verbs lazy.nvim's `:Lazy` covered.
+-- :PackUpdate opens the confirmation buffer (`:w` applies, `:q` denies, `]]`
+-- and `[[` walk the plugin sections, `K` explains the change under the cursor);
+-- with a bang it applies everything unattended. Args narrow it to named
+-- plugins, completed from what is installed.
+local function installed_names()
+  return vim.tbl_map(function(p)
+    return p.spec.name
+  end, vim.pack.get())
+end
+
+vim.api.nvim_create_user_command('PackUpdate', function(ev)
+  local names = #ev.fargs > 0 and ev.fargs or nil
+  vim.pack.update(names, { force = ev.bang })
+end, {
+  bang = true,
+  nargs = '*',
+  desc = 'Update vim.pack plugins (! applies without confirmation)',
+  complete = function(arg)
+    return vim.tbl_filter(function(name)
+      return vim.startswith(name, arg)
+    end, installed_names())
+  end,
+})
+
+vim.api.nvim_create_user_command('PackList', function()
+  local lines = vim.tbl_map(function(p)
+    return ('%-32s %s'):format(p.spec.name, (p.rev or ''):sub(1, 12))
+  end, vim.pack.get())
+  table.sort(lines)
+  vim.notify(table.concat(lines, '\n'))
+end, { desc = 'List installed vim.pack plugins and their revisions' })
+
 do
   local function run_build(name, cmd, cwd)
     local result = vim.system(cmd, { cwd = cwd }):wait()

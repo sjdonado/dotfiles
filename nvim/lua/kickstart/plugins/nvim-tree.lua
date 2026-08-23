@@ -19,9 +19,16 @@ require('nvim-tree').setup {
   disable_netrw = true,
   hijack_netrw = false,
   actions = {
-    open_file = { quit_on_open = true },
+    -- Keep the tree open after opening a file: it is a sidebar, not a picker.
+    -- Telescope is what one-shot file opening goes through.
+    open_file = { quit_on_open = false },
   },
-  view = { width = 50 },
+  -- Dynamic width: the table form sizes the window to the longest visible line
+  -- rather than a fixed column count, which is what a static 50 was compensating
+  -- for. Deep trees stop needing horizontal scrolling, and a shallow one stops
+  -- costing half the window. Capped at 50% so one long path cannot swallow the
+  -- editor; the cap is the only thing that can still truncate.
+  view = { width = { min = 30, max = '50%', padding = 2 } },
   notify = { threshold = vim.log.levels.ERROR },
   on_attach = function(bufnr)
     local api = require 'nvim-tree.api'

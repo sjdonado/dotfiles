@@ -54,12 +54,13 @@ default_shell = "fish"
 [keys]
 settings = "prefix+,"
 
-# lazygit is the only side panel, so herdr-lazygit's own toggle is enough; nvim
-# moved to a tab of its own and no longer competes for the panel.
+# lazygit-panel rather than herdr-lazygit.open directly: same toggle, but it first
+# repairs the pane a server restart left as a bare shell. Upstream's launcher
+# treats such a pane as somebody else's and opens a second sidebar beside it.
 [[keys.command]]
 key = "prefix+s"
 type = "plugin_action"
-command = "herdr-lazygit.open"
+command = "lazygit-panel.toggle"
 
 [[keys.command]]
 key = "prefix+."

@@ -1,0 +1,38 @@
+# herdr-plugin.toml — manifest for the lazygit-panel plugin.
+#
+# A thin front door for herdr-lazygit's own toggle, added for one reason: what a
+# server restart leaves behind.
+#
+# herdr restores the session's shape, not its processes. Its docs are explicit
+# that a pane which "cannot use a stronger restore path" comes back as a new
+# shell in its saved directory, and only agents have such a path
+# (resume_agents_on_restore). A plugin pane therefore returns as fish, keeping the
+# manifest label but not the program. Restore emits no events either: a probe
+# plugin subscribed to pane.created, tab.created and workspace.created logged
+# nothing across a stop/start cycle, then logged both pane.created and tab.created
+# for the next real pane. So nothing can revive these panes on its own, and the
+# repair has to hang off the key that opens them.
+#
+# Upstream's launcher cannot do it. It only reuses a "Git" pane that passes a
+# foreground-process check for lazygit, and deliberately leaves anything else
+# alone as a pane it does not own, which is right in general and wrong here: the
+# restored shell is its pane, and the result is a second sidebar next to a dead
+# prompt.
+#
+# So: a stale pane gets lazygit started in the shell that is already sitting
+# there, and everything else is handed to upstream unchanged, keeping its
+# open/focus/close semantics, its width handling and its config layering.
+
+id = "lazygit-panel"
+name = "Lazygit Panel"
+version = "1.0.0"
+description = "Toggle the herdr-lazygit panel, reviving the pane a server restart left as a bare shell."
+min_herdr_version = "0.7.0"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "toggle"
+title = "Toggle lazygit panel"
+description = "Open, focus or close the lazygit sidebar; restart lazygit in it first when a restore left a bare shell."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/toggle.sh"]

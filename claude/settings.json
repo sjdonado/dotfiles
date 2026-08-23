@@ -156,6 +156,11 @@
   },
   "syntaxHighlightingDisabled": false,
   "effortLevel": "medium",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
@@ -165,10 +170,5 @@
   "theme": "auto",
   "editorMode": "normal",
   "verbose": true,
-  "skipAutoPermissionPrompt": true,
-  "modelSettings": {
-    "claude-opus-5": {
-      "effortLevel": "medium"
-    }
-  }
+  "skipAutoPermissionPrompt": true
 }

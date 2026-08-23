@@ -30,32 +30,15 @@ origin_tab=${HERDR_TAB_ID:-$(printf '%s' "$context" | jq -r '.tab_id // empty')}
 
 # Locate the tab by its pane, not by tab label: the tab's own label is whatever
 # herdr numbered it, while the pane carries the manifest title.
-found=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg ws "$workspace" --arg l "$LABEL" \
-  'first(.result.panes[]? | select(.workspace_id == $ws and .label == $l)
-         | "\(.tab_id) \(.pane_id)") // empty')
-tab_id=${found%% *}
-pane_id=${found##* }
+tab_id=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg ws "$workspace" --arg l "$LABEL" \
+  'first(.result.panes[]? | select(.workspace_id == $ws and .label == $l) | .tab_id) // empty')
 
-# A restored pane keeps the label but loses the entrypoint. herdr brings plugin panes
-# back as plain shells rather than re-running `command`, so after a server restart the
-# tab is still there with fish sitting in it, and focusing it lands on a prompt
-# instead of the editor. Measured after a restart: the pane reports shell_pid set and
-# `-fish` in the foreground, where a live one reports `nvim`.
-#
-# Start the editor in the shell that is already there rather than rebuilding the tab.
-# Closing the pane was the first attempt and it is wrong: the tab does not always go
-# with it, so a surviving tab kept the stale label and the open branch below then
-# added a second tab also called nvim. `pane run` is safe at this point in a way it
-# is not at pane creation, because the shell has been at a prompt for as long as the
-# session has been up, so there is no startup to race.
-if [ -n "$pane_id" ]; then
-  foreground=$("$herdr_bin" pane process-info --pane "$pane_id" 2>/dev/null \
-    | jq -r '[.result.process_info.foreground_processes[]?.name] | join(" ")')
-  case " $foreground " in
-    *" $LABEL "*) ;;
-    *) "$herdr_bin" pane run "$pane_id" "$LABEL" >/dev/null 2>&1 || true ;;
-  esac
-fi
+# A restored pane keeps the label but loses the entrypoint: herdr brings plugin
+# panes back as plain shells rather than re-running `command`, so after a server
+# restart the tab is still there with fish sitting in it. Restarting nvim in it is
+# the panel-revive plugin's job, on the pane.focused event, because the tab is also
+# reachable with the mouse and by prefix+direction, which never run this script.
+# The `tab focus` below therefore repairs the tab as a side effect.
 
 state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/edit-tab}
 state_file="$state_dir/origin-$workspace"
