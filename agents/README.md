@@ -93,7 +93,7 @@ The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tra
 
 Agent-initiated review is adversarial: `adversarial-review` is the protocol, `caveman-review` is only the comment format. Human-requested review uses the harness's native review command, never a workflow.
 
-The upstream `code-review` skill remains vendored but nothing routes to it, and because it is hash-locked its auto-trigger phrases cannot be disabled in place without breaking the lock. Treat `AGENTS.md`'s routing prohibition as the control. Delete the skill with its lock entry if it ever fires unbidden.
+The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's own command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills are gone from here too, since the caveman plugin owns those bodies.
 
 ## Global versus project
 
@@ -135,6 +135,8 @@ Neither command belongs in `macos.sh`. The scripts provision a machine from what
 `skills list` reports a skill's agents from its own bookkeeping, so one added with `--agent universal` does not list Claude Code. That field is cosmetic here: both harnesses load the whole directory through the setup links, not per skill.
 
 Never edit a locked skill body in place, or the next update will report drift or clobber the edit. A locked skill may only be deleted, along with its lock entry, or wrapped by local policy in `AGENTS.md`.
+
+Deleting the body and leaving the entry is worse than leaving both: the entry is the instruction to fetch, so the next update reinstalls the skill. That is how the `caveman-*` and `code-review` bodies came back months after being removed. Deleting a skill therefore means the directory, the lock entry, and the `.claude/skills` symlink together.
 
 `adversarial-review`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
 
