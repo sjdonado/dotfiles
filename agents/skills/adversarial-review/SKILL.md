@@ -7,8 +7,6 @@ description: Agent-initiated adversarial review of a diff before pushing. Spawns
 
 Self-review that grades your own homework is worthless. This protocol removes the implementer's context from the reviewer so the diff has to defend itself.
 
-Render findings in `caveman-review`'s one-line format. This skill is the protocol; that skill is the format.
-
 ## Invocation
 
 Launch reviewers as read-only subagents, in parallel, each with a fresh context. Never pass the conversation history, the plan, your rationale, or a prior review round. Anchoring a reviewer on why you thought the code was right is exactly what makes the review useless.
@@ -42,6 +40,15 @@ One line per finding:
 ```
 path:Lline: <severity>: <problem>. <fix>.
 ```
+
+Severity is one of:
+
+- `bug:` broken behaviour, will cause an incident
+- `risk:` works but fragile, meaning a race, a missing guard, or a swallowed error
+- `nit:` naming, style, micro-optimisation; the implementer may ignore it
+- `q:` a genuine question rather than a suggestion, and where an unsure reviewer belongs
+
+Name the symbol in backticks and give the fix, not "consider refactoring". Drop the throat-clearing entirely: no "I noticed that", no hedging, no restating what the line does. The exception is a security finding or an architectural disagreement, which needs its reasoning spelled out and cannot survive as one line.
 
 A reviewer that finds nothing must state what it checked and why the diff survives. "Looks good" is not a review; "clean" has to be falsifiable.
 

@@ -91,7 +91,9 @@ The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tra
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
-Agent-initiated review is adversarial: `adversarial-review` is the protocol, `caveman-review` is only the comment format. Human-requested review uses the harness's native review command, never a workflow.
+Agent-initiated review is adversarial: `adversarial-review` carries both the protocol and the finding format. The reference it used to make to `caveman-review` is gone, because the skill already wrote the format out itself and the plugin skill advertised the same trigger phrases as the native review command, which is where a review request belongs.
+
+Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `adversarial-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
 
 The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's own command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills are gone from here too, since the caveman plugin owns those bodies.
 

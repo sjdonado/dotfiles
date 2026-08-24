@@ -138,9 +138,11 @@ Do not validate a harness change by re-reading it and judging it plausible. Plau
 
 ## Code reviews
 
-Agent-initiated review is adversarial and uses the `adversarial-review` skill as its protocol, rendering findings in `caveman-review`'s one-line format. `caveman-review` is a comment format, not a review procedure. Agent-initiated review never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
+Agent-initiated review is adversarial and uses the `adversarial-review` skill, which carries both the protocol and the one-line finding format. It never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
 
 Human-requested review uses the harness's native review command. Never invoke it from another workflow or loop, and never ask for consent on its behalf.
+
+That command is for a diff this session did not write: someone else's pull request, a branch inherited from another agent, or code landing from outside. A diff produced here has already been through `adversarial-review` before it was pushed, by blind reviewers holding neither the plan nor the rationale, so running the native command over it again buys a weaker second opinion from a reviewer that does have all that context. Re-review the same diff only when a human asks for it explicitly, or when the diff has changed since the adversarial round.
 
 ## Commit messages
 
