@@ -89,6 +89,8 @@ Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `op
 
 The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to, because implementation goes through `/yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
 
+`handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
+
 Agent-initiated review is adversarial: `adversarial-review` is the protocol, `caveman-review` is only the comment format. Human-requested review uses the harness's native review command, never a workflow.
 
 The upstream `code-review` skill remains vendored but nothing routes to it, and because it is hash-locked its auto-trigger phrases cannot be disabled in place without breaking the lock. Treat `AGENTS.md`'s routing prohibition as the control. Delete the skill with its lock entry if it ever fires unbidden.
@@ -113,11 +115,24 @@ Do not enable the worktrunk Claude Code plugin: its `UserPromptSubmit` hook writ
 
 Upstream skills are tracked in `skills-lock.json`. The `.agents/skills` link exposes the existing shared skill directory to `skills.sh`; Claude Code and OpenCode continue loading that directory through their setup links.
 
+Add one with `--agent universal`, which is what resolves to the `.agents/skills` link. Any other agent id writes the skill body somewhere else in the repo instead: `--agent claude-code` drops a full copy into `.claude/skills/`, where this repo keeps only symlinks, so the copy would drift from `agents/skills` the moment either side is updated.
+
+```sh
+npx skills@1 add <owner>/<repo> --skill <name> --agent universal -y
+ln -s ../../.agents/skills/<name> .claude/skills/<name>
+```
+
+The second line is bookkeeping this repo tracks: `.claude/skills/` holds a committed symlink per skills.sh-installed skill, and current versions of the CLI copy into an agent directory rather than linking, so adding one by hand keeps that set complete. Both harnesses already load the whole directory through the setup links, so the symlink changes nothing at runtime.
+
 Review upstream changes before committing them, then update project skills with:
 
 ```sh
 npx skills@1 update --project --yes
 ```
+
+Neither command belongs in `macos.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping the herdr plugin ref.
+
+`skills list` reports a skill's agents from its own bookkeeping, so one added with `--agent universal` does not list Claude Code. That field is cosmetic here: both harnesses load the whole directory through the setup links, not per skill.
 
 Never edit a locked skill body in place, or the next update will report drift or clobber the edit. A locked skill may only be deleted, along with its lock entry, or wrapped by local policy in `AGENTS.md`.
 
