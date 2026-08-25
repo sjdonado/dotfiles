@@ -28,29 +28,9 @@
 		}
 	},
 	"mcp": {
-		"linear": {
-			"type": "remote",
-			"url": "https://mcp.linear.app/mcp",
-			"enabled": true
-		},
-		"posthog": {
-			"type": "remote",
-			"url": "https://mcp-eu.posthog.com/mcp",
-			"enabled": true
-		},
-		"supabase": {
-			"type": "remote",
-			"url": "https://mcp.supabase.com/mcp?read_only=true",
-			"enabled": true
-		},
 		"chrome-devtools": {
 			"type": "local",
 			"command": ["npx", "-y", "chrome-devtools-mcp@latest"],
-			"enabled": true
-		},
-		"fastmail": {
-			"type": "remote",
-			"url": "https://api.fastmail.com/mcp",
 			"enabled": true
 		}
 	},
