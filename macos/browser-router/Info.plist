@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key><string>BrowserRouter</string>
+  <key>CFBundleIdentifier</key><string>com.sjdonado.browserrouter</string>
+  <key>CFBundleName</key><string>BrowserRouter</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>LSUIElement</key><true/>
+  <key>LSMinimumSystemVersion</key><string>13.0</string>
+  <key>NSAppleEventsUsageDescription</key><string>BrowserRouter opens links as tabs in Safari.</string>
+  <!-- Being a URL scheme handler is not enough to be offered as the default
+       browser: macOS only accepts an app that also claims to view HTML, which is
+       what these document types are for. Verified by removing them from an
+       otherwise identical bundle, where NSWorkspace.setDefaultApplication fails
+       with "The file couldn't be opened". Nothing here ever opens a file; the
+       claim exists to satisfy that check. -->
+  <key>CFBundleDocumentTypes</key>
+  <array><dict>
+    <key>CFBundleTypeName</key><string>HTML document</string>
+    <key>CFBundleTypeRole</key><string>Viewer</string>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>LSItemContentTypes</key>
+    <array>
+      <string>public.html</string>
+      <string>public.xhtml</string>
+      <string>public.url</string>
+    </array>
+  </dict></array>
+  <key>CFBundleURLTypes</key>
+  <array><dict>
+    <key>CFBundleURLName</key><string>Web</string>
+    <key>CFBundleTypeRole</key><string>Viewer</string>
+    <key>CFBundleURLSchemes</key><array><string>http</string><string>https</string></array>
+  </dict></array>
+</dict>
+</plist>

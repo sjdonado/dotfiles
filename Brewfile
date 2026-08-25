@@ -210,7 +210,6 @@ cask "android-commandlinetools"
 # Display management tool
 cask "betterdisplay"
 # Utility for customizing which browser to start
-cask "finicky"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
