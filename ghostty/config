@@ -30,3 +30,20 @@ macos-option-as-alt = right
 
 keybind = cmd+s=text:\x13
 keybind = shift+enter=text:\x1b\r
+
+# cmd+1..9 switches herdr workspaces. Two problems to get past: Ghostty binds
+# these to its own tabs (unused, herdr is the multiplexer and runs in one
+# window), and macOS terminals have no legacy encoding for a modified digit, so
+# even unbound the chord would transmit nothing. Both are solved by sending the
+# bytes directly: CSI 49..57 ; 7 u is the Kitty-protocol form of ctrl+alt+1..9,
+# which is what herdr/config.toml binds switch_workspace to. ctrl+alt is the
+# family herdr documents as safe, since terminals and shells leave it alone.
+keybind = super+digit_1=text:\x1b[49;7u
+keybind = super+digit_2=text:\x1b[50;7u
+keybind = super+digit_3=text:\x1b[51;7u
+keybind = super+digit_4=text:\x1b[52;7u
+keybind = super+digit_5=text:\x1b[53;7u
+keybind = super+digit_6=text:\x1b[54;7u
+keybind = super+digit_7=text:\x1b[55;7u
+keybind = super+digit_8=text:\x1b[56;7u
+keybind = super+digit_9=text:\x1b[57;7u

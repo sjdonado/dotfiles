@@ -54,6 +54,14 @@ default_shell = "fish"
 [keys]
 settings = "prefix+,"
 
+# Direct chord, no prefix: workspaces are what gets switched between all day, and
+# the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
+# super-modified digit only transmits when the outer terminal and the client have
+# negotiated the Kitty keyboard protocol, while ctrl+alt is the family herdr
+# documents as safe. ghostty/config maps cmd+1..9 onto exactly these sequences,
+# so the chord the fingers press is cmd, and the chord on the wire is ctrl+alt.
+switch_workspace = "ctrl+alt+1..9"
+
 # lazygit-panel rather than herdr-lazygit.open directly: same toggle, but it first
 # repairs the pane a server restart left as a bare shell. Upstream's launcher
 # treats such a pane as somebody else's and opens a second sidebar beside it.
