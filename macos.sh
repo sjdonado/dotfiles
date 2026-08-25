@@ -180,9 +180,10 @@ if [ "$INSTALL" = 1 ]; then
 
   log "Installing pnpm (if missing)..."
   if ! have pnpm; then
+    # The installer appends its PATH block to the rc of whichever shell it
+    # detects, which is not fish. fish/config.fish exports PNPM_HOME itself, so
+    # nothing has to be sourced back into this one.
     curl -fsSL https://get.pnpm.io/install.sh | sh -
-    PNPM_RC="$HOME/.zshrc"
-    [ -f "$PNPM_RC" ] && . "$PNPM_RC" || true
   fi
 
   if ! have claude; then
@@ -300,7 +301,7 @@ link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
-# opencode.json. `theme: system` is what follows the terminal's light/dark switch.
+# opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
 link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
 link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"

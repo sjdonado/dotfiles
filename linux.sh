@@ -245,8 +245,9 @@ ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
 # ~/.zshrc alone is not enough: non-interactive zsh never reads it, so hooks and
 # agent shells kept the injected identity. ~/.zshenv is read by every zsh. The
 # ~/.zshrc block stays too, since it sources ~/.config/coder/env.sh, which sets
-# the vars again after this file has run. Appended rather than symlinked from
-# zsh/.zshenv: that file is the macOS one, full of homebrew paths.
+# the vars again after this file has run. Appended rather than symlinked: zsh is
+# not a shell this repo configures, it is only what a Coder workspace happens to
+# log in with, so these blocks are the minimum to keep that box consistent.
 [ -e "$HOME/.zshenv" ] || touch "$HOME/.zshenv"
 grep -q 'dotfiles: git identity from gitconfig' "$HOME/.zshenv" || cat >> "$HOME/.zshenv" <<'EOF'
 
@@ -334,7 +335,7 @@ link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
-# opencode.json. `theme: system` is what follows the terminal's light/dark switch.
+# opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
 link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
 link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"
