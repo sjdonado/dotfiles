@@ -154,7 +154,7 @@ if ! have uv; then
   rescan
 fi
 
-# --- bun (claude/settings.json statusLine runs `bunx ccstatusline`) -----------
+# --- bun (openspec below installs through it; ~/.bun/bin is on PATH) ---------
 if ! have bun; then
   log "Installing bun..."
   curl -fsSL https://bun.sh/install | bash
@@ -319,7 +319,7 @@ mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 
 log "Linking Claude Code and OpenCode config..."
-mkdir -p "$HOME/.claude" "$HOME/.config/opencode" "$HOME/.config/ccstatusline"
+mkdir -p "$HOME/.claude" "$HOME/.config/opencode"
 # claude/settings.json declares a SessionStart hook running herdr's agent-state
 # script, and herdr owns that script. Install it BEFORE the symlink: the
 # installer also rewrites settings.json, so running it afterwards would write
@@ -329,7 +329,6 @@ if have herdr && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
     || log "herdr integration install claude failed; SessionStart hook will no-op"
 fi
 link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
-link_managed "$PWD/claude/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json"
 link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
 link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
