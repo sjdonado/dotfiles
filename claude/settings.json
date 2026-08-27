@@ -128,6 +128,11 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",
+    "padding": 0
+  },
   "enabledPlugins": {
     "caveman@caveman": true
   },
