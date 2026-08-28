@@ -78,9 +78,9 @@ curl -s -X POST http://localhost:$PORT/api/search \
   -d '{"code":"const doc = await api.getFocusedDoc(); return doc ? await api.getBindings(doc.id) : []"}'
 ```
 
-Every listed doc has `ownership: 'local' | 'remote'`. A remote doc's opaque `id` works with `/exec`, `api.getShapes()`, `api.getBindings()`, and screenshots, but its `documentId`, `filePath`, and `unsavedChanges` are `null`: only the host owns those facts, and `host` carries the `host:port` sharing it. Remote edits sync into the host working copy. Do not call `helpers.saveDoc()`, open `/script-workspace`, or claim the host archive was saved for a remote doc.
+Every listed doc has `ownership: 'local' | 'remote' | 'server'`. A remote or server doc's `id` (opaque connection id for remote; the server's board id for server) works with `/exec`, `api.getShapes()`, `api.getBindings()`, and screenshots, but its `documentId`, `filePath`, and `unsavedChanges` are `null`: only the host (or server) owns those facts, and `host` carries the `host:port` it came from. Remote edits sync into the host working copy; server edits sync into the server's durable storage on their own. Do not call `helpers.saveDoc()`, open `/script-workspace`, or claim an archive was saved for a remote or server doc.
 
-A local doc also reports `sharedToLan`. True means the board is open to LAN right now and other people are editing it as you work: read before you write, and never clear a page you did not create.
+A local doc also reports `shared`. True means the board is shared right now and other people are editing it as you work: read before you write, and never clear a page you did not create.
 
 ## Scripts on a shared board
 
@@ -91,7 +91,7 @@ Writing or editing a board script for a board that is (or may become) shared cha
 - Create with stable ids via `helpers.createShapeIfMissing` / `createShapesIfMissing`; never clear-and-redraw a page other people are on.
 - Keep per-client state (hover, selection, "which card is flipped for me") in module scope, not in shape props — writing it to the document broadcasts one person's UI to everyone.
 
-Read the `scripts-on-a-board-shared-over-lan` recipe from `api.recipes` before writing one.
+Read the `scripts-on-a-shared-board` recipe from `api.recipes` before writing one.
 
 ## Creating documents
 
@@ -109,9 +109,10 @@ curl -s -X POST http://localhost:$PORT/api/docs/create \
 `api.recipes` (via `/api/search`) is an object keyed by recipe `id`; read one in full with `api.recipes['<id>']`. Query it when a task matches one of the worked recipes:
 
 - `stack-existing-boxes` — Stack existing boxes
+- `group-shapes-with-a-box` — Group shapes with a box
 - `add-durable-behavior-with-a-board-script` — Add durable behavior with a board script
 - `editable-furniture-with-anchored-internals` — Editable furniture with anchored internals
-- `scripts-on-a-board-shared-over-lan` — Scripts on a board shared over LAN
+- `scripts-on-a-shared-board` — Scripts on a shared board
 - `clickable-card-or-button-ui` — Clickable card or button UI
 - `connection-dependent-behavior` — Connection-dependent behavior
 - `animation-simulation-loop` — Animation / simulation loop
@@ -123,7 +124,7 @@ Fetch `/readme` when an endpoint fails or you need API details not covered here.
 
 ## Durable UI Behavior
 
-For durable UI behavior on a locally owned document, open `/script-workspace`, write `script/main.js`, check `script-status`, then verify behavior once. `script-status` returns a derived `state` field — treat `state: "applied"` as success; `"pending"` means the watcher hasn't applied the current file yet — poll again and it resolves (a file saved while the app was restarting is applied automatically the next time you open `/script-workspace` or read `script-status`, no manual re-save needed); `"error"` means the apply failed (read `lastApplyError` / `errorLogPath`). Branch on `state` rather than comparing the raw digests yourself. The `/script-workspace` response reports `isDefaultScript` (true while `script/main.js` is still the untouched starter template, pre-created when absent) — when `isDefaultScript` is false there is a preexisting script to extend, not clobber. Read `mainJsPath` to see the current contents before editing (and read it once first if your file tools refuse to write a file they have not read). Remote boards have no local script workspace or watcher status; their host owns the script files. Do not spend the run searching for pointer/click APIs — read the clickable-UI recipe from `api.recipes` first.
+For durable UI behavior on a locally owned document, open `/script-workspace`, write `script/main.js`, check `script-status`, then verify behavior once. `script-status` returns a derived `state` field — treat `state: "applied"` as success; `"pending"` means the watcher hasn't applied the current file yet — poll again and it resolves (a file saved while the app was restarting is applied automatically the next time you open `/script-workspace` or read `script-status`, no manual re-save needed); `"error"` means the apply failed (read `lastApplyError` / `errorLogPath`). Branch on `state` rather than comparing the raw digests yourself. The `/script-workspace` response reports `isDefaultScript` (true while `script/main.js` is still the untouched starter template, pre-created when absent) — when `isDefaultScript` is false there is a preexisting script to extend, not clobber. Read `mainJsPath` to see the current contents before editing (and read it once first if your file tools refuse to write a file they have not read). Remote boards have no local script workspace or watcher status; their host owns the script files. Do not spend the run searching for pointer/click APIs — read the `clickable-card-or-button-ui` recipe from `api.recipes` first.
 
 ## Shape format
 
@@ -141,11 +142,11 @@ editor.createShape({
 await helpers.saveDoc()
 ```
 
-The `helpers.saveDoc()` call above is only for `ownership: 'local'`. Omit it for a remote doc; its edits sync to the host working copy and only the host saves the archive.
+The `helpers.saveDoc()` call above is only for `ownership: 'local'`. Omit it for a remote doc (its edits sync to the host working copy and only the host saves the archive) and for a server doc (its edits persist to the server on their own).
 
 Saving a local doc is your job, not the user's. Whenever a local doc reports `unsavedChanges: true` — including after script-workspace edits, which mark the doc unsaved — save it yourself with a one-line exec snippet: `{"code": "await helpers.saveDoc()"}`. Never ask the user to save or press Cmd+S.
 
-Use `api.getShapes(doc.id)` to inspect existing raw shape records before mutating them.
+Use `api.getShapes(doc.id)` to inspect existing raw shape records before mutating them; read a label's visible text with `helpers.richTextToPlainText(shape.props.richText)`, not by parsing the rich-text JSON.
 
 ## Screenshots
 
@@ -155,7 +156,7 @@ Use `api.getShapes(doc.id)` to inspect existing raw shape records before mutatin
 
 - Create every meaningful connection with `helpers.createArrowBetweenShapes(fromId, toId, options)` so both endpoints have real bindings.
 - Never create a raw arrow shape for a meaningful connection. Raw unbound arrows are only appropriate for explicitly decorative marks.
-- Run `helpers.getLints()` before reporting a diagram complete and address every actionable result. Fetch `/readme` for the helper recipe and the opt-out for intentional decorative arrows.
+- Run `helpers.getLints()` before reporting a diagram complete and address every actionable result. Fetch `/readme` for the `getLints` example and the `meta.lintIgnore` opt-out for intentional decorative arrows.
 
 ## Workflow
 
@@ -186,13 +187,14 @@ Use this when a board script draws a board that users should rearrange or restyl
 - Pick one visible anchor per interactive system, such as a track or table felt.
 - Use `helpers.onShapeTranslate(anchorId, ({ dx, dy }) => ... , { signal })` to respond only to that anchor.
 - Move script-owned internals with `helpers.translateShapes(..., dx, dy)` (it runs without recording undo history); wrap other script-owned writes in `editor.run(fn, { history: 'ignore' })`.
+- Render per-frame or purely visual writes through `helpers.renderEphemeral(fn)`: they paint without dirtying the document, landing in a save, syncing to LAN participants, or entering undo. `history: 'ignore'` alone still persists every frame, so an animation written that way can never be saved cleanly.
 - Avoid broad `store.listen` / `afterChange` layout handlers that react to every shape; they can treat the script's own writes as new user edits and recurse.
 
 ## Editor customization: custom shapes, tools, and overlays (`config.js`)
 
 Custom shape types, tools, overlays, or UI components need a `script/config.js` next to `main.js` (create it through `/script-workspace`, same as `main.js`) — a `main.js`-only script cannot register them. Its default export runs BEFORE the editor mounts, receives `{ config }` (the app's default `TldrawConfig`), and returns it after mutating or spreading it. The passed `config` carries `shapeUtils`, `bindingUtils`, `assetUtils`, `overlayUtils`, `tools` (arrays of constructors), `components` (a `TLComponents` map), and `options`; optional `getShapeVisibility(shape, editor)`, `assetUrls`, and `initialState`. Push your constructors onto the arrays — a util/tool whose static `type`/`id` matches a stock one replaces it. Custom shapes subclass `ShapeUtil` and custom overlays subclass `OverlayUtil` (both from `'tldraw'`); define them in a sibling file and `import` them, since `config.js` and `main.js` are separate module graphs.
 
-Read the worked `custom-shape`, `custom-binding`, and `custom-overlay` recipes from `api.recipes` for the full `ShapeUtil` / `BindingUtil` / `OverlayUtil` skeletons before writing one. (Their lifecycle hooks — `onAfterChangeToShape`, `getGeometry`, `isActive`, … — are also indexed in `api.members`, tagged with an `owner`, so a name search finds them instead of only the SDK types.) Saving `config.js` (or a file it imports) rebuilds the store and editor — document, camera, and selection are preserved but undo history resets — whereas saving `main.js` never remounts. Keep run-on-mount logic in `main.js`; `config.js` only builds the config. Types live in `.script-workspace/script-context.d.ts` (`ConfigScriptContext`, `TldrawConfig`).
+Read the worked `custom-shape-config-js`, `custom-binding-config-js`, and `custom-overlay-config-js` recipes from `api.recipes` for the full `ShapeUtil` / `BindingUtil` / `OverlayUtil` skeletons before writing one. (Their lifecycle hooks — `onAfterChangeToShape`, `getGeometry`, `isActive`, … — are also indexed in `api.members`, tagged with an `owner`, so a name search finds them instead of only the SDK types.) Saving `config.js` (or a file it imports) rebuilds the store and editor — document, camera, and selection are preserved but undo history resets — whereas saving `main.js` never remounts. Keep run-on-mount logic in `main.js`; `config.js` only builds the config. Types live in `.script-workspace/script-context.d.ts` (`ConfigScriptContext`, `TldrawConfig`).
 
 ## Fast path for static edits
 

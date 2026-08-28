@@ -126,6 +126,17 @@
           }
         ]
       }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "tldraw-offline",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh '/Users/sjdonado/skills/tldraw-offline/inject-server-context.sh' SubagentStart"
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -148,6 +159,9 @@
   "effortLevel": "medium",
   "modelSettings": {
     "claude-opus-5": {
+      "effortLevel": "medium"
+    },
+    "claude-fable-5": {
       "effortLevel": "medium"
     }
   },
