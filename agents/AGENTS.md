@@ -144,6 +144,12 @@ Human-requested review uses the harness's native review command. Never invoke it
 
 That command is for a diff this session did not write: someone else's pull request, a branch inherited from another agent, or code landing from outside. A diff produced here has already been through `adversarial-review` before it was pushed, by blind reviewers holding neither the plan nor the rationale, so running the native command over it again buys a weaker second opinion from a reviewer that does have all that context. Re-review the same diff only when a human asks for it explicitly, or when the diff has changed since the adversarial round.
 
+## Editing files
+
+File edits go through the harness's own edit and write tools, never `sed`, heredocs, or a script, even where bypass permissions mode says to prefer the shell. An edit tool fails loudly when its target is missing or ambiguous; a `.replace()` that matches nothing exits 0 and reports success, so the mistake surfaces later as a change that was never made. The rendered diff is also what makes the change reviewable as it happens, and what the harness's own undo history is built from.
+
+The shell is still the right tool for a mechanical sweep across many files, where one command replaces a long series of identical edits. Read the result back afterwards: nothing else confirms it landed.
+
 ## Commit messages
 
 When writing any git commit message, follow the `caveman-commit` skill: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. No AI attribution, no filler, no emoji.
