@@ -87,8 +87,8 @@ if test -f "$HOME/.config/coder/env.sh"
     end
 end
 
-# Coder also injects a git identity (juan@autarc.energy) into every process it
-# spawns, and env beats ~/.gitconfig, so every commit made here ignored the
+# Coder also injects a git identity (the workspace owner's work email) into
+# every process it spawns, and env beats ~/.gitconfig, so every commit made here ignored the
 # tracked user.name/user.email. Drop the identity vars and let gitconfig decide.
 # GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
 set -e GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL

@@ -13,6 +13,7 @@ The workflows in `commands/` are reachable only as `/name`. Skills are auto-invo
 | "what does X do", "why does Y happen", one bounded question | `/ask` |
 | "how should we approach this", a pasted ticket, "triage this" | `/triage` |
 | "implement this", "go build it", an approved plan | `/yolo` |
+| "prototype this", "spike it", "build it rough and show me", "let me try it first" | `/proto` |
 | a bullet list of changes to work already in a PR | `/feedback` |
 | "address the review comments", "CI is red on my PR" | `/address-review` |
 | "the PR merged", "archive the change", "clean up the spec" | `/land` |
@@ -31,13 +32,15 @@ Never route into *producing* a code or pull-request review. Review requires expl
 
 Implementation always goes through `/yolo`, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `/yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `/yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
+The one exception is `/proto`, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `/yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `/yolo`.
+
 A change archives after its PR merges, through `/land`, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
 
 When a request matches a workflow but omits something the workflow needs, follow the workflow and let its own steps handle the gap. Do not fall back to an ad-hoc answer.
 
 ## Planning
 
-Every change needs an agreed contract before implementation. There are two ways to reach one, and exactly one of them is required.
+Every change needs an agreed contract before implementation. There are two ways to reach one, and exactly one of them is required. A third path exists for requirements that cannot be settled on paper: `/proto` discovers the contract by building, and its finalized requirements ledger is the contract `/yolo` consumes.
 
 **A written spec, for work worth documenting.** Use the `openspec-*` skills: explore to think it through, then propose or new-change to produce the artifacts, then update-change to fold in what grilling or evidence changes. The change directory under `openspec/changes/<id>/` is the contract, it is durable, and it is reviewable by a teammate. Prefer this for a large feature, anything touching several surfaces, or anything whose reasoning is worth keeping after the PR merges.
 

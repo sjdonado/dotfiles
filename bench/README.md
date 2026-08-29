@@ -14,7 +14,7 @@ A synthetic task battery lived here first and was removed after one day: its con
 
 ## What a row carries
 
-Cost: output tokens, cache reads, tool calls by name, wall minutes, tool-result bytes. Friction, which is the part synthetic tasks cannot see: `interrupts` (the user stopped a running turn), `denials` (a permission rule blocked a call), `error_results`, and `sidechain_messages` (subagent delegation; 0% across all 44 sessions at the time of writing, which is what made the /triage delegation change worth making). `commands` counts slash-command invocations, so routing adoption is visible over time.
+Cost: output tokens, cache reads, tool calls by name, wall minutes, tool-result bytes. Friction, which is the part synthetic tasks cannot see: `interrupts` (the user stopped a running turn), `denials` (a permission rule blocked a call), `error_results`, and `sidechain_messages` (subagent delegation, counted from the `<session-id>/subagents/*.jsonl` sidecar files; the inline `isSidechain` flag stopped appearing, so before that fix this read 0% and the "no delegation" conclusion drawn from it was a measurement artifact). `commands` counts slash-command invocations, so routing adoption is visible over time.
 
 ## Caveats, honestly
 

@@ -29,11 +29,18 @@ flowchart TD
         folds the answers into the artifacts"]
         updatechange --> change
 
+        proto_in["requirements that will not settle on paper"] --> proto["/proto
+        build a slice, local rungs green,
+        human tries it, fold feedback in"]
+        proto --> protoledger["requirements ledger"]
+        proto -.->|premise disproved: kill, record why| proto
+
         else_in["everything else"] --> planmode["native plan mode"]
         planmode -.->|never both: an approved change is already the contract| planmode
 
         change --> approval["approval"]
         planmode --> approval
+        protoledger --> approval
     end
 
     subgraph BUILD["build"]
@@ -55,7 +62,9 @@ flowchart TD
         checks --> verify["openspec-verify-change
         does the code match the spec"]
         checks --> feedback["/feedback
-        a bullet list from you"]
+        a bullet list from you;
+        deferred rounds apply only,
+        a full round settles the debt"]
         checks --> addressreview["/address-review
         review threads, red CI"]
         checks --> sync["openspec-sync-specs
@@ -77,7 +86,7 @@ request did not name.
 
 ## Layout
 
-- `commands/` - shared `/address-review`, `/ask`, `/create-ticket`, `/feedback`, `/research`, `/triage`, and `/yolo` commands
+- `commands/` - shared `/address-review`, `/ask`, `/create-ticket`, `/feedback`, `/land`, `/proto`, `/research`, `/triage`, and `/yolo` commands
 - `skills/` - Agent Skills loaded on demand by both harnesses
 - `AGENTS.md` - global instructions, linked as Claude Code's `CLAUDE.md` and OpenCode's `AGENTS.md`
 
@@ -85,7 +94,7 @@ Commands are reachable only as `/name`; unlike skills they are never auto-invoke
 
 The setup scripts link the same command and skill directories into both harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins; the only custom agent is the OpenCode Ollama primary profile.
 
-Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom `/plan` command shadows native plan mode.
+Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom `/plan` command shadows native plan mode. A third path, `/proto`, exists for requirements that cannot be settled on paper: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `/yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `/yolo`.
 
 The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to, because implementation goes through `/yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
 

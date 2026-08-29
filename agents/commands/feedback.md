@@ -20,6 +20,15 @@ Load and follow the `ponytail` skill. Keep every change minimal and address the 
 
 The input is usually a bullet list reviewing work previously completed by `/yolo`. Evaluate it against the approved plan and current implementation. Preserve settled decisions unless the feedback explicitly changes them or repository evidence invalidates them.
 
+## Round types
+
+Feedback often arrives in serial small rounds while the human is testing the branch, and running the full check suite after every round makes the loop slower than the changes it applies. So each round is one of two types:
+
+- **Deferred round**: apply the feedback items, verify each has a corresponding change, report what changed and how to try it, then stop. No checks, no adversarial review, no commit, no push. The unvalidated delta accumulates as debt.
+- **Full round**: everything below, steps 5 through 7, over the *entire accumulated delta* since the last validated state, not just this round's items. Checks means the project's resolved oracle ladder plus whatever verifies the changed behavior directly: tests, linters, a debugger, or driving the change in the browser via the Chrome DevTools MCP when the surface is a UI.
+
+Pick the type at the start of the round: if the input says to skip or defer checks, or says more rounds are coming, run a deferred round; if it says to finalize or run the checks, run a full round. When the input says neither and this is the first round of the loop, ask once: checks now, or apply and defer? Reuse that answer for later rounds in the same conversation instead of re-asking. Deferred debt must be settled by a full round before the loop finalizes; never leave the loop with unvalidated changes, and never push from a deferred round.
+
 1. Resolve the current branch and its open PR with `gh pr view`, then inspect `git status --short`. This workflow updates that branch. Do not create another branch or PR. If no open PR exists, or the worktree contains pre-existing changes not explicitly part of this feedback run, STOP and ask how to proceed. Never absorb unrelated changes.
 
 2. Parse every feedback bullet into a separate actionable item. Investigate the relevant code before deciding how to implement it.

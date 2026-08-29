@@ -121,6 +121,23 @@ def analyze(path):
                             else:
                                 errors += 1
 
+    # Subagent transcripts moved out of the main file into a sidecar dir
+    # (<session-id>/subagents/agent-*.jsonl); the inline isSidechain flag no
+    # longer appears, so count sidecar messages too or delegation reads as 0%.
+    session_dir = path.removesuffix(".jsonl")
+    for side_path in glob.glob(os.path.join(session_dir, "subagents", "*.jsonl")):
+        try:
+            with open(side_path) as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if entry.get("type") in ("user", "assistant"):
+                        sidechain += 1
+        except OSError:
+            continue
+
     project = os.path.basename(os.path.dirname(path))
     work = any(p in project for p in cohort_patterns())
     return {
