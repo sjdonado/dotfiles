@@ -158,9 +158,9 @@ When writing any git commit message, follow the `caveman-commit` skill: Conventi
 
 Never use em-dashes (—) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
 
-Never hard-wrap prose. Let each paragraph run as one line and leave wrapping to whatever renders it. A break belongs in written output only where it carries meaning: a new paragraph, a list item, a heading, a code block. Do not insert one to keep a line under some column, and do not reflow a paragraph you are editing to a width its file does not enforce. This applies to Markdown, commit message bodies, PR text, code comments, and issue or review text.
+Never hard-wrap prose. Let each paragraph run as one line and leave wrapping to whatever renders it. A break belongs in written output only where it carries meaning: a new paragraph, a list item, a heading, a code block. Do not insert one to keep a line under some column. This applies to Markdown, commit message bodies, PR text, code comments, and issue or review text.
 
-Where a file already carries a wrapped style, match the file rather than this rule: a commit message body still wraps at 72 columns, and an edit inside an already-wrapped paragraph keeps that paragraph's shape instead of rewrapping the whole thing. Wrap where the format requires it, never to satisfy a width of your own.
+A file that is already hard-wrapped is not an exception to this, it is the same mistake made earlier. Write new prose unwrapped regardless of what surrounds it, and do not rewrap it to match. Leave the paragraphs you did not touch alone: reflowing a whole file turns a one-paragraph change into an unreviewable diff. Where a width is genuinely enforced, a formatter or a linter applies it on save, which is the only thing that should be inserting breaks.
 
 ## Links
 

@@ -144,6 +144,10 @@
     "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",
     "padding": 0
   },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "enabledPlugins": {
     "caveman@caveman": true
   },
