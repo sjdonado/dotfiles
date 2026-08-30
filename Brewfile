@@ -13,10 +13,6 @@ brew "act"
 brew "ca-certificates"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
-# Browser automation CLI for AI agents
-brew "agent-browser"
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Clone of cat(1) with syntax highlighting and Git integration
@@ -35,6 +31,8 @@ brew "pixman"
 brew "cairo"
 # Tool for emulating mouse and keyboard events
 brew "cliclick"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
 # CLI tool for Cloudflare Workers
 brew "cloudflare-wrangler"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
@@ -45,8 +43,6 @@ brew "cmake"
 brew "cocoapods"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
-# Next-gen compiler infrastructure
-brew "llvm"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
 # Fast and statically typed, compiled language with Ruby-like syntax
@@ -111,6 +107,8 @@ brew "libpq"
 brew "pango"
 # Library to render SVG files using Cairo
 brew "librsvg"
+# Next-gen compiler infrastructure
+brew "llvm"
 # Powerful, lightweight programming language
 brew "lua"
 # Package manager for the Lua programming language
@@ -198,7 +196,7 @@ brew "ory/tap/cli", trusted: true
 # Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
 brew "oven-sh/bun/bun"
 # Portable daemon + CLI that bridges AI coding agents to the Moshi mobile app
-brew "rjyo/moshi/moshi-hook"
+brew "rjyo/moshi/moshi-hook", trusted: true
 # Supabase CLI
 brew "supabase/tap/supabase", trusted: true
 # Password manager that keeps all passwords secure behind one password
@@ -209,7 +207,8 @@ cask "1password-cli"
 cask "android-commandlinetools"
 # Display management tool
 cask "betterdisplay"
-# Utility for customizing which browser to start
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
@@ -228,8 +227,6 @@ cask "nordvpn"
 cask "notion"
 # Replacement for Docker Desktop
 cask "orbstack"
-# HTTP proxy
-cask "rockxy"
 # Team communication and collaboration software
 cask "slack"
 # Native database client for many database types

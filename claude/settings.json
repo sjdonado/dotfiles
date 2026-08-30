@@ -1,4 +1,8 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "deny": [
       "Bash(git stash:*)",
@@ -143,10 +147,6 @@
     "type": "command",
     "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",
     "padding": 0
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
   },
   "enabledPlugins": {
     "caveman@caveman": true

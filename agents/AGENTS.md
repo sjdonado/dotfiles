@@ -66,6 +66,10 @@ Never merge the PR. Leave it open for human review.
 
 Never commit implementation to the default branch, in any mode. `/yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `/land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
 
+One line of work is one branch and one PR. Once a task branch exists, everything that follows in the session, feedback rounds included, is more commits on that branch. Do not open a second PR for the same work, and never branch away from an open PR without being asked: a second PR fragments the review, leaves the first describing a diff nobody will ship, and costs the human the thread they were reading. Splitting is a human decision, so propose it, name what would go where, and wait for an answer. This holds even when the feedback changes the shape of the work; a branch is not scoped to the plan it started from.
+
+After pushing to a branch whose PR is already open, bring the PR's title and body back in line with the diff as it now stands. A description that stopped matching the code is how a reviewer ends up approving something else.
+
 ## When to ask, and when to decide
 
 Asking is not caution, it is a cost transfer. Ask only when both of these hold:
