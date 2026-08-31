@@ -43,6 +43,28 @@ except Exception:
 PY
 }
 
+# Upstream splits to the right of whatever is focused, which drops the sidebar
+# into the middle of the tab whenever the focused pane is not the last one. The
+# panel is chrome for the whole tab, not for one pane, so focus the right-most
+# pane first and let upstream's split land at the far edge. `pane layout` reports
+# every pane's rect, so the right-most one is the largest x + width; ties cannot
+# happen because two panes cannot share a right edge.
+open_at_right_edge() {
+  local focused rightmost
+  focused=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg t "$tab" \
+    'first(.result.panes[]? | select(.tab_id == $t and .focused) | .pane_id) // empty')
+  if [ -n "$focused" ]; then
+    rightmost=$("$herdr_bin" pane layout --pane "$focused" 2>/dev/null | jq -r \
+      '[.result.layout.panes[]?] | max_by(.rect.x + .rect.width) | .pane_id // empty')
+    # Skipped when it is already focused: a redundant focus event would wake the
+    # panel-revive plugin for nothing.
+    if [ -n "$rightmost" ] && [ "$rightmost" != "$focused" ]; then
+      focus_pane "$rightmost"
+    fi
+  fi
+  delegate
+}
+
 context=${HERDR_PLUGIN_CONTEXT_JSON:-}
 tab=${HERDR_TAB_ID:-$(printf '%s' "$context" | jq -r '.tab_id // empty')}
 [ -n "$tab" ] || delegate
@@ -52,7 +74,7 @@ tab=${HERDR_TAB_ID:-$(printf '%s' "$context" | jq -r '.tab_id // empty')}
 found=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg t "$tab" --arg l "$LABEL" \
   'first(.result.panes[]? | select(.tab_id == $t and .label == $l)
          | "\(.pane_id) \(.focused)") // empty')
-[ -n "$found" ] || delegate
+[ -n "$found" ] || open_at_right_edge
 pane_id=${found%% *}
 focused=${found##* }
 
