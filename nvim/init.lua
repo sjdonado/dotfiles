@@ -923,40 +923,135 @@ do
 end
 
 -- ============================================================
--- SECTION 9b: MARKDOWN RENDERING (render-markdown.nvim)
+-- SECTION 9b: MARKDOWN PREVIEW (glow)
 -- ============================================================
+-- `:Glow` toggles a full-screen rendered preview of the current file.
+--
+-- Replaces render-markdown.nvim, which decorated the buffer in place and charged
+-- for it continuously: concealed fence rows desynchronized relativenumber, and
+-- the highlight group behind its language label resolved to nothing after a
+-- colorscheme switch, painting black bars across every fence.
+--
+-- glow's own pager (-p) is deliberately not used, which is the design
+-- ellisonleao/glow.nvim arrived at too. A pager is a TUI that redraws inside a
+-- pty, so its viewport has to track the window: get the pty size wrong, or resize
+-- the terminal afterwards, and scrolling turns into scrollback sliding past.
+-- Piping glow's ANSI output into a buffer through nvim_open_term instead makes
+-- the render inert text, and scrolling is Neovim's: j/k, ctrl-d, the mouse wheel,
+-- search, and yank all work because there is no process competing for the keys.
+--
+-- glow reads the file on disk, so an unsaved buffer previews its last written
+-- state; say so rather than writing the file behind the human's back.
 do
-  vim.pack.add { gh 'MeanderingProgrammer/render-markdown.nvim' }
-  -- The default code border is `hide`, which deletes the fence rows outright on
-  -- nvim 0.11+. That desynchronizes relativenumber from the file: the closing ```
-  -- kept its number while occupying no row, so the gutter appeared to skip a line.
-  -- `none` keeps both fences on screen without drawing a fill on them, which `thin`
-  -- did: those rows then rendered as dark bars that survived a switch to the light
-  -- colorscheme. `language` keeps the language label and drops the block background.
-  -- language_border is the `█` run that pads the language label to full width. It
-  -- is drawn as virtual text in RenderMarkdown_RenderMarkdownCodeBorder_bg_as_fg,
-  -- a group the plugin derives from the border background. `:colorscheme` clears
-  -- every highlight and the plugin only recreates the groups still in its cache,
-  -- so after a light/dark switch that one resolves to nothing and the glyphs fall
-  -- back to Normal's foreground: a solid black bar across each fence row. Empty
-  -- keeps the label and draws no run.
-  --
-  -- Loaded on the first markdown buffer rather than at startup: it renders only
-  -- markdown, and FileType has already fired for that buffer by then, so the
-  -- event is re-fired once for it.
-  vim.api.nvim_create_autocmd('FileType', {
-    pattern = 'markdown',
-    once = true,
-    group = vim.api.nvim_create_augroup('kickstart-render-markdown-lazy', { clear = true }),
-    callback = function(args)
-      require('render-markdown').setup {
-        completions = { lsp = { enabled = true } },
-        code = { style = 'language', border = 'none', language_border = '' },
-      }
-      vim.api.nvim_exec_autocmds('FileType', { buffer = args.buf })
-    end,
-  })
+  local state = {}
+
+  local function hide()
+    if state.win and vim.api.nvim_win_is_valid(state.win) then
+      -- The view is what "resume where I was" means once the content is static
+      -- text: no process is left running, only a cursor and a top line.
+      state.view = vim.api.nvim_win_call(state.win, vim.fn.winsaveview)
+      vim.api.nvim_win_close(state.win, true)
+    end
+    state.win = nil
+  end
+
+  local function drop()
+    hide()
+    if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
+      vim.api.nvim_buf_delete(state.buf, { force = true })
+    end
+    state.buf, state.file, state.view, state.chan = nil, nil, nil, nil
+  end
+
+  local function show()
+    state.win = vim.api.nvim_open_win(state.buf, true, {
+      relative = 'editor',
+      width = vim.o.columns,
+      height = vim.o.lines - vim.o.cmdheight,
+      row = 0,
+      col = 0,
+      style = 'minimal',
+      border = 'none',
+    })
+    if state.view then
+      vim.api.nvim_win_call(state.win, function()
+        vim.fn.winrestview(state.view)
+      end)
+    end
+  end
+
+  local function render(file, width)
+    state.buf = vim.api.nvim_create_buf(false, true)
+    state.file = file
+    state.view = nil
+    show()
+
+    -- An output-only terminal channel: it interprets glow's ANSI colours without
+    -- attaching a process, so the buffer stays a normal, scrollable buffer.
+    state.chan = vim.api.nvim_open_term(state.buf, {})
+    vim.keymap.set('n', 'q', function()
+      drop()
+    end, { buffer = state.buf, desc = 'Close the glow preview' })
+
+    -- -s follows the editor background so the preview does not stay dark under a
+    -- light colorscheme. -w is required: glow word-wraps at 80 whatever the
+    -- terminal reports, so the window width has to be handed to it, and it is
+    -- handed the whole width. A cap on readability grounds is the terminal's call
+    -- to make by being sized, not this command's to make on its behalf.
+    --
+    -- vim.system, not jobstart: measured, jobstart's on_stdout never fired for
+    -- this command, buffered or not, and the process ended up killed at exit
+    -- (code 143) having delivered nothing. vim.system returns the same 100KB of
+    -- ANSI without the callback ever going missing.
+    vim.system({ 'glow', '-s', vim.o.background, '-w', tostring(width), file }, { text = true }, function(res)
+      vim.schedule(function()
+        if not (state.chan and state.buf and vim.api.nvim_buf_is_valid(state.buf)) then
+          return
+        end
+        if res.code ~= 0 then
+          drop()
+          return vim.notify('glow: ' .. vim.trim(res.stderr or 'failed'), vim.log.levels.ERROR)
+        end
+        -- \r\n, not \n: a terminal channel leaves the cursor mid-row on a bare
+        -- newline, so every line would start where the previous one ended.
+        pcall(vim.api.nvim_chan_send, state.chan, (res.stdout:gsub('\n', '\r\n')))
+      end)
+    end)
+  end
+
+  local function open()
+    if vim.fn.executable 'glow' == 0 then
+      return vim.notify('glow is not installed', vim.log.levels.ERROR)
+    end
+
+    local file = vim.api.nvim_buf_get_name(0)
+    if file == '' or vim.fn.filereadable(file) == 0 then
+      return vim.notify('glow: buffer has no file on disk', vim.log.levels.WARN)
+    end
+    if vim.bo.modified then
+      vim.notify('glow: previewing the saved file, buffer has unsaved changes', vim.log.levels.WARN)
+    end
+
+    -- A render of this same file is worth resuming, with its view. One of another
+    -- file is stale, and re-rendering is cheap enough not to keep it around.
+    if state.buf and vim.api.nvim_buf_is_valid(state.buf) and state.file == file then
+      return show()
+    end
+    drop()
+    -- -2 leaves the right-hand column free: glow pads its own left margin, and a
+    -- line ending exactly at the last cell wraps into an empty row.
+    render(file, math.max(vim.o.columns - 2, 40))
+  end
+
+  vim.api.nvim_create_user_command('Glow', function()
+    if state.win and vim.api.nvim_win_is_valid(state.win) then
+      hide()
+    else
+      open()
+    end
+  end, { desc = 'Toggle a full-screen glow preview of the current file' })
 end
+
 
 -- ============================================================
 -- SECTION 10: CODE REFERENCES

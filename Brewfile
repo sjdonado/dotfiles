@@ -1,4 +1,5 @@
 tap "amberframework/micrate", trusted: true
+tap "anomalyco/tap"
 tap "coder/coder", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
@@ -79,6 +80,8 @@ brew "gh"
 brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
+# Render markdown on the CLI
+brew "glow"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU Transport Layer Security (TLS) Library
@@ -131,10 +134,6 @@ brew "nmap"
 brew "nss"
 # Create, run, and share large language models (LLMs)
 brew "ollama"
-# Search tool like grep and The Silver Searcher
-brew "ripgrep"
-# AI coding agent, built for the terminal
-brew "opencode"
 # Development kit for the Java programming language
 brew "openjdk"
 # Development kit for the Java programming language
@@ -155,6 +154,8 @@ brew "pv"
 brew "python@3.12"
 # Ruby version manager
 brew "rbenv"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
 # Rust toolchain installer
 brew "rustup"
 # Fast and accurate code counter with complexity and COCOMO estimates
@@ -189,6 +190,8 @@ brew "zig"
 brew "zig@0.15"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate", trusted: true
+# The AI coding agent built for the terminal.
+brew "anomalyco/tap/opencode", trusted: true
 # Grafana Cloud CLI
 brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!
