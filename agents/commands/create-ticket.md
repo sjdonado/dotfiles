@@ -28,6 +28,7 @@ The input is a raw request: a bug, a feature, or an adjustment. It may be terse,
 - Technical enough to act on, not a design doc. Link or cite code as `path:line` when it sharpens scope.
 - Back claims with data. Prefer a tracked error, a product metric, a dashboard panel, or a linked PR over an assertion. Always render links as complete absolute URLs, never behind alias text.
 - Use a diagram (a fenced ```mermaid block) only when a flow, state machine, or system relationship is faster to read than prose. Skip decorative diagrams.
+- A screenshot the human shared to explain the request belongs in the ticket, embedded in the description right under the paragraph it proves. It was evidence for you, so it is evidence for whoever picks the ticket up, and describing a screenshot in prose loses what made it worth sharing.
 
 ## Steps
 
@@ -51,12 +52,16 @@ The input is a raw request: a bug, a feature, or an adjustment. It may be terse,
 
    **Acceptance**: short, testable checklist of done conditions. Optional: include only when a clear solution approach exists. Omit it when the how is still open, so an implementer is not boxed into an unvalidated path.
 
+   **Images**: every screenshot or image the human shared for this request is embedded in the description itself, each one right under the paragraph it proves, not collected in a gallery at the end and not left as a bare attachment on the side. A UI shot sits under the requirement it illustrates, an error dialog next to the repro steps. Embedded means an inline image in the description body, so the reader sees it while reading the sentence it belongs to instead of clicking away from it. Give each a one-line caption saying what to look at, since the reader does not have the conversation it arrived in. Never paste a local file path or a cache path: an image reaches the ticket only by being uploaded to the tracker, so the description carries the URL the upload returned. Images the human shared about something else, or ones you produced while investigating, are not automatically part of the ticket; include one only when it is evidence for this request.
+
    **Batch mode.** When the input selected findings from a `/research` ledger, each selected finding becomes one ticket. Inherit that finding's evidence into `Context` verbatim; do not re-query what the ledger already grounded. Include `Acceptance` only for findings whose confidence is confirmed and whose `Actionable` line names a clear approach. Never ticket a finding marked `Actionable: no`; if one was selected, ask why before drafting.
 
 6. Resolve team, project, labels, priority, and assignee from explicit context or clear workspace conventions. Omit uncertain optional metadata. Show the draft and ask the user to confirm; ask only for a required field that cannot be resolved safely. Never ask again for values already provided. In batch mode, show all N drafts and take **one** confirmation for the batch.
 
-7. On confirmation, create each ticket with the tracker's `save_issue`, passing no `id` and including the confirmed title, team, description, and optional metadata. Report the identifier and URL returned by the tracker; never construct a URL manually. Do not create before explicit confirmation. If a create fails partway through a batch, stop and report which succeeded; never retry blindly.
+7. On confirmation, upload the drafted images through the tracker's upload flow (its `prepare_attachment_upload`, then `create_attachment_from_upload`) and embed the returned URLs in the description at the places the draft marked, as inline images rather than links. Upload after confirmation, not while drafting: an upload is a write to the tracker, and a draft the human rejects should leave nothing behind. If an upload fails, say which image and file the ticket without it rather than blocking on the picture.
 
-8. In batch mode, when more than one ticket came from the same research session, propose relating them and ask once. Do not apply relations unconfirmed.
+8. Create each ticket with the tracker's `save_issue`, passing no `id` and including the confirmed title, team, description, and optional metadata. Report the identifier and URL returned by the tracker; never construct a URL manually. Do not create before explicit confirmation. If a create fails partway through a batch, stop and report which succeeded; never retry blindly.
+
+9. In batch mode, when more than one ticket came from the same research session, propose relating them and ask once. Do not apply relations unconfirmed.
 
 Constraints: no code edits. Draft is text only until the user approves creation.
