@@ -945,12 +945,58 @@ end
 do
   local state = {}
 
+  -- Normalized for matching a rendered line against its source: glow rewrites
+  -- markers (`- ` becomes a bullet, headings lose their hashes, code spans lose
+  -- their backticks) but keeps the words, so comparing on words alone is what
+  -- survives the render.
+  local function words(line)
+    return (line:gsub('[#*_`>|%-•]', ' '):gsub('%s+', ' '):gsub('^ ', ''):gsub(' $', '')):lower()
+  end
+
+  -- Where the reader stopped, translated back into the source file. Scrolling a
+  -- render and returning to line 1 loses exactly the position the scrolling was
+  -- for, and the two buffers do not share line numbers: wrapping, tables, and
+  -- padding all shift them.
+  local function source_line(preview_win)
+    if not (state.src and vim.api.nvim_buf_is_valid(state.src)) then
+      return nil
+    end
+    local cursor = vim.api.nvim_win_get_cursor(preview_win)[1]
+    local rendered = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
+    local source = vim.api.nvim_buf_get_lines(state.src, 0, -1, false)
+
+    -- Anchor on the nearest line above the cursor with enough text to be
+    -- distinctive; a bare `|` from a table border matches everywhere.
+    for i = math.min(cursor, #rendered), 1, -1 do
+      local anchor = words(rendered[i] or '')
+      if #anchor >= 12 then
+        local needle = anchor:sub(1, 32)
+        for n, line in ipairs(source) do
+          if words(line):find(needle, 1, true) then
+            return n
+          end
+        end
+      end
+    end
+
+    -- Nothing matched, which happens in a long code block or a table: fall back
+    -- to the same fraction of the file. Approximate, but closer than line 1.
+    if #rendered > 0 then
+      return math.max(1, math.min(#source, math.floor(cursor / #rendered * #source + 0.5)))
+    end
+  end
+
   local function hide()
     if state.win and vim.api.nvim_win_is_valid(state.win) then
       -- The view is what "resume where I was" means once the content is static
       -- text: no process is left running, only a cursor and a top line.
       state.view = vim.api.nvim_win_call(state.win, vim.fn.winsaveview)
+      local line = source_line(state.win)
       vim.api.nvim_win_close(state.win, true)
+      if line then
+        pcall(vim.api.nvim_win_set_cursor, 0, { line, 0 })
+        vim.cmd 'normal! zz'
+      end
     end
     state.win = nil
   end
@@ -1032,6 +1078,11 @@ do
       vim.notify('glow: previewing the saved file, buffer has unsaved changes', vim.log.levels.WARN)
     end
 
+    -- Remembered so closing can put the cursor back on the line being read, and
+    -- re-recorded on every open: the same preview may be reopened from a
+    -- different window showing the same file.
+    state.src = vim.api.nvim_get_current_buf()
+
     -- A render of this same file is worth resuming, with its view. One of another
     -- file is stale, and re-rendering is cheap enough not to keep it around.
     if state.buf and vim.api.nvim_buf_is_valid(state.buf) and state.file == file then
@@ -1043,13 +1094,20 @@ do
     render(file, math.max(vim.o.columns - 2, 40))
   end
 
-  vim.api.nvim_create_user_command('Glow', function()
+  local function toggle()
     if state.win and vim.api.nvim_win_is_valid(state.win) then
       hide()
     else
       open()
     end
-  end, { desc = 'Toggle a full-screen glow preview of the current file' })
+  end
+
+  vim.api.nvim_create_user_command('Glow', toggle, {
+    desc = 'Toggle a full-screen glow preview of the current file',
+  })
+  -- Also bound inside the preview, so the key that opened it closes it rather
+  -- than being swallowed by a buffer that has no other use for it.
+  vim.keymap.set('n', '<leader>m', toggle, { desc = '[M]arkdown preview toggle' })
 end
 
 
