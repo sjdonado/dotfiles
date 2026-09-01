@@ -47,7 +47,10 @@ do
   vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
   vim.o.inccommand = 'split'
   vim.o.cursorline = true
-  vim.o.scrolloff = 0
+  -- Keep the cursor line centred: a value larger than any window height means
+  -- the viewport moves under the cursor rather than the cursor walking to an
+  -- edge, so the lines around the one being worked on are always in view.
+  vim.o.scrolloff = 999
   vim.o.showtabline = 2
   vim.o.confirm = true
   vim.o.termguicolors = true
@@ -82,7 +85,8 @@ do
   vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
   vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
-  -- Scroll viewport without moving the cursor (until scrolloff pushes it).
+  -- With scrolloff pinning the cursor to the middle, these move the cursor and
+  -- the viewport together rather than sliding the text under a parked cursor.
   vim.keymap.set('n', '<C-e>', '4<C-e>', { desc = 'Scroll down 4 lines' })
   vim.keymap.set('n', '<C-y>', '4<C-y>', { desc = 'Scroll up 4 lines' })
 
@@ -945,52 +949,76 @@ end
 do
   local state = {}
 
-  -- Normalized for matching a rendered line against its source: glow rewrites
-  -- markers (`- ` becomes a bullet, headings lose their hashes, code spans lose
-  -- their backticks) but keeps the words, so comparing on words alone is what
-  -- survives the render.
+  -- Normalized for matching a rendered line against its source. Everything that
+  -- is not a letter or a digit goes, because the render rewrites punctuation
+  -- freely: hashes vanish from headings, `-` becomes a bullet, backticks vanish
+  -- from code spans, and a table's ASCII pipes come back as box drawing. Keeping
+  -- any of those in the comparison is what makes every row of a table fail to
+  -- match and the search walk up to the paragraph above it.
   local function words(line)
-    return (line:gsub('[#*_`>|%-•]', ' '):gsub('%s+', ' '):gsub('^ ', ''):gsub(' $', '')):lower()
+    return (line:lower():gsub('[^%w]+', ' '):gsub('^ ', ''):gsub(' $', ''))
   end
 
-  -- Where the reader stopped, translated back into the source file. Scrolling a
-  -- render and returning to line 1 loses exactly the position the scrolling was
-  -- for, and the two buffers do not share line numbers: wrapping, tables, and
-  -- padding all shift them.
-  local function source_line(preview_win)
-    if not (state.src and vim.api.nvim_buf_is_valid(state.src)) then
-      return nil
-    end
-    local cursor = vim.api.nvim_win_get_cursor(preview_win)[1]
-    local rendered = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
-    local source = vim.api.nvim_buf_get_lines(state.src, 0, -1, false)
-
-    -- Anchor on the nearest line above the cursor with enough text to be
-    -- distinctive; a bare `|` from a table border matches everywhere.
-    for i = math.min(cursor, #rendered), 1, -1 do
-      local anchor = words(rendered[i] or '')
+  -- The two buffers do not share line numbers: wrapping, tables, and padding all
+  -- shift them, so a position crosses over by text. Anchor on the nearest line at
+  -- or above the cursor with enough words to be distinctive (a bare `|` from a
+  -- table border matches everywhere), then find that text on the other side.
+  -- Nothing distinctive above the cursor means a long code block or table, where
+  -- the same fraction of the file is approximate but nearer than line 1.
+  local function translate(from_lines, to_lines, cursor)
+    for i = math.min(cursor, #from_lines), 1, -1 do
+      local anchor = words(from_lines[i] or '')
       if #anchor >= 12 then
         local needle = anchor:sub(1, 32)
-        for n, line in ipairs(source) do
+        for n, line in ipairs(to_lines) do
           if words(line):find(needle, 1, true) then
             return n
           end
         end
       end
     end
+    if #from_lines > 0 and #to_lines > 0 then
+      return math.max(1, math.min(#to_lines, math.floor(cursor / #from_lines * #to_lines + 0.5)))
+    end
+  end
 
-    -- Nothing matched, which happens in a long code block or a table: fall back
-    -- to the same fraction of the file. Approximate, but closer than line 1.
-    if #rendered > 0 then
-      return math.max(1, math.min(#source, math.floor(cursor / #rendered * #source + 0.5)))
+  local function buf_lines(buf)
+    if buf and vim.api.nvim_buf_is_valid(buf) then
+      return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    end
+    return {}
+  end
+
+  -- Scrolling a render and coming back to line 1 loses exactly the position the
+  -- scrolling was for, in either direction.
+  local function source_line(preview_win)
+    if not (state.src and vim.api.nvim_buf_is_valid(state.src)) then
+      return nil
+    end
+    return translate(buf_lines(state.buf), buf_lines(state.src), vim.api.nvim_win_get_cursor(preview_win)[1])
+  end
+
+  local function goto_preview_line()
+    if not (state.win and vim.api.nvim_win_is_valid(state.win) and state.src_line) then
+      return
+    end
+    local rendered = buf_lines(state.buf)
+    -- The render arrives asynchronously, so an empty buffer means it has not
+    -- landed yet rather than that there is nothing to match.
+    if #rendered <= 1 then
+      return
+    end
+    local line = translate(buf_lines(state.src), rendered, state.src_line)
+    if line then
+      pcall(vim.api.nvim_win_set_cursor, state.win, { math.min(line, #rendered), 0 })
+      vim.api.nvim_win_call(state.win, function()
+        vim.cmd 'normal! zz'
+      end)
     end
   end
 
   local function hide()
     if state.win and vim.api.nvim_win_is_valid(state.win) then
-      -- The view is what "resume where I was" means once the content is static
-      -- text: no process is left running, only a cursor and a top line.
-      state.view = vim.api.nvim_win_call(state.win, vim.fn.winsaveview)
       local line = source_line(state.win)
       vim.api.nvim_win_close(state.win, true)
       if line then
@@ -1006,7 +1034,9 @@ do
     if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
       vim.api.nvim_buf_delete(state.buf, { force = true })
     end
-    state.buf, state.file, state.view, state.chan = nil, nil, nil, nil
+    -- src_line survives: it belongs to the pending open, not to the render being
+    -- discarded, and open() records it before dropping a stale one.
+    state.buf, state.file, state.chan = nil, nil, nil
   end
 
   local function show()
@@ -1019,11 +1049,15 @@ do
       style = 'minimal',
       border = 'none',
     })
-    if state.view then
-      vim.api.nvim_win_call(state.win, function()
-        vim.fn.winrestview(state.view)
-      end)
-    end
+    -- Reading, not editing: keep the line being read in the middle of the screen
+    -- rather than letting it walk to an edge. A scrolloff larger than any window
+    -- is the standard way to pin it there, and it costs nothing elsewhere because
+    -- it is set on this window alone.
+    vim.wo[state.win].scrolloff = 999
+    -- The editor's cursor decides where the preview opens, not the position the
+    -- preview was last left at: the human may have moved since, and the line
+    -- under the cursor is the one they asked to see rendered.
+    goto_preview_line()
   end
 
   local function render(file, width)
@@ -1061,6 +1095,30 @@ do
         -- \r\n, not \n: a terminal channel leaves the cursor mid-row on a bare
         -- newline, so every line would start where the previous one ended.
         pcall(vim.api.nvim_chan_send, state.chan, (res.stdout:gsub('\n', '\r\n')))
+        -- The channel renders on its own schedule and keeps the cursor at the end
+        -- of what it has written, so positioning while it is still emitting gets
+        -- overwritten by the next chunk. Wait for the line count to stop growing,
+        -- then place the cursor. Give up quietly after a second: opening at the
+        -- top is a worse preview, not a broken one.
+        local tries, previous = 0, -1
+        local timer = vim.uv.new_timer()
+        timer:start(
+          20,
+          40,
+          vim.schedule_wrap(function()
+            tries = tries + 1
+            local count = state.buf and vim.api.nvim_buf_is_valid(state.buf) and vim.api.nvim_buf_line_count(state.buf) or 0
+            local settled = count > 1 and count == previous
+            previous = count
+            if settled or tries > 25 then
+              timer:stop()
+              timer:close()
+              if settled then
+                goto_preview_line()
+              end
+            end
+          end)
+        )
       end)
     end)
   end
@@ -1078,13 +1136,14 @@ do
       vim.notify('glow: previewing the saved file, buffer has unsaved changes', vim.log.levels.WARN)
     end
 
-    -- Remembered so closing can put the cursor back on the line being read, and
-    -- re-recorded on every open: the same preview may be reopened from a
-    -- different window showing the same file.
+    -- Both directions of the sync start here: the buffer to put the cursor back
+    -- into on close, and the line to open the preview at. Re-recorded on every
+    -- open, since the human has usually moved since the last one.
     state.src = vim.api.nvim_get_current_buf()
+    state.src_line = vim.api.nvim_win_get_cursor(0)[1]
 
-    -- A render of this same file is worth resuming, with its view. One of another
-    -- file is stale, and re-rendering is cheap enough not to keep it around.
+    -- A render of this same file is reused as-is. One of another file is stale,
+    -- and re-rendering is cheap enough not to keep it around.
     if state.buf and vim.api.nvim_buf_is_valid(state.buf) and state.file == file then
       return show()
     end
