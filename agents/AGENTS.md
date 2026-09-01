@@ -133,6 +133,10 @@ The ladder adapts to what exists. No remote CI means it ends at the local rungs 
 
 Resolving review threads is deliberately **not** a rung. Threads only exist after a human reviews, which is after an autonomous run has finished, so `/address-review` owns them.
 
+## Reading a ticket
+
+A ticket is its description plus its comments. Read the thread every time, in order, and treat what it says as part of the request: comments routinely add requirements, narrow scope, or overturn the description outright, and the newest word wins. Fold them into the plan as work items, and when a comment contradicts the description, say which you followed.
+
 ## Production evidence
 
 A claim about runtime behavior, impact, frequency, or performance is load-bearing only if being wrong about it changes the decision. Check load-bearing runtime claims against production telemetry via the `evidence` skill, or mark them explicitly unchecked. Never state a number without its source deep link and timeframe. Where a telemetry capability is not configured for a project, say so and move on; absence of data is never a reason to block or to invent one.

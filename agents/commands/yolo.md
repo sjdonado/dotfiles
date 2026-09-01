@@ -12,7 +12,7 @@ $ARGUMENTS
 Resolve the effective input, cheapest first. No document is ever required, and no depth is ever mandatory:
 
 - An OpenSpec change directory (`openspec/changes/<id>/`): its artifacts are the contract. Implement from them and tick off `tasks.md` as each item lands. Do not re-derive what the proposal, design, or delta specs already settled.
-- An issue ID or URL: requirements come from the tracker.
+- An issue ID or URL: requirements come from the tracker, description and comment thread together, per `AGENTS.md`.
 - An approved plan in the conversation: the plan is the contract.
 - A `/triage` plan brief or `/research` finding ledger in the conversation: that is the contract.
 - A `/proto` requirements ledger and its branch: the ledger is the contract. Continue on that branch, squash its WIP checkpoints at commit time, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
