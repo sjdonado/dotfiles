@@ -15,6 +15,7 @@ Resolve the effective input, cheapest first. No document is ever required, and n
 - An issue ID or URL: requirements come from the tracker, description and comment thread together, per `AGENTS.md`.
 - An approved plan in the conversation: the plan is the contract.
 - A `/triage` plan brief or `/research` finding ledger in the conversation: that is the contract.
+- A path to a handoff document, typically written to the OS temporary directory by the `handoff` skill in another session: read it and treat it as the contract. It carries what that session established, so do not re-derive it; follow the artifacts it references (a change directory, an issue, a branch) rather than the summary of them, and act on its suggested skills.
 - A `/proto` requirements ledger and its branch: the ledger is the contract. Continue on that branch, squash its WIP checkpoints at commit time, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
 - A plain sentence: that is the contract. Self-grill it only if a load-bearing ambiguity survives a repository search.
 - Nothing resolvable: ask, per the escalation contract in `AGENTS.md`.
