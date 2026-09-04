@@ -1,17 +1,11 @@
 ---
+name: address-review
 description: Address open PR review threads, reply only inside those threads, and fix red CI or an outdated branch
-argument-hint: "[PR number, URL, or branch]"
 ---
 Address review feedback on a pull request. Use the `gh` CLI for all PR interaction (comments, CI status, branch state).
 
-Input (a PR number, URL, or branch name; if omitted, resolve the PR for the current branch via `gh pr view`):
-
-<user_input>
-$ARGUMENTS
-</user_input>
-
 Resolve the effective input:
-- Non-empty `<user_input>` is the explicit PR request.
+- A PR number, URL, or branch named by the user is the explicit request.
 - Otherwise use the latest unambiguous PR from the conversation; if none exists, resolve the current branch PR with `gh pr view`.
 - Ask only when no PR can be resolved or a load-bearing decision remains ambiguous. Preserve settled decisions and do not re-open completed scope.
 

@@ -1,18 +1,14 @@
 ---
+name: create-ticket
 description: Draft a clear, scoped ticket from a request or research findings, then create it via the tracker MCP after confirmation
-argument-hint: "[request]"
 ---
 
-Turn a request into a well-formed tracker ticket. Draft first, create only after the user confirms.
-
-<user_input>
-$ARGUMENTS
-</user_input>
+Turn the user's request into a well-formed tracker ticket. Draft first, create only after the user confirms.
 
 Resolve the effective input:
 
-- Non-empty `<user_input>` is the explicit request.
-- If the input names findings from a `/research` ledger in the conversation (`findings F2,F4,F5`, or "all actionable findings"), each selected finding becomes one ticket. See batch mode in step 5.
+- The user's current request is the explicit request.
+- If the input names findings from a `research` ledger in the conversation (`findings F2,F4,F5`, or "all actionable findings"), each selected finding becomes one ticket. See batch mode in step 5.
 - Otherwise use the latest unambiguous request or settled proposal in the conversation.
 - Ask only when no active request exists or a load-bearing product decision remains unresolved.
 
@@ -54,7 +50,7 @@ The input is a raw request: a bug, a feature, or an adjustment. It may be terse,
 
    **Images**: every screenshot or image the human shared for this request is embedded in the description itself, each one right under the paragraph it proves, not collected in a gallery at the end and not left as a bare attachment on the side. A UI shot sits under the requirement it illustrates, an error dialog next to the repro steps. Embedded means an inline image in the description body, so the reader sees it while reading the sentence it belongs to instead of clicking away from it. Give each a one-line caption saying what to look at, since the reader does not have the conversation it arrived in. Never paste a local file path or a cache path: an image reaches the ticket only by being uploaded to the tracker, so the description carries the URL the upload returned. Images the human shared about something else, or ones you produced while investigating, are not automatically part of the ticket; include one only when it is evidence for this request.
 
-   **Batch mode.** When the input selected findings from a `/research` ledger, each selected finding becomes one ticket. Inherit that finding's evidence into `Context` verbatim; do not re-query what the ledger already grounded. Include `Acceptance` only for findings whose confidence is confirmed and whose `Actionable` line names a clear approach. Never ticket a finding marked `Actionable: no`; if one was selected, ask why before drafting.
+   **Batch mode.** When the input selected findings from a `research` ledger, each selected finding becomes one ticket. Inherit that finding's evidence into `Context` verbatim; do not re-query what the ledger already grounded. Include `Acceptance` only for findings whose confidence is confirmed and whose `Actionable` line names a clear approach. Never ticket a finding marked `Actionable: no`; if one was selected, ask why before drafting.
 
 6. Resolve team, project, labels, priority, and assignee from explicit context or clear workspace conventions. Omit uncertain optional metadata. Show the draft and ask the user to confirm; ask only for a required field that cannot be resolved safely. Never ask again for values already provided. In batch mode, show all N drafts and take **one** confirmation for the batch.
 

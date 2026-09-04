@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Remote Ubuntu setup for herdr + Claude Code + OpenCode + nvim + lazygit, wired to these dotfiles.
+# Remote Ubuntu setup for herdr + Claude Code + Codex + OpenCode + nvim + lazygit, wired to these dotfiles.
 # Idempotent. Safe to re-run. macOS-only steps from macos.sh are omitted.
 #
 # End goal: connect from your local terminal with `herdr --remote <user>@<host>`.
 #
 # NOT handled here (sensitive — do manually, see notes printed at the end):
-#   - Claude Code, OpenCode provider, and MCP authentication
+#   - Claude Code, Codex, OpenCode provider, and MCP authentication
 #   - any secrets in .env / ~/.ssh
 set -euo pipefail
 
@@ -139,6 +139,12 @@ fi
 if ! have claude; then
   log "Installing Claude Code..."
   curl -fsSL https://claude.ai/install.sh | bash
+  rescan
+fi
+if ! have codex; then
+  log "Installing Codex..."
+  curl -fsSL https://github.com/openai/codex/releases/latest/download/install.sh \
+    | env CODEX_NON_INTERACTIVE=1 sh
   rescan
 fi
 if ! have opencode; then
@@ -318,8 +324,8 @@ log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
 
-log "Linking Claude Code and OpenCode config..."
-mkdir -p "$HOME/.claude" "$HOME/.config/opencode"
+log "Linking Claude Code, Codex, and OpenCode config..."
+mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$HOME/.config/opencode"
 # claude/settings.json declares a SessionStart hook running herdr's agent-state
 # script, and herdr owns that script. Install it BEFORE the symlink: the
 # installer also rewrites settings.json, so running it afterwards would write
@@ -329,16 +335,18 @@ if have herdr && [ ! -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
     || log "herdr integration install claude failed; SessionStart hook will no-op"
 fi
 link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json"
-link_managed "$PWD/agents/commands" "$HOME/.claude/commands"
 link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+link_managed "$PWD/agents/skills" "$HOME/.agents/skills"
+link_managed "$PWD/agents/AGENTS.md" "$HOME/.codex/AGENTS.md"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
 # opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
-link_managed "$PWD/opencode/commands" "$HOME/.config/opencode/commands"
-link_managed "$PWD/opencode/skills" "$HOME/.config/opencode/skills"
 link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+[ "$(readlink "$HOME/.claude/commands" 2>/dev/null || true)" = "$PWD/agents/commands" ] && unlink "$HOME/.claude/commands" || true
+[ "$(readlink "$HOME/.config/opencode/commands" 2>/dev/null || true)" = "$PWD/opencode/commands" ] && unlink "$HOME/.config/opencode/commands" || true
+[ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
@@ -425,6 +433,7 @@ MANUAL STEPS (sensitive — not scripted):
 
   1. Authenticate the coding harnesses:
        claude
+       codex login
        opencode auth login
      Add MCP servers separately with Claude Code and `opencode mcp add`.
 

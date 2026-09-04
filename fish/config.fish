@@ -62,7 +62,7 @@ alias wtr="wt remove -D --force"
 alias wtl="wt list --full"
 # Create a worktree and hand the terminal straight to an agent. -x replaces the
 # wt process after pre-start provisioning, so the agent gets a full TTY.
-#   wty my-branch -- '/yolo fix the thing'
+#   wty my-branch -- 'use yolo to fix the thing'
 alias wty="wt switch --create -x claude --"
 alias wtp="wt step prune --min-age 7d --dry-run"
 

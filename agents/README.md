@@ -1,20 +1,20 @@
 # AI agents
 
-Shared Claude Code and OpenCode commands, skills, and instructions.
+Shared skills and instructions for Claude Code, Codex, and OpenCode.
 
 ## Lifecycle
 
 ```mermaid
 flowchart TD
     subgraph INPUT["input"]
-        ask_in["a bounded question"] --> ask["/ask"]
+        ask_in["a bounded question"] --> ask["ask"]
         ask -.->|escalates when bigger than one answer| ask
 
-        research_in["a question or claim"] --> research["/research"]
+        research_in["a question or claim"] --> research["research"]
         research --> ledger["finding ledger (F1, F2, ...)"]
-        ledger --> ticket["/create-ticket (batch, one confirm)"]
+        ledger --> ticket["create-ticket (batch, one confirm)"]
 
-        triage_in["a ticket or an error"] --> triage["/triage"]
+        triage_in["a ticket or an error"] --> triage["triage"]
         triage --> brief["plan brief"]
         brief -.->|evidence: kill query first, then confirm or refute| brief
 
@@ -29,7 +29,7 @@ flowchart TD
         folds the answers into the artifacts"]
         updatechange --> change
 
-        proto_in["requirements that will not settle on paper"] --> proto["/proto
+        proto_in["requirements that will not settle on paper"] --> proto["proto
         build a slice, local rungs green,
         human tries it, fold feedback in"]
         proto --> protoledger["requirements ledger"]
@@ -44,7 +44,7 @@ flowchart TD
     end
 
     subgraph BUILD["build"]
-        approval --> yolo["/yolo"]
+        approval --> yolo["yolo"]
         yolo --> ladder["resolve oracle ladder
         project AGENTS.md, else task runner, else toolchain"]
         ladder --> implement["implement"]
@@ -61,11 +61,11 @@ flowchart TD
     subgraph AFTER["after"]
         checks --> verify["openspec-verify-change
         does the code match the spec"]
-        checks --> feedback["/feedback
+        checks --> feedback["feedback
         a bullet list from you;
         deferred rounds apply only,
         a full round settles the debt"]
-        checks --> addressreview["/address-review
+        checks --> addressreview["address-review
         review threads, red CI"]
         checks --> sync["openspec-sync-specs
         fold deltas into specs"]
@@ -86,17 +86,16 @@ request did not name.
 
 ## Layout
 
-- `commands/` - shared `/address-review`, `/ask`, `/create-ticket`, `/feedback`, `/land`, `/proto`, `/research`, `/triage`, and `/yolo` commands
-- `skills/` - Agent Skills loaded on demand by both harnesses
-- `AGENTS.md` - global instructions, linked as Claude Code's `CLAUDE.md` and OpenCode's `AGENTS.md`
+- `skills/` - Agent Skills loaded on demand by all three harnesses
+- `AGENTS.md` - global instructions, linked as Claude Code's `CLAUDE.md`, Codex's `AGENTS.md`, and OpenCode's `AGENTS.md`
 
-Commands are reachable only as `/name`; unlike skills they are never auto-invoked by description matching. `AGENTS.md` therefore carries an intent-routing table so a naturally phrased request still follows the workflow designed for it, with that workflow's gates intact.
+Skills provide both explicit and plain-language entry points. Each harness initially sees only skill names and descriptions, then loads a matching `SKILL.md` on demand, so moving the workflows does not add their full bodies to startup context.
 
-The setup scripts link the same command and skill directories into both harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins; the only custom agent is the OpenCode Ollama primary profile.
+The setup scripts link the same skill directory into all three harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins.
 
-Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom `/plan` command shadows native plan mode. A third path, `/proto`, exists for requirements that cannot be settled on paper: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `/yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `/yolo`.
+Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom plan skill shadows native plan mode. A third path, `proto`, exists for requirements that cannot be settled on paper: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `yolo`.
 
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to, because implementation goes through `/yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
+The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to, because implementation goes through `yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
@@ -104,7 +103,7 @@ Agent-initiated review is adversarial: `adversarial-review` carries both the pro
 
 Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `adversarial-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
 
-The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's own command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills are gone from here too, since the caveman plugin owns those bodies.
+The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills are gone from here too, since the caveman plugin owns those bodies.
 
 ## Global versus project
 
@@ -114,7 +113,7 @@ This is what lets the same harness serve a large monorepo and a small side proje
 
 ## No orchestration layer
 
-A session already starts inside a worktree with an agent running, and the model can spawn subagents itself, so parallelism and supervision are prompt-level concerns. There is deliberately no scheduler, daemon, queue tool, or fan-out script here: the loop lives in `AGENTS.md`, the commands, and the skills.
+A session already starts inside a worktree with an agent running, and the model can spawn subagents itself, so parallelism and supervision are prompt-level concerns. There is deliberately no scheduler, daemon, queue tool, or fan-out script here: the loop lives in `AGENTS.md` and the skills.
 
 Where per-stream state is needed, worktrunk already provides it. CI and review state ride on its PR object (`ci.ci_status`, `ci.review_state`) via `wt list --full`; escalation and attempt counts live in its per-branch vars (`git config worktrunk.state.<branch>.vars.*`), which survive an agent restart because they are stored in `.git`. Vars are used rather than the activity marker, because a marker is rewritten on every prompt and would erase an escalation.
 
@@ -159,10 +158,13 @@ Authenticate each harness independently:
 
 ```sh
 claude
+codex login
 opencode auth login
 ```
 
 Use Claude Code directly for a Claude Pro/Max subscription. Do not route its OAuth credentials through OpenCode.
+
+Use Codex for OpenAI models and OpenCode with OpenCode Zen for its curated non-OpenAI, non-Anthropic models. OpenCode defaults to the hosted Gemini 3.8 Flash model, which avoids local model memory pressure on a 16 GB laptop.
 
 Configure MCP servers manually in each harness. OpenCode's public configuration is tracked under `opencode/`; credentials and generated runtime state stay machine-local. See `opencode/README.md`.
 
@@ -176,8 +178,6 @@ Claude Code documentation:
 
 https://code.claude.com/docs/en/mcp
 
-## Ollama
+OpenCode Zen documentation:
 
-Select the `ollama` primary profile instead of only switching the model. The profile uses `ollama/gemma4:e4b-mlx`, blocks delegation, and denies the current `linear_*` and `posthog_*` MCP tools so their schemas do not consume the local model's context.
-
-When adding another OpenCode MCP server, also add its `<server-name>_*` deny rule to the `ollama` profile in `opencode/opencode.json`.
+https://opencode.ai/docs/zen/
