@@ -1073,6 +1073,15 @@ do
       drop()
     end, { buffer = state.buf, desc = 'Close the glow preview' })
 
+    -- This render's own handles. glow answers asynchronously, so a render that is
+    -- superseded before it finishes would otherwise write its output into the
+    -- buffer that replaced it: measured as a doubled document, since a theme flip
+    -- raises both OptionSet and ColorScheme and rebuilds twice in a row.
+    local buf, chan = state.buf, state.chan
+    local superseded = function()
+      return state.buf ~= buf or not vim.api.nvim_buf_is_valid(buf)
+    end
+
     -- -s follows the editor background so the preview does not stay dark under a
     -- light colorscheme. -w is required: glow word-wraps at 80 whatever the
     -- terminal reports, so the window width has to be handed to it, and it is
@@ -1085,7 +1094,7 @@ do
     -- ANSI without the callback ever going missing.
     vim.system({ 'glow', '-s', vim.o.background, '-w', tostring(width), file }, { text = true }, function(res)
       vim.schedule(function()
-        if not (state.chan and state.buf and vim.api.nvim_buf_is_valid(state.buf)) then
+        if superseded() then
           return
         end
         if res.code ~= 0 then
@@ -1094,7 +1103,7 @@ do
         end
         -- \r\n, not \n: a terminal channel leaves the cursor mid-row on a bare
         -- newline, so every line would start where the previous one ended.
-        pcall(vim.api.nvim_chan_send, state.chan, (res.stdout:gsub('\n', '\r\n')))
+        pcall(vim.api.nvim_chan_send, chan, (res.stdout:gsub('\n', '\r\n')))
         -- The channel renders on its own schedule and keeps the cursor at the end
         -- of what it has written, so positioning while it is still emitting gets
         -- overwritten by the next chunk. Wait for the line count to stop growing,
@@ -1107,10 +1116,10 @@ do
           40,
           vim.schedule_wrap(function()
             tries = tries + 1
-            local count = state.buf and vim.api.nvim_buf_is_valid(state.buf) and vim.api.nvim_buf_line_count(state.buf) or 0
+            local count = (not superseded()) and vim.api.nvim_buf_line_count(buf) or 0
             local settled = count > 1 and count == previous
             previous = count
-            if settled or tries > 25 then
+            if settled or tries > 25 or superseded() then
               timer:stop()
               timer:close()
               if settled then
@@ -1167,6 +1176,33 @@ do
   -- Also bound inside the preview, so the key that opened it closes it rather
   -- than being swallowed by a buffer that has no other use for it.
   vim.keymap.set('n', '<leader>m', toggle, { desc = '[M]arkdown preview toggle' })
+
+  -- The colours are baked into the render: glow picks them from -s at the moment
+  -- it runs, and the result is inert text afterwards. A theme flip therefore
+  -- leaves a light-theme render sitting on a dark background, unreadable rather
+  -- than merely wrong, so the render is thrown away and rebuilt at the position
+  -- being read. A hidden render is only dropped, since the next open rebuilds it.
+  vim.api.nvim_create_autocmd({ 'ColorScheme', 'OptionSet' }, {
+    group = vim.api.nvim_create_augroup('kickstart-glow-theme', { clear = true }),
+    callback = function(args)
+      if args.event == 'OptionSet' and args.match ~= 'background' then
+        return
+      end
+      if not (state.buf and vim.api.nvim_buf_is_valid(state.buf)) then
+        return
+      end
+      local file = state.file
+      local visible = state.win and vim.api.nvim_win_is_valid(state.win)
+      -- Read the position before dropping: hide() moves the source cursor there,
+      -- and that is where the rebuilt render has to open.
+      local line = visible and source_line(state.win) or state.src_line
+      drop()
+      if visible then
+        state.src_line = line
+        render(file, math.max(vim.o.columns - 2, 40))
+      end
+    end,
+  })
 end
 
 

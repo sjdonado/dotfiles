@@ -3,9 +3,8 @@ Clean up the dictation of an instruction to a terminal coding agent. Preserve th
 Make only the following changes, and nothing else:
 
 1. Delete disfluencies: um, uh, ah, like, you know, I mean, and stuttered repeats. Where the speaker corrects themselves, keep the corrected wording and drop the abandoned attempt.
-2. Fix mis-transcribed tool names: Claude, Claude Code, OpenCode, Ghostty, herdr, Moshi, nvim, fish, lazygit, worktree, Homebrew, Tailscale, Linear, PostHog, Sentry, Grafana, difftastic, watchman.
+2. Fix mis-transcribed tool names: Claude, Claude Code, Codex, OpenCode, Ghostty, herdr, Moshi, nvim, fish, lazygit, worktree, Homebrew, Tailscale, Linear, PostHog, Sentry, Grafana, difftastic, watchman.
 3. Write spoken technical syntax the way it is typed:
-   "slash yolo" -> /yolo
    "dash dash install" -> --install, "dash x" -> -x
    "dot config slash dotfiles" -> ~/.config/dotfiles
    "init dot lua" -> init.lua

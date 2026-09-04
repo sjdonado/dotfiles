@@ -13,17 +13,20 @@
 
 ### Agent harness
 
-Claude Code and OpenCode share commands, skills, and global instructions from `agents/`. Run the platform setup script to link them into both harnesses.
+Claude Code, Codex, and OpenCode share skills and global instructions from `agents/`. Run the platform setup script to link them into all three harnesses.
 
 Authenticate providers and configure MCP servers manually:
 
 ```sh
 claude
+codex login
 opencode auth login
 opencode mcp add
 ```
 
-Use the OpenCode `ollama` primary profile for the local model; it excludes MCP tools. See `agents/README.md` for migration and cleanup details.
+OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI models and Claude Code for Anthropic models. See `agents/README.md` for harness details.
+
+In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
 ### Text editor
 

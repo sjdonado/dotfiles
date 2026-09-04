@@ -4,9 +4,8 @@ Public OpenCode configuration shared across macOS and Linux.
 
 ## Tracked
 
-- `opencode.json` - models, permissions, and the MCP-free Ollama primary profile
+- `opencode.json` - OpenCode Zen default model, permissions, and MCP servers
 - `AGENTS.md` - link to shared global instructions
-- `commands/` - link to shared slash commands
 - `skills/` - link to shared Agent Skills
 - `kv.json` - persisted public TUI preferences, including thinking visibility, timestamps, details, animations, and diff wrapping
 
@@ -34,6 +33,8 @@ Then authenticate providers and MCP servers on each machine:
 opencode auth login
 opencode mcp auth <server>
 ```
+
+The default is the hosted `opencode/gemini-3.8-flash` model through OpenCode Zen, so OpenCode does not reserve laptop RAM for local inference. Use Codex for OpenAI models and Claude Code for Anthropic models.
 
 Configuration documentation:
 

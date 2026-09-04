@@ -2,21 +2,21 @@
 
 These are contracts, shapes, and protocols. They must stay project-agnostic. Concrete commands, paths, and available data sources belong in a project's own `AGENTS.md`. Where a project declares nothing, infer it and record what you inferred, so a wrong guess is visible and correctable rather than silent.
 
-## Command routing from plain language
+## Skill routing from plain language
 
-The workflows in `commands/` are reachable only as `/name`. Skills are auto-invoked by description matching; commands are not. So a request phrased naturally would otherwise get an ad-hoc answer instead of the workflow designed for it, skipping that workflow's evidence gathering and confirmation gates. Route by intent:
+Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with their native syntax, and can auto-invoke them by matching the skill description. Route by intent:
 
 | Plain language | Follow |
 | --- | --- |
-| "create a ticket for this", "file this", "make an issue" | `/create-ticket` |
-| "look into X", "is it true that", "dig into whether" | `/research` |
-| "what does X do", "why does Y happen", one bounded question | `/ask` |
-| "how should we approach this", a pasted ticket, "triage this" | `/triage` |
-| "implement this", "go build it", an approved plan | `/yolo` |
-| "prototype this", "spike it", "build it rough and show me", "let me try it first" | `/proto` |
-| a bullet list of changes to work already in a PR | `/feedback` |
-| "address the review comments", "CI is red on my PR" | `/address-review` |
-| "the PR merged", "archive the change", "clean up the spec" | `/land` |
+| "create a ticket for this", "file this", "make an issue" | `create-ticket` |
+| "look into X", "is it true that", "dig into whether" | `research` |
+| "what does X do", "why does Y happen", one bounded question | `ask` |
+| "how should we approach this", a pasted ticket, "triage this" | `triage` |
+| "implement this", "go build it", an approved plan | `yolo` |
+| "prototype this", "spike it", "build it rough and show me", "let me try it first" | `proto` |
+| a bullet list of changes to work already in a PR | `feedback` |
+| "address the review comments", "CI is red on my PR" | `address-review` |
+| "the PR merged", "archive the change", "clean up the spec" | `land` |
 | "poke holes in this", "challenge this design" | `grill-me` |
 | "think this through", "let's explore", an idea with no shape yet | `openspec-explore` |
 | "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
@@ -24,23 +24,23 @@ The workflows in `commands/` are reachable only as `/name`. Skills are auto-invo
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 
-Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `/yolo` still never merges, read-only workflows still make no edits.
+Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `yolo` still never merges, read-only workflows still make no edits.
 
 Do not route when the request is conversational or a one-line lookup where the workflow costs more than the answer, or when two workflows match and the choice changes the outcome. In that case name both and ask.
 
-Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `/address-review`.
+Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `address-review`.
 
-Implementation always goes through `/yolo`, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `/yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `/yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+Implementation always goes through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
-The one exception is `/proto`, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `/yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `/yolo`.
+The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `yolo`.
 
-A change archives after its PR merges, through `/land`, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
+A change archives after its PR merges, through the `land` skill, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
 
 When a request matches a workflow but omits something the workflow needs, follow the workflow and let its own steps handle the gap. Do not fall back to an ad-hoc answer.
 
 ## Planning
 
-Every change needs an agreed contract before implementation. There are two ways to reach one, and exactly one of them is required. A third path exists for requirements that cannot be settled on paper: `/proto` discovers the contract by building, and its finalized requirements ledger is the contract `/yolo` consumes.
+Every change needs an agreed contract before implementation. There are two ways to reach one, and exactly one of them is required. A third path exists for requirements that cannot be settled on paper: `proto` discovers the contract by building, and its finalized requirements ledger is the contract `yolo` consumes.
 
 **A written spec, for work worth documenting.** Use the `openspec-*` skills: explore to think it through, then propose or new-change to produce the artifacts, then update-change to fold in what grilling or evidence changes. The change directory under `openspec/changes/<id>/` is the contract, it is durable, and it is reviewable by a teammate. Prefer this for a large feature, anything touching several surfaces, or anything whose reasoning is worth keeping after the PR merges.
 
@@ -48,11 +48,11 @@ Never run `openspec init`. The `openspec-*` skills are installed globally and ar
 
 **Native plan mode, for everything else.** Cheaper, in-conversation, nothing to archive. Trace the relevant system end to end, identify the source of truth and lifecycle implications, clarify only load-bearing ambiguity, and recommend the smallest coherent change with specific files and verification steps.
 
-Do not do both. An approved OpenSpec change is already the implementation contract, so re-entering plan mode to restate it adds a second approval gate over the same decisions. Go straight from the approved change to `/yolo`.
+Do not do both. An approved OpenSpec change is already the implementation contract, so re-entering plan mode to restate it adds a second approval gate over the same decisions. Go straight from the approved change to `yolo`.
 
 Whichever route, pressure-test before committing to it: run `grill-me`, interactively when you want to drive it, or in self-grill mode so the agent resolves what evidence and a repository search can settle and brings back only the questions that survive.
 
-When a plan brief from `/triage`, a finding ledger from `/research`, or an OpenSpec change directory is present, treat it as the contract's input, not as a suggestion to re-derive. Do not re-investigate what it already grounded with a `path:line` or a linked number. Carry its verification concerns forward verbatim, and carry its open questions in as decisions with defaults. Re-run only evidence marked refuted or unchecked, or that predates the most recent deploy.
+When a plan brief from `triage`, a finding ledger from `research`, or an OpenSpec change directory is present, treat it as the contract's input, not as a suggestion to re-derive. Do not re-investigate what it already grounded with a `path:line` or a linked number. Carry its verification concerns forward verbatim, and carry its open questions in as decisions with defaults. Re-run only evidence marked refuted or unchecked, or that predates the most recent deploy.
 
 ## Approval means autonomous execution
 
@@ -64,7 +64,7 @@ Stop early only when implementation reveals that the plan is invalid against rep
 
 Never merge the PR. Leave it open for human review.
 
-Never commit implementation to the default branch, in any mode. `/yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `/land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
+Never commit implementation to the default branch, in any mode. `yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
 
 One line of work is one branch and one PR. Once a task branch exists, everything that follows in the session, feedback rounds included, is more commits on that branch. Do not open a second PR for the same work, and never branch away from an open PR without being asked: a second PR fragments the review, leaves the first describing a diff nobody will ship, and costs the human the thread they were reading. Splitting is a human decision, so propose it, name what would go where, and wait for an answer. This holds even when the feedback changes the shape of the work; a branch is not scoped to the plan it started from.
 
@@ -131,7 +131,7 @@ Re-derive the failure list on every pass; never work from a stale one. Record th
 
 The ladder adapts to what exists. No remote CI means it ends at the local rungs plus an open PR. No tests means a shorter ladder. A missing rung is skipped, never faked.
 
-Resolving review threads is deliberately **not** a rung. Threads only exist after a human reviews, which is after an autonomous run has finished, so `/address-review` owns them.
+Resolving review threads is deliberately **not** a rung. Threads only exist after a human reviews, which is after an autonomous run has finished, so `address-review` owns them.
 
 ## Reading a ticket
 

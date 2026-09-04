@@ -1,21 +1,18 @@
 ---
+name: yolo
 description: Autonomous requirements-to-PR. Clarify once, understand deeply, implement lazily, then drive every check green with no further input
-argument-hint: "[requirements, issue ID, or approved plan]"
 ---
 
-Autonomous implementation of:
-
-<user_input>
-$ARGUMENTS
-</user_input>
+Autonomously implement the user's request or the current conversation's approved contract.
 
 Resolve the effective input, cheapest first. No document is ever required, and no depth is ever mandatory:
 
 - An OpenSpec change directory (`openspec/changes/<id>/`): its artifacts are the contract. Implement from them and tick off `tasks.md` as each item lands. Do not re-derive what the proposal, design, or delta specs already settled.
 - An issue ID or URL: requirements come from the tracker, description and comment thread together, per `AGENTS.md`.
 - An approved plan in the conversation: the plan is the contract.
-- A `/triage` plan brief or `/research` finding ledger in the conversation: that is the contract.
-- A `/proto` requirements ledger and its branch: the ledger is the contract. Continue on that branch, squash its WIP checkpoints at commit time, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
+- A `triage` plan brief or `research` finding ledger in the conversation: that is the contract.
+- A path to a handoff document, typically written to the OS temporary directory by the `handoff` skill in another session: read it and treat it as the contract. It carries what that session established, so do not re-derive it; follow the artifacts it references (a change directory, an issue, a branch) rather than the summary of them, and act on its suggested skills.
+- A `proto` requirements ledger and its branch: the ledger is the contract. Continue on that branch, squash its WIP checkpoints at commit time, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
 - A plain sentence: that is the contract. Self-grill it only if a load-bearing ambiguity survives a repository search.
 - Nothing resolvable: ask, per the escalation contract in `AGENTS.md`.
 
@@ -52,7 +49,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
     While watching, also check the PR's merge state (`gh pr view --json mergeable,mergeStateStatus`). A conflicting PR is a failure to fix on the same footing as a red check: rebase onto the base, resolve, and `git push --force-with-lease` (the task branch this run created is not a shared branch). Resolve mechanical conflicts autonomously: adjacent-line collisions, regenerated lockfiles, import order. Escalate a semantic conflict, where both sides changed the same logic and resolution requires choosing between intents; resolving one silently would redesign someone else's concurrent change.
 
-    Do not wait for review threads. A PR you just opened has none, and any that appear later arrive after this run has finished. `/address-review` owns them, and its approval gate is a deliberate human handoff, not a step to drive through.
+    Do not wait for review threads. A PR you just opened has none, and any that appear later arrive after this run has finished. The `address-review` skill owns them, and its approval gate is a deliberate human handoff, not a step to drive through.
 
 **Terminal state is every resolved oracle green, not "PR opened."** Report the PR URL and the final state of each rung. If a rung cannot go green, escalate with what each attempt disproved rather than handing back a red PR.
 

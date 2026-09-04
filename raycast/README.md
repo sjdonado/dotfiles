@@ -6,12 +6,12 @@ To add one: Settings, Dictation, create a style, then paste the file into `Promp
 
 | File | Bind to | Purpose |
 | --- | --- | --- |
-| `dictation/coding-agents.txt` | Ghostty | Dictating to Claude Code and OpenCode |
+| `dictation/coding-agents.txt` | Ghostty | Dictating to Claude Code, Codex, and OpenCode |
 | `dictation/notes.txt` | Apple Notes, Notion, `notion.so` | Dictated notes |
 
 ## Why the two prompts are shaped so differently
 
-`coding-agents.txt` deliberately does **not** rewrite. An earlier version opened with "rewrite the dictation as an instruction to a terminal coding agent" and told it to keep the imperative mood and put each task on its own line; it then composed a new text rather than transcribing one. The current version names the permitted edits and forbids everything else, because a closed list is what actually holds. Your dictated words are already the instruction, so no conversion is wanted: only spoken syntax becoming typed syntax (`slash yolo` to `/yolo`), tool names spelled correctly, and backticks around paths and commands.
+`coding-agents.txt` deliberately does **not** rewrite. An earlier version opened with "rewrite the dictation as an instruction to a terminal coding agent" and told it to keep the imperative mood and put each task on its own line; it then composed a new text rather than transcribing one. The current version names the permitted edits and forbids everything else, because a closed list is what actually holds. Your dictated words are already the instruction, so no conversion is wanted: only spoken technical syntax becoming typed syntax, tool names spelled correctly, and backticks around paths and commands.
 
 `notes.txt` works the same way, and for the same reason. It adds structure, since speech carries structure that arrives as one stream, but it adds only structure: line breaks, bullets, grouping and indentation, over the speaker's own words. An earlier version told it to "compress each bullet to its meaning", which is a rewrite by another name and produced notes in someone else's phrasing. It is also told never to invent a heading and never to force bullets onto a single short thought.
 
