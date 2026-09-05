@@ -299,6 +299,12 @@ link_managed "$PWD/agents/skills" "$HOME/.claude/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 link_managed "$PWD/agents/skills" "$HOME/.agents/skills"
 link_managed "$PWD/agents/AGENTS.md" "$HOME/.codex/AGENTS.md"
+# Codex owns ~/.codex/config.toml and rewrites it as you work, adding a
+# [projects] entry per trusted directory and a [hooks.state] hash per approved
+# hook. Linking it would publish this machine's directory layout and churn on
+# every session, so only the shareable keys are tracked and merged in.
+DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
+  || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
 # opencode.json, and this file has its own schema.

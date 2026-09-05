@@ -1,0 +1,24 @@
+# Codex CLI settings shared across machines.
+#
+# The public half of ~/.codex/config.toml. Codex keeps the rest there and never
+# here: trusted project paths, hook trust hashes, dismissed notices. Those name
+# directories on one machine, so they are not tracked.
+#
+# `codex-config apply` writes these keys into the local file, preserving
+# everything else; `codex-config capture` brings changes made in the Codex TUI
+# back into this file. macos.sh and linux.sh run apply.
+
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+model = "gpt-5.6-sol"
+personality = "pragmatic"
+model_reasoning_effort = "medium"
+approvals_reviewer = "user"
+
+[tui]
+theme = "ansi"
+status_line = ["model-with-reasoning", "context-used", "pull-request-number", "approval-mode"]
+status_line_use_colors = false
+
+[features]
+hooks = true
