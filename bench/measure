@@ -1,246 +1,192 @@
 #!/usr/bin/env python3
-"""Harness performance from real Claude Code session transcripts.
+"""Run a disposable harness probe or measure explicit Codex exec JSONL transcripts.
 
-  bench/measure <session.jsonl | session-id>          one session, JSON
-  bench/measure --all [--since D] [--until D]         every session, JSONL rows
-  bench/measure --report [--since D] [--split DATE]   aggregate by cohort
-
-Sessions under ~/.claude/projects are the ground truth: real flows, personal
-and work, no synthetic tasks. A harness change is validated by splitting the
-real population at the change's commit date (--split) and comparing cohorts
-before and after. Deterministic: the same transcripts always produce the same
-numbers. Quality stays a human judgment; these are the cost and friction
-signals only.
-
-Cohorts come from bench/cohorts.json: {"work": ["pattern", ...]} matched
-against the project directory name; anything unmatched is personal.
+Usage: bench/measure run [--model gpt-5.6-luna]
+       bench/measure analyze SESSION.jsonl [SESSION.jsonl ...]
 """
 
+import argparse
 import collections
-import glob
+import hashlib
 import json
-import os
-import statistics
-import sys
-from datetime import datetime, timezone
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import time
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-
-
-def config():
-    for name in ("cohorts.json", "cohorts.example.json"):
-        try:
-            with open(os.path.join(HERE, name)) as f:
-                return json.load(f)
-        except OSError:
-            continue
-    return {}
-
-
-def roots():
-    paths = config().get("roots") or ["~/.claude/projects"]
-    return [os.path.expanduser(p) for p in paths]
-
-
-def ts(value):
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def cohort_patterns():
-    return config().get("work", [])
+ROOT = Path(__file__).resolve().parent.parent
+MODEL = "gpt-5.6-luna"
+BRANCH = "proto/handoff"
+NOTE = ".agent/proto%2Fhandoff.md"
+PROMPTS = [
+    "Prototype on this same branch using the installed harness. Implement label(text) "
+    "in label.py to trim and collapse whitespace while preserving case. The reason "
+    "for preserving case is that launch partner Northstar requires its original branding. "
+    "There will be a second round in a fresh session: blank input should then return "
+    "'Untitled', but defer that behavior for now. This round only implements whitespace "
+    "normalization. Use proto. For this disposable test, skip commits, pushes, PRs, "
+    "delegation, and external services; only modify this repository. Validate locally "
+    "with Python assertions, then stop for feedback.",
+    "Continue the prototype on this same branch. Implement the deferred blank-input "
+    "behavior from the saved requirements. Write rationale.md explaining the earlier "
+    "casing decision. Use proto. For this disposable test, skip commits, pushes, PRs, "
+    "delegation, and external services; only modify this repository. Validate locally "
+    "with Python assertions, then stop for feedback.",
+]
 
 
 def analyze(path):
-    tools = collections.Counter()
+    """Count completed items once; missing usage or completion stays unknown."""
     usage = collections.Counter()
-    commands = collections.Counter()
-    tool_names = {}
-    models = collections.Counter()
-    prompts = assistant = sidechain = interrupts = denials = errors = 0
+    items = {}
+    errors = []
+    threads = []
+    completed = 0
+    turn = 0
+    pending = False
+    missing_usage = False
+    with open(path) as stream:
+        for line in stream:
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            kind = event.get("type")
+            if kind == "thread.started":
+                threads.append(event["thread_id"])
+            elif kind == "turn.started":
+                turn += 1
+                pending = True
+            elif kind == "turn.completed":
+                completed += 1
+                pending = False
+                missing_usage |= not bool(event.get("usage"))
+                usage.update(event.get("usage") or {})
+            elif kind in ("error", "turn.failed"):
+                errors.append(event)
+            elif kind == "item.completed":
+                item = event["item"]
+                items[(len(threads), turn, item["id"])] = item
+    calls = collections.Counter()
+    failures = 0
     result_bytes = 0
-    first = last = None
-
-    with open(path) as f:
-        for line in f:
-            try:
-                entry = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            kind = entry.get("type")
-            if kind not in ("user", "assistant"):
-                continue
-            stamp = entry.get("timestamp")
-            if stamp:
-                t = ts(stamp)
-                first = first or t
-                last = t
-            if entry.get("isSidechain"):
-                sidechain += 1
-            message = entry.get("message") or {}
-            content = message.get("content")
-
-            if kind == "assistant":
-                assistant += 1
-                if message.get("model"):
-                    models[message["model"]] += 1
-                for key, val in (message.get("usage") or {}).items():
-                    if isinstance(val, (int, float)):
-                        usage[key] += val
-                if isinstance(content, list):
-                    for item in content:
-                        if item.get("type") == "tool_use":
-                            tools[item.get("name", "?")] += 1
-                            tool_names[item.get("id")] = item.get("name", "?")
-                continue
-
-            def scan_text(text):
-                nonlocal prompts, interrupts
-                if "[Request interrupted by user" in text:
-                    interrupts += 1
-                    return
-                if "<command-name>" in text:
-                    for part in text.split("<command-name>")[1:]:
-                        commands[part.split("</command-name>")[0].strip()] += 1
-                    return
-                if "<local-command" in text or "<system-reminder>" in text[:20]:
-                    return
-                prompts += 1
-
-            if isinstance(content, str):
-                scan_text(content)
-            elif isinstance(content, list):
-                for item in content:
-                    if item.get("type") == "text":
-                        scan_text(item.get("text", ""))
-                    elif item.get("type") == "tool_result":
-                        blob = json.dumps(item.get("content", ""), default=str)
-                        result_bytes += len(blob)
-                        if item.get("is_error") or "has been denied" in blob[:2000]:
-                            if "has been denied" in blob[:2000]:
-                                denials += 1
-                            else:
-                                errors += 1
-
-    # Subagent transcripts moved out of the main file into a sidecar dir
-    # (<session-id>/subagents/agent-*.jsonl); the inline isSidechain flag no
-    # longer appears, so count sidecar messages too or delegation reads as 0%.
-    session_dir = path.removesuffix(".jsonl")
-    for side_path in glob.glob(os.path.join(session_dir, "subagents", "*.jsonl")):
-        try:
-            with open(side_path) as f:
-                for line in f:
-                    try:
-                        entry = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    if entry.get("type") in ("user", "assistant"):
-                        sidechain += 1
-        except OSError:
-            continue
-
-    project = os.path.basename(os.path.dirname(path))
-    work = any(p in project for p in cohort_patterns())
+    for item in items.values():
+        kind = item.get("type")
+        if kind in ("command_execution", "mcp_tool_call", "web_search", "file_change"):
+            calls[kind] += 1
+        if item.get("status") == "failed" or item.get("exit_code") not in (None, 0):
+            failures += 1
+        result_bytes += len(item.get("aggregated_output", "").encode())
     return {
-        "session": os.path.basename(path).removesuffix(".jsonl"),
-        "project": project,
-        "cohort": "work" if work else "personal",
-        "start": first.date().isoformat() if first else None,
-        "wall_minutes": round((last - first).total_seconds() / 60, 1) if first else 0,
-        "user_prompts": prompts,
-        "assistant_messages": assistant,
-        "sidechain_messages": sidechain,
-        "interrupts": interrupts,
-        "denials": denials,
-        "error_results": errors,
-        "tokens": dict(usage),
-        "tool_calls": dict(tools.most_common()),
-        "tool_calls_total": sum(tools.values()),
-        "tool_result_bytes_total": result_bytes,
-        "commands": dict(commands.most_common()),
-        "model": models.most_common(1)[0][0] if models else None,
+        "transcript": str(path), "threads": threads,
+        "completed_turns": completed,
+        "status": "failed" if errors else "completed" if completed and not pending else "incomplete",
+        "tokens": dict(usage) if usage and not missing_usage and not pending else None,
+        "tool_calls": dict(calls), "tool_calls_total": sum(calls.values()),
+        "failed_items": failures, "command_output_bytes": result_bytes,
+        "errors": errors,
     }
 
 
-def all_sessions(since=None, until=None):
-    files = []
-    for root in roots():
-        if not os.access(root, os.R_OK):
-            print(f"unreadable root, run this from its owning account: {root}", file=sys.stderr)
-            continue
-        files.extend(glob.glob(os.path.join(root, "*", "*.jsonl")))
-    for path in sorted(files):
-        row = analyze(path)
-        if not row["start"] or row["user_prompts"] == 0:
-            continue
-        if since and row["start"] < since:
-            continue
-        if until and row["start"] > until:
-            continue
-        yield row
+def git(repo, *args):
+    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
 
 
-def med(rows, fn):
-    vals = [fn(r) for r in rows]
-    return round(statistics.median(vals), 1) if vals else 0
+def behavior(repo, blank):
+    check = (
+        "from label import label; "
+        "assert label('  Northstar   Labs  ') == 'Northstar Labs'; "
+        "assert label('a\\tb\\nc') == 'a b c'; "
+        f"assert label('   ') == {blank!r}"
+    )
+    result = subprocess.run(["python3", "-c", check], cwd=repo, capture_output=True, text=True)
+    return {"passed": result.returncode == 0, "stderr": result.stderr}
 
 
-def report(rows, split=None):
-    groups = collections.defaultdict(list)
-    for r in rows:
-        period = ""
-        if split:
-            period = " before" if r["start"] < split else " after"
-        groups[r["cohort"] + period].append(r)
-
-    header = f"{'group':<18}{'n':>4}{'med_out_tok':>12}{'med_tools':>10}{'med_min':>9}{'intr/sess':>10}{'deny/sess':>10}{'side%':>7}"
-    print(header)
-    for name in sorted(groups):
-        g = groups[name]
-        side = sum(r["sidechain_messages"] for r in g)
-        total = sum(r["assistant_messages"] for r in g) or 1
-        print(
-            f"{name:<18}{len(g):>4}"
-            f"{med(g, lambda r: r['tokens'].get('output_tokens', 0)):>12}"
-            f"{med(g, lambda r: r['tool_calls_total']):>10}"
-            f"{med(g, lambda r: r['wall_minutes']):>9}"
-            f"{med(g, lambda r: r['interrupts']):>10}"
-            f"{med(g, lambda r: r['denials']):>10}"
-            f"{100 * side // total:>6}%"
-        )
+def run(model):
+    # Each run owns fresh files. Never reset or reuse a previous fixture.
+    destination = ROOT / "bench" / "runs"
+    destination.mkdir(exist_ok=True)
+    run_dir = Path(tempfile.mkdtemp(prefix="handoff-", dir=destination))
+    repo = run_dir / "repo"
+    repo.mkdir()
+    harness = (ROOT / "agents/AGENTS.md").read_text()
+    (repo / "AGENTS.md").write_text(harness + "\n## Probe repository\n\nLocal oracle: python3 assertions against label.py. No compile, lint, build, or remote CI. Skills are in .agents/skills/. This disposable fixture skips commits by explicit user instruction.\n")
+    for name in ("proto", "ponytail"):
+        shutil.copytree(ROOT / "agents/skills" / name, repo / ".agents/skills" / name)
+    (repo / "label.py").write_text("def label(text):\n    return text\n")
+    git(repo, "init", "-b", BRANCH)
+    git(repo, "add", "AGENTS.md", ".agents", "label.py")
+    git(repo, "-c", "user.name=Harness probe", "-c", "user.email=probe@example.invalid",
+        "-c", "core.hooksPath=/dev/null", "commit", "--no-gpg-sign", "-m", "chore: seed fixture")
+    manifest = {
+        "scenario": "handoff-v1", "model_requested": model, "reasoning_effort": "low",
+        "harness_commit": git(ROOT, "rev-parse", "HEAD"),
+        "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "harness_sha256": hashlib.sha256(harness.encode()).hexdigest(),
+        "skill_sha256": {name: hashlib.sha256((repo / ".agents/skills" / name / "SKILL.md").read_bytes()).hexdigest() for name in ("proto", "ponytail")},
+        "cli": subprocess.check_output(["codex", "--version"], text=True).strip(),
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "rounds": [],
+    }
+    print(run_dir, flush=True)
+    note_before = ""
+    for index, prompt in enumerate(PROMPTS, 1):
+        (run_dir / f"round-{index}.prompt.txt").write_text(prompt)
+        transcript = run_dir / f"round-{index}.jsonl"
+        command = ["codex", "exec", "--ignore-user-config", "--json", "--ephemeral",
+                   "-m", model, "-c", 'model_reasoning_effort="low"',
+                   "-s", "workspace-write", "-C", str(repo), prompt]
+        started = time.monotonic()
+        with transcript.open("w") as output, (run_dir / f"round-{index}.stderr").open("w") as err:
+            try:
+                result = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=output, stderr=err, timeout=300)
+                exit_code = result.returncode
+            except subprocess.TimeoutExpired:
+                exit_code = 124
+        note = (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
+        (run_dir / f"round-{index}.note.md").write_text(note)
+        try:
+            metrics = analyze(transcript)
+        except (ValueError, KeyError, TypeError) as error:
+            metrics = {"status": "invalid", "tokens": None, "error": str(error)}
+        ignored = subprocess.run(["git", "check-ignore", "-q", NOTE], cwd=repo).returncode == 0
+        checks = {
+            "behavior": behavior(repo, "" if index == 1 else "Untitled"),
+            "note_exists": bool(note), "note_refreshed": bool(note) and note != note_before,
+            "note_ignored": ignored, "note_untracked": not git(repo, "ls-files", NOTE),
+            "same_branch": git(repo, "branch", "--show-current") == BRANCH,
+        }
+        if index == 2:
+            rationale = (repo / "rationale.md").read_text() if (repo / "rationale.md").exists() else ""
+            checks["rationale_preserved"] = "northstar" in rationale.lower() and "brand" in rationale.lower()
+        passed = exit_code == 0 and metrics["status"] == "completed" and all(
+            value["passed"] if isinstance(value, dict) else value for value in checks.values())
+        manifest["rounds"].append({"round": index, "exit_code": exit_code,
+                                   "wall_seconds": round(time.monotonic() - started, 2),
+                                   "metrics": metrics, "checks": checks, "passed": passed})
+        (run_dir / "result.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        print(f"round {index}: {'pass' if passed else 'fail'}", flush=True)
+        note_before = note
+        if exit_code != 0:
+            break
+    return 0 if len(manifest["rounds"]) == 2 and all(r["passed"] for r in manifest["rounds"]) else 1
 
 
 def main():
-    args = sys.argv[1:]
-
-    def opt(name):
-        if name in args:
-            i = args.index(name)
-            val = args[i + 1]
-            del args[i : i + 2]
-            return val
-
-    since, until, split = opt("--since"), opt("--until"), opt("--split")
-
-    if "--all" in args:
-        for row in all_sessions(since, until):
-            print(json.dumps(row))
-        return
-    if "--report" in args:
-        report(list(all_sessions(since, until)), split)
-        return
-    if len(args) != 1:
-        sys.exit(__doc__.strip())
-
-    path = args[0]
-    if not os.path.isfile(path):
-        hits = []
-        for root in roots():
-            hits.extend(glob.glob(os.path.join(root, "*", f"{path}*.jsonl")))
-        if len(hits) != 1:
-            sys.exit(f"expected one transcript for {path!r}, found {len(hits)}")
-        path = hits[0]
-    print(json.dumps(analyze(path), indent=2))
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    runner = commands.add_parser("run")
+    runner.add_argument("--model", default=MODEL)
+    reader = commands.add_parser("analyze")
+    reader.add_argument("transcripts", nargs="+")
+    args = parser.parse_args()
+    if args.command == "run":
+        return run(args.model)
+    for path in args.transcripts:
+        print(json.dumps(analyze(path)))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

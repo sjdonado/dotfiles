@@ -1,21 +1,48 @@
 # bench
 
-Harness performance measured from real Claude Code sessions, not synthetic tasks. Every session already leaves a deterministic record under `~/.claude/projects/`, and every harness change has a commit date in this repo, so validating a change means splitting the real session population at that date and comparing, per cohort.
+Test one concrete harness behavior in a disposable repository, retain the evidence, and measure the sessions that attempted it. Correctness comes first: fewer tokens in a failed task are not an improvement. This replaces automatic Claude transcript sweeps and date/cohort comparisons with explicit, reproducible scenarios and Codex exec JSONL analysis. Old transcripts and the ignored local cohorts.json are left untouched; the old --all, --report, and --split interface is retired.
 
-A synthetic task battery lived here first and was removed after one day: its control tasks swung 4x between identical runs, the tasks contaminated their own fixture (the repo), and the pinned cheap model failed tasks the real models pass. Real sessions have none of those problems, at the cost of arriving slowly and mixing many variables; both approaches judged, this one loses less.
+## Run the handoff probe
 
-## Usage
+Requires Python 3, Git, and an authenticated Codex CLI with access to the requested model. This starts two real model sessions and consumes your normal usage allowance.
 
-    bench/measure <session-id|jsonl>                 one session, full JSON
-    bench/measure --all [--since D] [--until D]      one JSONL row per session
-    bench/measure --report [--since D] [--split D]   aggregate by cohort
+```sh
+bench/measure run
+# Explicit model, no fallback:
+bench/measure run --model gpt-5.6-luna
+```
 
-`--split <date>` is the before/after: set it to the commit date of a harness change and compare the medians. `bench/cohorts.json` (gitignored; copy `cohorts.example.json`) lists the transcript roots to sweep and the directory patterns that mark the work cohort; everything else is personal. It stays out of the repo because it names accounts and employers. A root owned by another account is reported and skipped rather than read, so a sweep across accounts runs from the account that owns the data.
+The runner prints a new directory under ignored bench/runs/. Each attempt seeds its own repository on proto/handoff, copies the current AGENTS.md plus proto and ponytail skills, and starts two separate ephemeral Codex sessions with GPT-5.6 Luna and low reasoning. The second session gets neither the first prompt nor its conversation. User configuration is disabled; authentication and built-in/user-level instructions may still be supplied by Codex. This is a controlled fixture, not a hermetic runtime. Raw events come from codex exec --json, documented at https://learn.chatgpt.com/docs/non-interactive-mode.
 
-## What a row carries
+The prompts explicitly skip commits, pushes, PRs, delegation, and external services. The CLI uses workspace-write, and each round has a five-minute timeout. The runner makes only the fixture's seed commit and never pushes. No existing worktree is reset or removed. Run artifacts stay available for inspection and explicit cleanup.
 
-Cost: output tokens, cache reads, tool calls by name, wall minutes, tool-result bytes. Friction, which is the part synthetic tasks cannot see: `interrupts` (the user stopped a running turn), `denials` (a permission rule blocked a call), `error_results`, and `sidechain_messages` (subagent delegation, counted from the `<session-id>/subagents/*.jsonl` sidecar files; the inline `isSidechain` flag stopped appearing, so before that fix this read 0% and the "no delegation" conclusion drawn from it was a measurement artifact). `commands` counts slash-command invocations, so routing adoption is visible over time.
+## Scenario: handoff-v1
 
-## Caveats, honestly
+Round 1 asks proto to normalize whitespace in label.py while preserving case. It provides a business reason for casing and defers a specific blank-input fallback to the next round. Round 2 asks for the deferred behavior and a rationale document without repeating either fact. This tests whether proto uses ponytail and leaves enough durable context to continue in a fresh session.
 
-Sessions are not controlled experiments: a hard week moves every number without the harness changing. Read `--split` comparisons as populations, not pairs; require a real gap, not a nudge; and never read a single session as evidence of anything. Outputs contain project names, so aggregate output is fine to share and `--all` rows are not; nothing here writes files, so nothing sensitive can be committed by accident. Quality remains a human judgment made by reading sessions, not a number this tool produces.
+Assertions are declared in the runner before either model executes:
+
+- Both rounds: expected label behavior, same branch, an existing refreshed note at the prescribed path, ignored and untracked.
+- Round 2: the exact deferred fallback and the earlier branding rationale survive. The rationale check is a keyword smoke check; read the document to confirm meaning.
+
+Inspect transcripts for actual skill reads, note consumption, redundant exploration, false completion claims, and a useful next action. Note existence and modification alone do not establish good state. This scenario does not test yolo, PR rendering, feedback/address-review, land, branch switching, or every harness rule. Add a small scenario only when an observed gap warrants it.
+
+## Read the evidence
+
+Each run retains result.json, per-round prompts, JSONL events, stderr, note snapshots, and the final fixture. The manifest records UTC start time, requested model, reasoning effort, CLI version, source commit, and content hashes of AGENTS.md and both skills. Hashes distinguish uncommitted harness edits. Model is labeled requested because exec events do not necessarily identify the serving model.
+
+result.json separates artifact checks from session metrics and reports each round's pass/fail. The runner exits nonzero if any round fails, times out, or cannot complete. Preserve failed attempts; do not retry until green and then report only the survivor.
+
+```sh
+bench/measure analyze bench/runs/<run>/round-1.jsonl bench/runs/<run>/round-2.jsonl
+```
+
+The same analyze command accepts future sessions captured with codex exec --json. Supply explicit event files, not internal Codex rollout files or Claude transcripts. It emits one JSON row per file: terminal status, reported token usage, completed tool items, failed items, and command-output bytes. It counts completion once per item, not both its start and finish. Missing usage remains null, unfinished sessions remain incomplete, and malformed JSON fails visibly. analyze reports observations; a completed turn does not imply the task passed. It does not invent costs, interruption counts, permission-denial classifications, or model identity that the stream does not provide.
+
+## Compare harness versions
+
+First inspect correctness and continuation. Then repeat the same scenario with the same model, reasoning, CLI, and environment against each harness version. Keep all attempts, compare pass rates, and compare median input/output tokens, cached input separately, tool calls, and wall time among successful runs. Record sample counts and variability. Do not pool different scenarios or models, and do not claim savings from one pair. Alternate version order when possible to reduce timing/cache bias. Failure rate and manual intervention remain part of the result even when successful runs are cheap.
+
+For ordinary sessions, retain the task and expected outcome alongside the event file, inspect the final artifacts, and use analyze for cost/friction observations. Such sessions can expose missing scenarios, but unrelated tasks are not an A/B comparison. Raw artifacts can contain private context and stay ignored; publish only deliberately selected, inspected findings.
+
+Local checks: python3 -m py_compile bench/measure; python3 bench/test_measure.py; git diff --check. A red behavior probe is a finding about the harness, not a reason to weaken the assertions.

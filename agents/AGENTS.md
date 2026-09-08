@@ -151,9 +151,9 @@ A claim about runtime behavior, impact, frequency, or performance is load-bearin
 
 ## Validating harness changes
 
-These instructions, the commands, and the skills are themselves a surface with an oracle: the real sessions they produce. Every session leaves a transcript, and every harness change has a commit date, so a change to the `agents/` tree is validated by comparing the real session population before and after that date, per cohort, with the dotfiles `bench/measure` tool. Cost and friction (interrupts, denials, delegation share) are the measured part; quality stays a human judgment made by reading sessions. Populations, not pairs: a single session proves nothing, and a delta that would not survive a hard week of unrelated work is noise.
+Validate harness changes with a disposable session scenario that exercises the changed behavior, following the project's benchmark instructions. Declare the expected artifacts and assertions before running, retain the prompts, exact harness and skill versions, model settings, transcripts, and results, and test continuation in a fresh session when continuity is involved. Judge task correctness and handoff behavior from artifacts and transcript evidence before comparing tokens or tool calls. Missing usage is unknown, never zero; a failed run is evidence, never silently discarded.
 
-Do not validate a harness change by re-reading it and judging it plausible. Plausible is what the failed versions looked like too.
+One successful scenario is a smoke test, not proof of efficiency. Compare repeated runs of the same scenario and model settings across harness versions before claiming savings, and inspect real sessions for failures the scenario misses. Do not validate a harness change by re-reading it and judging it plausible. Keep the scenario small and add coverage only for an observed gap.
 
 ## Code reviews
 
