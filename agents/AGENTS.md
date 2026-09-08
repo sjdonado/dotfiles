@@ -54,6 +54,14 @@ Whichever route, pressure-test before committing to it: run `grill-me`, interact
 
 When a plan brief from `triage`, a finding ledger from `research`, or an OpenSpec change directory is present, treat it as the contract's input, not as a suggestion to re-derive. Do not re-investigate what it already grounded with a `path:line` or a linked number. Carry its verification concerns forward verbatim, and carry its open questions in as decisions with defaults. Re-run only evidence marked refuted or unchecked, or that predates the most recent deploy.
 
+## Continuity between skills
+
+For work spanning sessions or rounds, keep one local note at `.agent/<branch-key>.md` in the worktree. Derive the key from the exact branch name by replacing `%` with `%25`, then `/` with `%2F`. Before creating it, exclude `/.agent/` through `git rev-parse --git-path info/exclude`; never commit the note. Read it once when resuming or entering a skill, unless already current in context. Read-only skills may consume it but must not write it; the next authorized writing workflow preserves their relevant conclusions.
+
+Keep three sections: **Contract** (objective and artifact references), **State** (current checkpoint, next action, unresolved checks), and **Carry forward** (decisions, essential findings with sources, and rejected review findings). Existing specs and `tasks.md` remain authoritative. Reference retrievable artifacts instead of copying them; preserve essential conclusions when their only source is conversation. A note records approval already given, never grants it. Check its branch and checkpoint against Git before relying on it; recheck only stale or unresolved claims.
+
+At an existing checkpoint, before a handoff, or before returning from a writing workflow, refresh the note with what the next skill needs and remove superseded state. No event log, extra gate, or new tracking skill. Missing means continue, creating it when authorized and needed. `proto` keeps its requirements here; `yolo` consumes the contract; `feedback` and `address-review` retain outstanding check debt. At PR creation or update, reconcile the note with the final diff and checks, transfer relevant rationale into the PR body, and record the PR and remaining work. Mark complete only when the active workflow's terminal condition holds; awaiting prototype feedback or human review is an explicit next action. After merge, `land` marks any existing note complete and preserves it until worktree removal or explicit cleanup.
+
 ## Approval means autonomous execution
 
 Approving a contract is the go-ahead to run to completion. This applies to every surface that can produce one: native plan mode, `ExitPlanMode`, an OpenSpec change proposal, or any skill or command used to reach agreement.

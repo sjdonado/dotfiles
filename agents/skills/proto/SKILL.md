@@ -15,7 +15,7 @@ Load and follow the `ponytail` skill. Prototype code is still the laziest code t
 
 1. Establish a safe branch before editing, same rule as `yolo`: never the default branch, even for throwaway code. Include the tracker ID in the branch name when one is bound.
 2. Resolve the local rungs of the oracle ladder (type check, lint, tests) per `AGENTS.md`. Record them in worktree state if available. The remote rungs do not exist in this workflow.
-3. Start a requirements ledger in the conversation: the initial requirements as understood, each marked assumed or confirmed.
+3. Start the requirements ledger in the branch note's Contract section per `AGENTS.md` continuity rules: the initial requirements as understood, each marked assumed or confirmed. Present only what changed in the conversation; hand the same note to `yolo` on promotion.
 
 ## The loop
 
