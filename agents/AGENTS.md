@@ -21,6 +21,7 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "think this through", "let's explore", an idea with no shape yet | `openspec-explore` |
 | "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
 | "does the code match the spec" | `openspec-verify-change` |
+| "set up project agent instructions", "audit AGENTS.md" | `harness-boostrap` |
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 
@@ -56,11 +57,13 @@ When a plan brief from `triage`, a finding ledger from `research`, or an OpenSpe
 
 ## Continuity between skills
 
-For work spanning sessions or rounds, keep one local note at `.agent/<branch-key>.md` in the worktree. Derive the key from the exact branch name by replacing `%` with `%25`, then `/` with `%2F`. Before creating it, exclude `/.agent/` through `git rev-parse --git-path info/exclude`; never commit the note. Read it once when resuming or entering a skill, unless already current in context. Read-only skills may consume it but must not write it; the next authorized writing workflow preserves their relevant conclusions.
+For work spanning sessions or rounds, keep one ignored note at `.agent/<branch-key>.md`. Encode the exact branch name by replacing `%` with `%25`, then `/` with `%2F`. Before creating it, add `/.agent/` to the file resolved by `git rev-parse --git-path info/exclude`; never commit the note. Read it on continuation unless already current in context. Read-only skills consume without writing; the next authorized writer preserves their relevant conclusions.
 
-Keep three sections: **Contract** (objective and artifact references), **State** (current checkpoint, next action, unresolved checks), and **Carry forward** (decisions, essential findings with sources, and rejected review findings). Existing specs and `tasks.md` remain authoritative. Reference retrievable artifacts instead of copying them; preserve essential conclusions when their only source is conversation. A note records approval already given, never grants it. Check its branch and checkpoint against Git before relying on it; recheck only stale or unresolved claims.
+Keep **Contract** (requirements and artifact references), **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews). Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
 
-At an existing checkpoint, before a handoff, or before returning from a writing workflow, refresh the note with what the next skill needs and remove superseded state. No event log, extra gate, or new tracking skill. Missing means continue, creating it when authorized and needed. `proto` keeps its requirements here; `yolo` consumes the contract; `feedback` and `address-review` retain outstanding check debt. At PR creation or update, reconcile the note with the final diff and checks, transfer relevant rationale into the PR body, and record the PR and remaining work. Mark complete only when the active workflow's terminal condition holds; awaiting prototype feedback or human review is an explicit next action. After merge, `land` marks any existing note complete and preserves it until worktree removal or explicit cleanup.
+Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved handoff without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and preserves it for explicit cleanup.
+
+A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log or separate tracking system.
 
 ## Approval means autonomous execution
 

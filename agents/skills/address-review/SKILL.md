@@ -24,7 +24,7 @@ Steps:
 
    Prefer to handle straightforward fixes directly. For a wide or risky change, use native read-only delegation before editing.
 
-3. Commit fixes locally as you go. Do not push or reply yet: batch external actions for step 7 after approval.
+3. Commit fixes locally as you go. Save progress and outstanding checks in the branch note. Batch external actions for steps 7 and 8 after approval.
 
 4. Red pipelines: inspect CI with `gh pr checks <pr>` and failing logs with `gh run view <run-id> --log-failed`. Reproduce locally where practical, fix real failures in focused commits, and distinguish flakes from defects. Verify the changed surface with focused checks first, then the project's resolved oracle ladder. For data, auth, concurrency, migration, or public-contract changes, also verify failure behavior, compatibility, and rollback where relevant. Do not invent unrelated checks. Local checks are allowed before approval; do not rerun remote CI yet.
 
@@ -34,14 +34,14 @@ Steps:
 
 5. Outdated branch: if `mergeStateStatus` is `BEHIND` (or base has moved), prepare an update plan but do not update yet. Default to merging the actual base branch into the PR branch after approval to preserve history and avoid rewriting pushed commits. Never assume the base is `main`.
 
-6. STOP and confirm before external write actions (updating the branch, pushing commits, replying to comments, or rerunning remote CI). Show a summary: each comment's verdict (fix → commit / reject → reason / clarify → draft question), CI fixes or flakes, local checks run, and the exact branch-update plan. Continue only after the user approves.
+6. STOP before external writes: present the verdicts, fixes, checks, branch-update plan, and every reply for approval. Save the branch note with that pending action before returning. Approval covers only the presented scope; it includes the PR-description refresh after the approved push, never replies beyond those shown.
 
 7. After approval: update the branch if needed, resolve conflicts without dropping either side, rerun relevant local checks, push, rerun remote CI only where needed, then reply inside each existing unresolved thread using its existing comment ID and the GitHub review-comment reply endpoint (`POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies`):
    - Fixed: reply with the fixing commit hash, e.g. `Fixed in <shorthash>.` Add one short note only when the change is not obvious.
    - Rejected: reply with the approved reason, respectfully and specifically.
    - Needs clarification: post the approved clarifying question.
 
-8. After all actionable feedback is addressed, no clarification remains pending, and CI is green or any flake is explicitly acknowledged, offer to update the existing PR description so it reflects the final scope, rationale, checks, material risks, and deviations from the original description. If accepted, preserve issue links, closing keywords, checklists, and manually written context; show the proposed description and wait for explicit confirmation before applying it with `gh pr edit`. Never create another PR.
+8. After an authorized push, update the existing PR title and body from its diff and check results, preserving human context and issue links, per AGENTS.md. No second description approval is needed. Save checks, pending clarification, and next action in the branch note before returning. Outstanding required checks remain unresolved, not complete. Never create another PR.
 
 Never create a new inline review comment on a file or line. The only allowed line-level write is a reply inside an existing unresolved review thread. Never create a new review, top-level PR comment, or standalone conversation comment. If an existing item cannot be replied to through its thread, report it to the user instead of posting elsewhere.
 

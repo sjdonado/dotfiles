@@ -15,7 +15,7 @@ Load and follow the `ponytail` skill. Prototype code is still the laziest code t
 
 1. Establish a safe branch before editing, same rule as `yolo`: never the default branch, even for throwaway code. Include the tracker ID in the branch name when one is bound.
 2. Resolve the local rungs of the oracle ladder (type check, lint, tests) per `AGENTS.md`. Record them in worktree state if available. The remote rungs do not exist in this workflow.
-3. Start the requirements ledger in the branch note's Contract section per `AGENTS.md` continuity rules: the initial requirements as understood, each marked assumed or confirmed. Present only what changed in the conversation; hand the same note to `yolo` on promotion.
+3. Read the branch note or create it per `AGENTS.md` continuity rules, adding `/.agent/` to `info/exclude` first. Put confirmed/assumed requirements and deferred behavior in Contract, and non-reconstructible rationale in Carry forward. On continuation, recover missing state from artifacts; ask for an unrecoverable requirement before changing dependent behavior.
 
 ## The loop
 
@@ -23,7 +23,7 @@ Each iteration:
 
 1. **Build** the smallest slice that gives the human something new to react to.
 2. **Validate** with the local ladder rungs only: type check, lint, and the tests for the touched surface. Green before showing. No adversarial review, no push, no PR. The one exception: if the slice touches data, auth, concurrency, migration, or a public contract, run a single Reviewer B pass from `adversarial-review` (diff only, one subagent, one round) before presenting; those surfaces are where a prototype's shortcuts become incidents.
-3. **Checkpoint** with a WIP commit on the branch so every iteration is individually revertable. These commits are squash fodder, not history; message hygiene does not apply to them.
+3. **Checkpoint.** Save and read back the ignored branch note before presenting: requirements including deferred behavior, essential rationale, checks, and awaiting-feedback next action. Do this even when commits are skipped. Make a WIP commit on the branch when authorized, then record its hash in the note. Report a failed save instead of claiming the handoff is ready.
 4. **Present**: what was built, how to try it (load and follow the `run` skill when seeing it live helps), what this iteration taught, and what it changed in the requirements ledger. Then stop and wait. This is the one workflow where stopping for the human every round is the design, not a failure of autonomy.
 5. **Fold feedback in.** Feedback may change the code, the requirements, or both. Update the ledger: what survived, what changed and why, what died. A requirement the human reversed twice is a grilling target, not a coin to keep flipping; say so.
 
