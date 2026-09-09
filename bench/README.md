@@ -1,48 +1,55 @@
 # bench
 
-Test one concrete harness behavior in a disposable repository, retain the evidence, and measure the sessions that attempted it. Correctness comes first: fewer tokens in a failed task are not an improvement. This replaces automatic Claude transcript sweeps and date/cohort comparisons with explicit, reproducible scenarios and Codex exec JSONL analysis. Old transcripts and the ignored local cohorts.json are left untouched; the old --all, --report, and --split interface is retired.
+Test concrete harness behaviors in disposable repositories, retain every attempt, and judge outcomes from artifacts and tool actions rather than from what the model says it did. Correctness comes first: fewer tokens in a failed task are not an improvement. Sessions run through `codex exec --json`, documented at https://learn.chatgpt.com/docs/non-interactive-mode. The earlier Claude transcript sweep and date/cohort comparison are retired; old transcripts and the ignored local cohorts.json are left untouched.
 
-## Run the handoff probe
-
-Requires Python 3, Git, and an authenticated Codex CLI with access to the requested model. This starts two real model sessions and consumes your normal usage allowance.
+## Commands
 
 ```sh
-bench/measure run
-# Explicit model, no fallback:
-bench/measure run --model gpt-5.6-luna
+bench/measure verify --local            # compile, offline regression checks, git diff --check; no model calls
+bench/measure verify --behavior         # inspect recorded matrix coverage; nonzero unless every case passed review
+bench/measure verify --behavior --run   # start missing matrix sessions (paid), capped at 26 per retained batch
+bench/measure run --scenario <case> --model <model>   # one case, same batch, same cap and gate
+bench/measure analyze <events.jsonl> ...              # metrics for explicit codex exec --json files
 ```
 
-The runner prints a new directory under ignored bench/runs/. Each attempt seeds its own repository on proto/handoff, copies the current AGENTS.md plus proto and ponytail skills, and starts two separate ephemeral Codex sessions with GPT-5.6 Luna and low reasoning. The second session gets neither the first prompt nor its conversation. User configuration is disabled; authentication and built-in/user-level instructions may still be supplied by Codex. This is a controlled fixture, not a hermetic runtime. Raw events come from codex exec --json, documented at https://learn.chatgpt.com/docs/non-interactive-mode.
+Requirements: Python 3 standard library, Git, and for `--run` an authenticated Codex CLI with access to the requested models. `--run` starts real sessions and consumes usage allowance. The default batch is `bench/runs/effectiveness-v1` (ignored). Never reset or delete a batch to escape the cap or hide a failure; a failed or interrupted call still consumes its budget, while a model-access error (`unavailable`) does not and is retried on the next `--run`. Editing any hashed input marks earlier runs `stale` without refunding their sessions: a new harness version is validated in a new batch (`--batch <dir>`), which is a new budget the user authorizes.
 
-The prompts explicitly skip commits, pushes, PRs, delegation, and external services. The CLI uses workspace-write, and each round has a five-minute timeout. The runner makes only the fixture's seed commit and never pushes. No existing worktree is reset or removed. Run artifacts stay available for inspection and explicit cleanup.
+Local success means the benchmark tooling works. It says nothing about the harness. Only `verify --behavior` exiting zero is behavioral acceptance, and that is a smoke gate over one matrix, not a reliability or token-savings claim.
 
-## Scenario: handoff-v1
+## The matrix
 
-Round 1 asks proto to normalize whitespace in label.py while preserving case. It provides a business reason for casing and defers a specific blank-input fallback to the next round. Round 2 asks for the deferred behavior and a rationale document without repeating either fact. This tests whether proto uses ponytail and leaves enough durable context to continue in a fresh session.
+Nine cases in `bench/scenarios.py`, run on `gpt-5.6-luna` and `gpt-6-astra` at low reasoning, 26 sessions total. The unchanged handoff-v1 on Luna is always the first trial. Order and prompts are frozen in code; the `handoff-v1` prompts are byte-for-byte the original failed probe.
 
-Assertions are declared in the runner before either model executes:
+| Case | Sessions per model | Expected outcome |
+| --- | ---: | --- |
+| handoff-v1 | 2 (+2 extra Luna trials) | whitespace normalization, then exact `Untitled` fallback and Northstar rationale recovered from the branch note |
+| recoverable | 1 | deferred requirement recovered from `approved-contract.md` without asking |
+| unrecoverable | 1 | asks for the missing requirement; no dependent edits, no guessed fallback |
+| read-only | 1 | answers a question; no fixture writes, not even the note |
+| feedback | 1 | `Draft` fallback committed, pushed to a local bare remote, PR edited through the gh substitute, human context preserved |
+| land-open | 1 | reads OPEN state, keeps the note awaiting merge, changes nothing else |
+| land-merged | 1 | reads MERGED state, completes and preserves the note, changes nothing else |
+| bootstrap-audit | 1 | ordinary repo: flags unsupported `npm test`, finds `make check`, keeps nested scope, writes nothing |
+| bootstrap-setup | 2 | ordinary repo: grounded portable AGENTS.md; fresh session discovers and runs `make check`; repeat setup changes nothing |
 
-- Both rounds: expected label behavior, same branch, an existing refreshed note at the prescribed path, ignored and untracked.
-- Round 2: the exact deferred fallback and the earlier branding rationale survive. The rationale check is a keyword smoke check; read the document to confirm meaning.
+Each case seeds a standalone temporary repository outside this checkout so the project's root AGENTS.md cannot leak in. Harness cases get `agents/AGENTS.md` plus the skills they need copied into `.agents/skills/`. Bootstrap cases get only `harness-boostrap` and an ordinary Makefile project with a nested `src/AGENTS.md`. Forge cases get a local bare `origin` and a `gh` substitute (`bench/fixture_gh.py`) at `./.fixture/bin/gh` that supports `pr view/list/checks/edit`, logs every call to `.fixture/operations.jsonl`, and fails anything else. Fixture credentials are invalid and the sandbox has network disabled, so no real forge or tracker is reachable. The substitute is addressed by path, not PATH: Codex runs commands through a login shell that re-sources the profile, so a PATH prepend loses to the real `gh`. The `feedback` case runs with `danger-full-access` because workspace-write denies writes to `.git` and the case must commit and push; its remote is the local bare repository and its forge credentials are invalid. This is not hermetic: Codex may still load its own built-in or user-level instructions, which the manifest hashes as `ambient_instructions`.
 
-Inspect transcripts for actual skill reads, note consumption, redundant exploration, false completion claims, and a useful next action. Note existence and modification alone do not establish good state. This scenario does not test yolo, PR rendering, feedback/address-review, land, branch switching, or every harness rule. Add a small scenario only when an observed gap warrants it.
+## What a run retains
 
-## Read the evidence
+Each run directory under the batch holds `result.json` (provenance, input hash, per-round exit code, metrics, artifact checks, pass/fail), the exact prompts, `round-N.jsonl` events, stderr, note snapshots, before/after file hashes, a copy of every instruction source used, and the final fixture. Provenance hashes the actual file contents of `agents/AGENTS.md`, the copied skills (including yolo and address-review, which no case exercises but which the harness cases could route to), the runner, and the fixtures, so an uncommitted edit invalidates earlier evidence.
 
-Each run retains result.json, per-round prompts, JSONL events, stderr, note snapshots, and the final fixture. The manifest records UTC start time, requested model, reasoning effort, CLI version, source commit, and content hashes of AGENTS.md and both skills. Hashes distinguish uncommitted harness edits. Model is labeled requested because exec events do not necessarily identify the serving model.
+Artifact checks are declared in `scenarios.check` before any model runs and judge files, git state, and the gh operation log. They deliberately cannot judge meaning. That is why acceptance also requires a `review.json` beside each passing run:
 
-result.json separates artifact checks from session metrics and reports each round's pass/fail. The runner exits nonzero if any round fails, times out, or cannot complete. Preserve failed attempts; do not retry until green and then report only the survivor.
-
-```sh
-bench/measure analyze bench/runs/<run>/round-1.jsonl bench/runs/<run>/round-2.jsonl
+```json
+{"input_hash": "<from result.json>", "evidence_hash": "<from result.json>", "reviewer": "<who>", "observations": "<what the transcript showed>", "passed": true}
 ```
 
-The same analyze command accepts future sessions captured with codex exec --json. Supply explicit event files, not internal Codex rollout files or Claude transcripts. It emits one JSON row per file: terminal status, reported token usage, completed tool items, failed items, and command-output bytes. It counts completion once per item, not both its start and finish. Missing usage remains null, unfinished sessions remain incomplete, and malformed JSON fails visibly. analyze reports observations; a completed turn does not imply the task passed. It does not invent costs, interruption counts, permission-denial classifications, or model identity that the stream does not provide.
+Write it only after reading the transcript for actual skill routing, note consumption, unnecessary rereads, honest terminal claims, and, for unrecoverable, a real clarifying question. A run without a review reports `awaiting-transcript-review`; a review whose hashes no longer match reports `stale-review`.
 
-## Compare harness versions
+`verify --behavior` statuses: `passed`, `failed` (artifact checks, timeout, or exit code), `unavailable` (model access error, distinct from a wrong answer), `stale` (inputs changed since the run), `changed-evidence` (run files edited after the fact), `awaiting-transcript-review`, `stale-review`, `incomplete-review`, `review-failed`, `missing` (never attempted), `budget-exhausted` (cap would be exceeded; stop for direction). A matching failed attempt is never hidden behind a later success.
 
-First inspect correctness and continuation. Then repeat the same scenario with the same model, reasoning, CLI, and environment against each harness version. Keep all attempts, compare pass rates, and compare median input/output tokens, cached input separately, tool calls, and wall time among successful runs. Record sample counts and variability. Do not pool different scenarios or models, and do not claim savings from one pair. Alternate version order when possible to reduce timing/cache bias. Failure rate and manual intervention remain part of the result even when successful runs are cheap.
+## Reading metrics
 
-For ordinary sessions, retain the task and expected outcome alongside the event file, inspect the final artifacts, and use analyze for cost/friction observations. Such sessions can expose missing scenarios, but unrelated tasks are not an A/B comparison. Raw artifacts can contain private context and stay ignored; publish only deliberately selected, inspected findings.
+`analyze` emits one JSON row per event file: terminal status, reported token usage (cached input separately; never add it to input), completed tool items counted once, failed items, command-output bytes. Missing usage is `null`, unfinished sessions are `incomplete`, malformed JSON fails visibly. A completed turn does not mean the task passed. Model is recorded as requested; the event stream does not name the serving model.
 
-Local checks: python3 -m py_compile bench/measure; python3 bench/test_measure.py; git diff --check. A red behavior probe is a finding about the harness, not a reason to weaken the assertions.
+To compare harness versions, rerun the same matrix against each version, keep all attempts, compare pass rates first, then medians of input, output, cached input, tool calls, and wall time among passing runs only, per model. Do not pool models or scenarios, do not compare a failed baseline's tokens with a passing candidate, and do not claim savings from one pair. The baseline failure this work responds to is in `bench/handoff-v1-findings.md`.

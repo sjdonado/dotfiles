@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Run a disposable harness probe or measure explicit Codex exec JSONL transcripts.
 
-Usage: bench/measure run [--model gpt-5.6-luna]
+Usage: bench/measure verify --local
+       bench/measure verify --behavior [--run]
+       bench/measure run [--model gpt-5.6-luna] [--scenario handoff-v1]
        bench/measure analyze SESSION.jsonl [SESSION.jsonl ...]
 """
 
@@ -9,31 +11,23 @@ import argparse
 import collections
 import hashlib
 import json
+import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from scenarios import CASES, EXPECTED, NOTE, PROMPTS, SANDBOX, SKILLS, check, git, seed, snapshot
+
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = "gpt-5.6-luna"
-BRANCH = "proto/handoff"
-NOTE = ".agent/proto%2Fhandoff.md"
-PROMPTS = [
-    "Prototype on this same branch using the installed harness. Implement label(text) "
-    "in label.py to trim and collapse whitespace while preserving case. The reason "
-    "for preserving case is that launch partner Northstar requires its original branding. "
-    "There will be a second round in a fresh session: blank input should then return "
-    "'Untitled', but defer that behavior for now. This round only implements whitespace "
-    "normalization. Use proto. For this disposable test, skip commits, pushes, PRs, "
-    "delegation, and external services; only modify this repository. Validate locally "
-    "with Python assertions, then stop for feedback.",
-    "Continue the prototype on this same branch. Implement the deferred blank-input "
-    "behavior from the saved requirements. Write rationale.md explaining the earlier "
-    "casing decision. Use proto. For this disposable test, skip commits, pushes, PRs, "
-    "delegation, and external services; only modify this repository. Validate locally "
-    "with Python assertions, then stop for feedback.",
-]
+MODELS = (MODEL, "gpt-6-astra")
+BATCH = ROOT / "bench/runs/effectiveness-v1"
+LIMIT = 26
 
 
 def analyze(path):
@@ -88,89 +82,212 @@ def analyze(path):
     }
 
 
-def git(repo, *args):
-    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+def last_message(path):
+    text = ""
+    with open(path) as stream:
+        for line in stream:
+            if line.strip():
+                event = json.loads(line)
+                if event.get("type") == "item.completed" and event["item"].get("type") == "agent_message":
+                    text = event["item"].get("text", "")
+    return text
 
 
-def behavior(repo, blank):
-    check = (
-        "from label import label; "
-        "assert label('  Northstar   Labs  ') == 'Northstar Labs'; "
-        "assert label('a\\tb\\nc') == 'a b c'; "
-        f"assert label('   ') == {blank!r}"
-    )
-    result = subprocess.run(["python3", "-c", check], cwd=repo, capture_output=True, text=True)
-    return {"passed": result.returncode == 0, "stderr": result.stderr}
+def save(path, value):
+    path.write_text(json.dumps(value, indent=2) + "\n")
 
 
-def run(model):
-    # Each run owns fresh files. Never reset or reuse a previous fixture.
-    destination = ROOT / "bench" / "runs"
-    destination.mkdir(exist_ok=True)
-    run_dir = Path(tempfile.mkdtemp(prefix="handoff-", dir=destination))
-    repo = run_dir / "repo"
-    repo.mkdir()
-    harness = (ROOT / "agents/AGENTS.md").read_text()
-    (repo / "AGENTS.md").write_text(harness + "\n## Probe repository\n\nLocal oracle: python3 assertions against label.py. No compile, lint, build, or remote CI. Skills are in .agents/skills/. This disposable fixture skips commits by explicit user instruction.\n")
-    for name in ("proto", "ponytail"):
-        shutil.copytree(ROOT / "agents/skills" / name, repo / ".agents/skills" / name)
-    (repo / "label.py").write_text("def label(text):\n    return text\n")
-    git(repo, "init", "-b", BRANCH)
-    git(repo, "add", "AGENTS.md", ".agents", "label.py")
-    git(repo, "-c", "user.name=Harness probe", "-c", "user.email=probe@example.invalid",
-        "-c", "core.hooksPath=/dev/null", "commit", "--no-gpg-sign", "-m", "chore: seed fixture")
-    manifest = {
-        "scenario": "handoff-v1", "model_requested": model, "reasoning_effort": "low",
-        "harness_commit": git(ROOT, "rev-parse", "HEAD"),
-        "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "harness_sha256": hashlib.sha256(harness.encode()).hexdigest(),
-        "skill_sha256": {name: hashlib.sha256((repo / ".agents/skills" / name / "SKILL.md").read_bytes()).hexdigest() for name in ("proto", "ponytail")},
-        "cli": subprocess.check_output(["codex", "--version"], text=True).strip(),
-        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "rounds": [],
-    }
+def digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def inputs(case, model):
+    """Hash actual sources, not just a commit that may hide local modifications."""
+    files = [ROOT / "agents/AGENTS.md", Path(__file__).resolve(),
+             ROOT / "bench/scenarios.py", ROOT / "bench/fixture_gh.py"]
+    for name in SKILLS:
+        files.extend(p for p in (ROOT / "agents/skills" / name).rglob("*") if p.is_file())
+    sources = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(set(files)) if p.exists()}
+    codex_directory = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
+    ambient = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
+               (codex_directory / "AGENTS.md", codex_directory / "AGENTS.override.md") if p.is_file()}
+    return {"scenario": case, "prompts": PROMPTS[case], "expected": EXPECTED[case],
+            "model_requested": model, "reasoning_effort": "low", "timeout_seconds": 300,
+            "sandbox": SANDBOX.get(case, "workspace-write"), "network_access": False, "ignore_user_config": True,
+            "python": sys.version, "platform": sys.platform, "sources": sources, "ambient_instructions": ambient}
+
+
+def cli_version(cache=[]):
+    """Resolve once; verify --behavior must not need Codex installed."""
+    if not cache:
+        try:
+            cache.append(subprocess.check_output(["codex", "--version"], text=True).strip())
+        except (OSError, subprocess.CalledProcessError):
+            cache.append(None)
+    return cache[0]
+
+
+def sessions_used(batch):
+    """Rounds that reached a model. An access error never ran, so it costs nothing."""
+    return sum(1 for p in batch.glob("*/result.json")
+               for row in json.loads(p.read_text())["rounds"] if row.get("status") != "unavailable")
+
+
+def matrix():
+    # Freeze order: the unchanged Luna handoff is always the first model trial.
+    result = [(case, model, 1) for model in MODELS for case in CASES[:7]]
+    result += [("handoff-v1", MODEL, trial) for trial in (2, 3)]
+    result += [(case, model, 1) for model in MODELS for case in CASES[7:]]
+    return result
+
+
+def evidence_hash(run_dir):
+    return digest({p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                   for p in sorted(run_dir.glob("round-*")) if p.is_file()})
+
+
+def run_case(batch, case, model, trial, provenance):
+    batch.mkdir(parents=True, exist_ok=True)
+    if sessions_used(batch) + len(PROMPTS[case]) > LIMIT:
+        return None
+    run_dir = Path(tempfile.mkdtemp(prefix=f"{case}-{model}-{trial}-", dir=batch))
+    manifest = {"inputs": provenance, "input_hash": digest(provenance), "trial": trial, "cli": cli_version(),
+                "harness_commit": git(ROOT, "rev-parse", "HEAD"), "rounds": [],
+                "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    save(run_dir / "result.json", manifest)
+    # Retain exact instruction contents even after this source checkout changes.
+    for name in provenance["sources"]:
+        target = run_dir / "sources" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+    for index, name in enumerate(provenance["ambient_instructions"]):
+        (run_dir / "sources" / f"ambient-{index}.md").write_bytes(Path(name).read_bytes())
+    # Outside the checkout, so parent project AGENTS.md cannot contaminate fixtures.
+    fixture_dir = Path(tempfile.mkdtemp(prefix="harness-fixture-"))
+    repo = fixture_dir / "repo"
+    manifest["fixture_path"] = str(repo)
+    save(run_dir / "result.json", manifest)
+    seed(repo, case, ROOT)
     print(run_dir, flush=True)
-    note_before = ""
-    for index, prompt in enumerate(PROMPTS, 1):
+    for index, prompt in enumerate(PROMPTS[case], 1):
+        before = snapshot(repo)
+        note_before = (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
+        save(run_dir / f"round-{index}.before.json", before)
         (run_dir / f"round-{index}.prompt.txt").write_text(prompt)
         transcript = run_dir / f"round-{index}.jsonl"
         command = ["codex", "exec", "--ignore-user-config", "--json", "--ephemeral",
                    "-m", model, "-c", 'model_reasoning_effort="low"',
-                   "-s", "workspace-write", "-C", str(repo), prompt]
+                   "-c", "sandbox_workspace_write.network_access=false",
+                   "-s", SANDBOX.get(case, "workspace-write"), "-C", str(repo), prompt]
+        env = os.environ.copy()
+        env["PATH"] = str(repo / ".fixture/bin") + os.pathsep + env.get("PATH", "")
+        env.update(GH_HOST="example.invalid", GH_TOKEN="fixture-no-real-token", GITHUB_TOKEN="fixture-no-real-token")
         started = time.monotonic()
+        row = {"round": index, "status": "started", "command": command, "passed": False}
+        manifest["rounds"].append(row)
+        save(run_dir / "result.json", manifest)  # An interrupted call consumes its budget.
         with transcript.open("w") as output, (run_dir / f"round-{index}.stderr").open("w") as err:
+            process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=output, stderr=err,
+                                       env=env, start_new_session=True)
             try:
-                result = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=output, stderr=err, timeout=300)
-                exit_code = result.returncode
+                exit_code = process.wait(timeout=300)
             except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
                 exit_code = 124
         note = (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
         (run_dir / f"round-{index}.note.md").write_text(note)
         try:
             metrics = analyze(transcript)
+            message = last_message(transcript)
         except (ValueError, KeyError, TypeError) as error:
-            metrics = {"status": "invalid", "tokens": None, "error": str(error)}
-        ignored = subprocess.run(["git", "check-ignore", "-q", NOTE], cwd=repo).returncode == 0
-        checks = {
-            "behavior": behavior(repo, "" if index == 1 else "Untitled"),
-            "note_exists": bool(note), "note_refreshed": bool(note) and note != note_before,
-            "note_ignored": ignored, "note_untracked": not git(repo, "ls-files", NOTE),
-            "same_branch": git(repo, "branch", "--show-current") == BRANCH,
-        }
-        if index == 2:
-            rationale = (repo / "rationale.md").read_text() if (repo / "rationale.md").exists() else ""
-            checks["rationale_preserved"] = "northstar" in rationale.lower() and "brand" in rationale.lower()
+            metrics, message = {"status": "invalid", "tokens": None, "error": str(error)}, ""
+        try:
+            checks = check(repo, case, index, before, note_before, message)
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            checks = {"oracle_error": {"passed": False, "error": str(error)}}
         passed = exit_code == 0 and metrics["status"] == "completed" and all(
             value["passed"] if isinstance(value, dict) else value for value in checks.values())
-        manifest["rounds"].append({"round": index, "exit_code": exit_code,
-                                   "wall_seconds": round(time.monotonic() - started, 2),
-                                   "metrics": metrics, "checks": checks, "passed": passed})
-        (run_dir / "result.json").write_text(json.dumps(manifest, indent=2) + "\n")
-        print(f"round {index}: {'pass' if passed else 'fail'}", flush=True)
-        note_before = note
+        stderr = (run_dir / f"round-{index}.stderr").read_text()
+        # Access errors are distinguishable from completed turns with wrong artifacts.
+        access = exit_code != 0 and any(word in (stderr + json.dumps(metrics)).lower() for word in ("not supported", "model_not_found", "unauthorized", "authentication", "not available", "not have access"))
+        row.update(exit_code=exit_code, status="unavailable" if access else "finished",
+                   wall_seconds=round(time.monotonic() - started, 2), metrics=metrics, checks=checks, passed=passed)
+        save(run_dir / f"round-{index}.after.json", snapshot(repo))
+        save(run_dir / f"round-{index}.checks.json", checks)
+        save(run_dir / "result.json", manifest)
+        print(f"{case} {model} trial {trial} round {index}: {'pass' if passed else row['status'] if access else 'fail'}", flush=True)
         if exit_code != 0:
             break
-    return 0 if len(manifest["rounds"]) == 2 and all(r["passed"] for r in manifest["rounds"]) else 1
+    manifest["evidence_hash"] = evidence_hash(run_dir)
+    shutil.copytree(fixture_dir, run_dir / "fixture")
+    shutil.rmtree(fixture_dir, ignore_errors=True)
+    save(run_dir / "result.json", manifest)
+    return run_dir
+
+
+def acceptance(run_dir, provenance, trial):
+    manifest = json.loads((run_dir / "result.json").read_text())
+    if manifest.get("input_hash") != digest(provenance) or manifest.get("trial") != trial:
+        return "stale"
+    if any(row.get("status") == "unavailable" for row in manifest["rounds"]):
+        return "unavailable"
+    if len(manifest["rounds"]) != len(provenance["prompts"]) or not all(row.get("passed") for row in manifest["rounds"]):
+        return "failed"
+    if manifest.get("evidence_hash") != evidence_hash(run_dir):
+        return "changed-evidence"
+    review_path = run_dir / "review.json"
+    if not review_path.exists():
+        return "awaiting-transcript-review"
+    review = json.loads(review_path.read_text())
+    if review.get("input_hash") != manifest["input_hash"] or review.get("evidence_hash") != manifest["evidence_hash"]:
+        return "stale-review"
+    if not review.get("observations") or not review.get("reviewer"):
+        return "incomplete-review"
+    return "passed" if review.get("passed") is True else "review-failed"
+
+
+def verify_behavior(batch, execute=False, selected=None):
+    batch = Path(batch).resolve()
+    report = []
+    for case, model, trial in selected or matrix():
+        provenance = inputs(case, model)
+        matches = [p.parent for p in sorted(batch.glob("*/result.json"))
+                   if (lambda row: row.get("input_hash") == digest(provenance) and row.get("trial") == trial)(json.loads(p.read_text()))]
+        # Retry only when every prior attempt never reached the model.
+        if execute and all(acceptance(p, provenance, trial) == "unavailable" for p in matches):
+            result = run_case(batch, case, model, trial, provenance)
+            if result:
+                matches = [result]
+        statuses = [acceptance(path, provenance, trial) for path in matches]
+        # Never discard a failed matching attempt in favor of a survivor.
+        exhausted = sessions_used(batch) + len(PROMPTS[case]) > LIMIT if batch.exists() else False
+        status = "passed" if statuses and all(s == "passed" for s in statuses) else next((s for s in statuses if s != "passed"), "budget-exhausted" if exhausted else "missing")
+        report.append({"case": case, "model": model, "trial": trial, "status": status,
+                       "runs": [str(p) for p in matches], "input_hash": digest(provenance)})
+    used = sessions_used(batch)
+    result = {"kind": "behavioral-smoke", "sessions_used": used, "session_cap": LIMIT,
+              "passed": used <= LIMIT and all(row["status"] == "passed" for row in report), "results": report}
+    print(json.dumps(result, indent=2), flush=True)
+    if batch.exists() and selected is None:  # a single case must not overwrite the matrix record
+        save(batch / "acceptance.json", result)
+    return 0 if result["passed"] else 1
+
+
+def verify_local():
+    commands = [[sys.executable, "-m", "py_compile", "bench/measure", "bench/scenarios.py", "bench/fixture_gh.py", "bench/test_measure.py"],
+                [sys.executable, "bench/test_measure.py"], ["git", "diff", "--check", "HEAD"]]
+    for command in commands:
+        if subprocess.run(command, cwd=ROOT).returncode:
+            return 1
+    # git diff --check never sees untracked files.
+    untracked = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard", "bench", "AGENTS.md", "agents"], cwd=ROOT, text=True).split()
+    dirty = [f"{path}:{n}" for path in untracked for n, line in enumerate((ROOT / path).read_text(errors="replace").splitlines(), 1) if line != line.rstrip()]
+    if dirty:
+        print("trailing whitespace: " + ", ".join(dirty))
+        return 1
+    print("Local tooling checks passed; harness behavioral acceptance is separate.")
+    return 0
 
 
 def main():
@@ -178,11 +295,24 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     runner = commands.add_parser("run")
     runner.add_argument("--model", default=MODEL)
+    runner.add_argument("--scenario", choices=CASES, default="handoff-v1")
+    runner.add_argument("--batch", type=Path, default=BATCH)
+    runner.add_argument("--trial", type=int, default=1)
+    verifier = commands.add_parser("verify")
+    mode = verifier.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--local", action="store_true")
+    mode.add_argument("--behavior", action="store_true")
+    verifier.add_argument("--run", action="store_true", help="Explicitly authorize missing model sessions, capped at 26 per retained batch")
+    verifier.add_argument("--batch", type=Path, default=BATCH)
     reader = commands.add_parser("analyze")
     reader.add_argument("transcripts", nargs="+")
     args = parser.parse_args()
     if args.command == "run":
-        return run(args.model)
+        return verify_behavior(args.batch, execute=True, selected=[(args.scenario, args.model, args.trial)])
+    if args.command == "verify":
+        if args.local and args.run:
+            parser.error("--run requires --behavior")
+        return verify_local() if args.local else verify_behavior(args.batch, args.run)
     for path in args.transcripts:
         print(json.dumps(analyze(path)))
     return 0

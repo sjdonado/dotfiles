@@ -5,7 +5,8 @@ from pathlib import Path
 import runpy
 import tempfile
 
-analyze = runpy.run_path(str(Path(__file__).with_name("measure")))["analyze"]
+measure = runpy.run_path(str(Path(__file__).with_name("measure")))
+analyze = measure["analyze"]
 
 
 def main():
@@ -44,6 +45,37 @@ def main():
             pass
         else:
             raise AssertionError("Malformed transcripts must fail visibly")
+        matrix = measure["matrix"]()
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 26
+        assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
+        run = Path(directory) / "run"
+        run.mkdir()
+        provenance = {"prompts": ["Do the task"], "source": "v1"}
+        manifest = {"input_hash": measure["digest"](provenance), "trial": 1,
+                    "rounds": [{"passed": True}], "evidence_hash": measure["evidence_hash"](run)}
+        measure["save"](run / "result.json", manifest)
+        assert measure["acceptance"](run, provenance, 1) == "awaiting-transcript-review"
+        review = {"input_hash": manifest["input_hash"], "evidence_hash": manifest["evidence_hash"],
+                  "reviewer": "offline-test", "observations": "Fixture only", "passed": True}
+        measure["save"](run / "review.json", review)
+        assert measure["acceptance"](run, provenance, 1) == "passed"
+        assert measure["acceptance"](run, {**provenance, "source": "v2"}, 1) == "stale"
+        (run / "round-1.jsonl").write_text("changed evidence")
+        assert measure["acceptance"](run, provenance, 1) == "changed-evidence"
+        manifest["rounds"][0]["passed"] = False
+        measure["save"](run / "result.json", manifest)
+        assert measure["acceptance"](run, provenance, 1) == "failed"
+        manifest["rounds"] = []
+        measure["save"](run / "result.json", manifest)
+        assert measure["acceptance"](run, provenance, 1) == "failed"
+        manifest["rounds"] = [{"status": "unavailable", "passed": False}]
+        measure["save"](run / "result.json", manifest)
+        assert measure["acceptance"](run, provenance, 1) == "unavailable"
+        # A consumed budget cannot start another call, even without usable results.
+        exhausted = Path(directory) / "batch" / "interrupted"
+        exhausted.mkdir(parents=True)
+        measure["save"](exhausted / "result.json", {"rounds": [{"status": "started"}] * 26})
+        assert measure["run_case"](exhausted.parent, "handoff-v1", "unused", 1, {}) is None
     print("measure checks passed")
 
 
