@@ -22,6 +22,8 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
 | "does the code match the spec" | `openspec-verify-change` |
 | "set up project agent instructions", "audit AGENTS.md" | `harness-boostrap` |
+| "how is the harness doing here", "audit the harness in this project" | `harness-audit` |
+| "agents are on an old binary", "restart the agent panes" | `harness-restart` |
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 

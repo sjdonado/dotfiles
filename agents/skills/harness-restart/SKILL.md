@@ -1,5 +1,5 @@
 ---
-name: restart-agents
+name: harness-restart
 description: Restart the Claude Code or OpenCode processes running in herdr panes so they pick up a newer binary, keeping each conversation by resuming its session id. Use when an agent binary has updated and long-lived panes are still on the old version.
 ---
 
@@ -28,7 +28,9 @@ In that entry, `name` is the running version and `cmdline` is the exact command 
 
 Keep the `cmdline` verbatim. Panes restored by herdr carry `--resume <session-id>`, which is the only reason a restart keeps the conversation, and flags like `--dangerously-skip-permissions` are part of how that pane was meant to run.
 
-## Restart one pane
+## Confirm, then restart one pane
+
+Show the human the table of panes to restart (pane, running version, cmdline) and the panes to skip, and wait for a yes before touching any pane. Plain-language routing into this skill does not skip that stop.
 
 ```sh
 herdr pane send-keys <pane> Escape       # drop any open prompt or menu

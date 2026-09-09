@@ -1,6 +1,6 @@
 ---
 name: harness-boostrap
-description: Audit, create, or update project AGENTS.md instructions from repository evidence so coding agents can navigate, change, and verify the project. Use for project-instruction setup or audits, not general code review or installing an agent platform.
+description: Audit, create, or update a project's AGENTS.md instruction files from repository evidence so coding agents can navigate, change, and verify the project. Use for the instruction files themselves, not for how the harness performed there (harness-audit), code review, or installing an agent platform.
 ---
 
 Make the project's instructions useful to an agent arriving without conversation history. Follow the user's requested scope: an audit or review reports findings without writes; setup or update permits focused instruction-file edits. Do not install a harness or import personal workflows.
