@@ -940,16 +940,24 @@ do
   -- via bun) and the diagram replaces the fence. Plain `![](image)`
   -- references keep their text.
   --
-  -- Diagrams render at three times the terminal's pixel scale. snacks only
-  -- ever scales down, so a render wider than the window fills its width, and
-  -- the viewer crops the same file when zooming, so the extra pixels are what
-  -- it shows as detail. A diagram still narrower than the window at that
-  -- scale is drawn at its natural size.
-  -- `:let g:mermaid_scale = 1` switches it live; the next preview toggle
-  -- flushes and re-renders.
+  -- Diagrams render about as wide as the terminal in pixels: mermaid lays a
+  -- diagram out on an 800px page, so the scale is the terminal's pixel width
+  -- over 800. snacks only ever scales down, so that render fills the window
+  -- width, and the viewer crops the same file when zooming, so the extra
+  -- pixels are what it shows as detail. The scale is capped at three times
+  -- the terminal's pixel scale, and the cap is live: `:let g:mermaid_scale`
+  -- takes effect at the next preview toggle.
+  --
+  -- Measured in Ghostty 1.3.1: it accepts a 4200x3900 image (66 MB decoded)
+  -- and rejects 4704x4344 (82 MB) with ENOMEM, drawing nothing. Rendering at
+  -- three times the terminal scale hit that; terminal width stays well under.
+  -- ponytail: a diagram laid out wider than about 1600px at scale 1 could
+  -- still cross the ceiling; size the render from its own width if one does.
   vim.g.mermaid_scale = vim.g.mermaid_scale or 3
   local function mermaid_scale()
-    return tostring(vim.g.mermaid_scale * (require('snacks.image.terminal').size().scale or 1))
+    local size = require('snacks.image.terminal').size()
+    local scale = math.min(vim.g.mermaid_scale * (size.scale or 1), size.width / 800)
+    return ('%.2f'):format(math.max(1, scale))
   end
   -- snacks caches a rendered diagram by its source alone, so a scale change
   -- would keep serving the old pixels and the old .info sidecar that sizes
