@@ -88,6 +88,16 @@ if [ "$INSTALL" = 1 ]; then
     bun add -g @fission-ai/openspec@latest \
       || echo "openspec install failed; openspec-* skills will no-op"
   fi
+
+  # snacks.image shells out to this to draw mermaid fences as images inside
+  # Neovim. Same bun rationale as openspec above. The browser mmdc renders
+  # with arrives through puppeteer's postinstall, which bun's default trusted
+  # list runs.
+  if ! have mmdc; then
+    log "Installing mermaid-cli..."
+    bun add -g @mermaid-js/mermaid-cli \
+      || echo "mmdc install failed; mermaid fences will show source only"
+  fi
 fi
 
 log "Setting up Ghostty config..."

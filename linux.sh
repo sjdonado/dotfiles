@@ -62,7 +62,7 @@ sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat mosh python3 python3-pip \
-  jq fzf
+  jq fzf imagemagick
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
@@ -174,6 +174,17 @@ if ! have openspec; then
   log "Installing OpenSpec CLI..."
   bun add -g @fission-ai/openspec@latest \
     || echo "openspec install failed; openspec-* skills will no-op"
+  rescan
+fi
+
+# snacks.image shells out to this to draw mermaid fences as images inside
+# Neovim. Same bun rationale as openspec above. The browser mmdc renders
+# with arrives through puppeteer's postinstall, which bun's default trusted
+# list runs.
+if ! have mmdc; then
+  log "Installing mermaid-cli..."
+  bun add -g @mermaid-js/mermaid-cli \
+    || echo "mmdc install failed; mermaid fences will show source only"
   rescan
 fi
 

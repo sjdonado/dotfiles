@@ -927,282 +927,171 @@ do
 end
 
 -- ============================================================
--- SECTION 9b: MARKDOWN PREVIEW (glow)
+-- SECTION 9b: MARKDOWN RENDERING (snacks image + render-markdown)
 -- ============================================================
--- `:Glow` toggles a full-screen rendered preview of the current file.
---
--- Replaces render-markdown.nvim, which decorated the buffer in place and charged
--- for it continuously: concealed fence rows desynchronized relativenumber, and
--- the highlight group behind its language label resolved to nothing after a
--- colorscheme switch, painting black bars across every fence.
---
--- glow's own pager (-p) is deliberately not used, which is the design
--- ellisonleao/glow.nvim arrived at too. A pager is a TUI that redraws inside a
--- pty, so its viewport has to track the window: get the pty size wrong, or resize
--- the terminal afterwards, and scrolling turns into scrollback sliding past.
--- Piping glow's ANSI output into a buffer through nvim_open_term instead makes
--- the render inert text, and scrolling is Neovim's: j/k, ctrl-d, the mouse wheel,
--- search, and yank all work because there is no process competing for the keys.
---
--- glow reads the file on disk, so an unsaved buffer previews its last written
--- state; say so rather than writing the file behind the human's back.
 do
-  local state = {}
+  vim.pack.add {
+    gh 'folke/snacks.nvim',
+    gh 'MeanderingProgrammer/render-markdown.nvim',
+  }
 
-  -- Normalized for matching a rendered line against its source. Everything that
-  -- is not a letter or a digit goes, because the render rewrites punctuation
-  -- freely: hashes vanish from headings, `-` becomes a bullet, backticks vanish
-  -- from code spans, and a table's ASCII pipes come back as box drawing. Keeping
-  -- any of those in the comparison is what makes every row of a table fail to
-  -- match and the search walk up to the paragraph above it.
-  local function words(line)
-    return (line:lower():gsub('[^%w]+', ' '):gsub('^ ', ''):gsub(' $', ''))
+  -- Mermaid fences render as images through this (Kitty graphics protocol,
+  -- supported by Ghostty). It shells out to `mmdc` (mermaid-cli, installed
+  -- via bun) and the diagram replaces the fence. Plain `![](image)`
+  -- references keep their text.
+  require('snacks').setup {
+    image = {
+      enabled = true,
+      doc = {
+        -- snacks would otherwise attach to every markdown buffer on FileType;
+        -- preview mode owns that instead (see the <leader>m toggle below).
+        enabled = false,
+        conceal = function(_, type)
+          return type == 'math' or type == 'chart'
+        end,
+      },
+    },
+  }
+
+  -- Off by default, `<leader>m` toggles it per `:RenderMarkdown toggle`.
+  -- Anti-conceal is off so the cursor line renders exactly like every other
+  -- line instead of flipping back to raw source under the cursor.
+  require('render-markdown').setup {
+    enabled = false,
+    anti_conceal = { enabled = false },
+    -- No full-width fill behind the language label. That fill is painted in
+    -- the code background colour, a solid dark bar under some colorschemes.
+    -- The label itself stays.
+    code = { language_border = ' ' },
+  }
+
+  -- render-markdown's global state decides whether preview is on, so
+  -- `:RenderMarkdown toggle` and `<leader>m` agree. Its buffer-local toggles
+  -- are not tracked.
+  local function preview_on()
+    return require('render-markdown').get()
   end
 
-  -- The two buffers do not share line numbers: wrapping, tables, and padding all
-  -- shift them, so a position crosses over by text. Anchor on the nearest line at
-  -- or above the cursor with enough words to be distinctive (a bare `|` from a
-  -- table border matches everywhere), then find that text on the other side.
-  -- Nothing distinctive above the cursor means a long code block or table, where
-  -- the same fraction of the file is approximate but nearer than line 1.
-  local function translate(from_lines, to_lines, cursor)
-    for i = math.min(cursor, #from_lines), 1, -1 do
-      local anchor = words(from_lines[i] or '')
-      if #anchor >= 12 then
-        local needle = anchor:sub(1, 32)
-        for n, line in ipairs(to_lines) do
-          if words(line):find(needle, 1, true) then
-            return n
-          end
-        end
-      end
+  -- Gate snacks' doc finder on preview mode. The inline handle is kept for the
+  -- buffer's lifetime (its buf_attach cannot be detached, and a second handle
+  -- would draw every diagram twice); with no matches it closes what is on
+  -- screen and creates nothing, so it is inert while preview is off.
+  local image_doc = require('snacks.image.doc')
+  local find_visible = image_doc.find_visible
+  ---@diagnostic disable-next-line: duplicate-set-field
+  image_doc.find_visible = function(buf, cb, ...)
+    if preview_on() then
+      return find_visible(buf, cb, ...)
     end
-    if #from_lines > 0 and #to_lines > 0 then
-      return math.max(1, math.min(#to_lines, math.floor(cursor / #from_lines * #to_lines + 0.5)))
-    end
+    cb({})
   end
 
-  local function buf_lines(buf)
-    if buf and vim.api.nvim_buf_is_valid(buf) then
-      return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-    end
-    return {}
-  end
+  -- Buffers owned here, since only this toggle may attach the inline
+  -- renderer: attaching twice would stack duplicate diagrams. The handle is
+  -- also what refreshes an already-owned buffer, because the renderer's own
+  -- hooks only fire on scroll and edit, not on toggle.
+  local image_owned = {} ---@type table<integer, table>
+  local preview_group = vim.api.nvim_create_augroup('kickstart-md-preview', { clear = true })
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    group = preview_group,
+    callback = function(ev)
+      image_owned[ev.buf] = nil
+    end,
+  })
 
-  -- Scrolling a render and coming back to line 1 loses exactly the position the
-  -- scrolling was for, in either direction.
-  local function source_line(preview_win)
-    if not (state.src and vim.api.nvim_buf_is_valid(state.src)) then
-      return nil
-    end
-    return translate(buf_lines(state.buf), buf_lines(state.src), vim.api.nvim_win_get_cursor(preview_win)[1])
-  end
-
-  local function goto_preview_line()
-    if not (state.win and vim.api.nvim_win_is_valid(state.win) and state.src_line) then
+  local function preview_attach(buf)
+    local owned = image_owned[buf]
+    if owned then
+      owned:update()
       return
     end
-    local rendered = buf_lines(state.buf)
-    -- The render arrives asynchronously, so an empty buffer means it has not
-    -- landed yet rather than that there is nothing to match.
-    if #rendered <= 1 then
-      return
-    end
-    local line = translate(buf_lines(state.src), rendered, state.src_line)
-    if line then
-      pcall(vim.api.nvim_win_set_cursor, state.win, { math.min(line, #rendered), 0 })
-      vim.api.nvim_win_call(state.win, function()
-        vim.cmd 'normal! zz'
-      end)
-    end
-  end
-
-  local function hide()
-    if state.win and vim.api.nvim_win_is_valid(state.win) then
-      local line = source_line(state.win)
-      vim.api.nvim_win_close(state.win, true)
-      if line then
-        pcall(vim.api.nvim_win_set_cursor, 0, { line, 0 })
-        vim.cmd 'normal! zz'
+    -- Detect first: at a fast toggle the terminal probe may still be in
+    -- flight, and env() below would read as unsupported.
+    require('snacks.image.terminal').detect(function()
+      if not preview_on() or image_owned[buf] or not vim.api.nvim_buf_is_valid(buf) then
+        return
       end
-    end
-    state.win = nil
-  end
-
-  local function drop()
-    hide()
-    if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
-      vim.api.nvim_buf_delete(state.buf, { force = true })
-    end
-    -- src_line survives: it belongs to the pending open, not to the render being
-    -- discarded, and open() records it before dropping a stale one.
-    state.buf, state.file, state.chan = nil, nil, nil
-  end
-
-  local function show()
-    state.win = vim.api.nvim_open_win(state.buf, true, {
-      relative = 'editor',
-      width = vim.o.columns,
-      height = vim.o.lines - vim.o.cmdheight,
-      row = 0,
-      col = 0,
-      style = 'minimal',
-      border = 'none',
-    })
-    -- Reading, not editing: keep the line being read in the middle of the screen
-    -- rather than letting it walk to an edge. A scrolloff larger than any window
-    -- is the standard way to pin it there, and it costs nothing elsewhere because
-    -- it is set on this window alone.
-    vim.wo[state.win].scrolloff = 999
-    -- The editor's cursor decides where the preview opens, not the position the
-    -- preview was last left at: the human may have moved since, and the line
-    -- under the cursor is the one they asked to see rendered.
-    goto_preview_line()
-  end
-
-  local function render(file, width)
-    state.buf = vim.api.nvim_create_buf(false, true)
-    state.file = file
-    state.view = nil
-    show()
-
-    -- An output-only terminal channel: it interprets glow's ANSI colours without
-    -- attaching a process, so the buffer stays a normal, scrollable buffer.
-    state.chan = vim.api.nvim_open_term(state.buf, {})
-    vim.keymap.set('n', 'q', function()
-      drop()
-    end, { buffer = state.buf, desc = 'Close the glow preview' })
-
-    -- This render's own handles. glow answers asynchronously, so a render that is
-    -- superseded before it finishes would otherwise write its output into the
-    -- buffer that replaced it: measured as a doubled document, since a theme flip
-    -- raises both OptionSet and ColorScheme and rebuilds twice in a row.
-    local buf, chan = state.buf, state.chan
-    local superseded = function()
-      return state.buf ~= buf or not vim.api.nvim_buf_is_valid(buf)
-    end
-
-    -- -s follows the editor background so the preview does not stay dark under a
-    -- light colorscheme. -w is required: glow word-wraps at 80 whatever the
-    -- terminal reports, so the window width has to be handed to it, and it is
-    -- handed the whole width. A cap on readability grounds is the terminal's call
-    -- to make by being sized, not this command's to make on its behalf.
-    --
-    -- vim.system, not jobstart: measured, jobstart's on_stdout never fired for
-    -- this command, buffered or not, and the process ended up killed at exit
-    -- (code 143) having delivered nothing. vim.system returns the same 100KB of
-    -- ANSI without the callback ever going missing.
-    vim.system({ 'glow', '-s', vim.o.background, '-w', tostring(width), file }, { text = true }, function(res)
-      vim.schedule(function()
-        if superseded() then
-          return
-        end
-        if res.code ~= 0 then
-          drop()
-          return vim.notify('glow: ' .. vim.trim(res.stderr or 'failed'), vim.log.levels.ERROR)
-        end
-        -- \r\n, not \n: a terminal channel leaves the cursor mid-row on a bare
-        -- newline, so every line would start where the previous one ended.
-        pcall(vim.api.nvim_chan_send, chan, (res.stdout:gsub('\n', '\r\n')))
-        -- The channel renders on its own schedule and keeps the cursor at the end
-        -- of what it has written, so positioning while it is still emitting gets
-        -- overwritten by the next chunk. Wait for the line count to stop growing,
-        -- then place the cursor. Give up quietly after a second: opening at the
-        -- top is a worse preview, not a broken one.
-        local tries, previous = 0, -1
-        local timer = vim.uv.new_timer()
-        timer:start(
-          20,
-          40,
-          vim.schedule_wrap(function()
-            tries = tries + 1
-            local count = (not superseded()) and vim.api.nvim_buf_line_count(buf) or 0
-            local settled = count > 1 and count == previous
-            previous = count
-            if settled or tries > 25 or superseded() then
-              timer:stop()
-              timer:close()
-              if settled then
-                goto_preview_line()
-              end
-            end
-          end)
-        )
-      end)
+      -- Mirror doc._attach's inline branch: only inline rendering is owned
+      -- here, so on terminals without it snacks stays out of the buffer.
+      local image = require('snacks.image')
+      if image.config.doc.inline and image.terminal.env().placeholders then
+        image_owned[buf] = require('snacks.image.inline').new(buf)
+      end
     end)
   end
 
-  local function open()
-    if vim.fn.executable 'glow' == 0 then
-      return vim.notify('glow is not installed', vim.log.levels.ERROR)
-    end
-
-    local file = vim.api.nvim_buf_get_name(0)
-    if file == '' or vim.fn.filereadable(file) == 0 then
-      return vim.notify('glow: buffer has no file on disk', vim.log.levels.WARN)
-    end
-    if vim.bo.modified then
-      vim.notify('glow: previewing the saved file, buffer has unsaved changes', vim.log.levels.WARN)
-    end
-
-    -- Both directions of the sync start here: the buffer to put the cursor back
-    -- into on close, and the line to open the preview at. Re-recorded on every
-    -- open, since the human has usually moved since the last one.
-    state.src = vim.api.nvim_get_current_buf()
-    state.src_line = vim.api.nvim_win_get_cursor(0)[1]
-
-    -- A render of this same file is reused as-is. One of another file is stale,
-    -- and re-rendering is cheap enough not to keep it around.
-    if state.buf and vim.api.nvim_buf_is_valid(state.buf) and state.file == file then
-      return show()
-    end
-    drop()
-    -- -2 leaves the right-hand column free: glow pads its own left margin, and a
-    -- line ending exactly at the last cell wraps into an empty row.
-    render(file, math.max(vim.o.columns - 2, 40))
-  end
-
-  local function toggle()
-    if state.win and vim.api.nvim_win_is_valid(state.win) then
-      hide()
-    else
-      open()
-    end
-  end
-
-  vim.api.nvim_create_user_command('Glow', toggle, {
-    desc = 'Toggle a full-screen glow preview of the current file',
-  })
-  -- Also bound inside the preview, so the key that opened it closes it rather
-  -- than being swallowed by a buffer that has no other use for it.
-  vim.keymap.set('n', '<leader>m', toggle, { desc = '[M]arkdown preview toggle' })
-
-  -- The colours are baked into the render: glow picks them from -s at the moment
-  -- it runs, and the result is inert text afterwards. A theme flip therefore
-  -- leaves a light-theme render sitting on a dark background, unreadable rather
-  -- than merely wrong, so the render is thrown away and rebuilt at the position
-  -- being read. A hidden render is only dropped, since the next open rebuilds it.
-  vim.api.nvim_create_autocmd({ 'ColorScheme', 'OptionSet' }, {
-    group = vim.api.nvim_create_augroup('kickstart-glow-theme', { clear = true }),
-    callback = function(args)
-      if args.event == 'OptionSet' and args.match ~= 'background' then
-        return
+  -- A markdown buffer opened while preview is already on joins it directly.
+  vim.api.nvim_create_autocmd('FileType', {
+    group = preview_group,
+    pattern = 'markdown',
+    callback = function(ev)
+      if preview_on() then
+        preview_attach(ev.buf)
       end
-      if not (state.buf and vim.api.nvim_buf_is_valid(state.buf)) then
-        return
-      end
-      local file = state.file
-      local visible = state.win and vim.api.nvim_win_is_valid(state.win)
-      -- Read the position before dropping: hide() moves the source cursor there,
-      -- and that is where the rebuilt render has to open.
-      local line = visible and source_line(state.win) or state.src_line
-      drop()
-      if visible then
-        state.src_line = line
-        render(file, math.max(vim.o.columns - 2, 40))
-      end
+      -- Enter on a diagram opens the rendered PNG in the system viewer,
+      -- where real zoom exists. Anywhere else it keeps its default motion.
+      -- (Click is deliberately left alone: stealing it would break cursor
+      -- placement everywhere in the buffer.)
+      vim.keymap.set('n', '<CR>', function()
+        -- placement.img.src is the mermaid source; .file is the rendered PNG.
+        local img
+        if preview_on() and image_owned[ev.buf] then
+          local row = vim.api.nvim_win_get_cursor(0)[1]
+          for _, placement in pairs(image_owned[ev.buf]:get(row, row)) do
+            if placement.img and placement.img.file and placement.img.file ~= '' then
+              img = placement.img
+              break
+            end
+          end
+        end
+        if not img then
+          local cr = vim.api.nvim_replace_termcodes('<CR>', true, false, true)
+          return vim.api.nvim_feedkeys(cr, 'n', false)
+        end
+        if img:failed() then
+          return vim.notify('Diagram failed to render, see :checkhealth snacks', vim.log.levels.ERROR)
+        end
+        if not img:ready() then
+          return vim.notify('Diagram still rendering, try again in a moment', vim.log.levels.WARN)
+        end
+        -- vim.ui.open reports failure through its second return, not an error.
+        local job, err = vim.ui.open(img.file)
+        if not job then
+          vim.notify('Could not open diagram: ' .. tostring(err), vim.log.levels.ERROR)
+        end
+      end, { buffer = ev.buf, desc = 'Open diagram image under cursor' })
     end,
   })
+
+  vim.keymap.set('n', '<leader>m', function()
+    require('render-markdown').toggle()
+    local on = preview_on()
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == 'markdown' then
+        if on then
+          -- A hidden buffer has no window to render into; it joins on FileType
+          -- or when it is next shown and toggled.
+          if #vim.fn.win_findbuf(buf) > 0 then
+            preview_attach(buf)
+          end
+        else
+          require('snacks.image.placement').clean(buf)
+        end
+      end
+    end
+  end, { desc = '[M]arkdown preview toggle' })
+
+  vim.keymap.set('n', '<leader>mv', function()
+    require('custom.image-viewer').open_at_cursor()
+  end, { desc = '[M]arkdown [V]iew image under cursor' })
+  vim.api.nvim_create_user_command('ImageView', function(ev)
+    local viewer = require('custom.image-viewer')
+    if ev.args ~= '' then
+      viewer.open(vim.fn.expand(ev.args))
+    else
+      viewer.open_at_cursor()
+    end
+  end, { nargs = '?', complete = 'file', desc = 'View image in a floating window' })
 end
 
 

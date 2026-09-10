@@ -80,8 +80,6 @@ brew "gh"
 brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
-# Render markdown on the CLI
-brew "glow"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU Transport Layer Security (TLS) Library
@@ -96,6 +94,8 @@ brew "harfbuzz"
 brew "herdr"
 # Improved top (interactive process viewer)
 brew "htop"
+# Tools and libraries to manipulate images in many formats
+brew "imagemagick"
 # Image manipulation library
 brew "jpeg"
 # Library for interacting with JSON
