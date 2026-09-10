@@ -90,9 +90,13 @@ do
   vim.keymap.set('n', '<C-e>', '4<C-e>', { desc = 'Scroll down 4 lines' })
   vim.keymap.set('n', '<C-y>', '4<C-y>', { desc = 'Scroll up 4 lines' })
 
-  for _, mode in ipairs { 'n', 'i', 'v', 'x', 's', 'o', 'c', 't' } do
-    vim.keymap.set(mode, '<ScrollWheelLeft>', '<Nop>', {})
-    vim.keymap.set(mode, '<ScrollWheelRight>', '<Nop>', {})
+  -- Scroll the view sideways with the horizontal wheel (trackpad). <Cmd>
+  -- runs in any mode without leaving it. Inert on a wrapped window, so it
+  -- only bites where a line runs off-screen (e.g. an unwrapped markdown
+  -- preview table).
+  for _, mode in ipairs { 'n', 'i', 'v', 'x', 's', 't' } do
+    vim.keymap.set(mode, '<ScrollWheelLeft>', '<Cmd>normal! 3zh<CR>', {})
+    vim.keymap.set(mode, '<ScrollWheelRight>', '<Cmd>normal! 3zl<CR>', {})
   end
 
   vim.keymap.set('n', '<C-s>', ':w<CR>', { silent = true, desc = 'Save file' })
