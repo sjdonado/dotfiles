@@ -945,21 +945,19 @@ do
   -- the viewer crops the same file when zooming, so the extra pixels are what
   -- it shows as detail. A diagram still narrower than the window at that
   -- scale is drawn at its natural size.
-  local MERMAID_SCALE = 3
+  -- `:let g:mermaid_scale = 1` switches it live; the next preview toggle
+  -- flushes and re-renders.
+  vim.g.mermaid_scale = vim.g.mermaid_scale or 3
   local function mermaid_scale()
-    return tostring(MERMAID_SCALE * (require('snacks.image.terminal').size().scale or 1))
+    return tostring(vim.g.mermaid_scale * (require('snacks.image.terminal').size().scale or 1))
   end
   -- snacks caches a rendered diagram by its source alone, so a scale change
   -- would keep serving the old pixels and the old .info sidecar that sizes
-  -- them. Drop both once per scale, from the first preview attach rather
-  -- than at startup, when the terminal probe has answered and the scale is
-  -- real, and before snacks decides a cached render needs no conversion.
-  local flushed = false
+  -- them. Drop both whenever the scale differs from the stamped one, checked
+  -- at preview attach rather than at startup, when the terminal probe has
+  -- answered and the scale is real, and before snacks decides a cached
+  -- render needs no conversion.
   local function flush_stale_charts()
-    if flushed then
-      return
-    end
-    flushed = true
     local cache = require('snacks.image').config.cache
     local stamp = cache .. '/mermaid-scale'
     local scale = mermaid_scale()
