@@ -132,8 +132,6 @@ brew "neovim"
 brew "nmap"
 # Libraries for security-enabled client and server applications
 brew "nss"
-# Create, run, and share large language models (LLMs)
-brew "ollama"
 # Development kit for the Java programming language
 brew "openjdk"
 # Development kit for the Java programming language

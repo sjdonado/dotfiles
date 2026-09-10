@@ -1,16 +1,12 @@
 ---
+name: triage
 description: From a ticket or a production error signal, understand the request, challenge it with data, and propose an approach with tradeoffs (no implementation)
-argument-hint: "[issue ID, URL, pasted ticket, or error signal]"
 ---
 
-Triage a work item. This is analysis ONLY: no file writes, code edits, tests, commits, or other side-effecting commands. Read-only inspection is allowed.
-
-<user_input>
-$ARGUMENTS
-</user_input>
+Triage the user's work item. This is analysis ONLY: no file writes, code edits, tests, commits, or other side-effecting commands. Read-only inspection is allowed.
 
 Resolve the effective input:
-- Non-empty `<user_input>` is the explicit ticket, request, or signal.
+- The user's current request is the explicit ticket, request, or signal.
 - Otherwise use the latest unambiguous active ticket or triage request in the conversation.
 - Ask only when no active item exists or a load-bearing product decision remains unresolved.
 

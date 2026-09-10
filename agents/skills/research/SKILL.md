@@ -1,16 +1,12 @@
 ---
+name: research
 description: Deeply investigate a question or claim and return a sourced conclusion without making changes
-argument-hint: "[question or statement]"
 ---
 
-Research this question or statement:
-
-<user_input>
-$ARGUMENTS
-</user_input>
+Research the user's question or statement.
 
 Resolve the effective input:
-- Non-empty `<user_input>` is the explicit research target.
+- The user's current request is the explicit research target.
 - Otherwise use the latest unambiguous active question, claim, or unresolved statement; treat prior recommendations as context, not proof.
 - Ask only when no research target exists or ambiguity would materially change the investigation.
 
@@ -44,6 +40,6 @@ This is deep research, not implementation. Do not edit or write files, change co
    - **Contradictions and unknowns** - unresolved conflicts, weak evidence, or what would change the conclusion. Omit if none.
    - **Implications** - what the result means for the active discussion. Do not turn this into an implementation plan unless explicitly requested.
 
-If findings should become work, say so and stop: run `/create-ticket findings F2,F4`, using the ledger's own IDs. Do not create tickets from this workflow.
+If findings should become work, say so and stop: invoke `create-ticket` with `findings F2,F4`, using the ledger's own IDs. Do not create tickets from this workflow.
 
 Be thorough but relevant. Depth means stronger evidence and traced consequences, not a longer answer or unrelated exploration.

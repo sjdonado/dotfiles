@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""Keep the shareable half of ~/.codex/config.toml in dotfiles, and nothing else.
+
+Codex owns that file. It rewrites it as you work: a [projects] entry with an
+absolute path for every directory you trust, a [hooks.state] hash per approved
+hook, dismissed [notice] prompts, model NUX counters. Tracking the file whole
+would publish the layout of this machine and every repository on it, and would
+churn on every session.
+
+So the tracked copy holds only the settings below, and this script moves them
+between the two files in either direction:
+
+    codex-config apply     dotfiles -> ~/.codex/config.toml   (setup scripts)
+    codex-config capture   ~/.codex/config.toml -> dotfiles   (after a TUI change)
+
+apply edits the local file in place, key by key, so everything Codex wrote there
+survives. It is what a new machine runs. capture is the other half of the loop:
+settings are normally changed inside Codex, and this is how that change reaches
+the repository without hand-copying it.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import tomllib
+
+# The shareable settings. Anything not listed stays machine-local, which is the
+# safe default: a key has to be named here to ever leave this computer.
+TOP_LEVEL = [
+    "approval_policy",
+    "sandbox_mode",
+    "model",
+    "personality",
+    "model_reasoning_effort",
+    "approvals_reviewer",
+]
+TABLES = {
+    "tui": ["theme", "status_line", "status_line_use_colors"],
+    "features": ["hooks"],
+}
+
+HEADER = """# Codex CLI settings shared across machines.
+#
+# The public half of ~/.codex/config.toml. Codex keeps the rest there and never
+# here: trusted project paths, hook trust hashes, dismissed notices. Those name
+# directories on one machine, so they are not tracked.
+#
+# `codex-config apply` writes these keys into the local file, preserving
+# everything else; `codex-config capture` brings changes made in the Codex TUI
+# back into this file. macos.sh and linux.sh run apply.
+"""
+
+
+def render(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return repr(value)
+    if isinstance(value, list):
+        return "[" + ", ".join(render(v) for v in value) + "]"
+    return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def set_top_level(lines: list[str], key: str, value) -> list[str]:
+    """Replace `key = ...` above the first table header, or insert it there."""
+    rendered = f"{key} = {render(value)}\n"
+    first_table = next((i for i, l in enumerate(lines) if l.lstrip().startswith("[")), len(lines))
+    for i, line in enumerate(lines[:first_table]):
+        if line.split("=")[0].strip() == key:
+            lines[i] = rendered
+            return lines
+    at = first_table
+    while at > 0 and lines[at - 1].strip() == "":
+        at -= 1
+    return lines[:at] + [rendered] + lines[at:]
+
+
+def set_table_key(lines: list[str], table: str, key: str, value) -> list[str]:
+    """Same, scoped to a [table] block, appending the block when it is absent."""
+    rendered = f"{key} = {render(value)}\n"
+    header = f"[{table}]"
+    start = next((i for i, l in enumerate(lines) if l.strip() == header), None)
+    if start is None:
+        tail = lines + ([] if lines and lines[-1].strip() == "" else ["\n"])
+        return tail + [header + "\n", rendered]
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].lstrip().startswith("[")), len(lines))
+    for i in range(start + 1, end):
+        if lines[i].split("=")[0].strip() == key:
+            lines[i] = rendered
+            return lines
+    at = end
+    while at > start + 1 and lines[at - 1].strip() == "":
+        at -= 1
+    return lines[:at] + [rendered] + lines[at:]
+
+
+def load(path: str) -> dict:
+    try:
+        with open(path, "rb") as fh:
+            return tomllib.load(fh)
+    except FileNotFoundError:
+        return {}
+
+
+def write_atomic(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
+
+
+def apply(public_path: str, local_path: str) -> int:
+    public = load(public_path)
+    if not public:
+        print(f"codex-config: nothing to apply, {public_path} is missing or empty", file=sys.stderr)
+        return 1
+
+    # A symlink here would put Codex's own writes back in the repository, which
+    # is the thing this script exists to avoid.
+    if os.path.islink(local_path):
+        print(f"codex-config: {local_path} is a symlink; remove it first", file=sys.stderr)
+        return 1
+
+    try:
+        lines = open(local_path).readlines()
+    except FileNotFoundError:
+        lines = []
+
+    for key in TOP_LEVEL:
+        if key in public:
+            lines = set_top_level(lines, key, public[key])
+    for table, keys in TABLES.items():
+        for key in keys:
+            if key in public.get(table, {}):
+                lines = set_table_key(lines, table, key, public[table][key])
+
+    text = "".join(lines)
+    tomllib.loads(text)  # refuse to write a file Codex cannot read
+    write_atomic(local_path, text)
+    print(f"codex-config: applied {public_path} -> {local_path}")
+    return 0
+
+
+def capture(local_path: str, public_path: str) -> int:
+    local = load(local_path)
+    if not local:
+        print(f"codex-config: nothing to capture, {local_path} is missing or empty", file=sys.stderr)
+        return 1
+
+    out = [HEADER, "\n"]
+    out += [f"{k} = {render(local[k])}\n" for k in TOP_LEVEL if k in local]
+    for table, keys in TABLES.items():
+        present = [k for k in keys if k in local.get(table, {})]
+        if present:
+            out += ["\n", f"[{table}]\n"]
+            out += [f"{k} = {render(local[table][k])}\n" for k in present]
+
+    text = "".join(out)
+    tomllib.loads(text)
+    write_atomic(public_path, text)
+    print(f"codex-config: captured {local_path} -> {public_path}")
+    return 0
+
+
+def main() -> int:
+    verb = sys.argv[1] if len(sys.argv) > 1 else ""
+    root = os.environ.get("DOTFILES", os.path.expanduser("~/.config/dotfiles"))
+    public_path = os.path.join(root, "codex", "config.toml")
+    local_path = os.path.join(os.environ.get("CODEX_HOME", os.path.expanduser("~/.codex")), "config.toml")
+
+    if verb == "apply":
+        return apply(public_path, local_path)
+    if verb == "capture":
+        return capture(local_path, public_path)
+    print(__doc__.strip(), file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
