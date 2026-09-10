@@ -1105,6 +1105,32 @@ do
     end)
   end
 
+  -- Ghostty drops a pane's images when it loses focus, and snacks re-renders
+  -- on scroll, edit, and buffer enter but not on focus. Re-transmit each owned
+  -- diagram and force a re-place when focus returns, without rebuilding the
+  -- inline handle (its buffer attach cannot be detached, so a rebuild leaks).
+  vim.api.nvim_create_autocmd('FocusGained', {
+    group = preview_group,
+    callback = function()
+      if not preview_on() then
+        return
+      end
+      for buf, handle in pairs(image_owned) do
+        if vim.api.nvim_buf_is_valid(buf) then
+          for _, placement in pairs(handle.imgs or {}) do
+            local image = placement.img
+            if image and image.sent then
+              image.sent = false
+              image:send() -- re-transmit under the same id; on_send re-places
+            end
+            placement._state = nil -- defeat update's unchanged-state early return
+            placement:update()
+          end
+        end
+      end
+    end,
+  })
+
   -- A markdown buffer opened while preview is already on joins it directly.
   vim.api.nvim_create_autocmd('FileType', {
     group = preview_group,
