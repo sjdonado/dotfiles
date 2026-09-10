@@ -939,9 +939,56 @@ do
   -- supported by Ghostty). It shells out to `mmdc` (mermaid-cli, installed
   -- via bun) and the diagram replaces the fence. Plain `![](image)`
   -- references keep their text.
+  --
+  -- Diagrams render at three times the terminal's pixel scale. snacks only
+  -- ever scales down, so a render wider than the window fills its width, and
+  -- the viewer crops the same file when zooming, so the extra pixels are what
+  -- it shows as detail. A diagram still narrower than the window at that
+  -- scale is drawn at its natural size.
+  local MERMAID_SCALE = 3
+  local function mermaid_scale()
+    return tostring(MERMAID_SCALE * (require('snacks.image.terminal').size().scale or 1))
+  end
+  -- snacks caches a rendered diagram by its source alone, so a scale change
+  -- would keep serving the old pixels and the old .info sidecar that sizes
+  -- them. Drop both once per scale, from the first preview attach rather
+  -- than at startup, when the terminal probe has answered and the scale is
+  -- real, and before snacks decides a cached render needs no conversion.
+  local flushed = false
+  local function flush_stale_charts()
+    if flushed then
+      return
+    end
+    flushed = true
+    local cache = require('snacks.image').config.cache
+    local stamp = cache .. '/mermaid-scale'
+    local scale = mermaid_scale()
+    local f = io.open(stamp)
+    local seen = f and f:read('*a') or nil
+    if f then
+      f:close()
+    end
+    if seen ~= scale then
+      for _, file in ipairs(vim.fn.glob(cache .. '/*.chart.*.{png,info}', true, true)) do
+        vim.fn.delete(file)
+      end
+      vim.fn.mkdir(cache, 'p')
+      local out = io.open(stamp, 'w')
+      if out then
+        out:write(scale)
+        out:close()
+      end
+    end
+  end
   require('snacks').setup {
     image = {
       enabled = true,
+      convert = {
+        mermaid = function()
+          local theme = vim.o.background == 'light' and 'neutral' or 'dark'
+          return { '-i', '{src}', '-o', '{file}', '-b', 'transparent', '-t', theme, '-s', mermaid_scale() }
+        end,
+      },
       doc = {
         -- snacks would otherwise attach to every markdown buffer on FileType;
         -- preview mode owns that instead (see the <leader>m toggle below).
@@ -949,9 +996,18 @@ do
         conceal = function(_, type)
           return type == 'math' or type == 'chart'
         end,
+        -- Width wins: snacks caps an inline image at 80x40 cells and fits it
+        -- into the window height, which leaves a tall diagram narrow. Lift
+        -- both caps to 297, snacks' placeholder grid limit (cells past it are
+        -- requested but never drawn), and let the height run past the window
+        -- and scroll instead. Width is still bounded by the window.
+        max_width = 297,
+        max_height = 297,
+        height = 297,
       },
     },
   }
+
 
   -- Off by default, `<leader>m` toggles it per `:RenderMarkdown toggle`.
   -- Anti-conceal is off so the cursor line renders exactly like every other
@@ -1011,6 +1067,7 @@ do
       if not preview_on() or image_owned[buf] or not vim.api.nvim_buf_is_valid(buf) then
         return
       end
+      flush_stale_charts()
       -- Mirror doc._attach's inline branch: only inline rendering is owned
       -- here, so on terminals without it snacks stays out of the buffer.
       local image = require('snacks.image')
@@ -1028,10 +1085,10 @@ do
       if preview_on() then
         preview_attach(ev.buf)
       end
-      -- Enter on a diagram opens the rendered PNG in the system viewer,
-      -- where real zoom exists. Anywhere else it keeps its default motion.
-      -- (Click is deliberately left alone: stealing it would break cursor
-      -- placement everywhere in the buffer.)
+      -- Enter on a diagram opens it in the floating viewer, which crops the
+      -- rendered PNG per view so zooming shows detail. Anywhere else it keeps
+      -- its default motion. (Click is deliberately left alone: stealing it
+      -- would break cursor placement everywhere in the buffer.)
       vim.keymap.set('n', '<CR>', function()
         -- placement.img.src is the mermaid source; .file is the rendered PNG.
         local img
@@ -1054,12 +1111,8 @@ do
         if not img:ready() then
           return vim.notify('Diagram still rendering, try again in a moment', vim.log.levels.WARN)
         end
-        -- vim.ui.open reports failure through its second return, not an error.
-        local job, err = vim.ui.open(img.file)
-        if not job then
-          vim.notify('Could not open diagram: ' .. tostring(err), vim.log.levels.ERROR)
-        end
-      end, { buffer = ev.buf, desc = 'Open diagram image under cursor' })
+        require('custom.image-viewer').open(img.file, 'mermaid diagram')
+      end, { buffer = ev.buf, desc = 'View diagram under cursor' })
     end,
   })
 

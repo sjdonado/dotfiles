@@ -1,26 +1,21 @@
--- Floating image viewer with zoom and vertical scroll, drawn through snacks.image (Kitty
--- graphics protocol, i.e. Ghostty). Inline diagrams stay small by design and
--- snacks has no zoom, so large diagrams get a dedicated window instead.
---
--- snacks overlays the image row by row onto buffer lines, so the scratch
--- buffer is padded with blank lines and the viewport is pinned mid-buffer:
--- rows above the pinned top line are simply not drawn, which is what a
--- vertical pan is. Horizontal position is a window column snacks fixes from
--- the anchor, so it cannot go negative; zoom is therefore capped at the
--- window width and a diagram is read by scrolling it vertically.
--- ponytail: no leftward pan past the window edge; snacks has no API for it,
--- cropping the placeholder grid ourselves would be the upgrade path.
+-- Floating image viewer with zoom and pan, drawn through snacks.image (Kitty
+-- graphics protocol, i.e. Ghostty). Inline diagrams are fitted to the window,
+-- and snacks can neither upscale nor show part of an image, so the viewer
+-- re-renders on every change: it crops the visible region out of the source
+-- pixels with ImageMagick, resizes that to the window, and places the result.
+-- Zooming therefore shows the source's extra pixels as detail, and panning
+-- works in both directions.
+-- ponytail: snacks keeps one Lua-side Image record per frame file for the
+-- session (its table is private); the terminal side is freed per frame.
 local M = {}
 
-local ZOOM_MIN, ZOOM_STEP = 0.25, 1.25
-local PAN_STEP = 2
-local PAD_LINES, PAD_WIDTH = 2000, 400
-local VIEW_ROW = 1000
-local GRID_MAX = 297 -- snacks encodes cell positions as diacritics; that many exist
+local ZOOM_STEP = 1.25
+local MAX_PIXEL_SCALE = 4 -- zooming in stops once a source pixel would span this many screen pixels
+local PAN_FRACTION = 0.25 -- of the visible region per key press
 
 ---@param n number
----@param lo integer
----@param hi integer
+---@param lo number
+---@param hi number
 ---@return number
 local function clamp(n, lo, hi)
   return math.max(lo, math.min(hi, n))
@@ -29,129 +24,215 @@ end
 ---@class custom.ImageViewer
 ---@field buf integer
 ---@field win snacks.win
----@field placement snacks.image.Placement
+---@field src string source raster, cropped from directly
+---@field size { width: integer, height: integer } source pixels
 ---@field label string
----@field factor number
----@field base? { width: integer, height: integer } size as first fitted into the window
----@field natural? { width: integer, height: integer } size at 100% of the image's pixels
----@field padded boolean
----@field pos { row: integer, col: integer } col is always 0, see the header
+---@field zoom number 1 means the whole image fits the window
+---@field center { x: number, y: number } source pixel at the window center
+---@field frames { placement: snacks.image.Placement, img: snacks.Image, file: string }[] oldest first
+---@field tmp string
+---@field last? string crop and resize geometry of the frame on screen
+---@field generation integer
+---@field busy boolean
+---@field dirty boolean
 
--- Pin the viewport. snacks resets a non-inline placement's window to topline 1
--- and cursor line 1 on every update, and a cursor or mouse click would scroll
--- it too; either would break the anchor math in refresh.
+-- Poll snacks' async converter. Its own callbacks only reach placements.
+---@param img snacks.Image
+---@param cb fun(ok: boolean)
+local function when_ready(img, cb)
+  local timer = assert(vim.uv.new_timer())
+  local waited, done = 0, false
+  timer:start(0, 50, vim.schedule_wrap(function()
+    if done then
+      return
+    end
+    waited = waited + 50
+    local ready, failed = img:ready(), img:failed() or waited > 30000
+    if ready or failed then
+      done = true
+      timer:stop()
+      timer:close()
+      cb(ready and not failed)
+    end
+  end))
+end
+
+-- The window in pixels, less one text row: the image hangs below the
+-- buffer's only line, so that line's row is not available to it.
 ---@param st custom.ImageViewer
-local function pin(st)
-  if st.win and st.win:valid() then
-    vim.api.nvim_win_call(st.win.win, function()
-      vim.fn.winrestview({ topline = VIEW_ROW, leftcol = 0, lnum = VIEW_ROW, col = 0 })
-    end)
+---@return { width: number, height: number }
+local function box(st)
+  local size = require('snacks.image.terminal').size()
+  return {
+    width = math.max(1, vim.api.nvim_win_get_width(st.win.win)) * size.cell_width,
+    height = math.max(1, vim.api.nvim_win_get_height(st.win.win) - 1) * size.cell_height,
+  }
+end
+
+-- The visible region in source pixels for the current zoom and center. Also
+-- pulls the center back inside the image, so callers see a settled state.
+---@param st custom.ImageViewer
+local function region(st)
+  local b = box(st)
+  local fit = math.min(b.width / st.size.width, b.height / st.size.height)
+  local scale = fit * st.zoom
+  local w = math.min(st.size.width, b.width / scale)
+  local h = math.min(st.size.height, b.height / scale)
+  local x = clamp(st.center.x - w / 2, 0, st.size.width - w)
+  local y = clamp(st.center.y - h / 2, 0, st.size.height - h)
+  st.center = { x = x + w / 2, y = y + h / 2 }
+  return {
+    x = math.floor(x),
+    y = math.floor(y),
+    width = math.max(1, math.floor(w + 0.5)),
+    height = math.max(1, math.floor(h + 0.5)),
+    fit = fit,
+    box = b,
+  }
+end
+
+-- Free a frame's file, its snacks sidecar, and the terminal's copy.
+---@param img snacks.Image
+---@param file string
+local function discard(img, file)
+  img:del()
+  vim.fn.delete(file)
+  if img._convert then
+    vim.fn.delete(img._convert:tmpfile('png.info'))
+  end
+end
+
+-- Release every frame but the newest.
+---@param st custom.ImageViewer
+---@param keep integer
+local function retire(st, keep)
+  while #st.frames > keep do
+    local frame = table.remove(st.frames, 1)
+    frame.placement:close()
+    discard(frame.img, frame.file)
   end
 end
 
 ---@param st custom.ImageViewer
-local function refresh(st)
-  if not (st.win:valid() and st.base and st.natural) then
+local function render(st)
+  if not st.win:valid() then
     return
   end
-  pin(st)
-  local win_w = math.max(1, vim.api.nvim_win_get_width(st.win.win))
-  local win_h = math.max(1, vim.api.nvim_win_get_height(st.win.win))
-
-  -- snacks never upscales past the pixel size, never draws more than GRID_MAX
-  -- cells a side, and this viewer never goes past the window width, so the
-  -- factor is clamped to what can actually be drawn.
-  local max_factor = math.max(1, math.min(st.natural.width / st.base.width, win_w / st.base.width, GRID_MAX / st.base.width, GRID_MAX / st.base.height))
-  st.factor = clamp(st.factor, ZOOM_MIN, max_factor)
-  local dw = math.max(1, math.floor(st.base.width * st.factor + 0.5))
-  local dh = math.max(1, math.floor(st.base.height * st.factor + 0.5))
-  st.pos.row = clamp(st.pos.row, math.max(1, VIEW_ROW - (dh - 1)), VIEW_ROW + (win_h - 1))
-
-  local placement = st.placement
-  placement.opts.width, placement.opts.height = dw, dh
-  placement.opts.pos = { st.pos.row, st.pos.col }
-  placement.opts.range = { st.pos.row, st.pos.col, st.pos.row + dh - 1, st.pos.col }
-  placement:update()
-  local shown = placement:state().loc
-  st.win:set_title(('%s: %d%%'):format(st.label, math.floor(shown.width / st.natural.width * 100 + 0.5)))
-end
-
----@param st custom.ImageViewer
-local function close(st)
-  st.win:close()
+  if st.busy then
+    st.dirty = true
+    return
+  end
+  local r = region(st)
+  local crop = ('%dx%d+%d+%d'):format(r.width, r.height, r.x, r.y)
+  local resize = ('%dx%d'):format(math.floor(r.box.width), math.floor(r.box.height))
+  if crop .. ' ' .. resize == st.last then
+    return -- a clamped pan or zoom: the frame on screen already is this view
+  end
+  st.busy, st.dirty = true, false
+  st.generation = st.generation + 1
+  local out = ('%s-%d.png'):format(st.tmp, st.generation)
+  local function finish()
+    st.busy = false
+    if st.dirty and st.win:valid() then
+      render(st)
+    end
+  end
+  vim.system({ 'magick', st.src, '-crop', crop, '+repage', '-resize', resize, out }, {}, function(res)
+    vim.schedule(function()
+      if not st.win:valid() then
+        vim.fn.delete(out)
+        return finish()
+      end
+      if res.code ~= 0 then
+        vim.fn.delete(out)
+        vim.notify('magick: ' .. vim.trim(res.stderr or 'failed'), vim.log.levels.ERROR)
+        return finish()
+      end
+      -- Place only once snacks has identified the file: a placement created
+      -- before that shows a spinner and clears every other image in the buffer.
+      local img = require('snacks.image.image').new(out)
+      when_ready(img, function(ok)
+        if not (ok and st.win:valid()) then
+          discard(img, out)
+          return finish()
+        end
+        local placement = require('snacks.image.placement').new(st.buf, out, {
+          pos = { 1, 0 },
+          inline = false,
+          -- snacks refits the frame from its .info dpi and would overrun the
+          -- reserved box by a row; these caps keep it inside.
+          max_width = vim.api.nvim_win_get_width(st.win.win),
+          max_height = math.max(1, vim.api.nvim_win_get_height(st.win.win) - 1),
+          on_update = function()
+            retire(st, 1) -- the new frame is on screen; older ones can go
+          end,
+        })
+        st.frames[#st.frames + 1] = { placement = placement, img = img, file = out }
+        st.last = crop .. ' ' .. resize
+        -- Percent of the source's own pixels on screen; 100 is one to one.
+        st.win:set_title(('%s: %d%%'):format(st.label, math.floor(r.fit * st.zoom * 100 + 0.5)))
+        finish()
+      end)
+    end)
+  end)
 end
 
 ---@param st custom.ImageViewer
 ---@param mult number
 local function zoom(st, mult)
-  if not st.base then
-    return vim.notify('Diagram still rendering, try again in a moment', vim.log.levels.WARN)
+  if not st.win:valid() then
+    return
   end
-  st.factor = st.factor * mult
-  refresh(st)
+  local r = region(st)
+  st.zoom = clamp(st.zoom * mult, 1, math.max(1, MAX_PIXEL_SCALE / r.fit))
+  render(st)
+end
+
+---@param st custom.ImageViewer
+---@param dx number fraction of the visible width
+---@param dy number fraction of the visible height
+local function pan(st, dx, dy)
+  if not st.win:valid() then
+    return
+  end
+  local r = region(st)
+  st.center.x = st.center.x + dx * r.width
+  st.center.y = st.center.y + dy * r.height
+  render(st)
 end
 
 ---@param st custom.ImageViewer
 local function reset(st)
-  st.factor = 1
-  st.pos = { row = VIEW_ROW, col = 0 }
-  refresh(st)
+  st.zoom = 1
+  st.center = { x = st.size.width / 2, y = st.size.height / 2 }
+  render(st)
 end
 
----@param st custom.ImageViewer
----@param drow integer
-local function pan(st, drow)
-  st.pos.row = st.pos.row + drow
-  refresh(st)
-end
-
--- Runs once the image is ready. snacks' progress spinner empties the buffer
--- while the image converts, so the padding has to be written afterwards, and
--- the anchor stays at line 1 until then because a placement whose anchor is
--- past the last line deletes itself.
----@param st custom.ImageViewer
-local function on_ready(st)
-  if st.padded or not st.win:valid() then
-    return
-  end
-  st.padded = true
-  local pad = {}
-  for _ = 1, PAD_LINES do
-    pad[#pad + 1] = string.rep(' ', PAD_WIDTH)
-  end
-  vim.bo[st.buf].modifiable = true
-  vim.api.nvim_buf_set_lines(st.buf, 0, -1, false, pad)
-  vim.bo[st.buf].modifiable = false
-  -- Natural size the way snacks measures it (vector sources go by dpi, not
-  -- by the rendered pixels), and before base so a failure leaves refresh off.
-  local img = st.placement.img
-  st.natural = require('snacks.image.util').fit(img.file, { width = math.huge, height = math.huge }, { info = img.info })
-  local loc = st.placement:state().loc
-  st.base = { width = loc.width, height = loc.height }
-  -- Not inside the update that called us: refresh updates again.
-  vim.schedule(function()
-    refresh(st)
-  end)
-end
-
----@param src string
----@param label? string
+---@param file string raster on disk
+---@param label string
 ---@return custom.ImageViewer?
-local function open_now(src, label)
-  if not require('snacks.image').supports_terminal() then
-    vim.notify('Terminal cannot show images, opening externally', vim.log.levels.WARN)
-    return vim.ui.open(src)
-  end
-  -- snacks downloads http(s) sources itself; only local paths need to exist.
-  if not require('snacks.image.convert').is_url(src) and vim.fn.filereadable(src) == 0 then
-    vim.notify('Image not found: ' .. src, vim.log.levels.ERROR)
+local function show(file, label)
+  local ok, size = pcall(require('snacks.image.util').dim, file)
+  if not ok then
+    vim.notify('Could not read ' .. label .. ': ' .. tostring(size), vim.log.levels.ERROR)
     return nil
   end
-  label = (label == nil or label == '') and vim.fn.fnamemodify(src, ':t') or label
-
   local buf = vim.api.nvim_create_buf(false, true)
+  local group = vim.api.nvim_create_augroup('custom-image-viewer-' .. buf, { clear = true })
   ---@type custom.ImageViewer
-  local st = { buf = buf, label = label, factor = 1, padded = false, pos = { row = VIEW_ROW, col = 0 } }
+  local st = {
+    buf = buf,
+    src = file,
+    size = size,
+    label = label,
+    zoom = 1,
+    center = { x = size.width / 2, y = size.height / 2 },
+    frames = {},
+    tmp = vim.fn.tempname(),
+    generation = 0,
+    busy = false,
+    dirty = false,
+  }
   st.win = require('snacks.win')({
     buf = buf,
     relative = 'editor',
@@ -161,15 +242,14 @@ local function open_now(src, label)
     border = 'rounded',
     title = label,
     footer_pos = 'right',
-    footer_keys = { '+', '-', '0', 'j', 'k', 'q' },
+    footer_keys = { '+', '-', '0', 'h', 'j', 'k', 'l', 'q' },
     enter = true,
     backdrop = 60,
     wo = { wrap = false },
     bo = { modifiable = false },
     on_close = function()
-      if st.placement then
-        st.placement:close()
-      end
+      pcall(vim.api.nvim_del_augroup_by_id, group)
+      retire(st, 0)
       -- snacks only wipes buffers it created itself; this one is ours.
       vim.schedule(function()
         if vim.api.nvim_buf_is_valid(buf) then
@@ -178,43 +258,80 @@ local function open_now(src, label)
       end)
     end,
     keys = {
-      q = { function() close(st) end, desc = 'Close' },
-      ['<Esc>'] = { function() close(st) end, desc = 'Close' },
+      q = { function() st.win:close() end, desc = 'Close' },
+      ['<Esc>'] = { function() st.win:close() end, desc = 'Close' },
       ['+'] = { function() zoom(st, ZOOM_STEP) end, desc = 'Zoom in' },
       ['='] = { function() zoom(st, ZOOM_STEP) end, desc = 'Zoom in' },
       ['-'] = { function() zoom(st, 1 / ZOOM_STEP) end, desc = 'Zoom out' },
       ['_'] = { function() zoom(st, 1 / ZOOM_STEP) end, desc = 'Zoom out' },
-      ['0'] = { function() reset(st) end, desc = 'Reset zoom and pan' },
-      j = { function() pan(st, -PAN_STEP) end, desc = 'Scroll down' },
-      k = { function() pan(st, PAN_STEP) end, desc = 'Scroll up' },
-      ['<Down>'] = { function() pan(st, -PAN_STEP) end, desc = 'Scroll down' },
-      ['<Up>'] = { function() pan(st, PAN_STEP) end, desc = 'Scroll up' },
+      ['0'] = { function() reset(st) end, desc = 'Reset' },
+      h = { function() pan(st, -PAN_FRACTION, 0) end, desc = 'Pan' },
+      j = { function() pan(st, 0, PAN_FRACTION) end, desc = 'Pan' },
+      k = { function() pan(st, 0, -PAN_FRACTION) end, desc = 'Pan' },
+      l = { function() pan(st, PAN_FRACTION, 0) end, desc = 'Pan' },
+      ['<Left>'] = { function() pan(st, -PAN_FRACTION, 0) end, desc = 'Pan' },
+      ['<Down>'] = { function() pan(st, 0, PAN_FRACTION) end, desc = 'Pan' },
+      ['<Up>'] = { function() pan(st, 0, -PAN_FRACTION) end, desc = 'Pan' },
+      ['<Right>'] = { function() pan(st, PAN_FRACTION, 0) end, desc = 'Pan' },
     },
   })
-  st.placement = require('snacks.image.placement').new(buf, src, {
-    pos = { 1, 0 },
-    inline = false,
-    conceal = true,
-    on_update = function()
-      on_ready(st)
-      pin(st)
+  -- The crop is baked for one window size; a resize of this window needs a
+  -- new one. WinResized fires for every window in the tab, so filter.
+  vim.api.nvim_create_autocmd({ 'VimResized', 'WinResized' }, {
+    group = group,
+    callback = function(ev)
+      if ev.event == 'VimResized' or vim.tbl_contains(vim.v.event.windows or {}, st.win.win) then
+        render(st)
+      end
     end,
   })
+  render(st)
   return st
 end
 
----@param src string
+---@param src string image path, URL, or anything snacks can convert
 ---@param label? string
 ---@param cb? fun(st: custom.ImageViewer?)
 function M.open(src, label, cb)
+  cb = cb or function() end
+  if vim.fn.executable('magick') == 0 then
+    return cb(vim.notify('ImageMagick (magick) is required for the image viewer', vim.log.levels.ERROR))
+  end
   -- Detect first: the terminal probe snacks starts on FileType may still be
   -- in flight, and env() would then cache the terminal as unsupported for
   -- the whole session.
   require('snacks.image.terminal').detect(function()
-    local st = open_now(src, label)
-    if cb then
-      cb(st)
+    if not require('snacks.image').supports_terminal() then
+      vim.notify('Terminal cannot show images, opening externally', vim.log.levels.WARN)
+      local job, err = vim.ui.open(src)
+      if not job then
+        vim.notify('Could not open externally: ' .. tostring(err), vim.log.levels.ERROR)
+      end
+      return cb(nil)
     end
+    local is_url = require('snacks.image.convert').is_url(src)
+    if not is_url and vim.fn.filereadable(src) == 0 then
+      vim.notify('Image not found: ' .. src, vim.log.levels.ERROR)
+      return cb(nil)
+    end
+    label = (label == nil or label == '') and vim.fn.fnamemodify(src, ':t') or label
+    -- A local PNG is cropped as is: snacks' conversion would first scale it
+    -- down to 1920x1080, which is exactly the detail the viewer is for.
+    -- ponytail: other rasters take that downscale, since the size probe used
+    -- here reads PNG headers only; measure with magick identify to lift it.
+    if not is_url and vim.fn.fnamemodify(src, ':e'):lower() == 'png' then
+      return cb(show(src, label))
+    end
+    -- Anything else (jpg, svg, pdf, url, a mermaid source) goes through
+    -- snacks' converter and lands as the same cached PNG the inline renderer
+    -- uses.
+    when_ready(require('snacks.image.image').new(src), function(ok)
+      if not ok then
+        vim.notify('Could not render ' .. label .. ', see :checkhealth snacks', vim.log.levels.ERROR)
+        return cb(nil)
+      end
+      cb(show(require('snacks.image.image').new(src).file, label))
+    end)
   end)
 end
 
