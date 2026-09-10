@@ -940,24 +940,46 @@ do
   -- via bun) and the diagram replaces the fence. Plain `![](image)`
   -- references keep their text.
   --
-  -- Diagrams render about as wide as the terminal in pixels: mermaid lays a
-  -- diagram out on an 800px page, so the scale is the terminal's pixel width
-  -- over 800. snacks only ever scales down, so that render fills the window
-  -- width, and the viewer crops the same file when zooming, so the extra
-  -- pixels are what it shows as detail. The scale is capped at three times
-  -- the terminal's pixel scale, and the cap is live: `:let g:mermaid_scale`
-  -- takes effect at the next preview toggle.
+  -- Diagrams render about as wide as the terminal, but no larger than a
+  -- decoded budget. mermaid lays a diagram on an ~800px page and `-s` scales
+  -- it, so aim for the window width, then clamp so the decoded RGBA stays
+  -- under the budget (worst case a square page).
   --
-  -- Measured in Ghostty 1.3.1: it accepts a 4200x3900 image (66 MB decoded)
-  -- and rejects 4704x4344 (82 MB) with ENOMEM, drawing nothing. Rendering at
-  -- three times the terminal scale hit that; terminal width stays well under.
-  -- ponytail: a diagram laid out wider than about 1600px at scale 1 could
-  -- still cross the ceiling; size the render from its own width if one does.
+  -- Ghostty keeps a display budget for on-screen images far below what it
+  -- accepts over the wire, and it shrinks as the window grows: measured in a
+  -- 56-row tab a 2195x2027 (18 MB) diagram drew and a 2524x2331 (24 MB) one
+  -- was silently blank, while that same 24 MB drew in a 33-row split. A
+  -- near-square diagram therefore cannot be pixel-full-width and stay under
+  -- the ceiling at once, so the inline render fills the width of a landscape
+  -- diagram and comes close on a square one, always displaying. The viewer
+  -- (<CR>) re-renders the source at full detail and only ever sends
+  -- window-sized crops, so the ceiling never bites there.
+  -- ponytail: budget is a fixed 16 MB, not modelled on window height; lower
+  -- g:mermaid_scale if a very large monitor still blanks.
+  local MERMAID_MAX_DECODED_MB = 16
   vim.g.mermaid_scale = vim.g.mermaid_scale or 3
   local function mermaid_scale()
     local size = require('snacks.image.terminal').size()
-    local scale = math.min(vim.g.mermaid_scale * (size.scale or 1), size.width / 800)
-    return ('%.2f'):format(math.max(1, scale))
+    local want = math.min(vim.g.mermaid_scale * (size.scale or 1), size.width / 800)
+    local budget = math.sqrt(MERMAID_MAX_DECODED_MB * 1e6 / 4) / 800
+    return ('%.2f'):format(math.max(1, math.min(want, budget)))
+  end
+
+  -- Render a mermaid source to a fresh high-resolution PNG for the viewer,
+  -- which only ever sends window-sized crops onward, so this can be larger
+  -- than the inline render. Cleaned when nvim removes its tempdir on exit.
+  local function render_mermaid_hires(src, cb)
+    local theme = vim.o.background == 'light' and 'neutral' or 'dark'
+    local out = vim.fn.tempname() .. '.png'
+    vim.system(
+      { 'mmdc', '-i', src, '-o', out, '-b', 'transparent', '-t', theme, '-s', '6' },
+      {},
+      function(res)
+        vim.schedule(function()
+          cb(res.code == 0 and vim.fn.filereadable(out) == 1 and out or nil)
+        end)
+      end
+    )
   end
   -- snacks caches a rendered diagram by its source alone, so a scale change
   -- would keep serving the old pixels and the old .info sidecar that sizes
@@ -1117,7 +1139,15 @@ do
         if not img:ready() then
           return vim.notify('Diagram still rendering, try again in a moment', vim.log.levels.WARN)
         end
-        require('custom.image-viewer').open(img.file, 'mermaid diagram')
+        -- A chart source (`.mmd`) re-renders at high detail for the viewer;
+        -- a plain image reference opens its file directly.
+        if vim.fn.fnamemodify(img.src, ':e') == 'mmd' then
+          render_mermaid_hires(img.src, function(hires)
+            require('custom.image-viewer').open(hires or img.file, 'mermaid diagram')
+          end)
+        else
+          require('custom.image-viewer').open(img.file, 'mermaid diagram')
+        end
       end, { buffer = ev.buf, desc = 'View diagram under cursor' })
     end,
   })
