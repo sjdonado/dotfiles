@@ -1105,6 +1105,52 @@ do
     end)
   end
 
+  -- Preview turns wrap off so a wide table or row keeps its columns instead
+  -- of folding into the next line; the view scrolls sideways (trackpad
+  -- included, since horizontal wheel only scrolls an unwrapped window). Each
+  -- window's own wrap is stashed and restored when preview turns off.
+  vim.o.sidescroll = 1 -- scroll one column at a time when a line runs off-screen
+  local wrap_stash = {} ---@type table<integer, boolean>
+  local function preview_wrap(win, on)
+    if not vim.api.nvim_win_is_valid(win) then
+      return
+    end
+    if on then
+      if wrap_stash[win] == nil then
+        wrap_stash[win] = vim.wo[win].wrap
+      end
+      vim.wo[win].wrap = false
+    elseif wrap_stash[win] ~= nil then
+      vim.wo[win].wrap = wrap_stash[win]
+      wrap_stash[win] = nil
+    end
+  end
+  local function apply_preview_wrap(on)
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'markdown' then
+        preview_wrap(win, on)
+      end
+    end
+  end
+  vim.api.nvim_create_autocmd({ 'WinNew', 'WinClosed' }, {
+    group = preview_group,
+    callback = function(ev)
+      if ev.event == 'WinClosed' then
+        wrap_stash[tonumber(ev.match)] = nil
+      end
+    end,
+  })
+  -- A markdown window shown while preview is on adopts nowrap too.
+  vim.api.nvim_create_autocmd('BufWinEnter', {
+    group = preview_group,
+    pattern = '*.md',
+    callback = function()
+      if preview_on() then
+        preview_wrap(vim.api.nvim_get_current_win(), true)
+      end
+    end,
+  })
+
   -- Ghostty drops a pane's images when it loses focus, and snacks re-renders
   -- on scroll, edit, and buffer enter but not on focus. Re-transmit each owned
   -- diagram and force a re-place when focus returns, without rebuilding the
@@ -1181,6 +1227,7 @@ do
   vim.keymap.set('n', '<leader>m', function()
     require('render-markdown').toggle()
     local on = preview_on()
+    apply_preview_wrap(on)
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
       if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].filetype == 'markdown' then
         if on then
