@@ -12,6 +12,7 @@ local M = {}
 local ZOOM_STEP = 1.25
 local MAX_PIXEL_SCALE = 4 -- zooming in stops once a source pixel would span this many screen pixels
 local PAN_FRACTION = 0.25 -- of the visible region per key press
+local SCROLL_FRACTION = 0.1 -- per wheel tick; a trackpad sends many
 
 ---@param n number
 ---@param lo number
@@ -273,6 +274,14 @@ local function show(file, label)
       ['<Down>'] = { function() pan(st, 0, PAN_FRACTION) end, desc = 'Pan' },
       ['<Up>'] = { function() pan(st, 0, -PAN_FRACTION) end, desc = 'Pan' },
       ['<Right>'] = { function() pan(st, PAN_FRACTION, 0) end, desc = 'Pan' },
+      -- Wheel and trackpad: vertical scroll pans, horizontal scroll pans
+      -- sideways, and Ctrl plus wheel zooms.
+      ['<ScrollWheelUp>'] = { function() pan(st, 0, -SCROLL_FRACTION) end, desc = 'Pan' },
+      ['<ScrollWheelDown>'] = { function() pan(st, 0, SCROLL_FRACTION) end, desc = 'Pan' },
+      ['<ScrollWheelLeft>'] = { function() pan(st, -SCROLL_FRACTION, 0) end, desc = 'Pan' },
+      ['<ScrollWheelRight>'] = { function() pan(st, SCROLL_FRACTION, 0) end, desc = 'Pan' },
+      ['<C-ScrollWheelUp>'] = { function() zoom(st, ZOOM_STEP) end, desc = 'Zoom in' },
+      ['<C-ScrollWheelDown>'] = { function() zoom(st, 1 / ZOOM_STEP) end, desc = 'Zoom out' },
     },
   })
   -- The crop is baked for one window size; a resize of this window needs a
