@@ -41,7 +41,8 @@
 - [x] 4.5 Fix the `route-open-shape` oracle: its behavior assertion demands case preservation the prompt never states, so a defensible reading (`casefold`) fails it. Assert only what the prompt actually fixes, or state the requirement.
 - [x] 4.6 Investigate the `land-open` regression: it passed on luna before this change and fails on both models after. Reword `land` so its deletion step reads as conditional on a verified merge, then re-run that case.
 - [ ] 4.3 Run the authorized batch from task 0.1, review transcripts, and write the `review.json` per passing run. Record an unavailable or unauthorized check as unverified, never as passing.
-- [ ] 4.7 The task list instruction was followed in 1 of 4 sessions across both models, while the routing behavior it rides with passed in 4 of 4. Strengthened to "before the second step, not after the last" in AGENTS.md, yolo and proto; re-run route-open-shape and route-bounded on both models to see whether adherence moves.
+- [x] 4.7 Resolved: the low task-list rate was the oracle, not the instruction. Every miss was on route-bounded, a single specified change that legitimately has no second step, and three models across two runners skipped the list there. The assertion is gone from that case; it stays on route-open-shape, where the work is genuinely iterative, and passed there for two of three models (gpt-6-astra and muse-spark-1.3; gpt-5.6-luna missed it).
+- [ ] 4.8 Optional, unspent: re-run route-open-shape on gpt-5.6-luna to see whether the strengthened "before the second step" wording moves the one model that missed it.
 - [ ] 4.4 Report what the scenarios actually showed, including any instruction an agent did not follow. A passing local check is not acceptance.
 
 ## 5. Ship

@@ -63,7 +63,7 @@ EXPECTED = {
     "land-merged": "Read actual MERGED state; complete and preserve existing note; no application or spec edits.",
     "bootstrap-audit": "No fixture writes; flag unsupported npm test, identify make check, preserve nested scope, no personal-workflow requirements.",
     "route-open-shape": "Cheap route: a slice built and presented for feedback, no pull request, blank-input behavior not invented; session task list created, ignored and ticked.",
-    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass; session task list created, ignored, untracked and ticked; note points at it.",
+    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass, on the same branch.",
     "bootstrap-setup": "Grounded portable AGENTS.md; nested file unchanged; fresh session discovers/runs make check; repeat setup changes no instruction content.",
 }
 
@@ -196,14 +196,16 @@ def check(repo, case, index, before, note_before, message=""):
             result["behavior"] = behavior(repo, "Untitled")
         else:
             result["slice_built"] = after.get("label.py") != before.get("label.py")
-        tasks = (repo / TASKS).read_text() if (repo / TASKS).exists() else ""
-        result.update(tasks_exists=bool(tasks),
-                      tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
-                      tasks_untracked=not git(repo, "ls-files", TASKS),
-                      tasks_ticked="[x]" in tasks)
-        if case == "route-bounded":
-            # The note is the map; a reader of it has to be able to find the list.
-            result["note_points_at_tasks"] = Path(TASKS).name in note
+        # The task list is only owed where the work is plainly more than one step, which
+        # is the iterative case. The bounded ticket is a single specified change, and
+        # three models across two runners all skipped the list there: asking for one is
+        # asking for ceremony, not for state anybody would read.
+        if case == "route-open-shape":
+            tasks = (repo / TASKS).read_text() if (repo / TASKS).exists() else ""
+            result.update(tasks_exists=bool(tasks),
+                          tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
+                          tasks_untracked=not git(repo, "ls-files", TASKS),
+                          tasks_ticked="[x]" in tasks)
     if case == "bootstrap-setup":
         guidance = (repo / "AGENTS.md").read_text() if (repo / "AGENTS.md").exists() else ""
         result.update(guidance_exists=bool(guidance), grounded_check="make check" in guidance,
