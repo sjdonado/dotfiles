@@ -46,7 +46,7 @@ def main():
         else:
             raise AssertionError("Malformed transcripts must fail visibly")
         matrix = measure["matrix"]()
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 26
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 30
         assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
         run = Path(directory) / "run"
         run.mkdir()
@@ -74,7 +74,7 @@ def main():
         # A consumed budget cannot start another call, even without usable results.
         exhausted = Path(directory) / "batch" / "interrupted"
         exhausted.mkdir(parents=True)
-        measure["save"](exhausted / "result.json", {"rounds": [{"status": "started"}] * 26})
+        measure["save"](exhausted / "result.json", {"rounds": [{"status": "started"}] * 30})
         assert measure["run_case"](exhausted.parent, "handoff-v1", "unused", 1, {}) is None
     print("measure checks passed")
 

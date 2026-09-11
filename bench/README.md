@@ -7,7 +7,7 @@ Test concrete harness behaviors in disposable repositories, retain every attempt
 ```sh
 bench/measure verify --local            # compile, offline regression checks, git diff --check; no model calls
 bench/measure verify --behavior         # inspect recorded matrix coverage; nonzero unless every case passed review
-bench/measure verify --behavior --run   # start missing matrix sessions (paid), capped at 26 per retained batch
+bench/measure verify --behavior --run   # start missing matrix sessions (paid), capped at 30 per retained batch
 bench/measure run --scenario <case> --model <model>   # one case, same batch, same cap and gate
 bench/measure analyze <events.jsonl> ...              # metrics for explicit codex exec --json files
 ```
@@ -18,7 +18,7 @@ Local success means the benchmark tooling works. It says nothing about the harne
 
 ## The matrix
 
-Nine cases in `bench/scenarios.py`, run on `gpt-5.6-luna` and `gpt-6-astra` at low reasoning, 26 sessions total. The unchanged handoff-v1 on Luna is always the first trial. Order and prompts are frozen in code; the `handoff-v1` prompts are byte-for-byte the original failed probe.
+Eleven cases in `bench/scenarios.py`, run on `gpt-5.6-luna` and `gpt-6-astra` at low reasoning, 30 sessions total. The cap rose from 26 with the two routing cases appended below; the first nine keep their frozen order, so evidence from an earlier batch is comparable case by case. The unchanged handoff-v1 on Luna is always the first trial. Order and prompts are frozen in code; the `handoff-v1` prompts are byte-for-byte the original failed probe.
 
 | Case | Sessions per model | Expected outcome |
 | --- | ---: | --- |
@@ -31,6 +31,8 @@ Nine cases in `bench/scenarios.py`, run on `gpt-5.6-luna` and `gpt-6-astra` at l
 | land-merged | 1 | reads MERGED state, completes and preserves the note, changes nothing else |
 | bootstrap-audit | 1 | ordinary repo: flags unsupported `npm test`, finds `make check`, keeps nested scope, writes nothing |
 | bootstrap-setup | 2 | ordinary repo: grounded portable AGENTS.md; fresh session discovers and runs `make check`; repeat setup changes nothing |
+| route-default | 1 | no workflow named: both asked-for behaviors land in one run, session task list created, ignored, untracked and ticked, note points at it |
+| proto-explicit | 1 | prototype asked for in the human's words: whitespace only, blank input untouched, stopped for feedback, task list created |
 
 Each case seeds a standalone temporary repository outside this checkout so the project's root AGENTS.md cannot leak in. Harness cases get `agents/AGENTS.md` plus the skills they need copied into `.agents/skills/`. Bootstrap cases get only `harness-boostrap` and an ordinary Makefile project with a nested `src/AGENTS.md`. Forge cases get a local bare `origin` and a `gh` substitute (`bench/fixture_gh.py`) at `./.fixture/bin/gh` that supports `pr view/list/checks/edit`, logs every call to `.fixture/operations.jsonl`, and fails anything else. Fixture credentials are invalid and the sandbox has network disabled, so no real forge or tracker is reachable. The substitute is addressed by path, not PATH: Codex runs commands through a login shell that re-sources the profile, so a PATH prepend loses to the real `gh`. The `feedback` case runs with `danger-full-access` because workspace-write denies writes to `.git` and the case must commit and push; its remote is the local bare repository and its forge credentials are invalid. This is not hermetic: Codex may still load its own built-in or user-level instructions, which the manifest hashes as `ambient_instructions`.
 
