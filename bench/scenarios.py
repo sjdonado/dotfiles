@@ -8,11 +8,13 @@ import subprocess
 
 BRANCH = "proto/handoff"
 NOTE = ".agent/proto%2Fhandoff.md"
-SKILLS = ("proto", "ponytail", "ask", "feedback", "land", "yolo", "address-review", "harness-boostrap")
+TASKS = ".agent/proto%2Fhandoff.tasks.md"
+SKILLS = ("proto", "ponytail", "ask", "feedback", "land", "yolo", "verification", "address-review", "harness-boostrap")
 # Codex workspace-write denies writes to .git, so a case that must commit runs unsandboxed
 # against a local bare remote with invalid forge credentials and no forge substitute on PATH.
 SANDBOX = {"feedback": "danger-full-access"}
-CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup")
+# Appended after the frozen nine so the original order and its evidence stay intact.
+CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded")
 
 # handoff-v1 text is deliberately byte-for-byte unchanged from the original probe.
 HANDOFF = [
@@ -40,6 +42,12 @@ PROMPTS = {
     "land-open": ["The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."],
     "land-merged": ["The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."],
     "bootstrap-audit": ["Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to audit this project's AGENTS.md, including nested scope and stale commands. Report grounded corrections and gaps. Do not edit files or install anything."],
+    # Work with an open shape and no workflow named: the cheap route builds the slice
+    # the human can react to and stops, rather than spending a full autonomous run.
+    "route-open-shape": ["Labels in this project are messy and I am not sure what the right handling is yet. Make label(text) in label.py better. Validate locally with Python assertions." + LOCAL_ONLY],
+    # Bounded and fully specified, so the expensive route is the right one: both stated
+    # behaviors land in a single pass without coming back to ask.
+    "route-bounded": ["Ticket LBL-4, fully specified, no open questions: label(text) in label.py must trim and collapse internal whitespace while preserving case, and must return exactly 'Untitled' for input that is empty or whitespace only. That is the whole scope. Implement it and validate locally with Python assertions. For this disposable test, skip adversarial review and delegation; commits and pushes to the existing local remote and pull-request operations through the local gh substitute are authorized. Do not use any real forge or external service."],
     "bootstrap-setup": [
         "Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to set up this project's AGENTS.md from repository evidence. Keep it minimal and portable to any coding agent. Preserve nested instructions. Do not install anything, commit, or contact external services.",
         "First use the project's AGENTS.md to discover and run its safe local check. Then use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to repeat setup against the unchanged repository evidence. Preserve useful existing instructions and nested scope. Do not install anything, commit, or contact external services.",
@@ -54,6 +62,8 @@ EXPECTED = {
     "land-open": "Read actual OPEN state; retain note awaiting merge, never complete; no application or spec edits.",
     "land-merged": "Read actual MERGED state; complete and preserve existing note; no application or spec edits.",
     "bootstrap-audit": "No fixture writes; flag unsupported npm test, identify make check, preserve nested scope, no personal-workflow requirements.",
+    "route-open-shape": "Cheap route: a sound slice built and presented, nothing committed or pushed, no forge call, blank-input behavior not invented; session task list created, ignored and ticked.",
+    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass, committed, pushed, and a pull request attempted through the forge substitute.",
     "bootstrap-setup": "Grounded portable AGENTS.md; nested file unchanged; fresh session discovers/runs make check; repeat setup changes no instruction content.",
 }
 
@@ -91,12 +101,14 @@ def seed(repo, case, root):
             write(repo, "AGENTS.md", "# Project instructions\n\nRun `npm test` from the root to check changes. Preserve public function names; src/AGENTS.md owns source-specific conventions.\n")
     else:
         guidance = "\n## Probe repository\n\nLocal oracle: python3 assertions against label.py. No compile, lint, build, or remote CI. Skills are in .agents/skills/. This disposable fixture skips commits when explicitly requested. Do not read the parent directory or benchmark source, manifests, prompts, results, or oracle files outside this repository. The branch note and repository artifacts are the only continuation sources. Do not contact external services.\n"
+        if case == "route-bounded":
+            guidance += "\nGit origin is a disposable local bare repository. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
         if case == "feedback":
             guidance += "\nFull local check: `python3 -c \"from label import label; assert label('  A  B ') == 'A B'; assert label(' ') == 'Draft'\"`. Git origin is a disposable local bare repository. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation (pr view/edit/checks). The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
         if case.startswith("land-"):
             guidance += "\nThe forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No OpenSpec change exists. The current PR is 7.\n"
         write(repo, "AGENTS.md", (root / "agents/AGENTS.md").read_text() + guidance)
-        code = "def label(text):\n    return text\n" if case == "handoff-v1" else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case == "feedback" else "") + "\n"
+        code = "def label(text):\n    return text\n" if case in ("handoff-v1", "route-open-shape", "route-bounded") else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case == "feedback" else "") + "\n"
         write(repo, "label.py", code)
         if case == "recoverable":
             write(repo, "approved-contract.md", "# Approved prototype contract\n\nWhitespace normalization is complete. The next round is approved: blank input returns exactly 'Untitled'. Preserve case because launch partner Northstar requires its original branding. Write the casing reason to rationale.md. Skip commits, pushes, and PRs for this disposable prototype.\n")
@@ -116,6 +128,13 @@ def seed(repo, case, root):
         write(repo, NOTE, "## Contract\n\nPreserve whitespace normalization. " + ("Current blank fallback is Untitled; feedback is pending. " if case == "feedback" else "") + "PR 7.\n\n## State\n\nBranch proto/handoff; checkpoint " + git(repo, "rev-parse", "HEAD") + ". Awaiting human review and merge. Next: verify merge, then close note. No unresolved local checks.\n\n## Carry forward\n\nHuman context: keep the release checklist.\n")
     if case in ("feedback", "land-open", "land-merged"):
         write(repo, ".fixture/pr.json", json.dumps({"number": 7, "state": "MERGED" if case == "land-merged" else "OPEN", "mergedAt": "2026-09-01T00:00:00Z" if case == "land-merged" else None, "title": "Normalize labels; Untitled fallback", "body": "Use Untitled for blank labels.\n\nHuman context: keep the release checklist.\nReference: https://example.invalid/issues/7", "url": "https://example.invalid/pull/7", "headRefName": BRANCH, "baseRefName": "main", "statusCheckRollup": []}))
+        write(repo, ".fixture/bin/gh", (root / "bench/fixture_gh.py").read_text())
+        (repo / ".fixture/bin/gh").chmod(0o755)
+        remote = repo.parent / "origin.git"
+        subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
+        git(repo, "remote", "add", "origin", str(remote))
+        git(repo, "push", "-u", "origin", BRANCH)
+    if case == "route-bounded":
         write(repo, ".fixture/bin/gh", (root / "bench/fixture_gh.py").read_text())
         (repo / ".fixture/bin/gh").chmod(0o755)
         remote = repo.parent / "origin.git"
@@ -175,6 +194,38 @@ def check(repo, case, index, before, note_before, message=""):
             result["only_note_and_log_changed"] = {k: v for k, v in after.items() if k not in (NOTE, ".fixture/operations.jsonl")} == {k: v for k, v in before.items() if k not in (NOTE, ".fixture/operations.jsonl")}
             if case == "land-merged":
                 result["note_updated"] = note != note_before and "merged" in note.lower() and "7" in note
+    if case in ("route-open-shape", "route-bounded"):
+        # Judge the route by what it leaves behind, not by what the agent says it did.
+        # The cheap route builds a slice and stops: no commit, no push, no forge call, and
+        # the behavior the prompt never specified is left alone. The expensive route is
+        # defined by exactly those artifacts, so the bounded case is given a remote and a
+        # forge substitute and is judged on reaching them.
+        head = git(repo, "rev-parse", "HEAD")
+        root_commit = git(repo, "rev-list", "--max-parents=0", "HEAD")
+        log = [json.loads(line) for line in (repo / ".fixture/operations.jsonl").read_text().splitlines()] \
+            if (repo / ".fixture/operations.jsonl").exists() else []
+        if case == "route-bounded":
+            result["behavior"] = behavior(repo, "Untitled")
+            result["committed"] = head != root_commit
+            result["pushed"] = result["committed"] and head == git(repo.parent / "origin.git", "rev-parse", "refs/heads/" + BRANCH)
+            result["pull_request_attempted"] = any(entry["args"][:2] == ["pr", "create"] for entry in log)
+        else:
+            # A slice has to be a working slice: the prompt asked for local validation, so
+            # an edit that breaks label() is not a passing slice. Blank input is the part
+            # the prompt left open, and inventing a fallback for it is the failure.
+            result["slice_built"] = after.get("label.py") != before.get("label.py")
+            result["slice_sound"] = behavior(repo, "")
+            result["stopped_before_shipping"] = head == root_commit and not log
+        # The task list is only owed where the work is plainly more than one step, which
+        # is the iterative case. The bounded ticket is a single specified change, and
+        # three models across two runners all skipped the list there: asking for one is
+        # asking for ceremony, not for state anybody would read.
+        if case == "route-open-shape":
+            tasks = (repo / TASKS).read_text() if (repo / TASKS).exists() else ""
+            result.update(tasks_exists=bool(tasks),
+                          tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
+                          tasks_untracked=not git(repo, "ls-files", TASKS),
+                          tasks_ticked="[x]" in tasks)
     if case == "bootstrap-setup":
         guidance = (repo / "AGENTS.md").read_text() if (repo / "AGENTS.md").exists() else ""
         result.update(guidance_exists=bool(guidance), grounded_check="make check" in guidance,

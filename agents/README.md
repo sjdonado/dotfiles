@@ -29,7 +29,8 @@ flowchart TD
         folds the answers into the artifacts"]
         updatechange --> change
 
-        proto_in["requirements that will not settle on paper"] --> proto["proto
+        proto_in["work asked for, contract not settled
+        DEFAULT ROUTE"] --> proto["proto
         build a slice, local rungs green,
         human tries it, fold feedback in"]
         proto --> protoledger["requirements ledger"]
@@ -44,7 +45,9 @@ flowchart TD
     end
 
     subgraph BUILD["build"]
-        approval --> yolo["yolo"]
+        approval --> yolo["yolo
+        entered deliberately: asked for by name,
+        an approved contract, or work already bounded"]
         yolo --> ladder["resolve oracle ladder
         project AGENTS.md, else task runner, else toolchain"]
         ladder --> implement["implement"]
@@ -93,9 +96,11 @@ Skills provide both explicit and plain-language entry points. Each harness initi
 
 The setup scripts link the same skill directory into all three harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins.
 
-Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom plan skill shadows native plan mode. A third path, `proto`, exists for requirements that cannot be settled on paper: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `yolo`.
+Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom plan skill shadows native plan mode. A third path, `proto`, is the default way into implementation whenever the contract is not already settled: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `yolo`.
 
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to, because implementation goes through `yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
+`yolo` is the expensive run and is entered deliberately, not by default: the human asks for it or for a PR, or the contract is already pinned down by an approved change, an approved plan, a promoted ledger, a specified ticket, a round on a branch whose PR is open, or a change small enough that its shape is not in question. Uncertainty routes to `proto`. The two are a sequence rather than a choice: the ledger is what makes the later run cheap and correct.
+
+The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to: the path to a pull request goes through `yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
@@ -148,9 +153,9 @@ Never edit a locked skill body in place, or the next update will report drift or
 
 Deleting the body and leaving the entry is worse than leaving both: the entry is the instruction to fetch, so the next update reinstalls the skill. That is how the `caveman-*` and `code-review` bodies came back months after being removed. Deleting a skill therefore means the directory, the lock entry, and the `.claude/skills` symlink together.
 
-`adversarial-review`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
+`adversarial-review`, `verification`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
 
-There is no progress-tracking skill and no `AGENT_PROGRESS.md`. Run state is derivable from cheaper sources that cannot go stale: the oracle ladder says what is still failing, `git log` says what landed, `wt config state vars` holds attempts and escalations in `.git`, and a `tasks.md` in an OpenSpec change directory carries the checklist for specced work.
+There is no progress-tracking skill and no `AGENT_PROGRESS.md`. The ignored `.agent/<branch-key>.tasks.md` ledger is the unspecced counterpart to a change's `tasks.md`, not a second system: one list per line of work, and `land` removes it. Run state is derivable from cheaper sources that cannot go stale: the oracle ladder says what is still failing, `git log` says what landed, `wt config state vars` holds attempts and escalations in `.git`, and a `tasks.md` in an OpenSpec change directory carries the checklist for specced work.
 
 ## Authentication
 

@@ -12,8 +12,8 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "look into X", "is it true that", "dig into whether" | `research` |
 | "what does X do", "why does Y happen", one bounded question | `ask` |
 | "how should we approach this", a pasted ticket, "triage this" | `triage` |
-| "implement this", "go build it", an approved plan | `yolo` |
-| "prototype this", "spike it", "build it rough and show me", "let me try it first" | `proto` |
+| an approved plan or OpenSpec change, a promoted `proto` ledger, a specified ticket, "yolo it", "open a PR" | `yolo` |
+| "implement this", "go build it", "prototype this", "spike it", "let me try it first", anything whose contract is still open | `proto` |
 | a bullet list of changes to work already in a PR | `feedback` |
 | "address the review comments", "CI is red on my PR" | `address-review` |
 | "the PR merged", "archive the change", "clean up the spec" | `land` |
@@ -27,13 +27,25 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 
+**When a request asks for work and the contract is not settled, the answer is `proto`.** It is the cheap default: a slice, the local rungs green, the human tries it, feedback folds back in. No adversarial review, no push, no PR, nothing to unwind if the direction was wrong. Enter it and say so in one line; do not ask permission to begin.
+
+**`yolo` is for work that is already pinned down, and it is entered deliberately.** It is the expensive run: full understanding pass, adversarial review by blind subagents, commits, a PR, and every remote check driven green. Spending that on requirements that are still moving burns the run and produces a PR describing the wrong thing. Enter it when one of these holds:
+
+- the human asks for it by name, or asks for a PR
+- an approved OpenSpec change, an approved plan, or a promoted `proto` ledger already fixes the contract
+- the work is well defined and bounded on its own: a specified ticket, a follow-up round on a branch whose PR is already open, a mechanical or small change where the shape is not in question
+
+Uncertainty selects `proto`, never `yolo`. If you cannot say what "done" looks like without asking the human, that is the signal: build the slice and let them react to it. The two are not rivals, they are a sequence, and the ledger `proto` finalizes is what makes the later `yolo` run cheap and correct.
+
+Approval is the hinge. Once a contract is agreed, by any route, `yolo` runs to completion without further prompting, per **Approval means autonomous execution** below.
+
 Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `yolo` still never merges, read-only workflows still make no edits.
 
 Do not route when the request is conversational or a one-line lookup where the workflow costs more than the answer, or when two workflows match and the choice changes the outcome. In that case name both and ask.
 
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `address-review`.
 
-Implementation always goes through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+Implementation reaches a pull request only through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
 The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `yolo`.
 
@@ -49,6 +61,8 @@ Every change needs an agreed contract before implementation. There are two ways 
 
 Never run `openspec init`. The `openspec-*` skills are installed globally and are already available in every repository, so init only scaffolds redundant per-project command files. Create `openspec/changes/<id>/` directly when a change needs it.
 
+When work looks worth documenting, say so in one line and offer the written route before starting, rather than silently taking the cheaper one. Proceed on the answer; where the work can start either way, start it rather than blocking on the reply.
+
 **Native plan mode, for everything else.** Cheaper, in-conversation, nothing to archive. Trace the relevant system end to end, identify the source of truth and lifecycle implications, clarify only load-bearing ambiguity, and recommend the smallest coherent change with specific files and verification steps.
 
 Do not do both. An approved OpenSpec change is already the implementation contract, so re-entering plan mode to restate it adds a second approval gate over the same decisions. Go straight from the approved change to `yolo`.
@@ -61,11 +75,21 @@ When a plan brief from `triage`, a finding ledger from `research`, or an OpenSpe
 
 For work spanning sessions or rounds, keep one ignored note at `.agent/<branch-key>.md`. Encode the exact branch name by replacing `%` with `%25`, then `/` with `%2F`. Before creating it, add `/.agent/` to the file resolved by `git rev-parse --git-path info/exclude`; never commit the note. Read it on continuation unless already current in context. Read-only skills consume without writing; the next authorized writer preserves their relevant conclusions.
 
-Keep **Contract** (requirements and artifact references), **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews). Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
+Keep **Contract** (requirements and artifact references), **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews). Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks, naming the task list's path in State so a reader of the note finds it. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
 
 Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved handoff without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and preserves it for explicit cleanup.
 
-A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log or separate tracking system.
+### The task list
+
+Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end.
+
+Writing it is not optional and not a reward for finishing. A list written at the end is a report, and a report cannot be read by the session that needed it. If the work has more than one step, the file exists before the second step starts, and every later checkpoint updates it alongside the note.
+
+It exists so state outlives the session. A harness's own to-do list is per-session and per-product: a subagent cannot read it, and neither can the next session or a different agent on the same branch. So hand a subagent the list's path instead of restating what is done in its prompt, and read the list on continuation before re-deriving a plan.
+
+One list, one lifetime. Adopting an OpenSpec change mid-flight folds the ledger's items, done and outstanding, into the change's `tasks.md`, deletes the ledger, and says so: silently dropping it loses the record of what the session already finished. `land` deletes it when the work merges, next to the archive step. Where an OpenSpec change already exists, no ledger is created at all.
+
+A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log, and no tracking system beyond the note and the one task list described above.
 
 ## Approval means autonomous execution
 
@@ -125,6 +149,24 @@ These are irreversible or shared across every other concurrent stream, so touchi
 ### Do not escalate for
 
 Flaky or timed-out CI (re-run once; only a second failure counts as an attempt). Lint or format failures (auto-fix them). A branch behind or mechanically conflicting with its base (rebase, resolve, continue; only a semantic conflict, where both sides changed the same logic, escalates). Type errors in code you just wrote (that is the loop working). Dependency install, cache, or port collisions (re-run the project's provisioning). "I am not sure this design is optimal" (pick the minimal option, record it, continue).
+
+## Orchestrating, and what to hand down a tier
+
+The capable model earns its cost on understanding the problem, settling the contract, and judging what came back. Carrying out a settled contract and running the checks is mechanical, and paying the top tier to type is where a run's cost goes without buying anything.
+
+So treat yourself as the orchestrator. Before implementation begins, and again before verification begins, offer in one line to hand that stretch to a subagent at a cheaper tier, naming what would go with it, and carry on: this is a line of work, not a gate, and it never becomes a reason to wait for permission. Skip the offer when handing over would cost more than doing it, which is most small tasks; the handover prompt has to carry the whole contract, and that is not free.
+
+Delegate work, never waiting. A subagent told to watch something poll until it finishes burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command belongs in the session that can see it through.
+
+Record the human's answer where a later session will find it: the project's own `AGENTS.md` if it is the kind of preference that belongs in the repository, otherwise the durable memory the harness gives you. A preference nobody can find is asked again every session, which is the cost this avoids. Under an autonomous workflow the offer is never made: follow the recorded preference, and where none exists, do the work in this session. Stopping an autonomous run to ask about delegation breaks the one promise that workflow makes.
+
+The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `adversarial-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
+
+`verification` is the usual candidate for a cheaper tier. It runs the ladder, fixes what the change broke, and reports a verdict, all against a contract that is already settled and an oracle that is machine-checkable, so success there is not a judgement call. `adversarial-review` is the opposite case: a reviewer too weak to find the bug is not a saving, so weigh its tier on what it has to catch.
+
+Count the subagents a workflow already spawns. `adversarial-review` dispatches up to two reviewers per round at whatever tier they are given, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
+
+None of this names a model, a reasoning or effort level, or a threshold at which a subagent becomes warranted. Those change faster than these instructions do, and the agent holding the task is better placed to judge it than a rule written in advance.
 
 ## Oracle ladder
 
