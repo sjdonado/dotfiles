@@ -4,29 +4,34 @@ Task state for work that is not running under an OpenSpec change, so what a sess
 
 ## ADDED Requirements
 
-### Requirement: Implementation defaults to the autonomous workflow
+### Requirement: Implementation defaults to the cheap prototyping route
 
-A request to implement, build, fix, or carry out an agreed plan SHALL enter the autonomous implementation workflow without asking, whether it arrives as a plain request, an approved plan, a handoff document, or a contract produced by another workflow. The prototyping workflow SHALL be entered only when the human asks for one, in their own words, such as prototype, spike, rough, or a request to try something first. The agent's own judgement that requirements feel uncertain SHALL NOT select prototyping.
+A request for work whose contract is not already settled SHALL enter the prototyping workflow without asking. The autonomous implementation workflow SHALL be entered deliberately, when the human names it or asks for a pull request, when an approved specification, an approved plan, or a promoted requirements ledger already fixes the contract, or when the work is bounded on its own: a specified ticket, a further round on a branch whose pull request is open, or a change small and mechanical enough that its shape is not in question. Uncertainty SHALL select prototyping and never the autonomous workflow.
 
-#### Scenario: Plain implementation request
+#### Scenario: Implementation request with an open shape
 
-- **WHEN** the human asks for something to be implemented and names no workflow
-- **THEN** the autonomous implementation workflow runs, announced in one line, with no request for permission to begin
+- **WHEN** the human asks for something to be implemented, names no workflow, and no settled contract exists
+- **THEN** the prototyping workflow runs, announced in one line, with no request for permission to begin, and no pull request is opened
+
+#### Scenario: Contract already settled
+
+- **WHEN** an approved specification, an approved plan, or a promoted requirements ledger fixes what is to be built
+- **THEN** the autonomous workflow runs to its terminal state without further prompting
+
+#### Scenario: Bounded work
+
+- **WHEN** the request is a specified ticket, a further round on a branch whose pull request is open, or a small mechanical change
+- **THEN** the autonomous workflow runs, because the shape is not in question
+
+#### Scenario: Autonomous run asked for by name
+
+- **WHEN** the human names the autonomous workflow or asks for a pull request
+- **THEN** it runs, whatever the agent's own view of how settled the requirements are
 
 #### Scenario: Handoff with no written contract
 
-- **WHEN** a session starts from a handoff document that asks for work to be carried out, and no OpenSpec change or written plan exists
-- **THEN** the autonomous implementation workflow runs against the handoff as its input, rather than stopping to ask which workflow applies
-
-#### Scenario: Prototype asked for explicitly
-
-- **WHEN** the human asks to prototype, spike, or try something rough first
-- **THEN** the prototyping workflow runs instead, and nothing in it opens a pull request
-
-#### Scenario: Uncertain requirements without a prototype request
-
-- **WHEN** the agent judges the requirements underspecified but the human asked for implementation
-- **THEN** the autonomous implementation workflow still runs, deciding the open points and recording each decision with the fact that would reverse it, rather than switching to prototyping
+- **WHEN** a session starts from a handoff document asking for work to be carried out, and no settled contract exists
+- **THEN** the prototyping workflow runs against the handoff as its starting context, rather than spending an autonomous run on requirements that may still move
 
 ### Requirement: Work worth documenting is offered a written contract
 

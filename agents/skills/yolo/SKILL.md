@@ -5,6 +5,8 @@ description: Autonomous requirements-to-PR. Clarify once, understand deeply, imp
 
 Autonomously implement the user's request or the current conversation's approved contract.
 
+This is the expensive workflow and it is entered deliberately, not by default: the human asked for it or for a PR, or the contract is already pinned down by an approved OpenSpec change, an approved plan, a promoted `proto` ledger, a specified ticket, a round on a branch whose PR is open, or a change small and mechanical enough that its shape is not in question. If the contract is still moving, stop and run `proto` instead; a full run against requirements that change produces a PR describing the wrong thing.
+
 Resolve the effective input, cheapest first. No document is ever required, and no depth is ever mandatory:
 
 - An OpenSpec change directory (`openspec/changes/<id>/`): its artifacts are the contract. Implement from them and tick off `tasks.md` as each item lands. Without a change directory, keep and tick the session task list per `AGENTS.md`, so what this run finished survives it. Do not re-derive what the proposal, design, or delta specs already settled.

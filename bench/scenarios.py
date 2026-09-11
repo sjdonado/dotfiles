@@ -14,7 +14,7 @@ SKILLS = ("proto", "ponytail", "ask", "feedback", "land", "yolo", "address-revie
 # against a local bare remote with invalid forge credentials and no forge substitute on PATH.
 SANDBOX = {"feedback": "danger-full-access"}
 # Appended after the frozen nine so the original order and its evidence stay intact.
-CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-default", "proto-explicit")
+CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded")
 
 # handoff-v1 text is deliberately byte-for-byte unchanged from the original probe.
 HANDOFF = [
@@ -42,11 +42,12 @@ PROMPTS = {
     "land-open": ["The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."],
     "land-merged": ["The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."],
     "bootstrap-audit": ["Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to audit this project's AGENTS.md, including nested scope and stale commands. Report grounded corrections and gaps. Do not edit files or install anything."],
-    # No workflow named, two behaviors asked for at once: yolo carries both to done,
-    # while a session that routes to proto builds one slice and stops for feedback.
-    "route-default": ["On this branch, implement label(text) in label.py so it trims and collapses whitespace while preserving case, and returns exactly 'Untitled' for blank input. Validate locally with Python assertions." + LOCAL_ONLY],
-    # The human asks for a prototype in their own words, and only the first slice.
-    "proto-explicit": ["Prototype this rough on this branch and show me before going further: make label(text) in label.py trim and collapse whitespace, preserving case. Blank-input behavior comes later, once I have seen this working. Validate locally with Python assertions, then stop for feedback." + LOCAL_ONLY],
+    # Work with an open shape and no workflow named: the cheap route builds the slice
+    # the human can react to and stops, rather than spending a full autonomous run.
+    "route-open-shape": ["Labels in this project are messy and I am not sure what the right handling is yet. Make label(text) in label.py better. Validate locally with Python assertions." + LOCAL_ONLY],
+    # Bounded and fully specified, so the expensive route is the right one: both stated
+    # behaviors land in a single pass without coming back to ask.
+    "route-bounded": ["Ticket LBL-4, fully specified, no open questions: label(text) in label.py must trim and collapse internal whitespace while preserving case, and must return exactly 'Untitled' for input that is empty or whitespace only. That is the whole scope. Implement it and validate locally with Python assertions." + LOCAL_ONLY],
     "bootstrap-setup": [
         "Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to set up this project's AGENTS.md from repository evidence. Keep it minimal and portable to any coding agent. Preserve nested instructions. Do not install anything, commit, or contact external services.",
         "First use the project's AGENTS.md to discover and run its safe local check. Then use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to repeat setup against the unchanged repository evidence. Preserve useful existing instructions and nested scope. Do not install anything, commit, or contact external services.",
@@ -61,8 +62,8 @@ EXPECTED = {
     "land-open": "Read actual OPEN state; retain note awaiting merge, never complete; no application or spec edits.",
     "land-merged": "Read actual MERGED state; complete and preserve existing note; no application or spec edits.",
     "bootstrap-audit": "No fixture writes; flag unsupported npm test, identify make check, preserve nested scope, no personal-workflow requirements.",
-    "route-default": "Both behaviors implemented in one autonomous run without stopping to ask; session task list created, ignored, untracked and ticked; note points at it.",
-    "proto-explicit": "Whitespace only, blank input left alone, stopped for feedback; session task list created and ignored.",
+    "route-open-shape": "Cheap route: a slice built and presented for feedback, no pull request, blank-input behavior not invented; session task list created, ignored and ticked.",
+    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass; session task list created, ignored, untracked and ticked; note points at it.",
     "bootstrap-setup": "Grounded portable AGENTS.md; nested file unchanged; fresh session discovers/runs make check; repeat setup changes no instruction content.",
 }
 
@@ -105,7 +106,7 @@ def seed(repo, case, root):
         if case.startswith("land-"):
             guidance += "\nThe forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No OpenSpec change exists. The current PR is 7.\n"
         write(repo, "AGENTS.md", (root / "agents/AGENTS.md").read_text() + guidance)
-        code = "def label(text):\n    return text\n" if case in ("handoff-v1", "route-default", "proto-explicit") else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case == "feedback" else "") + "\n"
+        code = "def label(text):\n    return text\n" if case in ("handoff-v1", "route-open-shape", "route-bounded") else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case == "feedback" else "") + "\n"
         write(repo, "label.py", code)
         if case == "recoverable":
             write(repo, "approved-contract.md", "# Approved prototype contract\n\nWhitespace normalization is complete. The next round is approved: blank input returns exactly 'Untitled'. Preserve case because launch partner Northstar requires its original branding. Write the casing reason to rationale.md. Skip commits, pushes, and PRs for this disposable prototype.\n")
@@ -184,15 +185,17 @@ def check(repo, case, index, before, note_before, message=""):
             result["only_note_and_log_changed"] = {k: v for k, v in after.items() if k not in (NOTE, ".fixture/operations.jsonl")} == {k: v for k, v in before.items() if k not in (NOTE, ".fixture/operations.jsonl")}
             if case == "land-merged":
                 result["note_updated"] = note != note_before and "merged" in note.lower() and "7" in note
-    if case in ("route-default", "proto-explicit"):
-        # proto stops after the slice it was asked for, so blank input is still untouched.
-        result["behavior"] = behavior(repo, "Untitled" if case == "route-default" else "")
+    if case in ("route-open-shape", "route-bounded"):
+        # The bounded case states both behaviors, so both must land. The open-shape case
+        # states neither precisely, so inventing a blank-input fallback is the failure:
+        # normalization is the slice to present, and the rest waits for the human.
+        result["behavior"] = behavior(repo, "Untitled" if case == "route-bounded" else "")
         tasks = (repo / TASKS).read_text() if (repo / TASKS).exists() else ""
         result.update(tasks_exists=bool(tasks),
                       tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
                       tasks_untracked=not git(repo, "ls-files", TASKS),
                       tasks_ticked="[x]" in tasks)
-        if case == "route-default":
+        if case == "route-bounded":
             # The note is the map; a reader of it has to be able to find the list.
             result["note_points_at_tasks"] = Path(TASKS).name in note
     if case == "bootstrap-setup":

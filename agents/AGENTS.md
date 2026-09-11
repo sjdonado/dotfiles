@@ -12,8 +12,8 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "look into X", "is it true that", "dig into whether" | `research` |
 | "what does X do", "why does Y happen", one bounded question | `ask` |
 | "how should we approach this", a pasted ticket, "triage this" | `triage` |
-| "implement this", "go build it", an approved plan | `yolo` |
-| "prototype this", "spike it", "build it rough and show me", "let me try it first" | `proto` |
+| an approved plan or OpenSpec change, a promoted `proto` ledger, a specified ticket, "yolo it", "open a PR" | `yolo` |
+| "implement this", "go build it", "prototype this", "spike it", "let me try it first", anything whose contract is still open | `proto` |
 | a bullet list of changes to work already in a PR | `feedback` |
 | "address the review comments", "CI is red on my PR" | `address-review` |
 | "the PR merged", "archive the change", "clean up the spec" | `land` |
@@ -27,9 +27,17 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 
-**When a request asks for work to be done and names no workflow, the answer is `yolo`.** That covers a plain implementation request, an approved plan, a handoff document asking for the work to be carried out, and a contract handed over by another workflow. Enter it and say so in one line; do not ask which workflow applies, and do not ask permission to begin.
+**When a request asks for work and the contract is not settled, the answer is `proto`.** It is the cheap default: a slice, the local rungs green, the human tries it, feedback folds back in. No adversarial review, no push, no PR, nothing to unwind if the direction was wrong. Enter it and say so in one line; do not ask permission to begin.
 
-`proto` is opt-in. It runs when the human asks for a prototype in their own words: prototype, spike, rough, throwaway, try it first. Judging the requirements underspecified is **not** a reason to pick it. Under-specification is what `yolo`'s decide-and-declare rule is for: choose the most reasonable minimal option, record the fact that would reverse it, and keep going. Routing to `proto` on the agent's own initiative trades the human's one expensive run for several cheap ones they did not ask for, and leaves them to notice that nothing shipped.
+**`yolo` is for work that is already pinned down, and it is entered deliberately.** It is the expensive run: full understanding pass, adversarial review by blind subagents, commits, a PR, and every remote check driven green. Spending that on requirements that are still moving burns the run and produces a PR describing the wrong thing. Enter it when one of these holds:
+
+- the human asks for it by name, or asks for a PR
+- an approved OpenSpec change, an approved plan, or a promoted `proto` ledger already fixes the contract
+- the work is well defined and bounded on its own: a specified ticket, a follow-up round on a branch whose PR is already open, a mechanical or small change where the shape is not in question
+
+Uncertainty selects `proto`, never `yolo`. If you cannot say what "done" looks like without asking the human, that is the signal: build the slice and let them react to it. The two are not rivals, they are a sequence, and the ledger `proto` finalizes is what makes the later `yolo` run cheap and correct.
+
+Approval is the hinge. Once a contract is agreed, by any route, `yolo` runs to completion without further prompting, per **Approval means autonomous execution** below.
 
 Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `yolo` still never merges, read-only workflows still make no edits.
 
