@@ -26,7 +26,7 @@
     "showGitIgnored": true
   },
   "git": {
-    "fileView": "list"
+    "fileView": "tree"
   },
   "terminal": {
     "scrollback": 1000
