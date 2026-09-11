@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "theme": "default-light",
   "editor": {
     "tabSize": 4,
     "insertSpaces": true,
@@ -15,7 +16,7 @@
     "gutterStyle": "compact",
     "borderStyle": "default",
     "bracketPairColorization": false,
-    "transparentBackground": true
+    "transparentBackground": false
   },
   "search": {
     "debounce": 350
