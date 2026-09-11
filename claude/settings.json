@@ -137,7 +137,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node '/Users/sjdonado/skills/tldraw-offline/inject-server-context.mjs' SubagentStart"
+            "command": "sh '/Users/sjdonado/skills/tldraw-offline/inject-server-context.sh' SubagentStart"
           }
         ]
       }
