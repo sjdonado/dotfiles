@@ -36,6 +36,11 @@ The editor SHALL be operable by mouse and touch, so a phone or tablet terminal i
 - **WHEN** the human opens the editor from a tablet or phone terminal
 - **THEN** positioning the cursor, switching files, and viewing a diff are reachable by pointer without modal key chords
 
+#### Scenario: Right-click inside the editor
+
+- **WHEN** the editor runs inside the terminal workspace manager and the human right-clicks in it
+- **THEN** the click reaches the editor's own context menu rather than the workspace manager's pane menu, and this holds for every editor pane without a per-pane setting being chosen by hand
+
 ### Requirement: No orphaned host surfaces
 
 When a tool is removed, the terminal-workspace surfaces that existed only to host it SHALL be removed with it, including their keybindings. A surface that still serves a remaining tool SHALL be kept.
