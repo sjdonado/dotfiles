@@ -101,4 +101,9 @@ new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // em
 # the title and nothing else.
 new_tab=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.tab_id // empty')
 [ -n "$new_tab" ] || exit 0
-exec "$herdr_bin" tab rename "$new_tab" "$LABEL"
+"$herdr_bin" tab rename "$new_tab" "$LABEL" >/dev/null || true
+
+# `plugin pane open --focus` already focused it, but two calls run after that, so
+# focus is asserted last and unconditionally: pressing the key should always land
+# you in the editor, never beside it.
+exec "$herdr_bin" tab focus "$new_tab"
