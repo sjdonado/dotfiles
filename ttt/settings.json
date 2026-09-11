@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "editor": {
+    "tabSize": 4,
+    "insertSpaces": true,
+    "wordWrap": false,
+    "diffMode": "split",
+    "diffContext": "changes",
+    "diffWordWrap": false,
+    "lineNumbers": true,
+    "formatOnSave": false,
+    "insertFinalNewline": true,
+    "trimTrailingWhitespace": false,
+    "focusOnOpen": false,
+    "gutterStyle": "compact",
+    "borderStyle": "default",
+    "bracketPairColorization": false,
+    "transparentBackground": false
+  },
+  "search": {
+    "debounce": 350
+  },
+  "explorer": {
+    "showHidden": true,
+    "showGitIgnored": true
+  },
+  "git": {
+    "fileView": "list"
+  },
+  "terminal": {
+    "scrollback": 1000
+  },
+  "lsp": {
+    "saveOnRename": false,
+    "hoverDelay": 500
+  },
+  "autocomplete": {
+    "enabled": true,
+    "autoSuggest": true,
+    "debounce": 150,
+    "signatureHelp": true
+  },
+  "markdown": {
+    "wrapWidth": 80
+  }
+}
