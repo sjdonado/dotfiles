@@ -3,10 +3,10 @@
   "editor": {
     "tabSize": 4,
     "insertSpaces": true,
-    "wordWrap": false,
+    "wordWrap": true,
     "diffMode": "split",
     "diffContext": "changes",
-    "diffWordWrap": false,
+    "diffWordWrap": true,
     "lineNumbers": true,
     "formatOnSave": false,
     "insertFinalNewline": true,
@@ -15,7 +15,7 @@
     "gutterStyle": "compact",
     "borderStyle": "default",
     "bracketPairColorization": false,
-    "transparentBackground": false
+    "transparentBackground": true
   },
   "search": {
     "debounce": 350
