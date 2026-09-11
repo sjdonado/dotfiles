@@ -62,7 +62,7 @@ sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat mosh python3 python3-pip \
-  jq fzf pandoc
+  jq fzf
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
@@ -100,11 +100,6 @@ if ! have ttt; then
     || log "ttt install failed; install it later from https://tttedit.dev"
   rescan
   have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
-fi
-
-# --- chawan (bin/mdp opens its render in it; no apt package) ------------------
-if ! have cha; then
-  log "chawan has no apt package; bin/mdp needs it. Build or fetch it from https://sr.ht/~bptato/chawan/"
 fi
 
 # --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
@@ -192,15 +187,6 @@ if ! have openspec; then
   rescan
 fi
 
-# --- mermaid-cli (bin/mdp renders mermaid fences to PNG with mmdc) -----------
-# Same PATH reason as openspec above, and it must follow the bun block too.
-if ! have mmdc; then
-  log "Installing mermaid-cli..."
-  bun add -g @mermaid-js/mermaid-cli \
-    || echo "mermaid-cli install failed; mdp keeps mermaid fences as source"
-  rescan
-fi
-
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
   log "Installing worktrunk (wt)..."
@@ -231,6 +217,12 @@ cd "$DOTFILES"
 # --- link configs (Linux paths) ---------------------------------------------
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
+# Prune links left behind by a script this repo no longer ships, so a machine
+# provisioned before a removal does not keep a dangling command on PATH.
+for f in "$BIN"/*; do
+  [ -L "$f" ] || continue
+  case "$(readlink "$f")" in "$PWD/bin/"*) [ -e "$f" ] || rm -f "$f" ;; esac
+done
 
 # Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
 # so nvim/lazygit/tree-sitter resolve inside herdr too). Configure both bash and

@@ -31,15 +31,10 @@ In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the ter
 ### Text editor (TTT)
 
 - Run `ttt .` to open the current directory. It covers reading, diffs, staging, commits, and GitHub PR review (`ttt . <pr-url>`), and is operable by mouse and touch, so a phone or tablet terminal works without modal key chords.
-- Settings live in `ttt/settings.json`, linked file by file into `~/.config/ttt/` (a tracked `keybindings.json` is picked up the same way if one is added later). They are overrides merged over TTT's own defaults, so only what differs is tracked. TTT keeps its plugin state (`plugins.ttt.json`, `plugins/`) in that same directory, which is why the directory itself is not linked.
-- Plugins are a manual step: install them from TTT's Plugins sidebar (`ctrl+k` then the Plugins panel) or with `Install from URL`. Provisioning them from a script would mean writing pre-granted permissions for third-party Lua into a state file TTT rewrites, which is not worth it for the one plugin in use (Markdown Preview, which is text-only; `mdp` below is the reader that shows images).
-
-### Markdown reading
-
-- Run `mdp FILE.md` in a terminal pane. Mermaid fences are rendered to PNG with `mmdc`, the document is converted with pandoc, and it opens in chawan, which draws the images over the Kitty graphics protocol. Tables are boxed so wide cells wrap inside their own column.
-- It has to be its own pane. A nested terminal emulator (an editor's embedded terminal, for instance) consumes the graphics protocol, and the images render as a blank gap instead.
-- Diagram size is capped by decoded size, not by a scale multiplier: Ghostty accepts far more image data than it will draw, and its display budget shrinks as the window grows. Override the cap with `MDP_IMAGE_BUDGET` (bytes, default 12 MiB).
-- Missing `mmdc` degrades to the fence's source rather than a broken image. `pandoc` and `cha` (chawan) are required; chawan has no apt package, so on Linux it is a manual install and `linux.sh` only says so.
+- Settings live in `ttt/settings.json`, linked file by file into `~/.config/ttt/` (a tracked `keybindings.json` is picked up the same way if one is added later). TTT rewrites that file with its complete settings whenever you change something in its settings UI, so the tracked copy is a full snapshot rather than a list of overrides, and a UI change overwrites what is tracked instead of merging with it. TTT also keeps its plugin state (`plugins.ttt.json`, `plugins/`) in that same directory, which is why the directory itself is not linked.
+- Plugins are a manual step: install them from TTT's Plugins sidebar (`ctrl+k` then the Plugins panel) or with `Install from URL`. Provisioning them from a script would mean writing pre-granted permissions for third-party Lua into a state file TTT rewrites, which is not worth it for the one plugin in use (Markdown Preview, which is text-only).
+- No image or mermaid rendering, deliberately: TTT draws no images, and a standalone reader (mermaid to PNG, pandoc, chawan) was built and dropped as not worth chawan, pandoc and a headless-browser mermaid CLI across two platforms. It is recoverable with `git show 660215f:bin/mdp` if that judgement changes.
+- No automatic dark/light switching either: TTT carries one `theme` string with no appearance query, so the theme is whatever was last chosen with Switch Theme. The pair is `default-dark` and `default-light`.
 
 ### Text editor
 

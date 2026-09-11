@@ -31,8 +31,6 @@ brew "libpng"
 brew "pixman"
 # Vector graphics library with cross-device output support
 brew "cairo"
-# TUI web browser with CSS, inline image and JavaScript support
-brew "chawan"
 # Tool for emulating mouse and keyboard events
 brew "cliclick"
 # Open-source, cross-platform JavaScript runtime environment
@@ -143,8 +141,6 @@ brew "openjdk@11"
 brew "openjdk@17"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
-# Swiss-army knife of markup format conversion
-brew "pandoc"
 # Execute binaries from Python packages in isolated environments
 brew "pipx"
 # Fast, disk space efficient package manager

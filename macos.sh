@@ -70,6 +70,12 @@ export PATH
 
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
+# Prune links left behind by a script this repo no longer ships, so a machine
+# provisioned before a removal does not keep a dangling command on PATH.
+for f in "$HOME/.local/bin"/*; do
+  [ -L "$f" ] || continue
+  case "$(readlink "$f")" in "$PWD/bin/"*) [ -e "$f" ] || rm -f "$f" ;; esac
+done
 
 # Install dependencies from Brewfile only when requested.
 if [ "$INSTALL" = 1 ]; then
@@ -87,14 +93,6 @@ if [ "$INSTALL" = 1 ]; then
     log "Installing OpenSpec CLI..."
     bun add -g @fission-ai/openspec@latest \
       || echo "openspec install failed; openspec-* skills will no-op"
-  fi
-
-  # bin/mdp renders mermaid fences to PNG with mmdc. Installed with bun for the
-  # same PATH reason as openspec above; not in Homebrew.
-  if ! have mmdc; then
-    log "Installing mermaid-cli..."
-    bun add -g @mermaid-js/mermaid-cli \
-      || echo "mermaid-cli install failed; mdp keeps mermaid fences as source"
   fi
 fi
 
