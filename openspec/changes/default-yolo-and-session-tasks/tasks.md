@@ -1,12 +1,14 @@
 ## 0. Decide the acceptance budget first
 
-- [x] 0.1 Put the bench question to the human before writing any instruction text: this change needs `bench/measure verify --behavior`, which is paid sessions capped at 26 per retained batch, and `improve-harness-effectiveness` still has tasks 3.5, 3.6 and 4.4 open against the same budget. Options are one combined batch covering both, a batch for this change alone, or shipping unvalidated and saying so in the PR. Do not spend sessions without an answer.
+- [x] 0.1 Put the bench question to the human before writing any instruction text: this change needs `bench/measure verify --behavior`, which is paid sessions capped per retained batch (26 at the time, 30 after this change adds two cases), and `improve-harness-effectiveness` still has tasks 3.5, 3.6 and 4.4 open against the same budget. Options are one combined batch covering both, a batch for this change alone, or shipping unvalidated and saying so in the PR. Do not spend sessions without an answer.
 
-## 1. Default the route to yolo
+## 1. Default the route to proto, and enter yolo deliberately
 
-- [x] 1.1 In `agents/AGENTS.md`, add the default to the routing section: an implementation request that names no workflow is `yolo`, including one arriving as a handoff or an approved plan. State that the agent's own judgement that requirements are uncertain is not a reason to pick `proto`.
-- [x] 1.2 In the same section, make `proto` explicitly opt-in: it runs on the human's words (prototype, spike, rough, try it first), not on the agent's initiative.
-- [x] 1.3 Reword `agents/skills/proto/SKILL.md` so nothing in it invites the agent to select it. Its content stays; only the invitation goes.
+Reversed on 2026-09-11 after the first pass had it backwards; the change id predates the reversal.
+
+- [x] 1.1 In `agents/AGENTS.md`, state the default: work whose contract is not settled is `proto`, including a request arriving as a handoff. Uncertainty selects `proto`, never `yolo`.
+- [x] 1.2 In the same section, give `yolo` explicit entry conditions: named by the human or a PR asked for, an approved change or plan or promoted ledger, a specified ticket, a round on a branch whose PR is open, or work small and mechanical enough that its shape is not in question.
+- [x] 1.3 State the same rule at each skill's own entry point, so an agent landing directly in `proto` or `yolo` still reads it, and reconcile the surrounding prose that still said implementation always goes through `yolo`.
 - [x] 1.4 Keep the OpenSpec offer explicit: for work worth documenting, the agent names the written-spec route in one line and proceeds on the answer rather than blocking.
 
 ## 2. Add the session task ledger
@@ -42,6 +44,7 @@
 - [x] 4.6 Investigate the `land-open` regression: it passed on luna before this change and fails on both models after. Reword `land` so its deletion step reads as conditional on a verified merge, then re-run that case.
 - [ ] 4.3 Run the authorized batch from task 0.1, review transcripts, and write the `review.json` per passing run. Record an unavailable or unauthorized check as unverified, never as passing.
 - [x] 4.7 Resolved: the low task-list rate was the oracle, not the instruction. Every miss was on route-bounded, a single specified change that legitimately has no second step, and three models across two runners skipped the list there. The assertion is gone from that case; it stays on route-open-shape, where the work is genuinely iterative, and passed there for two of three models (gpt-6-astra and muse-spark-1.3; gpt-5.6-luna missed it).
+- [ ] 4.9 The routing cases were rebuilt after adversarial review found they could not observe the route at all: both oracles passed identically whichever workflow ran, because `LOCAL_ONLY` forbade the commits and pull requests that define the expensive one. `route-bounded` now has a remote and the forge substitute and asserts commit, push and a PR attempt; `route-open-shape` asserts a sound slice, nothing committed, and no forge call. Validated offline against simulated cheap and expensive runs in both directions, but NOT yet exercised by a model batch: every routing result reported before this rebuild came from the weaker oracles.
 - [ ] 4.8 Optional, unspent: re-run route-open-shape on gpt-5.6-luna to see whether the strengthened "before the second step" wording moves the one model that missed it.
 - [ ] 4.4 Report what the scenarios actually showed, including any instruction an agent did not follow. A passing local check is not acceptance.
 

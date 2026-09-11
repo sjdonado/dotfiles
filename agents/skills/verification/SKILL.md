@@ -1,6 +1,6 @@
 ---
 name: verification
-description: Drive a change's checks to green in a named subagent and report back. Runs the oracle ladder, fixes what the change broke, and returns a verdict. Use when a workflow needs its checks run, so verification is attributable and can sit on a cheaper tier than the session orchestrating it.
+description: Drive a change's checks to green and report back, in a subagent or in the current session. Runs the oracle ladder, fixes what the change broke, and returns a verdict. Use when a workflow needs its checks run, so verification is attributable and can sit on a cheaper tier than the session orchestrating it.
 ---
 
 # Verification
@@ -11,7 +11,7 @@ It is the natural place for a cheaper tier: the contract is fixed, the oracle is
 
 ## Invocation
 
-Dispatch as a subagent with the work to verify, not with the conversation. Give it, and nothing else:
+Run it in a subagent when delegation is worth it, or in the current session when it is not; either way it is this workflow, so the cost is attributable. Dispatched, it gets the work to verify and not the conversation. Give it, and nothing else:
 
 - the branch or diff under test, and where the contract lives (an OpenSpec change directory, a task list, a ticket, or a one-line statement of what the change is meant to do)
 - the resolved oracle ladder if the caller already resolved it, so it is not re-derived

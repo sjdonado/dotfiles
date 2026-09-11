@@ -45,7 +45,7 @@ Do not route when the request is conversational or a one-line lookup where the w
 
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `address-review`.
 
-Implementation always goes through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+Implementation reaches a pull request only through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
 The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `yolo`.
 
@@ -89,7 +89,7 @@ It exists so state outlives the session. A harness's own to-do list is per-sessi
 
 One list, one lifetime. Adopting an OpenSpec change mid-flight folds the ledger's items, done and outstanding, into the change's `tasks.md`, deletes the ledger, and says so: silently dropping it loses the record of what the session already finished. `land` deletes it when the work merges, next to the archive step. Where an OpenSpec change already exists, no ledger is created at all.
 
-A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log or separate tracking system.
+A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log, and no tracking system beyond the note and the one task list described above.
 
 ## Approval means autonomous execution
 
@@ -158,7 +158,7 @@ So treat yourself as the orchestrator. Before implementation begins, and again b
 
 Delegate work, never waiting. A subagent told to watch something poll until it finishes burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command belongs in the session that can see it through.
 
-Record the human's answer as the project's preference so the question is asked once rather than every session. Under an autonomous workflow the offer is never made: follow the recorded preference, and where none exists, do the work in this session. Stopping an autonomous run to ask about delegation breaks the one promise that workflow makes.
+Record the human's answer where a later session will find it: the project's own `AGENTS.md` if it is the kind of preference that belongs in the repository, otherwise the durable memory the harness gives you. A preference nobody can find is asked again every session, which is the cost this avoids. Under an autonomous workflow the offer is never made: follow the recorded preference, and where none exists, do the work in this session. Stopping an autonomous run to ask about delegation breaks the one promise that workflow makes.
 
 The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `adversarial-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
 

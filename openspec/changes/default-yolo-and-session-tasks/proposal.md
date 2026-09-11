@@ -28,4 +28,6 @@ Edits `agents/AGENTS.md` (the routing table, the planning section, and the conti
 
 Behavioral acceptance applies: these are agent instructions, so `bench/measure verify --behavior` governs whether the change can be called validated, per `bench/README.md`. That is a paid batch and needs the human's authorization. It also collides with existing debt: `openspec/changes/improve-harness-effectiveness/` is unarchived at 17/20 with its own behavioral acceptance (tasks 3.5, 3.6, 4.4) still open, so the two changes compete for the same session budget.
 
+The `model-tier-delegation` capability ships without bench coverage: no scenario observes a delegation offer, a recorded preference, or the named verification workflow, and the fixtures instruct every case to skip delegation. It is specified and implemented, not measured.
+
 No effect on the tools this repository provisions, on `bin/`, or on any application configuration.
