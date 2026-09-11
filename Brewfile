@@ -1,6 +1,7 @@
 tap "amberframework/micrate", trusted: true
 tap "anomalyco/tap"
 tap "coder/coder", trusted: true
+tap "eugenioenko/ttt", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
 tap "oven-sh/bun", trusted: true
@@ -30,6 +31,8 @@ brew "libpng"
 brew "pixman"
 # Vector graphics library with cross-device output support
 brew "cairo"
+# TUI web browser with CSS, inline image and JavaScript support
+brew "chawan"
 # Tool for emulating mouse and keyboard events
 brew "cliclick"
 # Open-source, cross-platform JavaScript runtime environment
@@ -140,6 +143,8 @@ brew "openjdk@11"
 brew "openjdk@17"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
+# Swiss-army knife of markup format conversion
+brew "pandoc"
 # Execute binaries from Python packages in isolated environments
 brew "pipx"
 # Fast, disk space efficient package manager
@@ -190,6 +195,8 @@ brew "zig@0.15"
 brew "amberframework/micrate/micrate", trusted: true
 # The AI coding agent built for the terminal.
 brew "anomalyco/tap/opencode", trusted: true
+# TTT Editor, Terminal Text Tool, an IDE for your terminal
+brew "eugenioenko/ttt/ttt", trusted: true
 # Grafana Cloud CLI
 brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!

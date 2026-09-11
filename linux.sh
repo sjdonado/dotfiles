@@ -62,7 +62,7 @@ sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat mosh python3 python3-pip \
-  jq fzf
+  jq fzf pandoc
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
@@ -90,6 +90,21 @@ if ! have lazygit; then
   tar -xzf "$tmp/lg.tar.gz" -C "$tmp" lazygit
   install -m755 "$tmp/lazygit" "$BIN/lazygit"
   rm -rf "$tmp"
+fi
+
+# --- ttt (the editor; no apt package, so use the project's own installer) -----
+if ! have ttt; then
+  log "Installing ttt..."
+  curl -fsSL https://raw.githubusercontent.com/eugenioenko/ttt/main/install.sh \
+    | env INSTALL_DIR="$BIN" sh \
+    || log "ttt install failed; install it later from https://tttedit.dev"
+  rescan
+  have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
+fi
+
+# --- chawan (bin/mdp opens its render in it; no apt package) ------------------
+if ! have cha; then
+  log "chawan has no apt package; bin/mdp needs it. Build or fetch it from https://sr.ht/~bptato/chawan/"
 fi
 
 # --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
@@ -174,6 +189,15 @@ if ! have openspec; then
   log "Installing OpenSpec CLI..."
   bun add -g @fission-ai/openspec@latest \
     || echo "openspec install failed; openspec-* skills will no-op"
+  rescan
+fi
+
+# --- mermaid-cli (bin/mdp renders mermaid fences to PNG with mmdc) -----------
+# Same PATH reason as openspec above, and it must follow the bun block too.
+if ! have mmdc; then
+  log "Installing mermaid-cli..."
+  bun add -g @mermaid-js/mermaid-cli \
+    || echo "mermaid-cli install failed; mdp keeps mermaid fences as source"
   rescan
 fi
 
@@ -283,6 +307,17 @@ log "Linking fish config..."
 mkdir -p "$HOME/.config/fish/functions"
 ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
 ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
+
+log "Linking TTT config..."
+# Only the tracked JSON files are linked, not the directory: TTT keeps plugin
+# state here (plugins.ttt.json and plugins/) and rewrites it as plugins are
+# installed or toggled, which would land in this repository. Partial settings
+# and keybindings files are merged over TTT's own defaults, so these hold
+# overrides only.
+for f in "$PWD/ttt/"*.json; do
+  [ -f "$f" ] || continue
+  link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
+done
 
 log "Linking Neovim config..."
 if [ -e "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
