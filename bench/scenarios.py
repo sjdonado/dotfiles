@@ -186,10 +186,16 @@ def check(repo, case, index, before, note_before, message=""):
             if case == "land-merged":
                 result["note_updated"] = note != note_before and "merged" in note.lower() and "7" in note
     if case in ("route-open-shape", "route-bounded"):
-        # The bounded case states both behaviors, so both must land. The open-shape case
-        # states neither precisely, so inventing a blank-input fallback is the failure:
-        # normalization is the slice to present, and the rest waits for the human.
-        result["behavior"] = behavior(repo, "Untitled" if case == "route-bounded" else "")
+        # The bounded case states both behaviors exactly, so both must land.
+        #
+        # The open-shape case states none of them: "make it better" fixes no oracle, so
+        # asserting a particular output would test a requirement the prompt never gave.
+        # What the cheap route owes is a slice the human can react to, so that is what is
+        # judged: label.py changed, and the session left a task list behind.
+        if case == "route-bounded":
+            result["behavior"] = behavior(repo, "Untitled")
+        else:
+            result["slice_built"] = after.get("label.py") != before.get("label.py")
         tasks = (repo / TASKS).read_text() if (repo / TASKS).exists() else ""
         result.update(tasks_exists=bool(tasks),
                       tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
