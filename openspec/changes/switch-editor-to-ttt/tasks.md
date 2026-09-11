@@ -11,7 +11,7 @@
 - [x] 1.6 Record the theme pair `default-dark` / `default-light` in design.md Decision 4 and turn `transparentBackground` off. Which half the config carries is not tracked as a decision: TTT rewrites `settings.json` through the symlink, so it is whatever was last chosen in its UI.
 - [x] 1.3 Link `ttt/` to `~/.config/ttt/` in macos.sh and linux.sh with the existing `link_managed` helper, matching how `agents/AGENTS.md` is linked.
 - [x] 1.4 Install TTT on Linux from its release or `go install`, following the existing pattern for tools with no apt package: attempt, and on failure print one notice without aborting.
-- [x] 1.7 Add the local `ttt-tab` herdr plugin: a three-state toggle on `prefix+.` that opens TTT in its own tab and routes right-clicks to it with `herdr pane input --right-click pane`. Teach `panel-revive` the `ttt` label so a restored tab restarts TTT and gets the routing back.
+- [x] 1.7 Add the local `ttt-tab` herdr plugin: a three-state toggle on `prefix+e` that opens TTT in its own tab and routes right-clicks to it with `herdr pane input --right-click pane`. Teach `panel-revive` the `ttt` label so a restored tab restarts TTT and gets the routing back.
 - [x] 1.5 Determine whether TTT plugins can be installed non-interactively (per design.md Decision 3). If they can, provision the markdown-preview plugin; if they cannot, document it as a manual post-install step in the README and add nothing to the installers.
 
 ## 2. Drop the markdown reader
@@ -39,7 +39,7 @@ The standalone reader was built (`660215f`) and then rejected as not practical; 
 
 ## 6. Remove the herdr surfaces that hosted them
 
-- [ ] 6.1 Delete the `edit-tab` plugin. Its `prefix+.` keybind stays and already points at `ttt-tab.toggle` (task 1.7).
+- [ ] 6.1 Delete the `edit-tab` plugin. Its `prefix+.` keybind is already gone: task 1.7 replaced that entry with `prefix+e` for `ttt-tab.toggle`.
 - [ ] 6.2 Delete the `lazygit-panel` plugin and its `prefix+s` keybind from herdr/config.toml.
 - [ ] 6.3 Keep `panel-revive`: a restored TTT tab comes back as a bare shell exactly as the nvim one did, so it still has a host. Drop only its `nvim` and `Git` branches, leaving the `ttt` one. Leave `copy-ignored` alone.
 - [ ] 6.4 Grep the repository for remaining references to nvim, neovim, lazygit, and glow, and resolve each: `README.md`, `bin/workspace`, `fish/config.fish`, `raycast/dictation/coding-agents.txt`, and `.claude/settings.local.json` are known to mention them. A dictation wordlist entry is not a dependency; judge each on its own.
