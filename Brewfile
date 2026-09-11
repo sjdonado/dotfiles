@@ -1,6 +1,7 @@
 tap "amberframework/micrate", trusted: true
 tap "anomalyco/tap"
 tap "coder/coder", trusted: true
+tap "eugenioenko/ttt", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
 tap "oven-sh/bun", trusted: true
@@ -190,6 +191,8 @@ brew "zig@0.15"
 brew "amberframework/micrate/micrate", trusted: true
 # The AI coding agent built for the terminal.
 brew "anomalyco/tap/opencode", trusted: true
+# TTT Editor, Terminal Text Tool, an IDE for your terminal
+brew "eugenioenko/ttt/ttt", trusted: true
 # Grafana Cloud CLI
 brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!

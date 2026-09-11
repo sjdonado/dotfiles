@@ -70,6 +70,12 @@ export PATH
 
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$HOME/.local/bin" 2>/dev/null || true
+# Prune links left behind by a script this repo no longer ships, so a machine
+# provisioned before a removal does not keep a dangling command on PATH.
+for f in "$HOME/.local/bin"/*; do
+  [ -L "$f" ] || continue
+  case "$(readlink "$f")" in "$PWD/bin/"*) [ -e "$f" ] || rm -f "$f" ;; esac
+done
 
 # Install dependencies from Brewfile only when requested.
 if [ "$INSTALL" = 1 ]; then
@@ -222,6 +228,17 @@ done
 if have bat; then
   bat cache --build >/dev/null 2>&1 || true
 fi
+
+log "Linking TTT config..."
+# Only the tracked JSON files are linked, not the directory: TTT keeps plugin
+# state here (plugins.ttt.json and plugins/) and rewrites it as plugins are
+# installed or toggled, which would land in this repository. Partial settings
+# and keybindings files are merged over TTT's own defaults, so these hold
+# overrides only.
+for f in "$PWD/ttt/"*.json; do
+  [ -f "$f" ] || continue
+  link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
+done
 
 log "Linking Neovim config..."
 if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then

@@ -92,6 +92,16 @@ if ! have lazygit; then
   rm -rf "$tmp"
 fi
 
+# --- ttt (the editor; no apt package, so use the project's own installer) -----
+if ! have ttt; then
+  log "Installing ttt..."
+  curl -fsSL https://raw.githubusercontent.com/eugenioenko/ttt/main/install.sh \
+    | env INSTALL_DIR="$BIN" sh \
+    || log "ttt install failed; install it later from https://tttedit.dev"
+  rescan
+  have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
+fi
+
 # --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
 if ! have tree-sitter; then
   log "Installing tree-sitter CLI..."
@@ -207,6 +217,12 @@ cd "$DOTFILES"
 # --- link configs (Linux paths) ---------------------------------------------
 log "Linking local bin..."
 ln -snf "$PWD/bin/"* "$BIN/" 2>/dev/null || true
+# Prune links left behind by a script this repo no longer ships, so a machine
+# provisioned before a removal does not keep a dangling command on PATH.
+for f in "$BIN"/*; do
+  [ -L "$f" ] || continue
+  case "$(readlink "$f")" in "$PWD/bin/"*) [ -e "$f" ] || rm -f "$f" ;; esac
+done
 
 # Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
 # so nvim/lazygit/tree-sitter resolve inside herdr too). Configure both bash and
@@ -283,6 +299,17 @@ log "Linking fish config..."
 mkdir -p "$HOME/.config/fish/functions"
 ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
 ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
+
+log "Linking TTT config..."
+# Only the tracked JSON files are linked, not the directory: TTT keeps plugin
+# state here (plugins.ttt.json and plugins/) and rewrites it as plugins are
+# installed or toggled, which would land in this repository. Partial settings
+# and keybindings files are merged over TTT's own defaults, so these hold
+# overrides only.
+for f in "$PWD/ttt/"*.json; do
+  [ -f "$f" ] || continue
+  link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
+done
 
 log "Linking Neovim config..."
 if [ -e "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
