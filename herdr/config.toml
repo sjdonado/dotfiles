@@ -70,10 +70,13 @@ key = "prefix+s"
 type = "plugin_action"
 command = "lazygit-panel.toggle"
 
+# ttt-tab rather than upstream's ttt.editor plugin: the toggle returns to the tab
+# it was pressed from, and it routes right-clicks into TTT, which herdr can only
+# be told per pane and which upstream's open action does not do.
 [[keys.command]]
 key = "prefix+."
 type = "plugin_action"
-command = "edit-tab.toggle"
+command = "ttt-tab.toggle"
 
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.

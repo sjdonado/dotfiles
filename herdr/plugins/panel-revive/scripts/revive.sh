@@ -19,6 +19,8 @@ pane=$(printf '%s' "$context" | jq -r '.focused_pane_id // empty')
 
 label=$("$herdr_bin" pane get "$pane" 2>/dev/null | jq -r '.result.pane.label // empty')
 case $label in
+  # ttt-tab's [[panes]] title.
+  ttt) want=ttt ;;
   # edit-tab's [[panes]] title.
   nvim) want=nvim ;;
   # herdr-lazygit's [[panes]] title.
@@ -26,10 +28,28 @@ case $label in
   *) exit 0 ;;
 esac
 
+# Right-click routing is per pane and cannot be read back from the CLI, so it is
+# re-asserted here rather than assumed to have survived the restore. It runs
+# before the "already running" exit below, because most focus events on a healthy
+# TTT tab stop there, and the routing has to hold on those too. Idempotent.
+if [ "$want" = ttt ]; then
+  "$herdr_bin" pane input --pane "$pane" --right-click pane >/dev/null || true
+fi
+
 foreground=$("$herdr_bin" pane process-info --pane "$pane" 2>/dev/null \
   | jq -r '[.result.process_info.foreground_processes[]?.name] | join(" ")')
 case " $foreground " in
   *" $want "*) exit 0 ;;
+esac
+
+# Only a pane sitting at a shell gets revived. `pane run` types its argument into
+# the pty, so firing it at a pane whose entrypoint is still exec'ing would land
+# the command's characters inside the program that is starting: a stray "ttt" in
+# an editor buffer rather than at a prompt. A restored pane is always a shell,
+# which is the only case this plugin exists for.
+case " $foreground " in
+  *" fish "*|*" bash "*|*" zsh "*|*" sh "*) ;;
+  *) exit 0 ;;
 esac
 
 # Two focus events can land while the program is still starting, and the second
@@ -41,6 +61,9 @@ mkdir "$lock" 2>/dev/null || exit 0
 trap 'rmdir "$lock" 2>/dev/null || true' EXIT
 
 case $want in
+  ttt)
+    command=ttt
+    ;;
   nvim)
     command=nvim
     ;;
@@ -60,4 +83,5 @@ esac
 # creation: this shell has been at a prompt since the session came back, so there
 # is no startup to race.
 "$herdr_bin" pane run "$pane" "$command" >/dev/null 2>&1 || true
+
 sleep 3
