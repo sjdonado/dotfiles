@@ -10,8 +10,7 @@ set -euo pipefail
 
 # herdr runs plugin commands with the server's PATH, which is whatever started the
 # server. On a remote box that is often a system PATH without ~/.local/bin, so a
-# bare `herdr` dies with 127. HERDR_BIN_PATH exists for this; herdr-lazygit
-# resolves it the same way.
+# bare `herdr` dies with 127. HERDR_BIN_PATH exists for exactly this.
 herdr_bin="${HERDR_BIN_PATH:-herdr}"
 
 # The pane title from the manifest. herdr labels plugin-owned panes with it, which

@@ -21,7 +21,7 @@ set -g fish_history_max 20000
 umask 002
 
 # Path configurations
-set -x EDITOR "nvim"
+set -x EDITOR "ttt"
 if test (uname) = Darwin
   set -gx PNPM_HOME "$HOME/Library/pnpm"
 else

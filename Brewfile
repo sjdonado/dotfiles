@@ -51,8 +51,6 @@ brew "pkgconf"
 brew "crystal"
 # Power of curl, ease of use of httpie
 brew "curlie"
-# Diff that understands syntax
-brew "difftastic"
 # Pack, ship and run any application as a lightweight container
 brew "docker", link: false
 # Docker CLI plugin for extended build capabilities with BuildKit
@@ -81,8 +79,6 @@ brew "gh"
 brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
-# Render markdown on the CLI
-brew "glow"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU Transport Layer Security (TLS) Library
@@ -101,8 +97,6 @@ brew "htop"
 brew "jpeg"
 # Library for interacting with JSON
 brew "jsoncpp"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Lightweight application-protocol for resource-constrained devices
 brew "libcoap"
 # Postgres C API library
@@ -246,4 +240,3 @@ go "github.com/bootdotdev/bootdev"
 go "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 go "github.com/pressly/goose/v3/cmd/goose"
 go "zen-habit/server"
-cargo "tree-sitter-cli"

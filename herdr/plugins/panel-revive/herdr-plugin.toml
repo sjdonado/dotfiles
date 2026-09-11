@@ -2,8 +2,8 @@
 #
 # herdr restores the session's shape, not its processes: a pane that "cannot use a
 # stronger restore path" comes back as a shell in its saved directory, and only
-# agents have such a path (resume_agents_on_restore). So the nvim tab and the
-# lazygit sidebar come back labelled but empty, sitting at a fish prompt.
+# agents have such a path (resume_agents_on_restore). So the TTT tab comes back
+# labelled but empty, sitting at a fish prompt.
 #
 # Restore itself is silent. A probe plugin subscribed to pane.created, tab.created
 # and workspace.created logged nothing across a stop/start cycle, then logged two
@@ -12,9 +12,9 @@
 #
 # pane.focused is the next best trigger, and it is better than a keybinding:
 # clicking the tab in the tab bar, walking panes with prefix+direction and pressing
-# the panel's own toggle all end in a focus change, whereas only the last of those
-# runs a plugin action. That is why the nvim tab could look unrepaired even though
-# edit-tab knew how to repair it: reaching the tab with the mouse never invoked it.
+# the tab's own toggle all end in a focus change, whereas only the last of those
+# runs a plugin action. That is why the tab could look unrepaired even though
+# ttt-tab knows how to repair it: reaching the tab with the mouse never invokes it.
 #
 # The handler stays cheap on the overwhelmingly common path: it drops out on the
 # context alone for a pane that has an agent, then costs one `pane get` (~5ms,
@@ -24,7 +24,7 @@
 id = "panel-revive"
 name = "Panel Revive"
 version = "1.0.0"
-description = "Restart the program a restored plugin pane lost, the first time that pane is focused."
+description = "Restart TTT in a restored plugin pane the first time it is focused, and re-assert its right-click routing."
 min_herdr_version = "0.7.0"
 platforms = ["linux", "macos"]
 

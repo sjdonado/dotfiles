@@ -179,11 +179,6 @@ if [ "$INSTALL" = 1 ]; then
     [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
   fi
 
-  log "Installing tree-sitter CLI (needed by nvim-treesitter main branch)..."
-  if ! have tree-sitter && have cargo; then
-    cargo install tree-sitter-cli
-  fi
-
   log "Installing pnpm (if missing)..."
   if ! have pnpm; then
     # The installer appends its PATH block to the rc of whichever shell it
@@ -240,15 +235,29 @@ for f in "$PWD/ttt/"*.json; do
   link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
 done
 
-log "Linking Neovim config..."
-if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
-  mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%s)"
-fi
-ln -snf "$PWD/nvim" "$HOME/.config/nvim"
-
 log "Linking Worktrunk config..."
 mkdir -p "$HOME/.config/worktrunk"
 ln -snf "$PWD/worktrunk/config.toml" "$HOME/.config/worktrunk/config.toml"
+
+# Remove what this repo used to provision, so a machine set up before the editor
+# switch does not keep a dangling ~/.config/nvim or herdr plugins whose directories
+# are gone. Stopping the install is not the same as undoing it. Only links this repo
+# created are touched: a hand-made config that happens to sit at one of these paths
+# is left alone, and the `if` form keeps a false test from tripping `set -e`.
+for stale in "$HOME/.config/nvim" "$HOME/Library/Application Support/lazygit/config.yml" \
+  "$HOME/.config/herdr/plugins/config/herdr-lazygit/panel.conf"; do
+  if [ -L "$stale" ]; then
+    case "$(readlink "$stale")" in "$PWD"/*) rm -f "$stale" ;; esac
+  elif [ -e "$stale" ]; then
+    log "  left in place, not created by this repo: $stale"
+  fi
+done
+if have herdr; then
+  for gone in edit-tab lazygit-panel; do
+    herdr plugin unlink "$gone" >/dev/null 2>&1 || true
+  done
+  herdr plugin uninstall Crokily/herdr-lazygit >/dev/null 2>&1 || true
+fi
 
 log "Linking Herdr config..."
 # NOTE: only symlink config.toml; herdr keeps sockets/logs/session.json in this dir.
@@ -266,38 +275,6 @@ if have herdr; then
       log "  Herdr not running; later run: herdr plugin link $plugin_dir"
     fi
   done
-  # Remote Herdr plugins, pinned like skills-lock.json so a rebuild is
-  # reproducible. Bump the ref deliberately after reviewing upstream. Bundles its
-  # own pinned lazygit + fzf runtime; panel.conf below overrides the lazygit half
-  # with the system one. The local lazygit-panel plugin is what prefix+s calls,
-  # and it delegates the actual toggle to this plugin.
-  herdr plugin install Crokily/herdr-lazygit \
-    --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
-    && log "  installed Herdr plugin: herdr-lazygit" \
-    || log "  Herdr not running; later run: herdr plugin install Crokily/herdr-lazygit"
-fi
-
-log "Linking Lazygit config..."
-mkdir -p "$HOME/Library/Application Support/lazygit"
-ln -snf "$PWD/lazygit/config.yml" "$HOME/Library/Application Support/lazygit/config.yml"
-
-# Point the herdr-lazygit pane at the system lazygit instead of the 0.63.0 it
-# bundles. git.diffRenderers, the key lazygit/config.yml uses to route diffs
-# through difftastic, only exists in 0.64+, so under the bundled binary that key
-# is silently ignored and the pane falls back to `git diff`. Upstream HEAD is the
-# ref pinned above and still pins 0.63.0, so there is no newer plugin to bump to.
-#
-# Upstream calls the override unsupported and warns on stderr about version skew:
-# its generated keybinding layer is only tested against 0.63.0. Drop this file
-# once the plugin bumps its own pin.
-if have lazygit; then
-  lg_panel_dir="$HOME/.config/herdr/plugins/config/herdr-lazygit"
-  mkdir -p "$lg_panel_dir"
-  cat > "$lg_panel_dir/panel.conf" <<EOF
-# Managed by dotfiles (macos.sh). Edits here are overwritten.
-RUNTIME_LAZYGIT_BIN=$(command -v lazygit)
-EOF
-  log "  herdr-lazygit pane pinned to $(command -v lazygit) ($(lazygit --version | sed -n 's/.*version=\([^,]*\).*/\1/p'))"
 fi
 
 log "Linking Claude Code, Codex, and OpenCode config..."
