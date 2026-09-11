@@ -28,6 +28,8 @@ brew "caddy"
 brew "libpng"
 # Low-level library for pixel manipulation
 brew "pixman"
+# Universal document converter, markdown -> HTML for the preview
+brew "pandoc"
 # Vector graphics library with cross-device output support
 brew "cairo"
 # Tool for emulating mouse and keyboard events
@@ -40,6 +42,8 @@ brew "cloudflare-wrangler"
 brew "cloudflared"
 # Cross-platform make
 brew "cmake"
+# TUI web browser, renders the markdown preview (tables wrap, inline images)
+brew "chawan"
 # Dependency manager for Cocoa projects
 brew "cocoapods"
 # GNU File, Shell, and Text utilities
@@ -80,8 +84,6 @@ brew "gh"
 brew "git-delta"
 # Git extension for versioning large files
 brew "git-lfs"
-# Render markdown on the CLI
-brew "glow"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU Transport Layer Security (TLS) Library

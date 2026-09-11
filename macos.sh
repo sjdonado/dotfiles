@@ -88,6 +88,14 @@ if [ "$INSTALL" = 1 ]; then
     bun add -g @fission-ai/openspec@latest \
       || echo "openspec install failed; openspec-* skills will no-op"
   fi
+
+  # The markdown preview renders mermaid fences to images through this CLI.
+  # chawan and pandoc come from the Brewfile; this is the one piece not there.
+  if ! have mmdc; then
+    log "Installing mermaid-cli..."
+    bun add -g @mermaid-js/mermaid-cli \
+      || echo "mmdc install failed; mermaid fences will show as source"
+  fi
 fi
 
 log "Setting up Ghostty config..."

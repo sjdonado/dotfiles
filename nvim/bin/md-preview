@@ -1,0 +1,50 @@
+#!/bin/sh
+# Render a markdown file to a self-contained HTML preview for a TUI browser.
+# Mermaid fences become PNGs (mmdc); everything else is pandoc GFM. The HTML
+# path is stable per source, so a re-run overwrites it in place and the browser
+# reloads the same URL. Prints the HTML path on stdout.
+set -eu
+
+src=$1
+[ -f "$src" ] || { echo "md-preview: no such file: $src" >&2; exit 1; }
+
+cache=${XDG_CACHE_HOME:-$HOME/.cache}/nvim/md-preview
+key=$(printf '%s' "$src" | shasum | cut -c1-16)
+dir=$cache/$key
+mkdir -p "$dir"
+rm -f "$dir"/m[0-9]*.mmd "$dir"/m[0-9]*.png
+html=$dir/preview.html
+
+# Pull each fenced ```mermaid block into its own file, then swap it for an
+# image reference; every other line passes through untouched.
+awk -v dir="$dir" '
+  /^```[ \t]*mermaid[ \t]*$/ { inm = 1; n++; f = dir "/m" n ".mmd"; printf "" > f; next }
+  inm && /^```[ \t]*$/       { inm = 0; print "![](" dir "/m" n ".png)"; next }
+  inm                        { print >> f; next }
+                             { print }
+' "$src" > "$dir/pre.md"
+
+for mmd in "$dir"/m[0-9]*.mmd; do
+  [ -f "$mmd" ] || continue
+  mmdc -i "$mmd" -o "${mmd%.mmd}.png" -b transparent -t dark -s 2 >/dev/null 2>&1 || true
+done
+
+# A boxed, wrapping table and images that fit the page width. Code keeps a
+# light background rather than the browser's heavy default block.
+style=$dir/style.html
+cat > "$style" <<'CSS'
+<style>
+  img { max-width: 100%; height: auto; }
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid; padding: 0.15em 0.6em; vertical-align: top; }
+  code { padding: 0 0.2em; }
+  pre { padding: 0.4em 0.6em; }
+</style>
+CSS
+
+pandoc "$dir/pre.md" -f gfm -t html -s \
+  --metadata title="$(basename "$src")" \
+  --include-in-header="$style" \
+  -o "$html"
+
+echo "$html"

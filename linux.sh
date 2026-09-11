@@ -62,7 +62,7 @@ sudo apt-get update -y
 sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat mosh python3 python3-pip \
-  jq fzf
+  jq fzf pandoc
 
 # --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
 NEED_NVIM=1
@@ -175,6 +175,19 @@ if ! have openspec; then
   bun add -g @fission-ai/openspec@latest \
     || echo "openspec install failed; openspec-* skills will no-op"
   rescan
+fi
+
+# --- mermaid-cli (markdown preview renders mermaid fences to images) ---------
+if ! have mmdc; then
+  log "Installing mermaid-cli..."
+  bun add -g @mermaid-js/mermaid-cli \
+    || echo "mmdc install failed; mermaid fences will show as source"
+  rescan
+fi
+
+# --- chawan (the markdown preview browser; not packaged in apt) --------------
+if ! have cha; then
+  echo "chawan (cha) not found: install it from https://sr.ht/~bptato/chawan/ for the markdown preview"
 fi
 
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
