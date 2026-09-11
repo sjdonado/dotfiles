@@ -27,10 +27,19 @@
 - [x] 3.4 Specify that an answer is recorded as the project's preference so the question is asked once.
 - [x] 3.5 State that the subagents a workflow already spawns, including `adversarial-review`'s reviewers, count toward the run's cost when deciding what else to delegate.
 
+## 3b. Name the verification subagent
+
+- [x] 3b.1 Add `agents/skills/verification/SKILL.md`: the counterpart to `adversarial-review`, running the ladder, repairing in scope, and reporting a verdict, with the never-redesign, never-push and unverified-not-passing constraints.
+- [x] 3b.2 Point `yolo`'s ladder step at it, so the checks half is attributable whether or not it is delegated.
+- [x] 3b.3 State in `AGENTS.md` that the two delegatable stretches are named, that `verification` is the usual cheap-tier candidate, and that a weak reviewer is not a saving.
+- [x] 3b.4 State that waiting is never delegated, from this change's own bench run.
+
 ## 4. Validate
 
 - [ ] 4.1 Run the local checks: `bench/measure verify --local`, and `openspec validate default-yolo-and-session-tasks --strict`.
-- [ ] 4.2 Write the bench scenarios this change needs, per `bench/README.md`: entering yolo from a bare implementation request, entering yolo from a handoff with no written contract, `proto` only on an explicit ask, a ledger created and ticked then folded into an adopted OpenSpec change, and a delegation offer that does not stop an autonomous run. Declare expected artifacts and assertions before running anything.
+- [x] 4.2 Write the bench scenarios this change needs, per `bench/README.md`: a request with an open shape taking the cheap route, and a fully specified ticket taking the expensive one. Declare expected artifacts and assertions before running anything.
+- [ ] 4.5 Fix the `route-open-shape` oracle: its behavior assertion demands case preservation the prompt never states, so a defensible reading (`casefold`) fails it. Assert only what the prompt actually fixes, or state the requirement.
+- [ ] 4.6 Investigate the `land-open` regression: it passed on luna before this change and fails on both models after. Reword `land` so its deletion step reads as conditional on a verified merge, then re-run that case.
 - [ ] 4.3 Run the authorized batch from task 0.1, review transcripts, and write the `review.json` per passing run. Record an unavailable or unauthorized check as unverified, never as passing.
 - [ ] 4.4 Report what the scenarios actually showed, including any instruction an agent did not follow. A passing local check is not acceptance.
 

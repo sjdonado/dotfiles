@@ -51,6 +51,34 @@ The instructions SHALL describe the orchestrator role and the tier split in gene
 - **WHEN** the work about to start is small enough that handing it over costs more than doing it
 - **THEN** the agent does it directly, and the offer is not made for its own sake
 
+### Requirement: The verification stretch is a named subagent
+
+Running a change's checks SHALL be a named workflow of its own, as review already is, rather than an unnamed general-purpose subagent, so that what verification costs can be told apart from every other delegated task. It SHALL run the resolved oracle ladder, repair what the change broke within that change's scope, and report each rung's final state, what it fixed, and anything it could not resolve. It SHALL NOT redesign, push, open or merge a pull request, absorb unrelated failures, or report an unrunnable rung as passing.
+
+#### Scenario: Checks run for a change
+
+- **WHEN** a workflow needs its change's checks driven to green
+- **THEN** the named verification workflow runs them, whether in a subagent or in the current session, so the work is attributable either way
+
+#### Scenario: A failure outside the change's scope
+
+- **WHEN** verification meets a failure that predates the change or can only be resolved by altering what the change is for
+- **THEN** it reports the failure rather than fixing it, and the caller decides
+
+#### Scenario: A rung the project does not have
+
+- **WHEN** the project declares no such rung, or the rung cannot be run
+- **THEN** it is reported as skipped or unverified, never as passing
+
+### Requirement: Waiting is never delegated
+
+A subagent SHALL NOT be dispatched to watch, poll, or wait for work that is already running. Long-running work SHALL stay with the session that can see it through.
+
+#### Scenario: A long-running command
+
+- **WHEN** a command will take a long time and its result is needed
+- **THEN** it runs in the current session's own background rather than inside a subagent whose context is spent polling and whose termination would end the work
+
 ### Requirement: Delegation accounts for what already runs below
 
 Delegation decisions SHALL account for the subagents a workflow already spawns, so that the agents a run creates are not all at the expensive tier.

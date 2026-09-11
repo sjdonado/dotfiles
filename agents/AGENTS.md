@@ -154,7 +154,13 @@ The capable model earns its cost on understanding the problem, settling the cont
 
 So treat yourself as the orchestrator. Before implementation begins, and again before verification begins, offer in one line to hand that stretch to a subagent at a cheaper tier, naming what would go with it, and carry on: this is a line of work, not a gate, and it never becomes a reason to wait for permission. Skip the offer when handing over would cost more than doing it, which is most small tasks; the handover prompt has to carry the whole contract, and that is not free.
 
+Delegate work, never waiting. A subagent told to watch something poll until it finishes burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command belongs in the session that can see it through.
+
 Record the human's answer as the project's preference so the question is asked once rather than every session. Under an autonomous workflow the offer is never made: follow the recorded preference, and where none exists, do the work in this session. Stopping an autonomous run to ask about delegation breaks the one promise that workflow makes.
+
+The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `adversarial-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
+
+`verification` is the usual candidate for a cheaper tier. It runs the ladder, fixes what the change broke, and reports a verdict, all against a contract that is already settled and an oracle that is machine-checkable, so success there is not a judgement call. `adversarial-review` is the opposite case: a reviewer too weak to find the bug is not a saving, so weigh its tier on what it has to catch.
 
 Count the subagents a workflow already spawns. `adversarial-review` dispatches up to two reviewers per round at whatever tier they are given, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
 
