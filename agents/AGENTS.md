@@ -81,7 +81,9 @@ Save the note at the workflow's existing checkpoint before returning, replacing 
 
 ### The task list
 
-Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, keep `.agent/<branch-key>.tasks.md`: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end. Create it as soon as the work has more than one step, and write it at the checkpoints where the note is already written, never as a separate ritual.
+Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end.
+
+Writing it is not optional and not a reward for finishing. A list written at the end is a report, and a report cannot be read by the session that needed it. If the work has more than one step, the file exists before the second step starts, and every later checkpoint updates it alongside the note.
 
 It exists so state outlives the session. A harness's own to-do list is per-session and per-product: a subagent cannot read it, and neither can the next session or a different agent on the same branch. So hand a subagent the list's path instead of restating what is done in its prompt, and read the list on continuation before re-deriving a plan.
 

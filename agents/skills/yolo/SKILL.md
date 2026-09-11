@@ -27,7 +27,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 2. Clarify only when the escalation contract in `AGENTS.md` says to: the answer is not derivable from repository evidence, telemetry, or convention, AND getting it wrong is expensive to reverse or the choice is not yours. Pre-existing changes that cannot be safely separated, or an unrelated open PR on the current branch, also stop here. Batch every question into one stop, each carrying its evidence. Otherwise proceed without asking.
 
-3. Establish a safe branch before editing. Resolve the repository's default branch. If currently on the default branch, create a task branch from the current base. If already on a non-default branch with no unrelated PR, use it. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the branch name.
+3. Establish a safe branch before editing, then write the task list per `AGENTS.md` before the second step of the work: the change's `tasks.md` where an OpenSpec change exists, otherwise `.agent/<branch-key>.tasks.md`. Tick it as items land. Resolve the repository's default branch. If currently on the default branch, create a task branch from the current base. If already on a non-default branch with no unrelated PR, use it. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the branch name.
 
 4. Resolve or reuse the current repository oracle ladder from its instructions and task runner; record it in worktree state if available. Include declared behavioral acceptance: tooling checks alone do not satisfy it. Missing coverage stays incomplete, never a skipped success.
 

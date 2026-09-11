@@ -17,7 +17,7 @@ Load and follow the `ponytail` skill. Prototype code is still the laziest code t
 
 1. Establish a safe branch before editing, same rule as `yolo`: never the default branch, even for throwaway code. Include the tracker ID in the branch name when one is bound.
 2. Resolve the local rungs of the oracle ladder (type check, lint, tests) per `AGENTS.md`. Record them in worktree state if available. The remote rungs do not exist in this workflow.
-3. Read the branch note and the session task list, or create them per `AGENTS.md` continuity rules, adding `/.agent/` to `info/exclude` first. Tick the list as each iteration lands, so the next session sees what the loop already settled. Put confirmed/assumed requirements and deferred behavior in Contract, and non-reconstructible rationale in Carry forward. On continuation, recover missing state from artifacts; ask for an unrecoverable requirement before changing dependent behavior.
+3. Read the branch note and the session task list, or write both per `AGENTS.md` continuity rules before the second iteration, adding `/.agent/` to `info/exclude` first. Tick the list as each iteration lands, so the next session sees what the loop already settled. Put confirmed/assumed requirements and deferred behavior in Contract, and non-reconstructible rationale in Carry forward. On continuation, recover missing state from artifacts; ask for an unrecoverable requirement before changing dependent behavior.
 
 ## The loop
 
