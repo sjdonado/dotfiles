@@ -7,7 +7,7 @@ Autonomously implement the user's request or the current conversation's approved
 
 Resolve the effective input, cheapest first. No document is ever required, and no depth is ever mandatory:
 
-- An OpenSpec change directory (`openspec/changes/<id>/`): its artifacts are the contract. Implement from them and tick off `tasks.md` as each item lands. Do not re-derive what the proposal, design, or delta specs already settled.
+- An OpenSpec change directory (`openspec/changes/<id>/`): its artifacts are the contract. Implement from them and tick off `tasks.md` as each item lands. Without a change directory, keep and tick the session task list per `AGENTS.md`, so what this run finished survives it. Do not re-derive what the proposal, design, or delta specs already settled.
 - An issue ID or URL: requirements come from the tracker, description and comment thread together, per `AGENTS.md`.
 - An approved plan in the conversation: the plan is the contract.
 - A `triage` brief, `research` ledger, or handoff: read it and its authoritative artifact references. Reuse grounded findings; preserve approval state. The user's implementation request or prior approval authorizes work, not the document itself. A planning-only request stays planning-only.
@@ -29,7 +29,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 4. Resolve or reuse the current repository oracle ladder from its instructions and task runner; record it in worktree state if available. Include declared behavioral acceptance: tooling checks alone do not satisfy it. Missing coverage stays incomplete, never a skipped success.
 
-5. Implement the smallest sufficient change per `ponytail`. For data, auth, concurrency, migration, or public-contract changes, also verify failure behavior, compatibility, and rollback where relevant. Do not invent unrelated checks.
+5. Implement the smallest sufficient change per `ponytail`. Delegate the implementation and the verification stretches per the orchestration rules in `AGENTS.md`: follow the project's recorded preference where one exists, and otherwise do the work here. Never stop this run to ask about delegation. For data, auth, concurrency, migration, or public-contract changes, also verify failure behavior, compatibility, and rollback where relevant. Do not invent unrelated checks.
 
 6. Drive the local ladder to green. Ascend one rung at a time and re-derive the failure list on every pass; never work from a stale list. Fix the failures your change caused. Follow the escalation contract's do-not-escalate list: auto-fix lint and format, rebase when behind the base, re-run provisioning on install or cache or port failures, and re-run a flaky check once before counting it as an attempt. Stop only on a rabbit-hole trip.
 
@@ -52,6 +52,6 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 **Terminal state is every resolved oracle green, not "PR opened."** Report the PR URL and the final state of each rung. If a rung cannot go green, escalate with what each attempt disproved rather than handing back a red PR.
 
-Before returning, refresh the branch note with the current checks, PR, and next action per AGENTS.md. Awaiting review is distinct from merged completion.
+Before returning, refresh the branch note and the session task list with the current checks, PR, and next action per AGENTS.md. Awaiting review is distinct from merged completion.
 
 Use subagents only if the task genuinely benefits (large recon, parallel work, adversarial review); otherwise do it directly. Do not force-push shared branches.
