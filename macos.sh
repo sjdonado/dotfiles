@@ -100,35 +100,23 @@ log "Setting up Ghostty config..."
 ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
 ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
-# BrowserRouter is the default browser: it receives every link the system opens
-# and routes it, previews to Helium and everything else to a Safari tab. It only
-# takes effect once macOS names it the default browser, which is a prompt, not
-# something a script can set.
+# BrowserRouter is the default browser, and lives in its own repository:
+# https://github.com/sjdonado/browser-router
 #
-# It replaced Finicky, which did the same routing from a JS config and cost 131MB
-# resident to do it: Finicky embeds JavaScriptCore, and the engine reserves ~95MB
-# of heap arenas at launch regardless of the config. This process handles one URL
-# and exits.
-#
-# It has to be an app bundle declaring http/https: only that receives the Apple
-# Event carrying the URL. It is compiled rather than an AppleScript applet because
-# the applet stub shows AppleScript's startup screen when another app launches it,
-# which made every link wait on a dialog. Editing Info.plist invalidates a
-# signature, so the bundle is signed after it is assembled, not before.
-log "Building the BrowserRouter URL handler..."
-BROWSER_ROUTER_APP="$HOME/Applications/BrowserRouter.app"
-rm -rf "$BROWSER_ROUTER_APP" "$HOME/Applications/SafariTab.app"
-mkdir -p "$BROWSER_ROUTER_APP/Contents/MacOS"
-if xcrun swiftc -O -framework AppKit \
-  -o "$BROWSER_ROUTER_APP/Contents/MacOS/BrowserRouter" "$PWD/macos/browser-router/main.swift" 2>/dev/null; then
-  cp "$PWD/macos/browser-router/Info.plist" "$BROWSER_ROUTER_APP/Contents/Info.plist"
-  codesign --force --sign - "$BROWSER_ROUTER_APP" >/dev/null 2>&1 || true
-  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
-    -f "$BROWSER_ROUTER_APP" >/dev/null 2>&1 || true
-  log "  built $BROWSER_ROUTER_APP (set it as the default browser, and allow it to control Safari when macOS asks)"
-else
-  log "  swiftc failed; links will open in whatever macOS considers the default browser"
-fi
+# The config is linked from here rather than seeded, so the routing rules are
+# tracked with the rest of the dotfiles. Link before installing: the installer
+# only writes a starting config when there is none, and the link counts as one.
+log "Setting up BrowserRouter (the default browser)..."
+mkdir -p "$HOME/.config/browser-router"
+ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
+
+# Rebuilds and re-registers on every run, which is how it picks up an upstream
+# change. --no-default-prompt keeps provisioning non-interactive; making it the
+# default browser is a one-time system prompt, answered by running the installer
+# by hand or by opening ~/Applications/BrowserRouter.app.
+curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh \
+  | sh -s -- --no-default-prompt \
+  || log "  BrowserRouter install failed; links will open in whatever macOS considers the default browser"
 
 
 log "Setting fish shell..."

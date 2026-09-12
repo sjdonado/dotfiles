@@ -1,0 +1,15 @@
+{
+  "default": {
+    "bundleID": "com.apple.Safari",
+    "tab": true
+  },
+  "rules": [
+    {
+      "match": [
+        "^https?://(localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\\[::1\\])(:\\d+)?(/|$)",
+        "^https?://([^/]+\\.)?(pages|workers)\\.dev(/|$)"
+      ],
+      "browser": "net.imput.helium"
+    }
+  ]
+}
