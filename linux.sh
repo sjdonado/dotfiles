@@ -44,120 +44,85 @@ case "$(uname -m)" in
   *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;;
 esac
 
-COREPACK_HOME="$HOME/.cache/corepack"
-PNPM_HOME="$HOME/.local/share/pnpm"
-export COREPACK_HOME PNPM_HOME
-mkdir -p "$BIN" "$HOME/.config" "$COREPACK_HOME" "$PNPM_HOME"
+SHIMS="$HOME/.local/share/mise/shims"
+mkdir -p "$BIN" "$HOME/.config"
 # Ensure dirs where installers drop binaries are on PATH, so re-runs detect
 # already-installed tools (idempotency) and post-install `have` checks pass.
-for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin" "$HOME/.bun/bin"; do
+# Everything mise manages resolves through its shims directory, which is why
+# there is no per-tool entry here any more.
+for d in "$BIN" "$SHIMS" "$HOME/.opencode/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
 rescan() { hash -r 2>/dev/null || true; }
 
-# --- dependencies (opt-in) ---------------------------------------------------
-if [ "$INSTALL" = 1 ]; then
-log "apt base packages..."
-export DEBIAN_FRONTEND=noninteractive
-sudo apt-get update -y
-sudo apt-get install -y \
-  git curl wget ca-certificates build-essential unzip tar \
-  fish ripgrep fd-find bat mosh python3 python3-pip \
-  jq fzf
-
-# --- ttt (the editor; no apt package, so use the project's own installer) -----
-if ! have ttt; then
-  log "Installing ttt..."
-  curl -fsSL https://raw.githubusercontent.com/eugenioenko/ttt/main/install.sh \
-    | env INSTALL_DIR="$BIN" sh \
-    || log "ttt install failed; install it later from https://tttedit.dev"
-  rescan
-  have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
-fi
-
-# --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
-if ! have moshi-hook; then
-  log "Installing moshi-hook..."
-  curl -fsSL https://getmoshi.app/install.sh | sh
-  rescan
-fi
-
-# --- herdr -------------------------------------------------------------------
-if ! have herdr; then
-  log "Installing herdr..."
-  curl -fsSL https://herdr.dev/install.sh | sh
-  rescan
-fi
-
-# --- AI coding harnesses -----------------------------------------------------
-if ! have claude; then
-  log "Installing Claude Code..."
-  curl -fsSL https://claude.ai/install.sh | bash
-  rescan
-fi
-if ! have codex; then
-  log "Installing Codex..."
-  curl -fsSL https://github.com/openai/codex/releases/latest/download/install.sh \
-    | env CODEX_NON_INTERACTIVE=1 sh
-  rescan
-fi
-if ! have opencode; then
-  log "Installing OpenCode..."
-  curl -fsSL https://opencode.ai/install | bash
-  rescan
-fi
-
-# --- uv/uvx (MCP servers launched with `uvx`, e.g. grafana's mcp-grafana) -----
-if ! have uv; then
-  log "Installing uv..."
-  curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$BIN" sh
-  rescan
-fi
-
-# --- bun (openspec below installs through it; ~/.bun/bin is on PATH) ---------
-if ! have bun; then
-  log "Installing bun..."
-  curl -fsSL https://bun.sh/install | bash
-  rescan
-fi
-
-# --- openspec (the openspec-* agent skills shell out to this CLI) ------------
-# Installed with bun because ~/.bun/bin is already on PATH, while `npm -g` lands
-# in a version-pinned Node prefix that is not. Must follow the bun block above.
-if ! have openspec; then
-  log "Installing OpenSpec CLI..."
-  bun add -g @fission-ai/openspec@latest \
-    || echo "openspec install failed; openspec-* skills will no-op"
-  rescan
-fi
-
-# --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
-if ! have wt; then
-  log "Installing worktrunk (wt)..."
-  # cargo-dist installer: downloads prebuilt musl binary, no rust needed.
-  curl -fsSL https://github.com/max-sixty/worktrunk/releases/latest/download/worktrunk-installer.sh | sh \
-    && rescan \
-    || echo "worktrunk install failed; herdr copy-ignored plugin will no-op"
-fi
-else
-  log "Skipping dependency installation (use --install to enable)."
-fi
-
-# fd and bat use different binary names on Debian/Ubuntu; keep these symlinks
-# current even when dependency installation is skipped.
-have fd || { have fdfind && ln -snf "$(command -v fdfind)" "$BIN/fd"; } || true
-have bat || { have batcat && ln -snf "$(command -v batcat)" "$BIN/bat"; } || true
-
 # --- clone / update dotfiles -------------------------------------------------
+# First, because the tool list lives in this repo: mise.toml is linked below and
+# then installed from, so the clone has to exist before anything is installed.
+if [ "$INSTALL" = 1 ] && ! have git; then
+  export DEBIAN_FRONTEND=noninteractive
+  sudo apt-get update -y && sudo apt-get install -y git curl ca-certificates
+fi
 if [ -d "$DOTFILES/.git" ]; then
   log "Updating dotfiles..."
   git -C "$DOTFILES" pull --ff-only || true
-else
+elif [ ! -d "$DOTFILES" ]; then
   log "Cloning dotfiles..."
   git clone "$DOTFILES_REPO" "$DOTFILES"
 fi
 cd "$DOTFILES"
+
+# --- dependencies (opt-in) ---------------------------------------------------
+if [ "$INSTALL" = 1 ]; then
+# Only what mise cannot or should not provide: the compiler toolchain its
+# backends occasionally need, the archive formats they ship in, and the login
+# environment (fish, mosh), which is not project tooling.
+log "apt base packages..."
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get update -y
+sudo apt-get install -y \
+  git curl wget ca-certificates build-essential unzip tar xz-utils \
+  fish mosh python3 python3-pip
+
+# --- mise: every other tool ---------------------------------------------------
+# The list is mise.toml in this repo, linked to the global config below, so
+# adding a tool is a line of TOML rather than another curl-and-guard block here.
+if ! have mise; then
+  log "Installing mise..."
+  curl -fsSL https://mise.run | env MISE_INSTALL_PATH="$BIN/mise" sh
+  rescan
+fi
+log "Installing tools from mise.toml..."
+mkdir -p "$HOME/.config/mise"
+ln -snf "$PWD/mise.toml" "$HOME/.config/mise/config.toml"
+mise install --yes || log "  some mise tools failed; re-run: mise install"
+rescan
+
+# --- installers mise cannot replace ------------------------------------------
+# Claude Code and OpenCode publish npm wrappers that fetch their real binary in
+# a postinstall script, which mise does not run: installed that way, both fail
+# at startup ("native binary not installed", "postinstall script was not run").
+# herdr and moshi-hook ship from their own CDNs with no GitHub release for ubi
+# to read. All four keep their official installers.
+# Claude Code manages its own updates and shell integration, and herdr and
+# moshi-hook ship from their own CDNs, so all three keep their installers. None
+# of them aborts the run: losing one tool should cost that tool, not the rest of
+# the provisioning.
+install_tool() {
+  if have "$1"; then return 0; fi
+  log "Installing $1..."
+  shift
+  sh -c "$*" || log "  install failed; re-run this script or install it by hand"
+  rescan
+}
+install_tool claude    'curl -fsSL https://claude.ai/install.sh | bash'
+install_tool herdr     'curl -fsSL https://herdr.dev/install.sh | sh'
+install_tool moshi-hook 'curl -fsSL https://getmoshi.app/install.sh | sh'
+else
+  log "Skipping dependency installation (use --install to enable)."
+  mkdir -p "$HOME/.config/mise"
+  ln -snf "$PWD/mise.toml" "$HOME/.config/mise/config.toml"
+fi
 
 # --- link configs (Linux paths) ---------------------------------------------
 log "Linking local bin..."
@@ -169,33 +134,35 @@ for f in "$BIN"/*; do
   case "$(readlink "$f")" in "$PWD/bin/"*) [ -e "$f" ] || rm -f "$f" ;; esac
 done
 
-# Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
-# so ttt and the agent binaries resolve inside herdr too). Configure both bash and
-# zsh: Coder workspaces default to zsh, so a bash-only setup leaves herdr/fish
-# off PATH. Create the rc file if missing (a zsh box may ship no ~/.bashrc).
+# Where PATH and environment go, and why it is two lists.
+#
+# ~/.bashrc on Ubuntu opens with `case $- in *i*) ;; *) return;; esac`, so
+# anything appended to it is invisible to every non-interactive shell: an agent
+# hook, a herdr pane running a command, `ssh host some-command`. The tools then
+# exist and cannot be found, which is exactly what the container check caught.
+#
+# So environment lives in the files a shell reads regardless of how it was
+# started (~/.profile for login sh/bash, ~/.zshenv for every zsh), and the rc
+# files keep only what is genuinely interactive, plus a PATH line for the
+# interactive non-login case, which reads no profile at all.
+SHELL_ENVS="$HOME/.profile $HOME/.zshenv"
 SHELL_RCS="$HOME/.bashrc $HOME/.zshrc"
-for RC in $SHELL_RCS; do
-  [ -e "$RC" ] || touch "$RC"
-  grep -q 'HOME/.local/bin.*PATH' "$RC" \
-    || printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$RC"
-  grep -q 'HOME/.opencode/bin.*PATH' "$RC" \
-    || printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$RC"
-  # bun's own installer appends a `$BUN_INSTALL/bin` block to the rc of the
-  # shell it detects; only add ours when neither form is present.
-  grep -qE 'BUN_INSTALL|HOME/\.bun/bin' "$RC" \
-    || printf 'export PATH="$HOME/.bun/bin:$PATH"\n' >> "$RC"
-  grep -q 'COREPACK_HOME.*\.cache/corepack' "$RC" || cat >> "$RC" <<'EOF'
 
-# dotfiles: user-writable package-manager caches
-export COREPACK_HOME="$HOME/.cache/corepack"
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
+for F in $SHELL_ENVS $SHELL_RCS; do
+  [ -e "$F" ] || touch "$F"
+  grep -q 'dotfiles: tools on PATH' "$F" || cat >> "$F" <<'EOF'
+
+# dotfiles: tools on PATH. Shims rather than `mise activate`: a shim is a plain
+# executable, so it resolves in non-interactive shells too.
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"
 EOF
+done
+
+for F in $SHELL_ENVS; do
   # Coder injects a git identity into every process it spawns, and env beats
   # ~/.gitconfig, so commits made here ignored the tracked user.name/user.email.
-  # Unset after the rc sources ~/.config/coder/env.sh, which sets them again.
   # GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
-  grep -q 'dotfiles: git identity from gitconfig' "$RC" || cat >> "$RC" <<'EOF'
+  grep -q 'dotfiles: git identity from gitconfig' "$F" || cat >> "$F" <<'EOF'
 
 # dotfiles: git identity from gitconfig, not Coder's injected env
 unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
@@ -206,25 +173,16 @@ ulimit -c 0
 EOF
 done
 
-log "Linking git config..."
-ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
-
-# ~/.zshrc alone is not enough: non-interactive zsh never reads it, so hooks and
-# agent shells kept the injected identity. ~/.zshenv is read by every zsh. The
-# ~/.zshrc block stays too, since it sources ~/.config/coder/env.sh, which sets
-# the vars again after this file has run. Appended rather than symlinked: zsh is
-# not a shell this repo configures, it is only what a Coder workspace happens to
-# log in with, so these blocks are the minimum to keep that box consistent.
-[ -e "$HOME/.zshenv" ] || touch "$HOME/.zshenv"
-grep -q 'dotfiles: git identity from gitconfig' "$HOME/.zshenv" || cat >> "$HOME/.zshenv" <<'EOF'
+# ~/.zshrc keeps its own copy: it sources ~/.config/coder/env.sh, which sets the
+# identity vars again after ~/.zshenv has already run.
+grep -q 'dotfiles: git identity from gitconfig' "$HOME/.zshrc" || cat >> "$HOME/.zshrc" <<'EOF'
 
 # dotfiles: git identity from gitconfig, not Coder's injected env
 unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
-
-# dotfiles: no core dumps. core_pattern is the bare name `core`, so a crash
-# writes the dump into the process's cwd, i.e. straight into a repo.
-ulimit -c 0
 EOF
+
+log "Linking git config..."
+ln -snf "$PWD/git/.gitconfig" "$HOME/.gitconfig"
 
 log "Linking bat themes (GitHub Dark/Light, chosen by BAT_THEME_*)..."
 mkdir -p "$HOME/.config/bat/themes"

@@ -1,0 +1,50 @@
+# Tools this setup installs, declared instead of scripted.
+#
+# Everything here used to be a `curl | sh` block or an apt package in linux.sh
+# with a `have <cmd>` guard around it. mise makes the list the code: one install
+# step provisions all of it, re-running updates it, and the shims directory is
+# the only thing that has to be on PATH.
+#
+# Linked to ~/.config/mise/config.toml by the installers, so it is the global
+# tool set for every project on the machine rather than a per-directory one.
+#
+# What is deliberately NOT here, and why, so nobody tries again:
+#   claude    the npm package is a wrapper that fetches a native binary from a
+#             postinstall script; mise does not run those, so `claude --version`
+#             fails with "claude native binary not installed".
+#   opencode  the npm package has the same problem, but its GitHub release does
+#             not: `github:anomalyco/opencode` installs a working binary, and
+#             unlike the official installer it can authenticate, so it does not
+#             fail on a box that has spent the hour's 60 anonymous API calls.
+#   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
+#   moshi-hook  same, cdn.getmoshi.app.
+# Those four keep their official installers. fish and mosh stay with the system
+# package manager: they are the login environment, not project tooling.
+
+[tools]
+# `lts` rather than `latest`: node@latest fails to resolve in mise.
+node = "lts"
+bun = "latest"
+uv = "latest"
+
+ripgrep = "latest"
+fd = "latest"
+bat = "latest"
+fzf = "latest"
+jq = "latest"
+
+# The editor and the worktree tool, both straight from their GitHub releases.
+# worktrunk's binary is named `wt`, which the backend cannot guess from the repo
+# name. These two are the only entries that spend GitHub API calls, so a box
+# behind a shared IP wants GITHUB_TOKEN set before provisioning.
+"github:eugenioenko/ttt" = "latest"
+"github:anomalyco/opencode" = "latest"
+"github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
+
+# `opencode upgrade` writes into mise's install directory rather than going
+# through mise, so after a self-upgrade the version mise reports is stale until
+# the next `mise install`. Harmless, but that is why it happens.
+
+# npm-backed CLIs that work without a postinstall step.
+"npm:@openai/codex" = "latest"
+"npm:@fission-ai/openspec" = "latest"

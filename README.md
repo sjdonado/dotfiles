@@ -10,6 +10,8 @@
 - Linux (remote/dev box): `./linux.sh`
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
+- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`. Adding one is a line of TOML, not another installer block in a script. Four tools stay outside it, and the file says which and why.
+- Verify a change to `linux.sh` against a throwaway Ubuntu container rather than a real box: `docker/linux-setup/run.sh`. See `docker/linux-setup/README.md`.
 
 ### Agent harness
 
