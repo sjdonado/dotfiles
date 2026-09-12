@@ -25,30 +25,30 @@ The standalone reader was built (`660215f`) and then rejected as not practical; 
 
 ## 3. Confirm before removing anything
 
-- [ ] 3.1 Stop and hand back to the human with TTT installed and working. They use it in real work, on the laptop and on a tablet, and confirm before the removals below. Do not proceed on your own judgment; removing a working editor before its replacement is proven is the one step with no cheap recovery.
+- [x] 3.1 Stop and hand back to the human with TTT installed and working. They use it in real work, on the laptop and on a tablet, and confirm before the removals below. Do not proceed on your own judgment; removing a working editor before its replacement is proven is the one step with no cheap recovery.
 
 ## 4. Remove Neovim
 
-- [ ] 4.1 Delete the `nvim/` tree (init.lua, lua/custom/, nvim-pack-lock.json, and anything else under it).
-- [ ] 4.2 Remove the nvim config symlinks from macos.sh and linux.sh, and the `glow` binary from the Brewfile. Keep the `neovim` binary provisioned as an escape hatch per design.md Decision 6.
-- [ ] 4.3 Drop the nvim-specific `minimize` behavior from `bin/workspace`, including its help text.
+- [x] 4.1 Delete the `nvim/` tree (init.lua, lua/custom/, nvim-pack-lock.json, and anything else under it).
+- [x] 4.2 Remove the nvim config symlinks from macos.sh and linux.sh, and the `glow` binary from the Brewfile. Keep the `neovim` binary provisioned as an escape hatch per design.md Decision 6.
+- [x] 4.3 Drop the nvim-specific `minimize` behavior from `bin/workspace`, including its help text.
 
 ## 5. Remove lazygit
 
-- [ ] 5.1 Remove lazygit from the Brewfile, macos.sh, and linux.sh, and delete `lazygit/config.yml`.
+- [x] 5.1 Remove lazygit from the Brewfile, macos.sh, and linux.sh, and delete `lazygit/config.yml`.
 
 ## 6. Remove the herdr surfaces that hosted them
 
-- [ ] 6.1 Delete the `edit-tab` plugin. Its `prefix+.` keybind is already gone: task 1.7 replaced that entry with `prefix+e` for `ttt-tab.toggle`.
-- [ ] 6.2 Delete the `lazygit-panel` plugin and its `prefix+s` keybind from herdr/config.toml.
-- [ ] 6.3 Keep `panel-revive`: a restored TTT tab comes back as a bare shell exactly as the nvim one did, so it still has a host. Drop only its `nvim` and `Git` branches, leaving the `ttt` one. Leave `copy-ignored` alone.
-- [ ] 6.4 Grep the repository for remaining references to nvim, neovim, lazygit, and glow, and resolve each: `README.md`, `bin/workspace`, `fish/config.fish`, `raycast/dictation/coding-agents.txt`, and `.claude/settings.local.json` are known to mention them. A dictation wordlist entry is not a dependency; judge each on its own.
+- [x] 6.1 Delete the `edit-tab` plugin. Its `prefix+.` keybind is already gone: task 1.7 replaced that entry with `prefix+e` for `ttt-tab.toggle`.
+- [x] 6.2 Delete the `lazygit-panel` plugin and its `prefix+s` keybind from herdr/config.toml.
+- [x] 6.3 Keep `panel-revive`: a restored TTT tab comes back as a bare shell exactly as the nvim one did, so it still has a host. Drop only its `nvim` and `Git` branches, leaving the `ttt` one. Leave `copy-ignored` alone.
+- [x] 6.4 Grep the repository for remaining references to nvim, neovim, lazygit, and glow, and resolve each: `README.md`, `bin/workspace`, `fish/config.fish`, `raycast/dictation/coding-agents.txt`, and `.claude/settings.local.json` are known to mention them. A dictation wordlist entry is not a dependency; judge each on its own.
 
 ## 7. Rewrite the README
 
-- [ ] 7.1 Describe the new shape: TTT as the single editor for reading, diffs, and git; the agent harness unchanged; no image-capable markdown reader, deliberately.
-- [ ] 7.2 Remove the nvim and lazygit sections, and state the manual step for TTT plugins if task 1.5 found they cannot be provisioned.
-- [ ] 7.3 Record both deferred goals, markdown images inside TTT and dark/light switching, pointing at design.md's Deferred work sections so the next session starts from the measurement rather than a guess.
+- [x] 7.1 Describe the new shape: TTT as the single editor for reading, diffs, and git; the agent harness unchanged; no image-capable markdown reader, deliberately.
+- [x] 7.2 Remove the nvim and lazygit sections, and state the manual step for TTT plugins if task 1.5 found they cannot be provisioned.
+- [x] 7.3 Record both deferred goals, markdown images inside TTT and dark/light switching, pointing at design.md's Deferred work sections so the next session starts from the measurement rather than a guess.
 
 ## 8. Validate and hand off
 

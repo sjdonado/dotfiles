@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Remote Ubuntu setup for herdr + Claude Code + Codex + OpenCode + nvim + lazygit, wired to these dotfiles.
+# Remote Ubuntu setup for herdr + Claude Code + Codex + OpenCode + ttt, wired to these dotfiles.
 # Idempotent. Safe to re-run. macOS-only steps from macos.sh are omitted.
 #
 # End goal: connect from your local terminal with `herdr --remote <user>@<host>`.
@@ -36,9 +36,11 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+# Kept for the guard alone: every installer that used the normalized names went with
+# Neovim, lazygit, tree-sitter and difftastic, but refusing an unsupported arch up
+# front still beats failing halfway through a provisioning run.
 case "$(uname -m)" in
-  x86_64|amd64) ARCH=x86_64; DARCH=amd64; GARCH=x86_64 ;;
-  aarch64|arm64) ARCH=arm64; DARCH=arm64; GARCH=arm64 ;;
+  x86_64|amd64|aarch64|arm64) ;;
   *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;;
 esac
 
@@ -64,34 +66,6 @@ sudo apt-get install -y \
   fish ripgrep fd-find bat mosh python3 python3-pip \
   jq fzf
 
-# --- neovim (stable: config uses vim.pack / vim.loader, needs >=0.12) ---------
-NEED_NVIM=1
-if have nvim && nvim --version | head -1 | grep -qE 'v0\.(1[2-9]|[2-9][0-9])'; then NEED_NVIM=0; fi
-if [ "$NEED_NVIM" = 1 ]; then
-  log "Installing Neovim stable..."
-  tmp="$(mktemp -d)"
-  curl -fsSL -o "$tmp/nvim.tar.gz" \
-    "https://github.com/neovim/neovim/releases/download/stable/nvim-linux-${ARCH}.tar.gz"
-  sudo rm -rf /opt/nvim
-  sudo mkdir -p /opt/nvim
-  sudo tar -xzf "$tmp/nvim.tar.gz" -C /opt/nvim --strip-components=1
-  ln -snf /opt/nvim/bin/nvim "$BIN/nvim"
-  rm -rf "$tmp"
-fi
-
-# --- lazygit -----------------------------------------------------------------
-if ! have lazygit; then
-  log "Installing lazygit..."
-  v="$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest \
-       | grep -oE '"tag_name": *"v[^"]+"' | head -1 | grep -oE '[0-9.]+')"
-  tmp="$(mktemp -d)"
-  curl -fsSL -o "$tmp/lg.tar.gz" \
-    "https://github.com/jesseduffield/lazygit/releases/download/v${v}/lazygit_${v}_Linux_${GARCH}.tar.gz"
-  tar -xzf "$tmp/lg.tar.gz" -C "$tmp" lazygit
-  install -m755 "$tmp/lazygit" "$BIN/lazygit"
-  rm -rf "$tmp"
-fi
-
 # --- ttt (the editor; no apt package, so use the project's own installer) -----
 if ! have ttt; then
   log "Installing ttt..."
@@ -100,35 +74,6 @@ if ! have ttt; then
     || log "ttt install failed; install it later from https://tttedit.dev"
   rescan
   have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
-fi
-
-# --- tree-sitter CLI (nvim-treesitter main branch builds parsers with it) ----
-if ! have tree-sitter; then
-  log "Installing tree-sitter CLI..."
-  case "$ARCH" in x86_64) TSA=x64 ;; arm64) TSA=arm64 ;; esac
-  v="$(curl -fsSL https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest \
-       | grep -oE '"tag_name": *"v[^"]+"' | head -1 | grep -oE '[0-9.]+')"
-  tmp="$(mktemp -d)"
-  curl -fsSL -o "$tmp/ts.gz" \
-    "https://github.com/tree-sitter/tree-sitter/releases/download/v${v}/tree-sitter-linux-${TSA}.gz"
-  gunzip -c "$tmp/ts.gz" > "$BIN/tree-sitter"
-  chmod +x "$BIN/tree-sitter"
-  rm -rf "$tmp"
-fi
-
-# --- difftastic (lazygit's external diff command) ----------------------------
-if ! have difft; then
-  log "Installing difftastic..."
-  case "$ARCH" in x86_64) DFA=x86_64 ;; arm64) DFA=aarch64 ;; esac
-  v="$(curl -fsSL https://api.github.com/repos/Wilfred/difftastic/releases/latest \
-       | grep -oE '"tag_name": *"[^"]+"' | head -1 | grep -oE '[0-9.]+')"
-  tmp="$(mktemp -d)"
-  curl -fsSL -o "$tmp/difft.tar.gz" \
-    "https://github.com/Wilfred/difftastic/releases/download/${v}/difft-${DFA}-unknown-linux-gnu.tar.gz"
-  tar -xzf "$tmp/difft.tar.gz" -C "$tmp"
-  install -m755 "$(find "$tmp" -type f -name difft -perm -u+x | head -1)" "$BIN/difft" \
-    || log "difftastic install failed; lazygit falls back to git diff"
-  rm -rf "$tmp"
 fi
 
 # --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
@@ -225,7 +170,7 @@ for f in "$BIN"/*; do
 done
 
 # Persist ~/.local/bin on PATH for non-login shells (herdr panes spawn these,
-# so nvim/lazygit/tree-sitter resolve inside herdr too). Configure both bash and
+# so ttt and the agent binaries resolve inside herdr too). Configure both bash and
 # zsh: Coder workspaces default to zsh, so a bash-only setup leaves herdr/fish
 # off PATH. Create the rc file if missing (a zsh box may ship no ~/.bashrc).
 SHELL_RCS="$HOME/.bashrc $HOME/.zshrc"
@@ -311,33 +256,24 @@ for f in "$PWD/ttt/"*.json; do
   link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
 done
 
-log "Linking Neovim config..."
-if [ -e "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
-  mv "$HOME/.config/nvim" "$HOME/.config/nvim.backup.$(date +%s)"
-fi
-ln -snf "$PWD/nvim" "$HOME/.config/nvim"
-
-log "Linking lazygit config..."
-mkdir -p "$HOME/.config/lazygit"
-ln -snf "$PWD/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
-
-# Point the herdr-lazygit pane at the lazygit installed above instead of the
-# 0.63.0 the plugin bundles. git.diffRenderers, the key lazygit/config.yml uses
-# to route diffs through difftastic, only exists in 0.64+, so under the bundled
-# binary that key is silently ignored and the pane falls back to `git diff`.
-# Upstream HEAD is the ref pinned below and still pins 0.63.0.
-#
-# Upstream calls the override unsupported and warns on stderr about version skew:
-# its generated keybinding layer is only tested against 0.63.0. Drop this file
-# once the plugin bumps its own pin.
-if have lazygit; then
-  lg_panel_dir="$HOME/.config/herdr/plugins/config/herdr-lazygit"
-  mkdir -p "$lg_panel_dir"
-  cat > "$lg_panel_dir/panel.conf" <<EOF
-# Managed by dotfiles (linux.sh). Edits here are overwritten.
-RUNTIME_LAZYGIT_BIN=$(command -v lazygit)
-EOF
-  log "herdr-lazygit pane pinned to $(command -v lazygit)"
+# Remove what this repo used to provision, so a machine set up before the editor
+# switch does not keep a dangling ~/.config/nvim or herdr plugins whose directories
+# are gone. Stopping the install is not the same as undoing it. Only links this repo
+# created are touched: a hand-made config that happens to sit at one of these paths
+# is left alone, and the `if` form keeps a false test from tripping `set -e`.
+for stale in "$HOME/.config/nvim" "$HOME/.config/lazygit/config.yml" \
+  "$HOME/.config/herdr/plugins/config/herdr-lazygit/panel.conf"; do
+  if [ -L "$stale" ]; then
+    case "$(readlink "$stale")" in "$PWD"/*) rm -f "$stale" ;; esac
+  elif [ -e "$stale" ]; then
+    log "  left in place, not created by this repo: $stale"
+  fi
+done
+if have herdr; then
+  for gone in edit-tab lazygit-panel; do
+    herdr plugin unlink "$gone" >/dev/null 2>&1 || true
+  done
+  herdr plugin uninstall Crokily/herdr-lazygit >/dev/null 2>&1 || true
 fi
 
 log "Linking herdr config..."
@@ -397,14 +333,6 @@ if have herdr; then
       log "Herdr server not running; later: herdr plugin link $plugin_dir"
     fi
   done
-  # Bundles its own pinned lazygit + fzf runtime; panel.conf above overrides the
-  # lazygit half with the system one, since the bundled 0.63.0 cannot read
-  # git.diffRenderers. The local lazygit-panel plugin is what prefix+s calls, and
-  # it delegates the actual toggle to this plugin.
-  herdr plugin install Crokily/herdr-lazygit \
-    --ref a13e12c99e5e469edd73165cabba413c2a2fd698 -y >/dev/null 2>&1 \
-    && log "installed Herdr plugin: herdr-lazygit" \
-    || log "Herdr server not running; later: herdr plugin install Crokily/herdr-lazygit"
 fi
 
 # --- interactive shell to fish (login shell stays POSIX) ---------------------

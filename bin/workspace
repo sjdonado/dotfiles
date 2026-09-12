@@ -5,7 +5,6 @@ usage() {
     echo ""
     echo "  open [path]             Open existing directory (uses fzf to find git projects if no path given)"
     echo "  close [name]            Kill tmux session (auto-detects if omitted)"
-    echo "  minimize [name]         Close all nvim panes in tmux session (auto-detects if omitted)"
     echo "  help                    Show this help"
     echo ""
     echo "Modes:"
@@ -32,7 +31,6 @@ add_worktree=false
 run_setup=false
 remove_worktree=false
 close_session=false
-minimize_panes=false
 prune_worktrees=false
 force_prune=false
 sessionizer_mode=false
@@ -251,20 +249,6 @@ case $command in
             fi
         fi
         ;;
-    minimize)
-        minimize_panes=true
-        if [[ $# -gt 0 && $1 != --* ]]; then
-            target_path=$1
-        else
-            # Auto-detect: use current tmux session name
-            if [[ -n $TMUX ]]; then
-                target_path=$(tmux display-message -p '#S')
-            else
-                echo "Error: Not in a tmux session and no session name provided"
-                exit 1
-            fi
-        fi
-        ;;
     prune)
         if ! $worktree_mode; then
             echo "Error: 'prune' command only available in worktree mode (use --worktree)"
@@ -323,7 +307,7 @@ if [[ -n $target_path ]]; then
     exit 0
 fi
 
-# Handle close and minimize for both modes
+# Handle close for both modes
 if $close_session; then
     session_name="${target_path:-$branch_name}"
     if tmux has-session -t "$session_name" 2>/dev/null; then
@@ -332,25 +316,6 @@ if $close_session; then
     else
         echo "No tmux session found: $session_name"
     fi
-    exit 0
-fi
-
-if $minimize_panes; then
-    session_name="${target_path:-$branch_name}"
-    if ! tmux has-session -t "$session_name" 2>/dev/null; then
-        echo "No tmux session found: $session_name"
-        exit 1
-    fi
-
-    echo "Closing nvim panes in session: $session_name"
-    # List all panes in the session and close nvim instances
-    tmux list-panes -s -t "$session_name" -F "#{pane_id} #{pane_current_command}" | \
-    while read -r pane_id pane_command; do
-        if [[ "$pane_command" == "nvim" || "$pane_command" == "vim" ]]; then
-            echo "  Closing nvim in pane $pane_id"
-            tmux send-keys -t "$pane_id" Escape ":qa!" C-m 2>/dev/null || true
-        fi
-    done
     exit 0
 fi
 

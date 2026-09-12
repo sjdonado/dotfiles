@@ -54,7 +54,7 @@ default_shell = "fish"
 [keys]
 settings = "prefix+,"
 # Moved off its default prefix+e, which the TTT tab toggle below now owns, the
-# same way settings moved off prefix+s for the lazygit panel.
+# same way settings moved off prefix+s when the lazygit panel still held it.
 edit_scrollback = "prefix+shift+e"
 
 # Direct chord, no prefix: workspaces are what gets switched between all day, and
@@ -64,14 +64,6 @@ edit_scrollback = "prefix+shift+e"
 # documents as safe. ghostty/config maps cmd+1..9 onto exactly these sequences,
 # so the chord the fingers press is cmd, and the chord on the wire is ctrl+alt.
 switch_workspace = "ctrl+alt+1..9"
-
-# lazygit-panel rather than herdr-lazygit.open directly: same toggle, but it first
-# repairs the pane a server restart left as a bare shell. Upstream's launcher
-# treats such a pane as somebody else's and opens a second sidebar beside it.
-[[keys.command]]
-key = "prefix+s"
-type = "plugin_action"
-command = "lazygit-panel.toggle"
 
 # ttt-tab rather than upstream's ttt.editor plugin: the toggle returns to the tab
 # it was pressed from, and it routes right-clicks into TTT, which herdr can only

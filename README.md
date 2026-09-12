@@ -28,84 +28,81 @@ OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI
 
 In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
-### Text editor (TTT)
-
-- `prefix+e` toggles a dedicated TTT tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `ttt .` directly to open the current directory. herdr's own `edit_scrollback` moves to `prefix+shift+e` to make room, the way `settings` moved to `prefix+,` for the lazygit panel.
-- Right-clicks in that tab reach TTT's own menu rather than herdr's pane menu. herdr has no config default for that, only per-pane state, so the local `ttt-tab` plugin sets it on the pane it opens and `panel-revive` re-asserts it after a session restore. Upstream's `ttt.editor` plugin is deliberately not used: it cannot route right-clicks and has no toggle-back.
-- It covers reading, diffs, staging, commits, and GitHub PR review (`ttt . <pr-url>`), and is operable by mouse and touch, so a phone or tablet terminal works without modal key chords.
-- Settings live in `ttt/settings.json`, linked file by file into `~/.config/ttt/` (a tracked `keybindings.json` is picked up the same way if one is added later). TTT rewrites that file with its complete settings whenever you change something in its settings UI, so the tracked copy is a full snapshot rather than a list of overrides, and a UI change overwrites what is tracked instead of merging with it. TTT also keeps its plugin state (`plugins.ttt.json`, `plugins/`) in that same directory, which is why the directory itself is not linked.
-- Plugins are a manual step: install them from TTT's Plugins sidebar (`ctrl+k` then the Plugins panel) or with `Install from URL`. Provisioning them from a script would mean writing pre-granted permissions for third-party Lua into a state file TTT rewrites, which is not worth it for the one plugin in use (Markdown Preview, which is text-only).
-- No image or mermaid rendering, deliberately: TTT draws no images, and a standalone reader (mermaid to PNG, pandoc, chawan) was built and dropped as not worth chawan, pandoc and a headless-browser mermaid CLI across two platforms. It is recoverable with `git show 660215f:bin/mdp` if that judgement changes.
-- No automatic dark/light switching either: TTT carries one `theme` string with no appearance query, so the theme is whatever was last chosen with Switch Theme. The pair is `default-dark` and `default-light`.
-
 ### Text editor
 
-- Run `nvim .`
-- Update plugins: `:PackUpdate` (`:PackUpdate!` skips the confirmation buffer, `:PackList` shows installed revisions). This config uses Neovim 0.12's built-in `vim.pack`, not lazy.nvim, so there is no `:Lazy`.
-- Update LSP servers, DAP servers, linters, and formatters: `:Mason`
+- `prefix+e` toggles a dedicated TTT tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `ttt .` directly to open the current directory. herdr's own `edit_scrollback` sits on `prefix+shift+e`.
+- Right-clicks in that tab reach TTT's own menu rather than herdr's pane menu. herdr has no config default for that, only per-pane state, so the local `ttt-tab` plugin sets it on the pane it opens and `panel-revive` re-asserts it after a session restore. Upstream's `ttt.editor` plugin is deliberately not used: it cannot route right-clicks and has no toggle-back.
+- It covers reading, diffs, staging, commits, and GitHub PR review (`ttt . <pr-url>`), and is operable by mouse and touch, so a phone or tablet terminal works without modal key chords.
+- Syntax highlighting is chroma, compiled into the binary, so there are no parsers to build and nothing like `tree-sitter` or Mason to keep current. The outline and symbol list come from LSP (`textDocument/documentSymbol`), so they appear only for languages with a server configured under `lsp.servers`; highlighting does not depend on that.
+- Settings live in `ttt/settings.json`, linked file by file into `~/.config/ttt/` (a tracked `keybindings.json` is picked up the same way if one is added later). TTT rewrites that file with its complete settings whenever you change something in its settings UI, so the tracked copy is a full snapshot rather than a list of overrides, and a UI change overwrites what is tracked instead of merging with it. TTT also keeps its plugin state (`plugins.ttt.json`, `plugins/`) in that same directory, which is why the directory itself is not linked.
+- Plugins are a manual step: install them from TTT's Plugins sidebar (`ctrl+k` then the Plugins panel) or with `Install from URL`. Provisioning them from a script would mean writing pre-granted permissions for third-party Lua into a state file TTT rewrites, which is not worth it for the one plugin in use (Markdown Preview, which is text-only).
+- No image or mermaid rendering: TTT draws no images, so nothing here renders a diagram in the terminal. Doing it outside the editor costs chawan, pandoc and a headless-browser mermaid CLI on both platforms, which is more than it is worth.
+- No automatic dark/light switching either: TTT carries one `theme` string with no appearance query, so the theme is whatever was last chosen with Switch Theme. The pair is `default-dark` and `default-light`.
+
+### Deferred
+
+Two things this setup does not do, both written up in `openspec/changes/switch-editor-to-ttt/design.md` so the next attempt starts from the measurement rather than a guess:
+
+- **Markdown images and mermaid inside TTT.** TTT renders no images at all, so its markdown preview plugin is text-only. The first thing to measure is whether TTT's embedded terminal passes the Kitty graphics protocol through, since a nested terminal emulator eats it; that single test decides whether this is a plugin or a contribution to TTT's renderer.
+- **Following the terminal's dark/light appearance.** TTT carries one `theme` string and no appearance query. `settings.reload` re-applies a theme live and `ttt --listen` accepts commands over HTTP, so an appearance hook could drive it; the obstacle is that `--listen` binds one fixed port, so several instances need assigned ports.
 
 ### Footprint
 
-Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-08-22. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them.
+Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-09-11. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them.
 
-Neovim startup, five runs through a real pty so the UI attaches (`script -q /dev/null nvim --startuptime FILE -c 'qa!'`):
+Editor startup, five runs through a real pty so the UI attaches:
 
-|                                            | time                       |
-| ------------------------------------------ | -------------------------- |
-| with UI                                    | 161-174 ms, median 163 ms  |
-| headless (`nvim --headless --startuptime`) | 36-48 ms                   |
-| of which `nvim/init.lua`                   | 38 ms sourcing, 18 ms self |
+| | command | time |
+| --- | --- | --- |
+| TTT | `script -q /dev/null ttt --exec "quit" .` | 20-60 ms, median 20 ms |
 
-29 plugins, all through `vim.pack`, none lazy-loaded by a plugin manager. The single largest startup cost is Neovim's own `vim._core.defaults` at 114 ms, so the config is not what makes it feel slow: trimming plugins further buys back tens of milliseconds at most.
+TTT is a single Go binary with no plugin manager, so there is nothing that grows with use: startup stays flat as the editor gets configured.
 
-Resident memory per process, ranges taken across the instances that happened to be running (`ps -Ao rss,args`):
+Resident memory per process, ranges across the instances that happened to be running (`ps -Ao rss,comm`; use `args` instead of `comm` to tell a herdr server from its client):
 
-| process           | RSS                              |
+| process | RSS |
 | ----------------- | -------------------------------- |
-| Ghostty           | 51 MB                            |
-| `herdr server`    | 24 MB                            |
-| `herdr` client    | 11 MB                            |
-| `nvim`            | 5-38 MB each                     |
-| Mason LSP servers | 38-54 MB each                    |
-| `lazygit`         | 34 MB                            |
-| `claude`          | 225-574 MB each, ~250 MB typical |
-| `opencode`        | 280-840 MB, one process per TUI  |
-| `wt`              | none, it exits                   |
+| Ghostty | 54 MB |
+| `herdr`, server and client together | 14-30 MB each, 44 MB for the pair |
+| `ttt` | 15-26 MB each |
+| `claude` | 217-479 MB each, ~280 MB typical |
+| `opencode` | 217 MB, one process per TUI |
+| `codex` | not measured; its TUI would not stay resident long enough to sample, and no session was running |
+| `wt` | none, it exits |
 
-So the terminal plus the multiplexer is about 85 MB, and everything after that scales per stream. An agent is one to two orders of magnitude heavier than any tool it drives: a handful of concurrent agents outweighs the 85 MB shell of the setup around them by an order of magnitude. Editors and LSP servers only matter once several worktrees each have their own.
+So the terminal plus the multiplexer is about 98 MB, and an editor adds roughly 20 MB per open tab. The shape of the conclusion has not changed with the editor swap: an agent is one to two orders of magnitude heavier than any tool it drives, and sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them.
 
-On-disk, measured after `brew cleanup`, so each formula holds one version. Skipping cleanup roughly doubles the Homebrew rows, and it fails silently when another user in the `brew` group installed the older keg (see `homebrew/macos-multi-user.md`):
+On-disk, measured after `brew cleanup`, so each formula holds one version:
 
-|                                                | size                                                |
+| | size |
 | ---------------------------------------------- | --------------------------------------------------- |
-| neovim                                         | 33 MB                                               |
-| herdr                                          | 20 MB                                               |
-| lazygit                                        | 18 MB                                               |
-| worktrunk                                      | 22 MB                                               |
-| opencode                                       | 137 MB                                              |
-| claude                                         | 310 MB per version, more as legacy releases pile up      |
-| nvim plugins (`~/.local/share/nvim/site/pack`) | 89 MB                                               |
-| nvim Mason packages                            | 1.3 GB (clangd 368 MB, basedpyright 286 MB)         |
-| nvim cache and state                           | 19 MB                                               |
-| `~/.claude` (transcripts, skills, history)     | 475 MB                                              |
-| `~/.local/share/opencode`                      | 1.4 GB                                              |
-| `~/.config/herdr` (logs, session state)        | 37 MB                                               |
+| ttt | 14 MB |
+| herdr | 21 MB |
+| worktrunk | 22 MB |
+| neovim, macOS only, for an edit TTT cannot do | 33 MB |
+| codex | 272 MB |
+| opencode | 137 MB |
+| claude | 310 MB per version, more as legacy releases pile up |
+| `~/.claude` (transcripts, skills, history) | 1.7 GB |
+| `~/.local/share/opencode` | 1.7 GB |
+| `~/.codex` | 238 MB |
+| `~/.config/herdr` (logs, session state) | 35 MB |
 
-The tools themselves are small; what grows is everything they cache. Mason and the two agent state directories are 3.2 GB against about 230 MB of binaries. Agent version retention is its own line item: Claude Code self-updates into a new directory per release and leaves the old ones in place, so what it occupies depends on how many legacy versions have piled up rather than on the size of one install.
+The editor is 14 MB and configures itself from one JSON file, so nothing accumulates underneath it: no plugin tree, no language-server package manager, no per-language parsers to build. What grows is everything the agents cache. `~/.claude` and `~/.local/share/opencode` are 3.4 GB against well under 1 GB of binaries, and Claude Code self-updates into a new directory per release, so its share depends on how many legacy versions have piled up rather than on the size of one install.
 
 Worktrees dominate everything else. `~/.herdr/worktrees` was 42 GB, because a single checkout of one React Native monorepo is 12-15 GB once its dependencies are installed, and each worktree gets its own copy. `wt step copy-ignored` uses APFS clonefile, so a fresh worktree costs almost nothing until files are modified, and `du` still reports the full size for each. Budget by repository, not by worktree count.
 
 ### Minimum requirements
 
-Derived from the numbers above, for the full setup (herdr + Claude Code or OpenCode + Neovim + lazygit + worktrunk):
+Derived from the numbers above, for the full setup (herdr + an agent + TTT + worktrunk):
 
 | RAM   | Concurrent agent streams | Notes                                                                                       |
 | ----- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| 8 GB  | 1-2                      | Workable for a single stream with an editor; a second agent plus its dev server will swap.  |
+| 8 GB  | 1-2                      | The editor is no longer a factor; a second agent plus its dev server is what swaps.  |
 | 16 GB | 4-6                      | Where parallel worktrees stop being the constraint.                                         |
 | 32 GB | 10+                      | What the numbers above were measured on, with agents, editors and dev servers all resident. |
 
-Disk: about 5 GB for the toolchain and its caches (binaries, Mason, agent state), then the installed size of one checkout of the repository multiplied by the number of live worktrees. Scale it to the toolchain, not the source: a React Native or Expo app is the expensive case, 10-15 GB per worktree, and almost all of it is prebuilt native modules and platform build artifacts rather than JS. A plain web or Node monorepo of comparable source size is a few hundred MB to 2 GB, and a Go or Rust repository less again.
+Disk: about 4.5 GB for the toolchain and agent state, of which 3.7 GB is agent caches and transcripts rather than binaries, then the installed size of one checkout of the repository multiplied by the number of live worktrees. Scale it to the toolchain, not the source: a React Native or Expo app is the expensive case, 10-15 GB per worktree, and almost all of it is prebuilt native modules and platform build artifacts rather than JS. A plain web or Node monorepo of comparable source size is a few hundred MB to 2 GB, and a Go or Rust repository less again.
 
 CPU matters less than either. Agents are I/O and network bound while waiting on a model, so the practical ceiling is memory and disk, not cores.
 
