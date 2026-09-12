@@ -1,0 +1,70 @@
+#!/bin/sh
+# Install or upgrade herdr-agent-quota, then put the tracked files back.
+#
+# https://github.com/levi-qiao/herdr-agent-quota shows model, context, cache and
+# subscription quota in herdr's agent sidebar. It builds from source and is
+# upgraded with `git pull && ./install.sh`, so the checkout lives outside this
+# repository and only the resulting configuration is tracked.
+#
+# Its `configure` action writes two files this repository owns:
+#
+#   herdr/config.toml      written through the symlink, so the sidebar rows and
+#                          the two keybindings land in the tracked copy already.
+#   claude/settings.json   replaced via rename(), which breaks the symlink, and
+#                          with the plugin's own absolute paths baked in. This
+#                          script folds the result back and rewrites those paths
+#                          as "$HOME/..." so the tracked copy also works on Linux.
+#                          Claude runs statusLine through a shell, which is what
+#                          makes that expansion work.
+#
+# The wrapper it installs chains the previous statusLine command, so
+# claude/statusline.sh keeps rendering; `uninstall.sh` restores it from the
+# backup in the plugin's state directory.
+set -eu
+
+DOTFILES="${DOTFILES:-$PWD}"
+ROOT="$HOME/.local/share/herdr-agent-quota"
+REPO="https://github.com/levi-qiao/herdr-agent-quota.git"
+AGENTS="claude,codex,opencode"
+# Only the provider and the two quota windows. Quota is per account, so a
+# model, cache, TTL or context row repeats on every pane sharing one login
+# and crowds out the two numbers actually worth reading; the topic is already
+# readable in the pane itself.
+FIELDS="provider,5h,7d"
+
+command -v herdr >/dev/null 2>&1 || { echo "herdr missing; skipping agent-quota."; exit 0; }
+command -v cargo >/dev/null 2>&1 || { echo "cargo missing; skipping agent-quota."; exit 0; }
+
+if [ -d "$ROOT/.git" ]; then
+  git -C "$ROOT" pull --ff-only >/dev/null 2>&1 || echo "  agent-quota pull failed; building what is checked out."
+else
+  git clone -q "$REPO" "$ROOT"
+fi
+
+# Needs a running herdr server: install.sh links the plugin and invokes its
+# configure action over the socket.
+( cd "$ROOT" && ./install.sh --agent "$AGENTS" --fields "$FIELDS" ) >/dev/null || {
+  echo "  agent-quota install failed; sidebar quota will be absent."
+  exit 0
+}
+
+python3 - "$DOTFILES" <<'PY'
+import json, os, sys
+
+live = os.path.expanduser("~/.claude/settings.json")
+tracked = os.path.join(sys.argv[1], "claude", "settings.json")
+if os.path.islink(live):  # configure did not run, nothing to fold back
+    sys.exit(0)
+with open(live) as handle:
+    settings = json.load(handle)
+command = settings.get("statusLine", {}).get("command")
+if command:
+    settings["statusLine"]["command"] = command.replace(
+        "'" + os.path.expanduser("~") + "/", '"$HOME/'
+    ).replace("'", '"')
+with open(tracked, "w") as handle:
+    json.dump(settings, handle, indent=2)
+    handle.write("\n")
+PY
+
+ln -snf "$DOTFILES/claude/settings.json" "$HOME/.claude/settings.json"

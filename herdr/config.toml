@@ -17,6 +17,17 @@ copy_on_select = false
 [ui.toast]
 delivery = "terminal"
 
+[ui.sidebar]
+
+[ui.sidebar.agents]
+row_gap = 1 # herdr-agent-quota
+rows = [["state_icon", "machine", "workspace", "tab"], [{ token = "$quota_provider", bold = true, dim = false }], [{ token = "$quota_error", fg = "#e4b957", bold = false, dim = false }], [{ token = "$quota_5h_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_5h_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_5h_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_5h_unknown", bold = false, dim = false }], [{ token = "$quota_week_inline_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_inline_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_inline_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_inline_unknown", bold = false, dim = false }, { token = "$quota_week_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_unknown", bold = false, dim = false }]] # herdr-agent-quota-row
+
+[ui.sidebar.agents.rows_by_agent]
+claude = [["state_icon", "machine", "workspace", "tab"], [{ token = "$quota_provider", fg = "#e88461", bold = true, dim = false }], [{ token = "$quota_error", fg = "#e4b957", bold = false, dim = false }], [{ token = "$quota_5h_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_5h_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_5h_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_5h_unknown", bold = false, dim = false }], [{ token = "$quota_week_inline_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_inline_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_inline_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_inline_unknown", bold = false, dim = false }, { token = "$quota_week_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_unknown", bold = false, dim = false }]] # herdr-agent-quota-provider
+codex = [["state_icon", "machine", "workspace", "tab"], [{ token = "$quota_provider", fg = "#c4d7f5", bold = true, dim = false }], [{ token = "$quota_error", fg = "#e4b957", bold = false, dim = false }], [{ token = "$quota_5h_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_5h_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_5h_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_5h_unknown", bold = false, dim = false }], [{ token = "$quota_week_inline_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_inline_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_inline_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_inline_unknown", bold = false, dim = false }, { token = "$quota_week_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_unknown", bold = false, dim = false }]] # herdr-agent-quota-provider
+opencode = [["state_icon", "machine", "workspace", "tab"], [{ token = "$quota_provider", bold = true, dim = false }], [{ token = "$quota_error", fg = "#e4b957", bold = false, dim = false }], [{ token = "$quota_5h_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_5h_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_5h_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_5h_unknown", bold = false, dim = false }], [{ token = "$quota_week_inline_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_inline_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_inline_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_inline_unknown", bold = false, dim = false }, { token = "$quota_week_normal", fg = "#98b17d", bold = false, dim = false }, { token = "$quota_week_warning", fg = "#dec27f", bold = false, dim = false }, { token = "$quota_week_danger", fg = "#df919b", bold = false, dim = false }, { token = "$quota_week_unknown", bold = false, dim = false }]] # herdr-agent-quota-provider
+
 # Catppuccin, deliberately not matching ghostty's Terminal Basic pair.
 #
 # "terminal" is the theme that would match, since it builds herdr's UI from the
@@ -72,6 +83,18 @@ switch_workspace = "ctrl+alt+1..9"
 key = "prefix+e"
 type = "plugin_action"
 command = "ttt-tab.toggle"
+
+[[keys.command]]
+key = "prefix+shift+r"
+type = "plugin_action"
+command = "herdr-agent-quota.refresh"
+description = "refresh all agent quotas"
+
+[[keys.command]]
+key = "prefix+shift+q"
+type = "plugin_action"
+command = "herdr-agent-quota.open-settings"
+description = "open agent quota settings"
 
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.

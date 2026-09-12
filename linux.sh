@@ -132,6 +132,14 @@ if ! have openspec; then
   rescan
 fi
 
+# --- rust — herdr-agent-quota is the only thing here that builds from source -
+if ! have cargo; then
+  log "Installing rustup..."
+  curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path \
+    && rescan \
+    || echo "rustup install failed; agent quota will be absent"
+fi
+
 # --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
 if ! have wt; then
   log "Installing worktrunk (wt)..."
@@ -318,6 +326,12 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
+
+# Model, context, cache and subscription quota in herdr's agent sidebar. Runs
+# after the agent configs are linked and before moshi-hook, because both this
+# and moshi-hook replace ~/.claude/settings.json and each re-links it.
+log "Setting up agent quota..."
+DOTFILES="$PWD" "$PWD/bin/agent-quota" || log "  agent-quota setup failed; sidebar quota will be absent."
 
 # --- Herdr plugins (need running Herdr server) -------------------------------
 # Remote ones are pinned like skills-lock.json so a rebuild is reproducible;

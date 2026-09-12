@@ -298,6 +298,12 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
+# Model, context, cache and subscription quota in herdr's agent sidebar. Runs
+# after the agent configs are linked and before moshi-hook, because both this
+# and moshi-hook replace ~/.claude/settings.json and each re-links it.
+log "Setting up agent quota..."
+DOTFILES="$PWD" "$PWD/bin/agent-quota" || log "  agent-quota setup failed; sidebar quota will be absent."
+
 log "Setting default apps for code files and plain text..."
 if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
   duti "$PWD/macos/default-apps.duti" || true
