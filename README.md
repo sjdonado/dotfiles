@@ -11,6 +11,18 @@
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
+### Tool versions
+
+`mise.toml` declares `ttt`, `worktrunk`, `uv`, `bun` and `openspec`, and `mise.lock` records the version and per-platform checksum each machine resolved. These were the five tools installed two different ways: a Homebrew formula here, a hand-rolled `curl | sh` on Linux, each taking whatever was newest on the day the box was built, with nothing recording which. One declaration now covers both, and `mise upgrade` replaces deleting a binary and re-running the setup script.
+
+Not in there, on purpose. Claude Code, Codex and OpenCode each self-update into their own directory, so a pin would fight their own updater. herdr hosts every pane including the one running the setup script, and swapping it under a live server is not worth the saved line. `moshi-hook` has no public release, so no backend exists for it.
+
+Everything else stays with Homebrew here and `apt` on Linux. Porting the whole Brewfile to mise's `[bootstrap.packages]` is a real option, since mise reimplements Homebrew rather than wrapping it and writes brew-compatible receipts, but it wants testing on a Linux box before it touches this one.
+
+On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
+
+A machine provisioned before this still has the four Homebrew copies. The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall ttt worktrunk uv bun`.
+
 ### Agent harness
 
 Claude Code, Codex, and OpenCode share skills and global instructions from `agents/`. Run the platform setup script to link them into all three harnesses.

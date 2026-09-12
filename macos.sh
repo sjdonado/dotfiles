@@ -86,13 +86,16 @@ if [ "$INSTALL" = 1 ]; then
     log "No Brewfile found, skipping."
   fi
 
-  # The openspec-* agent skills shell out to this CLI; it is not in Homebrew.
-  # Installed with bun because ~/.bun/bin is already on PATH, while `npm -g`
-  # lands in a version-pinned Node prefix that is not.
-  if ! have openspec; then
-    log "Installing OpenSpec CLI..."
-    bun add -g @fission-ai/openspec@latest \
-      || echo "openspec install failed; openspec-* skills will no-op"
+  # ttt, worktrunk, uv, bun and openspec come from mise.toml instead of the
+  # Brewfile, so one declaration covers this machine and a Linux box. Homebrew
+  # installs mise itself and its fish vendor_conf.d activates it, so nothing
+  # here has to touch PATH.
+  log "Installing tools from mise.toml..."
+  if have mise; then
+    mise trust --quiet "$PWD/mise.toml" >/dev/null 2>&1 || true
+    mise install --quiet || log "  mise install failed; ttt, wt, uv, bun and openspec may be missing."
+  else
+    log "  mise missing; ttt, wt, uv, bun and openspec will be absent."
   fi
 fi
 

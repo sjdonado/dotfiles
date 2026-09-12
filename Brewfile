@@ -1,10 +1,8 @@
 tap "amberframework/micrate", trusted: true
 tap "anomalyco/tap"
 tap "coder/coder", trusted: true
-tap "eugenioenko/ttt", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
-tap "oven-sh/bun", trusted: true
 tap "rjyo/moshi", trusted: true
 tap "supabase/tap", trusted: true
 tap "tunneltodev/tap", trusted: true
@@ -169,12 +167,10 @@ brew "telnet"
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
-# Extremely fast Python package installer and resolver, written in Rust
-brew "uv"
+# Polyglot tool version manager; owns the tools declared in mise.toml
+brew "mise"
 # Watch files and take action when they change
 brew "watchman"
-# CLI for Git worktree management, designed for parallel AI agent workflows
-brew "worktrunk"
 # Command-line XML and HTML beautifier and content extractor
 brew "xq"
 # Programming language designed for robustness, optimality, and clarity
@@ -185,14 +181,10 @@ brew "zig@0.15"
 brew "amberframework/micrate/micrate", trusted: true
 # The AI coding agent built for the terminal.
 brew "anomalyco/tap/opencode", trusted: true
-# TTT Editor, Terminal Text Tool, an IDE for your terminal
-brew "eugenioenko/ttt/ttt", trusted: true
 # Grafana Cloud CLI
 brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!
 brew "ory/tap/cli", trusted: true
-# Incredibly fast JavaScript runtime, bundler, transpiler and package manager - all in one.
-brew "oven-sh/bun/bun"
 # Portable daemon + CLI that bridges AI coding agents to the Moshi mobile app
 brew "rjyo/moshi/moshi-hook", trusted: true
 # Supabase CLI
