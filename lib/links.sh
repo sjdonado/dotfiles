@@ -43,6 +43,10 @@ link_mise_config() {
   log "Linking mise config..."
   mkdir -p "$HOME/.config/mise"
   ln -snf "$PWD/mise.toml" "$HOME/.config/mise/config.toml"
+  # The lockfile is linked separately because mise looks for it beside the
+  # config it resolved, which is ~/.config/mise, not the repository the config
+  # is a link to. Without this link the lock is simply never read, silently.
+  ln -snf "$PWD/mise.lock" "$HOME/.config/mise/mise.lock"
 }
 
 link_local_bin() {

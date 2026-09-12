@@ -162,9 +162,12 @@ ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
 # fetches the real binary from a postinstall script that mise does not run, and
 # it manages its own updates and shell integration. Everything else that used to
 # be curl-piped here comes from mise.toml now, rustup aside, which Homebrew has.
-# mise's `rust` plugin is not the alternative it looks like: it installs rustup
-# into ~/.cargo and pins a toolchain, so it would take over the same directories
-# Homebrew's rustup manages and reset `rustup default` on every provisioning run.
+# mise's `rust` plugin is not the alternative it looks like. It installs and is
+# rustup, but its shim shadows rustup's proxy, and that proxy is what implements
+# rust-toolchain.toml. Measured: in a directory pinning 1.90.0, the mise shim
+# reports 1.98.1 while ~/.cargo/bin/rustc syncs 1.90.0. Shims come first on PATH
+# here, so mise owning rust means a pinned repository builds with the wrong
+# compiler and says nothing. rustup keeps rust; see mise.toml.
 if [ "$INSTALL" = 1 ] && ! have claude; then
   log "Installing Claude Code..."
   curl -fsSL https://claude.ai/install.sh | bash \

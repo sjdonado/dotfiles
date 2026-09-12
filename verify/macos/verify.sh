@@ -27,6 +27,9 @@ exists() { if [ -e "$1" ]; then ok "${1#"$HOME"/} exists"; else bad "${1#"$HOME"
 
 group "tool declarations"
 linked "$HOME/.config/mise/config.toml" "$DOTFILES/mise.toml"
+# Silently ignored if it is not linked here: mise looks for the lock beside the
+# config it resolved, not in the repository the config points at.
+linked "$HOME/.config/mise/mise.lock" "$DOTFILES/mise.lock"
 
 group "shell and terminal"
 linked "$HOME/.config/fish/config.fish" "$DOTFILES/fish/config.fish"

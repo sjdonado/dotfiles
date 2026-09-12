@@ -45,6 +45,9 @@ for c in git fish mosh python3; do runs "$c"; done
 
 group "linked config"
 linked "$HOME/.config/mise/config.toml" "$DOTFILES/mise.toml"
+# Linked separately from the config, and silently ignored if it is not: mise
+# looks for the lock beside the config it resolved, not in this repository.
+linked "$HOME/.config/mise/mise.lock" "$DOTFILES/mise.lock"
 linked "$HOME/.gitconfig"               "$DOTFILES/git/.gitconfig"
 linked "$HOME/.config/fish/config.fish" "$DOTFILES/fish/config.fish"
 linked "$HOME/.config/herdr/config.toml" "$DOTFILES/herdr/config.toml"
@@ -71,6 +74,22 @@ for c in rg ttt wt codex claude; do
   fi
 done
 if fish -c 'type -q rg; and type -q ttt' 2>/dev/null; then ok "fish finds rg and ttt"; else bad "fish cannot find rg or ttt"; fi
+
+group "the lockfile is the one being used"
+# The point of the lock is a resolve that needs no GitHub API call, which is the
+# only rate-limited step in provisioning. Checked with the token removed, since
+# with a token present an unlocked resolve would succeed too and prove nothing.
+if out=$(env -u GITHUB_TOKEN -u GH_TOKEN mise ls --current 2>&1); then
+  ok "mise resolves every tool with no GitHub token present"
+else
+  bad "resolving without a token failed: $(printf '%s' "$out" | tail -1 | cut -c1-80)"
+fi
+locked_ttt=$(grep -A3 '"github:eugenioenko/ttt"' "$DOTFILES/mise.lock" 2>/dev/null | grep -m1 version | tr -d ' ",' | cut -d= -f2)
+if [ -n "$locked_ttt" ] && ttt --version 2>/dev/null | grep -q "$locked_ttt"; then
+  ok "ttt is the locked version ($locked_ttt)"
+else
+  bad "ttt is not the locked version (lock says '$locked_ttt', binary says '$(ttt --version 2>&1 | head -1)')"
+fi
 
 group "git identity comes from the tracked gitconfig"
 if bash -lc 'git config --get user.email' 2>/dev/null | grep -q '@'; then
