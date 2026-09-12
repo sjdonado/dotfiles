@@ -54,6 +54,10 @@ linked "$HOME/.claude/CLAUDE.md"        "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
+linked "$HOME/.config/ttt/settings.json"      "$DOTFILES/ttt/settings.json"
+# Linked by the shared lib/links.sh rather than by either script, so both checks
+# assert them: a refactor that drops the call is otherwise invisible.
+for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
 
 group "non-interactive shells resolve the tools"
 # The reason shims are used instead of `mise activate`: this is the shell an

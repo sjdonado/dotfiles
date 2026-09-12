@@ -48,6 +48,11 @@ linked "$HOME/.config/opencode/AGENTS.md"     "$DOTFILES/opencode/AGENTS.md"
 linked "$HOME/.local/state/opencode/kv.json"  "$DOTFILES/opencode/kv.json"
 exists "$HOME/.codex/config.toml"
 
+group "bat themes"
+# Linked by the shared lib/links.sh rather than by either script, so both checks
+# assert them: a refactor that drops the call is otherwise invisible.
+for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
+
 group "editor, multiplexer, worktrees"
 for f in "$DOTFILES/ttt/"*.json; do linked "$HOME/.config/ttt/$(basename "$f")" "$f"; done
 linked "$HOME/.config/herdr/config.toml"     "$DOTFILES/herdr/config.toml"

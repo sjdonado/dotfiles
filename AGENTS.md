@@ -8,7 +8,7 @@ This repository provisions personal developer tools and maintains shared agent i
 - agents/AGENTS.md: shared workflow conventions, linked by macos.sh and linux.sh.
 - bench/: disposable agent scenarios, transcript analysis, and verification instructions in bench/README.md. Generated runs are ignored.
 - openspec/changes/: proposed contracts and implementation tasks. Main specs describe merged work only.
-- macos.sh, linux.sh and mise.toml: machine provisioning. mise.toml declares every tool that is not platform-specific and both scripts install from it; the scripts own linking and the platform-specific parts. These scripts change the host; do not run them as validation, run the checks under verify/ instead.
+- macos.sh, linux.sh, mise.toml and lib/links.sh: machine provisioning. mise.toml declares every tool that is not platform-specific and both scripts install from it; lib/links.sh holds every symlink this repository owns and is sourced by both, so each script keeps only what is genuinely platform-specific. These scripts change the host; do not run them as validation, run the checks under verify/ instead.
 - verify/: the setup checks. verify/linux/ provisions a throwaway Ubuntu container, verify/macos/ runs macos.sh against a throwaway HOME. verify/README.md explains why the two differ.
 - claude/, opencode/, and other application directories: tool-specific configuration. Inspect the relevant installer links before changing managed files.
 
@@ -33,7 +33,7 @@ This is a different question from verifying a harness change, and the two are no
 - **Removal is part of provisioning.** Stopping the install of something is not the same as undoing it, so both scripts prune links this repository no longer ships, and only links it created.
 - **A failed install costs one tool, not the run.** Installers that reach the network fail in ways the change under test did not cause. Each is guarded so provisioning finishes and reports, rather than aborting halfway and leaving a box in a state nobody can reason about.
 
-**What the check is.** Syntax first, because it is free: `sh -n macos.sh` and `bash -n linux.sh`. Then the real one, which is provisioning from scratch somewhere disposable:
+**What the check is.** Syntax first, because it is free: `sh -n macos.sh`, `bash -n linux.sh` and `sh -n lib/links.sh`. That last one is why the shared linking code is a sourced shell file rather than mise tasks: shell embedded in TOML is invisible to this rung. Then the real one, which is provisioning from scratch somewhere disposable:
 
 - `verify/linux/run.sh` builds a bare Ubuntu container, copies the working tree in (uncommitted changes included), runs `linux.sh --install`, asserts, runs it again, asserts again, and checks no shell-rc block was duplicated. It needs Docker, and a GitHub token when the host IP has spent the hour's anonymous API calls. `--platform linux/amd64` checks the other architecture.
 - `verify/macos/run.sh` points HOME at a temporary directory and runs `macos.sh --links-only` twice, asserting every link and that the second pass replaced nothing. macOS cannot be containerised, so this covers linking only; Homebrew, mise's installs, the login shell, launchd and macOS defaults are verified by running the script for real.
