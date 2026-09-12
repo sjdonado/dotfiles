@@ -7,6 +7,8 @@
 #
 # Linked to ~/.config/mise/config.toml by the installers, so it is the global
 # tool set for every project on the machine rather than a per-directory one.
+# Both platforms read the same file: on macOS it replaced the Brewfile entries
+# for the same tools, so a version bump happens in one place instead of two.
 #
 # What is deliberately NOT here, and why, so nobody tries again:
 #   claude    the npm package is a wrapper that fetches a native binary from a
@@ -25,6 +27,7 @@
 # `lts` rather than `latest`: node@latest fails to resolve in mise.
 node = "lts"
 bun = "latest"
+pnpm = "latest"
 uv = "latest"
 
 ripgrep = "latest"

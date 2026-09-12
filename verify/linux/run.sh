@@ -3,9 +3,9 @@
 # result. This is how a change to linux.sh is checked: not by reading it, and
 # not on a real box where a half-applied run leaves residue.
 #
-#   docker/linux-setup/run.sh                     # current arch
-#   docker/linux-setup/run.sh --platform linux/amd64   # the other one
-#   docker/linux-setup/run.sh --shell             # drop into the provisioned box
+#   verify/linux/run.sh                     # current arch
+#   verify/linux/run.sh --platform linux/amd64   # the other one
+#   verify/linux/run.sh --shell             # drop into the provisioned box
 #
 # The working tree is copied in, not mounted read-write, so the container starts
 # from exactly what is committed *and* what is still uncommitted, and can write
@@ -14,7 +14,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-IMAGE="dotfiles-linux-setup"
+IMAGE="dotfiles-verify-linux"
 # Empty-array expansion under `set -u` is an error on bash 3.2 (macOS), so this
 # carries a placeholder element rather than an empty array.
 PLATFORM=()
@@ -66,14 +66,14 @@ echo "==> first run: linux.sh --install"
 time run '~/.config/dotfiles/linux.sh --install'
 
 echo "==> verifying"
-run '~/.config/dotfiles/docker/linux-setup/verify.sh'
+run '~/.config/dotfiles/verify/linux/verify.sh'
 
 echo "==> second run: linux.sh --install again (idempotency)"
 run '~/.config/dotfiles/linux.sh --install' >/tmp/second-run.log 2>&1 \
   || { echo "second run failed:"; tail -30 /tmp/second-run.log; exit 1; }
 
 echo "==> verifying again"
-run '~/.config/dotfiles/docker/linux-setup/verify.sh'
+run '~/.config/dotfiles/verify/linux/verify.sh'
 
 # A second pass must not keep appending to the shell rc files. Every block
 # linux.sh writes is guarded by a grep, and this is what proves the guards hold.

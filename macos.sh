@@ -4,7 +4,7 @@ set -euo pipefail
 # helpers
 have() { command -v "$1" >/dev/null 2>&1; }
 log()  { printf '\n==> %s\n' "$*"; }
-usage() { echo "Usage: $0 [--install]"; }
+usage() { echo "Usage: $0 [--install] [--links-only]"; }
 link_managed() {
   src=$1 dst=$2
   mkdir -p "$(dirname "$dst")"
@@ -15,10 +15,19 @@ link_managed() {
   ln -snf "$src" "$dst"
 }
 
+# --links-only does the half of this script that only writes inside $HOME:
+# directories, symlinks, generated config. It skips everything that changes the
+# machine itself (the login shell, /etc/shells, macOS defaults, launchd agents,
+# default-app bindings, the browser router, moshi-hook pairing) and installs
+# nothing. That is what makes this script testable: verify/macos/run.sh points
+# HOME at a throwaway directory and runs it, which would otherwise mean chsh'ing
+# a real user and loading real launch agents.
 INSTALL=0
+LINKS_ONLY=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --install) INSTALL=1 ;;
+    --links-only) LINKS_ONLY=1 ;;
     -h|--help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
@@ -65,7 +74,8 @@ mkdir -p "$HOME/Library/Keyboard Layouts"
 mkdir -p "$HOME/.config/ghostty/themes"
 mkdir -p "$HOME/.config/fish/functions"
 mkdir -p "$HOME/.config/bat"
-PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+# mise's shims directory carries every tool in mise.toml.
+PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"
 export PATH
 
 log "Linking local bin..."
@@ -86,57 +96,68 @@ if [ "$INSTALL" = 1 ]; then
     log "No Brewfile found, skipping."
   fi
 
-  # The openspec-* agent skills shell out to this CLI; it is not in Homebrew.
-  # Installed with bun because ~/.bun/bin is already on PATH, while `npm -g`
-  # lands in a version-pinned Node prefix that is not.
-  if ! have openspec; then
-    log "Installing OpenSpec CLI..."
-    bun add -g @fission-ai/openspec@latest \
-      || echo "openspec install failed; openspec-* skills will no-op"
-  fi
+fi
+
+# mise owns every tool that is not macOS-specific, from the same mise.toml the
+# Linux box reads: the editor, the agent CLIs, the search tools, the runtimes.
+# Homebrew keeps the GUI applications and the system libraries. Adding a tool is
+# a line of TOML in one file rather than an entry here and another in linux.sh.
+log "Linking mise config..."
+mkdir -p "$HOME/.config/mise"
+ln -snf "$PWD/mise.toml" "$HOME/.config/mise/config.toml"
+if [ "$INSTALL" = 1 ] && have mise; then
+  log "Installing tools from mise.toml..."
+  mise install --yes || log "  some mise tools failed; re-run: mise install"
 fi
 
 log "Setting up Ghostty config..."
 ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
 ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
 
-# BrowserRouter is the default browser, and lives in its own repository:
-# https://github.com/sjdonado/browser-router
-#
-# The config is linked from here rather than seeded, so the routing rules are
-# tracked with the rest of the dotfiles. Link before installing: the installer
-# only writes a starting config when there is none, and the link counts as one.
-log "Setting up BrowserRouter (the default browser)..."
-mkdir -p "$HOME/.config/browser-router"
-ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping BrowserRouter (--links-only)."
+else
+  # BrowserRouter is the default browser, and lives in its own repository:
+  # https://github.com/sjdonado/browser-router
+  #
+  # The config is linked from here rather than seeded, so the routing rules are
+  # tracked with the rest of the dotfiles. Link before installing: the installer
+  # only writes a starting config when there is none, and the link counts as one.
+  log "Setting up BrowserRouter (the default browser)..."
+  mkdir -p "$HOME/.config/browser-router"
+  ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
 
-# Rebuilds and re-registers on every run, which is how it picks up an upstream
-# change. --no-default-prompt keeps provisioning non-interactive; making it the
-# default browser is a one-time system prompt, answered by running the installer
-# by hand or by opening ~/Applications/BrowserRouter.app.
-curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh \
-  | sh -s -- --no-default-prompt \
-  || log "  BrowserRouter install failed; links will open in whatever macOS considers the default browser"
-
-
-log "Setting fish shell..."
-if [ "$INSTALL" = 1 ] && ! have fish; then
-  brew install fish
+  # Rebuilds and re-registers on every run, which is how it picks up an upstream
+  # change. --no-default-prompt keeps provisioning non-interactive; making it the
+  # default browser is a one-time system prompt, answered by running the installer
+  # by hand or by opening ~/Applications/BrowserRouter.app.
+  curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh \
+    | sh -s -- --no-default-prompt \
+    || log "  BrowserRouter install failed; links will open in whatever macOS considers the default browser"
 fi
 
-FISH_PATH="$(command -v fish || true)"
-if [ -n "$FISH_PATH" ]; then
-  # ensure fish is listed in /etc/shells
-  if ! grep -qx "$FISH_PATH" /etc/shells; then
-    echo "Adding $FISH_PATH to /etc/shells (requires sudo)..."
-    echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping the login shell (--links-only)."
+else
+  log "Setting fish shell..."
+  if [ "$INSTALL" = 1 ] && ! have fish; then
+    brew install fish
   fi
 
-  # change default shell if not already fish (check dscl, not $SHELL subshell var)
-  CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
-  if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
-    echo "Changing login shell to fish (requires your password)..."
-    chsh -s "$FISH_PATH"
+  FISH_PATH="$(command -v fish || true)"
+  if [ -n "$FISH_PATH" ]; then
+    # ensure fish is listed in /etc/shells
+    if ! grep -qx "$FISH_PATH" /etc/shells; then
+      echo "Adding $FISH_PATH to /etc/shells (requires sudo)..."
+      echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+    fi
+
+    # change default shell if not already fish (check dscl, not $SHELL subshell var)
+    CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
+    if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
+      echo "Changing login shell to fish (requires your password)..."
+      chsh -s "$FISH_PATH"
+    fi
   fi
 fi
 
@@ -159,30 +180,14 @@ if [ ! -e "$HOME/.fish_history" ]; then
 fi
 ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
 
-# Agent binaries install only with --install and manage their own updates.
-if [ "$INSTALL" = 1 ]; then
-  log "Installing rustup (if missing)..."
-  if ! have rustup-init && ! have rustup; then
-    curl -fsSL https://sh.rustup.rs | sh -s -- -y
-    [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-  fi
-
-  log "Installing pnpm (if missing)..."
-  if ! have pnpm; then
-    # The installer appends its PATH block to the rc of whichever shell it
-    # detects, which is not fish. fish/config.fish exports PNPM_HOME itself, so
-    # nothing has to be sourced back into this one.
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
-  fi
-
-  if ! have claude; then
-    log "Installing Claude Code..."
-    curl -fsSL https://claude.ai/install.sh | bash
-  fi
-  if ! have opencode; then
-    log "Installing OpenCode..."
-    curl -fsSL https://opencode.ai/install | bash
-  fi
+# Claude Code is the one agent binary with its own installer: its npm package
+# fetches the real binary from a postinstall script that mise does not run, and
+# it manages its own updates and shell integration. Everything else that used to
+# be curl-piped here comes from mise.toml now, rustup aside, which Homebrew has.
+if [ "$INSTALL" = 1 ] && ! have claude; then
+  log "Installing Claude Code..."
+  curl -fsSL https://claude.ai/install.sh | bash \
+    || log "  install failed; re-run this script or install it by hand"
 fi
 
 log "Linking Docker config..."
@@ -251,18 +256,22 @@ log "Linking Herdr config..."
 # NOTE: only symlink config.toml; herdr keeps sockets/logs/session.json in this dir.
 mkdir -p "$HOME/.config/herdr"
 ln -snf "$PWD/herdr/config.toml" "$HOME/.config/herdr/config.toml"
-# Link local Herdr workflow plugins. Requires a running Herdr server.
-if have herdr; then
-  for plugin_dir in "$PWD/herdr/plugins/"*; do
-    [ -f "$plugin_dir/herdr-plugin.toml" ] || continue
-    plugin_id="$(basename "$plugin_dir")"
-    herdr plugin unlink "$plugin_id" >/dev/null 2>&1 || true
-    if herdr plugin link "$plugin_dir" >/dev/null 2>&1; then
-      log "  linked Herdr plugin: $plugin_id"
-    else
-      log "  Herdr not running; later run: herdr plugin link $plugin_dir"
-    fi
-  done
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping herdr plugin linking (--links-only)."
+else
+  # Link local Herdr workflow plugins. Requires a running Herdr server.
+  if have herdr; then
+    for plugin_dir in "$PWD/herdr/plugins/"*; do
+      [ -f "$plugin_dir/herdr-plugin.toml" ] || continue
+      plugin_id="$(basename "$plugin_dir")"
+      herdr plugin unlink "$plugin_id" >/dev/null 2>&1 || true
+      if herdr plugin link "$plugin_dir" >/dev/null 2>&1; then
+        log "  linked Herdr plugin: $plugin_id"
+      else
+        log "  Herdr not running; later run: herdr plugin link $plugin_dir"
+      fi
+    done
+  fi
 fi
 
 log "Linking Claude Code, Codex, and OpenCode config..."
@@ -298,73 +307,85 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
-log "Setting default apps for code files and plain text..."
-if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
-  duti "$PWD/macos/default-apps.duti" || true
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping macOS defaults, shortcuts and default apps (--links-only)."
 else
-  echo "duti missing or macos/default-apps.duti absent; skipping."
+  log "Setting default apps for code files and plain text..."
+  if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
+    duti "$PWD/macos/default-apps.duti" || true
+  else
+    echo "duti missing or macos/default-apps.duti absent; skipping."
+  fi
+
+  log "Applying macOS defaults..."
+  if [ -x "$PWD/macos/defaults.sh" ]; then
+    "$PWD/macos/defaults.sh" || true
+  fi
+
+  log "Applying macOS app shortcuts..."
+  if [ -x "$PWD/macos/app-shortcuts.sh" ]; then
+    "$PWD/macos/app-shortcuts.sh" || true
+  fi
 fi
 
-log "Applying macOS defaults..."
-if [ -x "$PWD/macos/defaults.sh" ]; then
-  "$PWD/macos/defaults.sh" || true
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping launchd agents (--links-only)."
+else
+  log "Mapping Caps Lock to Control for all keyboards..."
+  mkdir -p "$HOME/Library/LaunchAgents"
+  AGENT_SRC="$PWD/macos/com.local.KeyRemapping.plist"
+  AGENT_DST="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
+  # Generated rather than symlinked, as with the Time Machine agent below: the
+  # plist names caps-to-control.sh directly so Login Items shows that rather than a
+  # bare "hidutil", and launchd does not expand $HOME.
+  rm -f "$AGENT_DST"
+  sed "s|__CAPS_TO_CONTROL_SCRIPT__|$PWD/macos/caps-to-control.sh|" "$AGENT_SRC" > "$AGENT_DST"
+  launchctl unload "$AGENT_DST" 2>/dev/null || true
+  launchctl load "$AGENT_DST" 2>/dev/null || true
+  # apply now for this session
+  "$PWD/macos/caps-to-control.sh" || true
+
+  log "Installing Time Machine dev-junk exclusion agent..."
+  TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"
+  TM_AGENT_DST="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
+  # Generated rather than symlinked: the plist names the script directly so Login
+  # Items shows tm-exclude-dev.sh instead of a bare "sh", and launchd does not
+  # expand $HOME, so the path has to be baked in here.
+  rm -f "$TM_AGENT_DST"
+  sed "s|__TM_EXCLUDE_SCRIPT__|$PWD/macos/tm-exclude-dev.sh|" "$TM_AGENT_SRC" > "$TM_AGENT_DST"
+  launchctl unload "$TM_AGENT_DST" 2>/dev/null || true
+  launchctl load "$TM_AGENT_DST" 2>/dev/null || true
+  # run once now to backfill existing dirs
+  "$PWD/macos/tm-exclude-dev.sh" || true
 fi
-
-log "Applying macOS app shortcuts..."
-if [ -x "$PWD/macos/app-shortcuts.sh" ]; then
-  "$PWD/macos/app-shortcuts.sh" || true
-fi
-
-log "Mapping Caps Lock to Control for all keyboards..."
-mkdir -p "$HOME/Library/LaunchAgents"
-AGENT_SRC="$PWD/macos/com.local.KeyRemapping.plist"
-AGENT_DST="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
-# Generated rather than symlinked, as with the Time Machine agent below: the
-# plist names caps-to-control.sh directly so Login Items shows that rather than a
-# bare "hidutil", and launchd does not expand $HOME.
-rm -f "$AGENT_DST"
-sed "s|__CAPS_TO_CONTROL_SCRIPT__|$PWD/macos/caps-to-control.sh|" "$AGENT_SRC" > "$AGENT_DST"
-launchctl unload "$AGENT_DST" 2>/dev/null || true
-launchctl load "$AGENT_DST" 2>/dev/null || true
-# apply now for this session
-"$PWD/macos/caps-to-control.sh" || true
-
-log "Installing Time Machine dev-junk exclusion agent..."
-TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"
-TM_AGENT_DST="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
-# Generated rather than symlinked: the plist names the script directly so Login
-# Items shows tm-exclude-dev.sh instead of a bare "sh", and launchd does not
-# expand $HOME, so the path has to be baked in here.
-rm -f "$TM_AGENT_DST"
-sed "s|__TM_EXCLUDE_SCRIPT__|$PWD/macos/tm-exclude-dev.sh|" "$TM_AGENT_SRC" > "$TM_AGENT_DST"
-launchctl unload "$TM_AGENT_DST" 2>/dev/null || true
-launchctl load "$TM_AGENT_DST" 2>/dev/null || true
-# run once now to backfill existing dirs
-"$PWD/macos/tm-exclude-dev.sh" || true
 
 touch "$PWD/.env"
 
-# --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
-# The device token is a secret, so it lives in the gitignored .env as
-# MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
-# a fresh machine still finishes setup; re-run this script after adding it.
-# NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
-# breaking the symlink into this repo, so re-link right after. The hooks it
-# writes are tracked in claude/settings.json, which is why re-linking keeps them
-# instead of dropping them. Same for ~/.config/opencode/plugins.
-if have moshi-hook; then
-  # shellcheck disable=SC1091
-  [ -f "$PWD/.env" ] && . "$PWD/.env"
-  if [ -n "${MOSHI_DEVICE_TOKEN:-}" ]; then
-    log "Pairing moshi-hook..."
-    moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
-      && moshi-hook install >/dev/null 2>&1 \
-      && link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json" \
-      && brew services start moshi-hook >/dev/null 2>&1 \
-      && log "  moshi-hook paired and running" \
-      || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
-  else
-    log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."
+if [ "$LINKS_ONLY" = 1 ]; then
+  log "Skipping moshi-hook pairing (--links-only)."
+else
+  # --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
+  # The device token is a secret, so it lives in the gitignored .env as
+  # MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
+  # a fresh machine still finishes setup; re-run this script after adding it.
+  # NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
+  # breaking the symlink into this repo, so re-link right after. The hooks it
+  # writes are tracked in claude/settings.json, which is why re-linking keeps them
+  # instead of dropping them. Same for ~/.config/opencode/plugins.
+  if have moshi-hook; then
+    # shellcheck disable=SC1091
+    [ -f "$PWD/.env" ] && . "$PWD/.env"
+    if [ -n "${MOSHI_DEVICE_TOKEN:-}" ]; then
+      log "Pairing moshi-hook..."
+      moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
+        && moshi-hook install >/dev/null 2>&1 \
+        && link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json" \
+        && brew services start moshi-hook >/dev/null 2>&1 \
+        && log "  moshi-hook paired and running" \
+        || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
+    else
+      log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."
+    fi
   fi
 fi
 

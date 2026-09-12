@@ -10,8 +10,8 @@
 - Linux (remote/dev box): `./linux.sh`
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
-- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`. Adding one is a line of TOML, not another installer block in a script. Four tools stay outside it, and the file says which and why.
-- Verify a change to `linux.sh` against a throwaway Ubuntu container rather than a real box: `docker/linux-setup/run.sh`. See `docker/linux-setup/README.md`.
+- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`, on both platforms. Adding one is a line of TOML rather than an installer block in each script. Homebrew keeps the GUI applications and the macOS-only CLIs; three tools keep their own installers, and `mise.toml` says which and why.
+- Verify a change to an installer before running it for real: `verify/linux/run.sh` provisions a throwaway Ubuntu container, `verify/macos/run.sh` runs `macos.sh --links-only` against a throwaway `HOME`. Both run twice and assert idempotency. See `verify/README.md`.
 
 ### Agent harness
 

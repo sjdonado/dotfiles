@@ -5,15 +5,15 @@
 So it gets a throwaway box instead.
 
 ```sh
-docker/linux-setup/run.sh
+verify/linux/run.sh
 ```
 
 That builds a bare Ubuntu 24.04, copies this working tree in (uncommitted changes included), runs `linux.sh --install` from scratch, asserts the result, runs it a second time, asserts again, and checks that the second pass did not duplicate anything in the shell startup files. It takes about a minute on a warm image and prints `all checks passed` or the first thing that broke.
 
 | | |
 | --- | --- |
-| `docker/linux-setup/run.sh --platform linux/amd64` | Same run on the other architecture. Slower, emulated on Apple silicon. |
-| `docker/linux-setup/run.sh --shell` | Provision, then hand you a shell inside the finished box. |
+| `verify/linux/run.sh --platform linux/amd64` | Same run on the other architecture. Slower, emulated on Apple silicon. |
+| `verify/linux/run.sh --shell` | Provision, then hand you a shell inside the finished box. |
 
 ## What it asserts
 
@@ -30,6 +30,6 @@ The unauthenticated GitHub API allows 60 requests an hour per IP, and every tool
 
 ## What it does not cover
 
-macOS. `macos.sh` touches Homebrew, LaunchServices, `defaults`, and GUI applications, none of which exist in a Linux container, and the parts that could be tested are not the parts that break. It is verified by running it on a real machine.
+macOS, which cannot be containerised at all. `verify/macos/run.sh` covers what a sandboxed `HOME` can, and `verify/README.md` explains the asymmetry.
 
 Nor does it prove the box is usable in anger: nothing authenticates, no agent runs a session, herdr never starts a server. It proves provisioning is complete, linked, idempotent, and on PATH.
