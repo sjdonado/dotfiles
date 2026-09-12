@@ -21,7 +21,22 @@
 #   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
 #   moshi-hook  same, cdn.getmoshi.app.
 # Those four keep their official installers. fish and mosh stay with the system
-# package manager: they are the login environment, not project tooling.
+# package manager: they are the login environment, not project tooling. rust
+# stays on Homebrew for a measured reason, not the assumed one: mise's `rust`
+# plugin *is* rustup, installing it into ~/.cargo and running `rustup default`
+# for the version it resolved, so adding it here would take over the same
+# directories Homebrew's rustup owns and reset the toolchain on every run.
+#
+# Everything below says `latest`, so two machines provisioned a month apart get
+# different versions. `mise lock` fixes that and works here: it resolves all 14
+# tools across every platform into a 523-line mise.lock with URLs and sha256s,
+# and a locked run needs no GitHub API calls at all, which is the one flake
+# these installers actually have. It is deliberately not enabled, because the
+# fastest-moving entries are the agent CLIs and a stale pin on those is its own
+# failure. Two things to know before turning it on: the scripts would have to
+# link the lockfile next to the config as well (a lockfile beside the symlink
+# *target* is not found; ~/.config/mise/mise.lock is), and refreshing it means
+# running `mise lock` and committing the result on purpose.
 
 [tools]
 # `lts` rather than `latest`: node@latest fails to resolve in mise.

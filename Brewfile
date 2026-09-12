@@ -6,6 +6,14 @@
 # worktrunk, pnpm, bun, ttt, opencode, codex. Dropping the line does not
 # uninstall anything, so on a machine provisioned before this change run
 # `brew uninstall` for them once, or keep both and let PATH order decide.
+#
+# Most of the CLIs left here do have a mise backend (act, awscli, caddy, cmake,
+# cloudflared, duckdb, flyctl, gh, git-lfs, golangci-lint, grpcurl, mailpit,
+# mkcert, pipx, staticcheck, stripe-cli, supabase, bombardier, curlie and more).
+# They stay on Homebrew anyway: none of them is needed on the Linux box, moving
+# them saves no shell code, and some are not the same tool under the same name
+# (mise's `coreutils` is uutils, not GNU). The split is by platform, not by
+# which package manager happens to be able.
 tap "amberframework/micrate", trusted: true
 tap "coder/coder", trusted: true
 tap "grafana/grafana", trusted: true
