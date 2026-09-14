@@ -38,26 +38,39 @@ docker build ${PLATFORM[@]+"${PLATFORM[@]}"} -q -t "$IMAGE" "$HERE" >/dev/null
 # GitHub's unauthenticated API allows 60 requests an hour per IP, and mise's
 # github backend spends two per tool. A container behind a shared NAT runs out,
 # and the run fails with 403s that have nothing to do with the change under
-# test. Pass the host's token through when there is one; it needs no scopes.
+# test. A committed mise.lock needs no API calls at all (there is a check
+# asserting exactly that), so the token is passed only when the lock is
+# missing: with no scopes to spend it is still the user's full CLI credential,
+# and every process in the container would otherwise inherit it. It needs no
+# scopes for what it is spent on here.
 GH_TOKEN_ENV=()
-if token="$(gh auth token 2>/dev/null)" && [ -n "$token" ]; then
-  GH_TOKEN_ENV=(-e "GITHUB_TOKEN=$token")
-  echo "==> passing a GitHub token through (avoids API rate limits)"
+if [ ! -f "$ROOT/mise.lock" ]; then
+  if token="$(gh auth token 2>/dev/null)" && [ -n "$token" ]; then
+    GH_TOKEN_ENV=(-e "GITHUB_TOKEN=$token")
+    echo "==> no mise.lock; passing a GitHub token through (avoids API rate limits)"
+  else
+    echo "==> no mise.lock and no GitHub token found; tools from GitHub releases may hit the 60/hour limit"
+  fi
 else
-  echo "==> no GitHub token found; tools from GitHub releases may hit the 60/hour limit"
+  echo "==> mise.lock present; installs need no GitHub API calls, so no token is passed"
 fi
 
-CID="$(docker run ${PLATFORM[@]+"${PLATFORM[@]}"} ${GH_TOKEN_ENV[@]+"${GH_TOKEN_ENV[@]}"} -d -v "$ROOT:/src:ro" "$IMAGE" sleep infinity)"
+CID="$(docker run ${PLATFORM[@]+"${PLATFORM[@]}"} ${GH_TOKEN_ENV[@]+"${GH_TOKEN_ENV[@]}"} -d "$IMAGE" sleep infinity)"
 trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT INT TERM
 
 run() { docker exec -u dev -w /home/dev "$CID" bash -lc "$1"; }
 
-echo "==> copying the working tree in"
+echo "==> copying the working tree in (secrets stay on the host)"
+# Staged from the host through a pipe, never mounted: a bind mount would leave
+# the live tree, gitignored secrets included (.env, .ssh/private.conf), readable
+# inside the container for the whole run, next to third-party install scripts.
 # tar, not cp -a: the checkout may sit on a volume with .Trashes/.fseventsd
 # entries the container user cannot read, and one unreadable entry fails the
 # whole copy. .git is a worktree pointer file here; excluding it keeps the
-# guest free of host git state either way.
-run 'mkdir -p ~/.config/dotfiles && tar -C /src --exclude=.git --exclude=.Trashes --exclude=.fseventsd -cf - . | tar -C ~/.config/dotfiles -xf -'
+# guest free of host git state either way. Exclusion lists mirror
+# verify/macos/run.sh; keep both in sync when a new secret-bearing name appears.
+run 'mkdir -p ~/.config/dotfiles'
+tar -C "$ROOT" --exclude=.git --exclude=.agent --exclude=.fseventsd --exclude=.Trashes --exclude=.env --exclude=.env.* --exclude=.ssh/private.conf -cf - . | docker exec -i -u dev -w /home/dev "$CID" tar -C ~/.config/dotfiles -xf -
 
 if [ "$SHELL_ONLY" = 1 ]; then
   echo "==> provisioning, then handing you a shell"

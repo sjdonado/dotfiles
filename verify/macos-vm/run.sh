@@ -44,6 +44,7 @@ cleanup() {
   tart stop "$VM" >/dev/null 2>&1 || true
   tart delete "$VM" >/dev/null 2>&1 || true
   rm -f /tmp/tart-run-"$VM".log
+  [ -n "${STAGE:-}" ] && rm -rf "$STAGE"
 }
 trap cleanup EXIT INT TERM
 
@@ -62,8 +63,16 @@ guest() {
 echo "==> cloning $BASE (pulls ~25 GB on first use, cached after)"
 tart clone "$BASE" "$VM"
 
-echo "==> booting headless with the working tree mounted"
-tart run --no-graphics "$VM" --dir=repo:"$ROOT" >/tmp/tart-run-"$VM".log 2>&1 &
+echo "==> staging a filtered copy (the guest must not see live secrets)"
+# The share is the guest's only view of the tree, so it cannot be the live
+# checkout: gitignored secrets (.env, .ssh/private.conf) would sit readable
+# next to third-party installers for the whole run. Same exclusion list as
+# verify/linux/run.sh and verify/macos/run.sh; keep all three in sync.
+STAGE="$(mktemp -d /tmp/dotfiles-verify-src.XXXXXX)"
+rsync -a --exclude .git --exclude .agent --exclude .fseventsd --exclude .Trashes --exclude .env --exclude '.env.*' --exclude .ssh/private.conf --exclude .DS_Store "$ROOT/" "$STAGE/"
+
+echo "==> booting headless with the staged tree mounted"
+tart run --no-graphics "$VM" --dir=repo:"$STAGE" >/tmp/tart-run-"$VM".log 2>&1 &
 echo "==> waiting for boot and sshd"
 GUEST_IP="$(tart ip "$VM" --wait 300)"
 [ -n "$GUEST_IP" ] || { echo "guest never got an IP; see /tmp/tart-run-$VM.log" >&2; exit 1; }

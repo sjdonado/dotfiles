@@ -51,7 +51,11 @@ echo "==> staging a copy of the working tree (the installer touches it)"
 mkdir -p "$SANDBOX/repo" "$SANDBOX/home" "$SANDBOX/tmp"
 # .git is a worktree pointer file here, not a dir; either way it must not
 # travel. .agent holds local-only proto notes, .fseventsd is volume noise.
-rsync -a --exclude .git --exclude .agent --exclude .fseventsd --exclude .Trashes "$ROOT/" "$SANDBOX/repo/"
+# .env* and .ssh/private.conf are gitignored secrets the check never needs
+# (pairing skips gracefully without a token); the sandbox user must not be
+# able to read them. Exclusion lists mirror verify/linux/run.sh; keep both in
+# sync when a new secret-bearing name appears.
+rsync -a --exclude .git --exclude .agent --exclude .fseventsd --exclude .Trashes --exclude .env --exclude '.env.*' --exclude .ssh/private.conf "$ROOT/" "$SANDBOX/repo/"
 
 echo "==> creating ephemeral user $VUSER (sudo)"
 # The FDE warning sysadminctl prints here is expected: a scripted user gets
