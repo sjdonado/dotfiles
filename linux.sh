@@ -109,14 +109,6 @@ if ! have mise; then
   rescan
 fi
 
-# --- rust — herdr-agent-quota is the only thing here that builds from source -
-if ! have cargo; then
-  log "Installing rustup..."
-  curl -fsSL https://sh.rustup.rs | sh -s -- -y --no-modify-path \
-    && rescan \
-    || echo "rustup install failed; agent quota will be absent"
-fi
-
 else
   log "Skipping dependency installation (use --install to enable)."
 fi
@@ -312,11 +304,28 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
 
-# Model, context, cache and subscription quota in herdr's agent sidebar. Runs
-# after the agent configs are linked and before moshi-hook, because both this
-# and moshi-hook replace ~/.claude/settings.json and each re-links it.
-log "Setting up agent quota..."
-DOTFILES="$PWD" "$PWD/bin/agent-quota" || log "  agent-quota setup failed; sidebar quota will be absent."
+# On-demand agent usage (senna-lang/herdr-agent-usage, pinned). Keymap only:
+# no sidebar rows, no toasts. prefix+u opens the limits pane for every
+# agent, ctrl+shift+m refreshes the data (keybindings live in herdr/config.toml).
+log "Setting up agent usage..."
+if have herdr; then
+  herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null 2>&1 \
+    && herdr plugin action invoke usagebar.setup >/dev/null 2>&1 || true
+  usagebar_cfg="$(herdr plugin config-dir usagebar 2>/dev/null || true)/config.toml"
+  if [ -f "$usagebar_cfg" ]; then
+    python3 - "$usagebar_cfg" <<'PY' || log "  agent-usage notify-off failed; toasts may appear."
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+text = re.sub(r"^enabled\s*=\s*true", "enabled = false", text, flags=re.M)
+open(path, "w").write(text)
+PY
+  else
+    log "  agent-usage setup failed; usage pane will be absent."
+  fi
+else
+  log "  herdr missing; skipping agent-usage."
+fi
 
 # --- Herdr plugins (need running Herdr server) -------------------------------
 # Remote ones are pinned like skills-lock.json so a rebuild is reproducible;

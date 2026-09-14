@@ -145,7 +145,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "HERDR_PLUGIN_STATE_DIR=\"$HOME/.local/state/herdr/plugins/herdr-agent-quota\" \"$HOME/.local/share/herdr-agent-quota/target/release/herdr-agent-quota\" claude-statusline",
+    "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",
     "padding": 0,
     "refreshInterval": 60
   },

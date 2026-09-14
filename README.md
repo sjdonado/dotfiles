@@ -40,15 +40,9 @@ OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI
 
 In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
-### Agent quota
+### Agent usage
 
-The herdr sidebar carries model, context, prompt-cache and subscription quota per agent pane, from [herdr-agent-quota](https://github.com/levi-qiao/herdr-agent-quota). Installed for Claude, Codex and OpenCode only; the other agents it supports are not in use here. The rows are the provider and the 5h and 7d windows, nothing else: quota is per account rather than per pane, so a model, cache, TTL or context row repeats identically on every pane sharing one login, and the topic is already readable in the pane itself. Codex and Claude report 5h and 7d windows. OpenCode shows model and context but no quota, because the Zen route it runs on is pay as you go and has no subscription window to report.
-
-It builds from source and upgrades with `git pull && ./install.sh`, so the checkout lives at `~/.local/share/herdr-agent-quota` rather than in this repository, and `bin/agent-quota` drives it from both setup scripts.
-
-What is tracked is the configuration it produces. `herdr/config.toml` gets the sidebar rows and two keybindings (`prefix+shift+q` for settings, `prefix+shift+r` to refresh) written straight through the symlink. `claude/settings.json` gets a `statusLine` entry, which is where Claude's quota is observed from: the plugin replaces that file with a real one and bakes in absolute paths, so `bin/agent-quota` folds the result back and rewrites them as `$HOME`, which works because Claude runs `statusLine` through a shell. The wrapper chains the previous command, so `claude/statusline.sh` keeps rendering underneath it.
-
-Settings are in the pane at `prefix+shift+q`. To remove it, run `~/.local/share/herdr-agent-quota/uninstall.sh`, which restores both files from its own backups.
+Usage and rate limits are on demand, from [herdr-agent-usage](https://github.com/senna-lang/herdr-agent-usage) (pinned at v0.5.11). Nothing lives in the sidebar: always-on quota rows made each agent entry too tall for the Agents panel to keep the focused agent visible when switching workspaces, so the sidebar stays at Herdr's stock two-line layout. `prefix+u` opens the plugin's native usage pane with every agent's context and 5h/7d/30d windows. `ctrl+shift+m` (Control+Shift on Mac, not Command) refreshes the data. Toasts stay off (`enabled = false` in the plugin config), since usage is keymap-only; the setup scripts re-assert that on every run. Numbers follow each CLI's own cache: a provider with no recent turns shows its last reading labeled stale, which is the plugin being honest rather than stuck; a turn, or `/usage` for Claude, refetches.
 
 ### Text editor
 
