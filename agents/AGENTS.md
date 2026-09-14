@@ -122,6 +122,14 @@ Every question carries its context. A question without evidence is a request for
 
 Batch every open question into one stop. Never ask serially.
 
+## Secrets and environment files
+
+Never read a `.env` file. Do not open, display, search, copy, diff, summarize, or otherwise inspect the contents of `.env`, `.env.*`, or similarly named environment-secret files with any tool or command. Checking whether such a file exists is allowed; observing any value from it is not.
+
+When an authorized command needs a secret already stored there, use only an opaque one-way handoff that keeps the value out of the agent context and tool output: a project-approved environment runner may inject a named key into the child process, or a producer may pipe that key directly to a consumer that accepts secrets on stdin. Never expand a secret into the command line, arguments, filenames, generated files, logs, or messages. Do not use an ad-hoc parser when no approved handoff exists; ask the human to inject the value or run the secret-bearing step.
+
+Do not run commands likely to reveal secrets. This includes environment or configuration dumps, shell tracing such as `set -x`, verbose or debug modes that print headers, credentials, request bodies, or process environments, and commands that echo secret-bearing responses. Prefer commands with known redaction, inspect only explicitly non-secret fields, and suppress output only when the exit status is sufficient. If safe output behavior is uncertain, stop before running the command.
+
 ### Rabbit-hole detector
 
 Stop and escalate the moment any of these trips, regardless of which step you are on:
