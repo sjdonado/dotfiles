@@ -22,3 +22,6 @@ bench/runs/
 
 # Legacy cohort mappings can contain employer and account paths.
 bench/cohorts.json
+
+# Prototype branch notes and task lists stay local (throwaway branches).
+/.agent/
