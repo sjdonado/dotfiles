@@ -5,7 +5,7 @@ verify/macos/run.sh          # ~5 seconds
 verify/macos/run.sh --keep   # leave the sandbox behind to poke at
 ```
 
-It points `HOME` at a temporary directory, runs `macos.sh --links-only` twice, and asserts what landed there. Nothing is installed, nothing outside that directory is touched, and the real `$HOME` is never written to.
+It stages a copy of the working tree (no `.git`) in `/tmp`, creates an ephemeral local user that owns it, and runs `macos.sh --links-only` twice as that user plus the assertions. Nothing is installed. The real `$HOME` is unreachable by file permission, not just by `$HOME` pointing elsewhere: the sandbox lives outside the per-user `/var/folders` tree (whose parents are 700) and is itself 700 and user-owned. User and sandbox are deleted afterwards; `--keep` leaves both and prints their removal commands. Needs sudo once, for user create/delete.
 
 ## What `--links-only` means
 
@@ -23,4 +23,4 @@ The flag exists for this check. A sandboxed run of the whole script would `chsh`
 
 ## What it cannot cover
 
-Homebrew, `mise install`, the login shell, launchd, macOS defaults, LaunchServices, and anything needing a GUI. Those are verified by running `macos.sh` for real, or by rehearsing the whole thing in a macOS VM (`tart`), which `verify/README.md` explains.
+Homebrew, `mise install`, the login shell, launchd, macOS defaults, LaunchServices, and anything needing a GUI. Those are verified by running `macos.sh` for real. A disposable-VM rehearsal exists in `verify/macos-vm/` but is deferred: host vmnet NAT died under brew-download load (pristine guests fail identically, so the rehearsal wedged nothing) and needs a host reboot to recover.
