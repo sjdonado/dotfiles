@@ -11,6 +11,18 @@
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
 
+### Tool versions
+
+`mise.toml` declares `ttt`, `worktrunk`, `uv`, `bun` and `openspec`, and `mise.lock` records the version and per-platform checksum each machine resolved. These were the five tools installed two different ways: a Homebrew formula here, a hand-rolled `curl | sh` on Linux, each taking whatever was newest on the day the box was built, with nothing recording which. One declaration now covers both, and `mise upgrade` replaces deleting a binary and re-running the setup script.
+
+Not in there, on purpose. Claude Code, Codex and OpenCode each self-update into their own directory, so a pin would fight their own updater. herdr hosts every pane including the one running the setup script, and swapping it under a live server is not worth the saved line. `moshi-hook` has no public release, so no backend exists for it.
+
+Everything else stays with Homebrew here and `apt` on Linux. Porting the whole Brewfile to mise's `[bootstrap.packages]` is a real option, since mise reimplements Homebrew rather than wrapping it and writes brew-compatible receipts, but it wants testing on a Linux box before it touches this one.
+
+On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
+
+A machine provisioned before this still has the four Homebrew copies. The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall ttt worktrunk uv bun`.
+
 ### Agent harness
 
 Claude Code, Codex, and OpenCode share skills and global instructions from `agents/`. Run the platform setup script to link them into all three harnesses.
@@ -27,6 +39,10 @@ opencode mcp add
 OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI models and Claude Code for Anthropic models. See `agents/README.md` for harness details.
 
 In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
+
+### Agent usage
+
+Usage and rate limits are on demand, from [herdr-agent-usage](https://github.com/senna-lang/herdr-agent-usage) (pinned at v0.5.11). Nothing lives in the sidebar: always-on quota rows made each agent entry too tall for the Agents panel to keep the focused agent visible when switching workspaces, so the sidebar stays at Herdr's stock two-line layout. `prefix+u` opens the plugin's native usage pane with every agent's context and 5h/7d/30d windows. `ctrl+shift+m` (Control+Shift on Mac, not Command) refreshes the data. Toasts stay off (`enabled = false` in the plugin config), since usage is keymap-only; the setup scripts re-assert that on every run. Numbers follow each CLI's own cache: a provider with no recent turns shows its last reading labeled stale, which is the plugin being honest rather than stuck; a turn, or `/usage` for Claude, refetches.
 
 ### Text editor
 

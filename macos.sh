@@ -86,13 +86,16 @@ if [ "$INSTALL" = 1 ]; then
     log "No Brewfile found, skipping."
   fi
 
-  # The openspec-* agent skills shell out to this CLI; it is not in Homebrew.
-  # Installed with bun because ~/.bun/bin is already on PATH, while `npm -g`
-  # lands in a version-pinned Node prefix that is not.
-  if ! have openspec; then
-    log "Installing OpenSpec CLI..."
-    bun add -g @fission-ai/openspec@latest \
-      || echo "openspec install failed; openspec-* skills will no-op"
+  # ttt, worktrunk, uv, bun and openspec come from mise.toml instead of the
+  # Brewfile, so one declaration covers this machine and a Linux box. Homebrew
+  # installs mise itself and its fish vendor_conf.d activates it, so nothing
+  # here has to touch PATH.
+  log "Installing tools from mise.toml..."
+  if have mise; then
+    mise trust --quiet "$PWD/mise.toml" >/dev/null 2>&1 || true
+    mise install --quiet || log "  mise install failed; ttt, wt, uv, bun and openspec may be missing."
+  else
+    log "  mise missing; ttt, wt, uv, bun and openspec will be absent."
   fi
 fi
 
@@ -288,6 +291,7 @@ link_managed "$PWD/agents/AGENTS.md" "$HOME/.codex/AGENTS.md"
 DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
   || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link_managed "$PWD/opencode/pty.md" "$HOME/.config/opencode/pty.md"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
 # opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
@@ -297,6 +301,29 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
+
+# On-demand agent usage (senna-lang/herdr-agent-usage, pinned). Keymap only:
+# no sidebar rows, no toasts. prefix+u opens the limits pane for every
+# agent, ctrl+shift+m refreshes the data (keybindings live in herdr/config.toml).
+log "Setting up agent usage..."
+if have herdr; then
+  herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null 2>&1 \
+    && herdr plugin action invoke usagebar.setup >/dev/null 2>&1 || true
+  usagebar_cfg="$(herdr plugin config-dir usagebar 2>/dev/null || true)/config.toml"
+  if [ -f "$usagebar_cfg" ]; then
+    python3 - "$usagebar_cfg" <<'PY' || log "  agent-usage notify-off failed; toasts may appear."
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+text = re.sub(r"^enabled\s*=\s*true", "enabled = false", text, flags=re.M)
+open(path, "w").write(text)
+PY
+  else
+    log "  agent-usage setup failed; usage pane will be absent."
+  fi
+else
+  log "  herdr missing; skipping agent-usage."
+fi
 
 log "Setting default apps for code files and plain text..."
 if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then

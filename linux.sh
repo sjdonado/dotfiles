@@ -50,7 +50,7 @@ export COREPACK_HOME PNPM_HOME
 mkdir -p "$BIN" "$HOME/.config" "$COREPACK_HOME" "$PNPM_HOME"
 # Ensure dirs where installers drop binaries are on PATH, so re-runs detect
 # already-installed tools (idempotency) and post-install `have` checks pass.
-for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin" "$HOME/.bun/bin"; do
+for d in "$BIN" "$PNPM_HOME" "$HOME/.cargo/bin" "$HOME/.opencode/bin" "$HOME/.bun/bin" "$HOME/.local/share/mise/shims"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
 export PATH
@@ -65,16 +65,6 @@ sudo apt-get install -y \
   git curl wget ca-certificates build-essential unzip tar \
   fish ripgrep fd-find bat mosh python3 python3-pip \
   jq fzf
-
-# --- ttt (the editor; no apt package, so use the project's own installer) -----
-if ! have ttt; then
-  log "Installing ttt..."
-  curl -fsSL https://raw.githubusercontent.com/eugenioenko/ttt/main/install.sh \
-    | env INSTALL_DIR="$BIN" sh \
-    || log "ttt install failed; install it later from https://tttedit.dev"
-  rescan
-  have ttt || log "ttt still not on PATH; install it later from https://tttedit.dev"
-fi
 
 # --- moshi-hook (agent events -> the Moshi iOS app) --------------------------
 if ! have moshi-hook; then
@@ -108,38 +98,17 @@ if ! have opencode; then
   rescan
 fi
 
-# --- uv/uvx (MCP servers launched with `uvx`, e.g. grafana's mcp-grafana) -----
-if ! have uv; then
-  log "Installing uv..."
-  curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="$BIN" sh
+# --- mise: ttt, worktrunk, uv, bun and openspec ------------------------------
+# One declaration in mise.toml covers this box and the Mac, with mise.lock
+# recording the versions each resolved. Replaces five separate installers, each
+# of which took whatever was newest on the day the box was built.
+if ! have mise; then
+  log "Installing mise..."
+  curl -fsSL https://mise.run | sh \
+    || echo "mise install failed; ttt, wt, uv, bun and openspec will be absent"
   rescan
 fi
 
-# --- bun (openspec below installs through it; ~/.bun/bin is on PATH) ---------
-if ! have bun; then
-  log "Installing bun..."
-  curl -fsSL https://bun.sh/install | bash
-  rescan
-fi
-
-# --- openspec (the openspec-* agent skills shell out to this CLI) ------------
-# Installed with bun because ~/.bun/bin is already on PATH, while `npm -g` lands
-# in a version-pinned Node prefix that is not. Must follow the bun block above.
-if ! have openspec; then
-  log "Installing OpenSpec CLI..."
-  bun add -g @fission-ai/openspec@latest \
-    || echo "openspec install failed; openspec-* skills will no-op"
-  rescan
-fi
-
-# --- worktrunk (wt) — optional; herdr copy-ignored plugin uses it ------------
-if ! have wt; then
-  log "Installing worktrunk (wt)..."
-  # cargo-dist installer: downloads prebuilt musl binary, no rust needed.
-  curl -fsSL https://github.com/max-sixty/worktrunk/releases/latest/download/worktrunk-installer.sh | sh \
-    && rescan \
-    || echo "worktrunk install failed; herdr copy-ignored plugin will no-op"
-fi
 else
   log "Skipping dependency installation (use --install to enable)."
 fi
@@ -158,6 +127,16 @@ else
   git clone "$DOTFILES_REPO" "$DOTFILES"
 fi
 cd "$DOTFILES"
+
+# Needs mise.toml, so it follows the clone rather than sitting with the other
+# dependency installs.
+if [ "$INSTALL" = 1 ] && have mise; then
+  log "Installing tools from mise.toml..."
+  mise trust --quiet "$PWD/mise.toml" >/dev/null 2>&1 || true
+  mise install --quiet \
+    || echo "mise install failed; ttt, wt, uv, bun and openspec may be missing"
+  rescan
+fi
 
 # --- link configs (Linux paths) ---------------------------------------------
 log "Linking local bin..."
@@ -180,6 +159,11 @@ for RC in $SHELL_RCS; do
     || printf '\n# dotfiles: local bin on PATH\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$RC"
   grep -q 'HOME/.opencode/bin.*PATH' "$RC" \
     || printf 'export PATH="$HOME/.opencode/bin:$PATH"\n' >> "$RC"
+  # mise shims rather than `mise activate`: shims work in any shell without a
+  # hook, which is what herdr's non-login panes get. Homebrew does the
+  # equivalent on macOS through its fish vendor_conf.d.
+  grep -q 'mise/shims' "$RC" \
+    || printf 'export PATH="$HOME/.local/share/mise/shims:$PATH"\n' >> "$RC"
   # bun's own installer appends a `$BUN_INSTALL/bin` block to the rc of the
   # shell it detects; only add ours when neither form is present.
   grep -qE 'BUN_INSTALL|HOME/\.bun/bin' "$RC" \
@@ -309,6 +293,7 @@ link_managed "$PWD/agents/AGENTS.md" "$HOME/.codex/AGENTS.md"
 DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
   || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link_managed "$PWD/opencode/pty.md" "$HOME/.config/opencode/pty.md"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
 # opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
@@ -318,6 +303,29 @@ link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
 [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
 mkdir -p "$HOME/.local/state/opencode"
 link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
+
+# On-demand agent usage (senna-lang/herdr-agent-usage, pinned). Keymap only:
+# no sidebar rows, no toasts. prefix+u opens the limits pane for every
+# agent, ctrl+shift+m refreshes the data (keybindings live in herdr/config.toml).
+log "Setting up agent usage..."
+if have herdr; then
+  herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null 2>&1 \
+    && herdr plugin action invoke usagebar.setup >/dev/null 2>&1 || true
+  usagebar_cfg="$(herdr plugin config-dir usagebar 2>/dev/null || true)/config.toml"
+  if [ -f "$usagebar_cfg" ]; then
+    python3 - "$usagebar_cfg" <<'PY' || log "  agent-usage notify-off failed; toasts may appear."
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+text = re.sub(r"^enabled\s*=\s*true", "enabled = false", text, flags=re.M)
+open(path, "w").write(text)
+PY
+  else
+    log "  agent-usage setup failed; usage pane will be absent."
+  fi
+else
+  log "  herdr missing; skipping agent-usage."
+fi
 
 # --- Herdr plugins (need running Herdr server) -------------------------------
 # Remote ones are pinned like skills-lock.json so a rebuild is reproducible;
