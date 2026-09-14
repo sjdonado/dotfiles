@@ -301,6 +301,7 @@ link_managed "$PWD/agents/AGENTS.md" "$HOME/.codex/AGENTS.md"
 DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
   || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
 link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link_managed "$PWD/opencode/pty.md" "$HOME/.config/opencode/pty.md"
 # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
 # opencode.json, and this file has its own schema.
 link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
