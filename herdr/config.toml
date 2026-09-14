@@ -73,6 +73,22 @@ key = "prefix+e"
 type = "plugin_action"
 command = "ttt-tab.toggle"
 
+# Agent Usage is on demand, not in the sidebar: the always-on quota rows made
+# each agent entry too tall for the Agents panel to keep the focused agent
+# visible. `prefix+u` opens the plugin's native limits pane; `ctrl+shift+m`
+# refreshes the data (Control+Shift on Mac, not Command).
+[[keys.command]]
+key = "prefix+u"
+type = "plugin_action"
+command = "usagebar.open-limits"
+description = "Agent Usage: open usage pane"
+
+[[keys.command]]
+key = "ctrl+shift+m"
+type = "plugin_action"
+command = "usagebar.refresh"
+description = "Agent Usage: refresh usage data"
+
 [experimental]
 # Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.

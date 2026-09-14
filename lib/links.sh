@@ -159,6 +159,28 @@ link_herdr_plugins() {
       log "  Herdr not running; later run: herdr plugin link $plugin_dir"
     fi
   done
+  # On-demand agent usage (senna-lang/herdr-agent-usage, pinned). Remote, so
+  # installed rather than linked: no source lives in this repository. Keymap
+  # only, no sidebar rows, no toasts: prefix+u opens the limits pane for
+  # every agent, ctrl+shift+m refreshes the data (keybindings live in
+  # herdr/config.toml). Shared here rather than per script so both platforms
+  # run the same install; on macOS the caller skips this whole function under
+  # --links-only.
+  log "Setting up agent usage..."
+  herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null 2>&1 \
+    && herdr plugin action invoke usagebar.setup >/dev/null 2>&1 || true
+  usagebar_cfg="$(herdr plugin config-dir usagebar 2>/dev/null || true)/config.toml"
+  if [ -f "$usagebar_cfg" ]; then
+    python3 - "$usagebar_cfg" <<'PY' || log "  agent-usage notify-off failed; toasts may appear."
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+text = re.sub(r"^enabled\s*=\s*true", "enabled = false", text, flags=re.M)
+open(path, "w").write(text)
+PY
+  else
+    log "  agent-usage setup failed; usage pane will be absent."
+  fi
 }
 
 link_agent_configs() {
@@ -185,6 +207,8 @@ link_agent_configs() {
   DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
     || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
   link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+  # pty.md holds opencode's PTY-session instructions for long-running commands.
+  link_managed "$PWD/opencode/pty.md" "$HOME/.config/opencode/pty.md"
   # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
   # opencode.json, and this file has its own schema.
   link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"

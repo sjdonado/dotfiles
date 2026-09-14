@@ -56,6 +56,7 @@ linked "$HOME/.claude/skills"           "$DOTFILES/agents/skills"
 linked "$HOME/.claude/CLAUDE.md"        "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
+linked "$HOME/.config/opencode/pty.md" "$DOTFILES/opencode/pty.md"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
 linked "$HOME/.config/ttt/settings.json"      "$DOTFILES/ttt/settings.json"
 # Linked by the shared lib/links.sh rather than by either script, so both checks

@@ -2,6 +2,8 @@
 	"$schema": "https://opencode.ai/config.json",
 	"autoupdate": true,
 	"model": "opencode/gemini-3.8-flash",
+	"plugin": ["opencode-pty"],
+	"instructions": ["./pty.md"],
 	"permission": {
 		"external_directory": "allow",
 		"bash": {
