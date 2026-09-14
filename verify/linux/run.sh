@@ -70,7 +70,9 @@ echo "==> copying the working tree in (secrets stay on the host)"
 # guest free of host git state either way. Exclusion lists mirror
 # verify/macos/run.sh; keep both in sync when a new secret-bearing name appears.
 run 'mkdir -p ~/.config/dotfiles'
-tar -C "$ROOT" --exclude=.git --exclude=.agent --exclude=.fseventsd --exclude=.Trashes --exclude=.env --exclude=.env.* --exclude=.ssh/private.conf -cf - . | docker exec -i -u dev -w /home/dev "$CID" tar -C ~/.config/dotfiles -xf -
+# Absolute guest path: this half runs without a shell, so a ~ would be
+# expanded by the host shell instead and point tar at the wrong machine.
+tar -C "$ROOT" --exclude=.git --exclude=.agent --exclude=.fseventsd --exclude=.Trashes --exclude=.env --exclude=.env.* --exclude=.ssh/private.conf -cf - . | docker exec -i -u dev -w /home/dev "$CID" tar -C /home/dev/.config/dotfiles -xf -
 
 if [ "$SHELL_ONLY" = 1 ]; then
   echo "==> provisioning, then handing you a shell"
