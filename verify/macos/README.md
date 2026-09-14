@@ -1,7 +1,7 @@
 # Verifying macos.sh
 
 ```sh
-verify/macos/run.sh          # ~5 seconds
+verify/macos/run.sh          # ~1 minute, one sudo prompt
 verify/macos/run.sh --keep   # leave the sandbox behind to poke at
 ```
 

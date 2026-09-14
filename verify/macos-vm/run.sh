@@ -24,8 +24,9 @@
 # (the cirruslabs tap is currently broken upstream) and a ~25 GB image pull.
 # Apple allows 2 running macOS guests per host.
 #
-# Iteration 2: single provision pass only; the second-run idempotency check
-# and full assertion parity are the next iteration.
+# Scope: single provision pass plus spot checks. A second-run idempotency
+# pass and full assertion parity are future work, noted so nobody mistakes
+# this for the finished check.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -39,7 +40,11 @@ VM="dotfiles-verify-macos-$$"
 command -v tart >/dev/null 2>&1 || { echo "install tart first: brew install openai/tools/tart" >&2; exit 2; }
 [ -x "$HERE/askpass.sh" ] || { echo "askpass.sh missing or not executable" >&2; exit 2; }
 
-cleanup() { tart stop "$VM" >/dev/null 2>&1 || true; tart delete "$VM" >/dev/null 2>&1 || true; }
+cleanup() {
+  tart stop "$VM" >/dev/null 2>&1 || true
+  tart delete "$VM" >/dev/null 2>&1 || true
+  rm -f /tmp/tart-run-"$VM".log
+}
 trap cleanup EXIT INT TERM
 
 # The remote command travels pre-quoted: ssh joins its argv into one remote
@@ -49,7 +54,7 @@ trap cleanup EXIT INT TERM
 guest() {
   local qc="'${1//\'/\'\\\'\'}'"
   SSH_ASKPASS="$HERE/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 \
-  GUEST_PASSWORD=$GUEST_PASSWORD \
+  GUEST_PASSWORD="$GUEST_PASSWORD" \
     ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
       "$GUEST_USER@$GUEST_IP" "bash -lc $qc" < /dev/null
 }

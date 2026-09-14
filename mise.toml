@@ -75,10 +75,18 @@ jq = "latest"
 "npm:@openai/codex" = "latest"
 "npm:@fission-ai/openspec" = "latest"
 
-# --- SPIKE (spike/mise-bootstrap): full Brewfile + links as bootstrap config ---
-# Every `brew:`/`brew-cask:` entry carries `os = "macos"`, every `apt:` entry
-# `os = "linux"`, so one file provisions both platforms the way Brewfile +
-# linux.sh's apt block used to.
+# --- Declarative provisioning (experimental, proven, not yet wired) ---
+# `[bootstrap.packages]` holds every Brewfile formula/cask plus the apt base
+# from linux.sh, each tagged with its platform; `[dotfiles]` holds the links
+# both verify scripts assert, and the shell-rc PATH blocks as edit entries.
+# Proven in a container (apt resolves + installs) and a sandbox HOME
+# (dotfiles status + dry-run apply emit exactly the links lib/links.sh owns).
+# NOT yet the provisioning path: linux.sh and macos.sh still do everything
+# themselves, so these sections are advisory until a change wires
+# `mise bootstrap` into the scripts and deletes the duplication. Until then,
+# editing one side without the other silently drifts them apart.
+#
+# Measured while writing this, not assumed:
 #
 # Measured, not assumed:
 # - `mise bootstrap packages import --manager brew` was NOT used to write this.
