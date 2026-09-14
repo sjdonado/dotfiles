@@ -53,7 +53,11 @@ trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT INT TERM
 run() { docker exec -u dev -w /home/dev "$CID" bash -lc "$1"; }
 
 echo "==> copying the working tree in"
-run 'mkdir -p ~/.config && cp -a /src ~/.config/dotfiles && rm -rf ~/.config/dotfiles/.git'
+# tar, not cp -a: the checkout may sit on a volume with .Trashes/.fseventsd
+# entries the container user cannot read, and one unreadable entry fails the
+# whole copy. .git is a worktree pointer file here; excluding it keeps the
+# guest free of host git state either way.
+run 'mkdir -p ~/.config/dotfiles && tar -C /src --exclude=.git --exclude=.Trashes --exclude=.fseventsd -cf - . | tar -C ~/.config/dotfiles -xf -'
 
 if [ "$SHELL_ONLY" = 1 ]; then
   echo "==> provisioning, then handing you a shell"
