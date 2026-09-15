@@ -48,7 +48,7 @@ def main():
         else:
             raise AssertionError("Malformed transcripts must fail visibly")
         matrix = measure["matrix"]()
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 30
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 32
         assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
         run = Path(directory) / "run"
         run.mkdir()
@@ -90,10 +90,18 @@ def main():
         gh("pr", "edit", "--title", "Normalize labels")
         assert json.loads((forge / ".fixture/pr.json").read_text())["title"] == "Normalize labels"
 
+        issue_path = forge / ".fixture/issue.json"
+        issue_path.write_text(json.dumps({"number": 86, "state": "OPEN", "title": "Dependency report", "body": "Investigate", "comments": [], "url": "https://example.invalid/issues/86"}))
+        assert json.loads(gh("issue", "view", "86", "--json", "title,state"))["state"] == "OPEN"
+        gh("issue", "comment", "86", "--body", "Checked the repository evidence.")
+        assert json.loads(issue_path.read_text())["comments"][0]["body"] == "Checked the repository evidence."
+        gh("issue", "close", "86")
+        assert json.loads(issue_path.read_text())["state"] == "CLOSED"
+
         # A consumed budget cannot start another call, even without usable results.
         exhausted = Path(directory) / "batch" / "interrupted"
         exhausted.mkdir(parents=True)
-        measure["save"](exhausted / "result.json", {"rounds": [{"status": "started"}] * 30})
+        measure["save"](exhausted / "result.json", {"rounds": [{"status": "started"}] * 32})
         assert measure["run_case"](exhausted.parent, "handoff-v1", "unused", 1, {}) is None
     print("measure checks passed")
 

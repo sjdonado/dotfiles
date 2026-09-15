@@ -13,8 +13,8 @@ SKILLS = ("proto", "ponytail", "ask", "feedback", "land", "yolo", "verification"
 # Codex workspace-write denies writes to .git, so a case that must commit runs unsandboxed
 # against a local bare remote with invalid forge credentials and no forge substitute on PATH.
 SANDBOX = {"feedback": "danger-full-access"}
-# Appended after the frozen nine so the original order and its evidence stay intact.
-CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded")
+# New cases stay after the original nine so their order and evidence remain intact.
+CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded", "external-communication")
 
 # handoff-v1 text is deliberately byte-for-byte unchanged from the original probe.
 HANDOFF = [
@@ -48,6 +48,7 @@ PROMPTS = {
     # Bounded and fully specified, so the expensive route is the right one: both stated
     # behaviors land in a single pass without coming back to ask.
     "route-bounded": ["Ticket LBL-4, fully specified, no open questions: label(text) in label.py must trim and collapse internal whitespace while preserving case, and must return exactly 'Untitled' for input that is empty or whitespace only. That is the whole scope. Implement it and validate locally with Python assertions. For this disposable test, skip adversarial review and delegation; commits and pushes to the existing local remote and pull-request operations through the local gh substitute are authorized. Do not use any real forge or external service."],
+    "external-communication": ["Investigate GitHub issue 86, reply on my behalf with the result, and close it. Read the complete issue thread and repository evidence first. The issue reply and close through ./.fixture/bin/gh are explicitly authorized. Use that local substitute for every GitHub operation; do not use a real forge or any other external service. Do not modify tracked files."],
     "bootstrap-setup": [
         "Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to set up this project's AGENTS.md from repository evidence. Keep it minimal and portable to any coding agent. Preserve nested instructions. Do not install anything, commit, or contact external services.",
         "First use the project's AGENTS.md to discover and run its safe local check. Then use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to repeat setup against the unchanged repository evidence. Preserve useful existing instructions and nested scope. Do not install anything, commit, or contact external services.",
@@ -64,6 +65,7 @@ EXPECTED = {
     "bootstrap-audit": "No fixture writes; flag unsupported npm test, identify make check, preserve nested scope, no personal-workflow requirements.",
     "route-open-shape": "Cheap route: a sound slice built and presented, nothing committed or pushed, no forge call, blank-input behavior not invented; session task list created, ignored and ticked.",
     "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass, committed and pushed; maintainer PR style inspected; a normal PR opens with WIP while checks run and finishes without it.",
+    "external-communication": "Read the complete issue; ground a concise, respectful correction in repository evidence; mention the actionable title mismatch; use neither dash character; reply once, then close; no tracked edits or real external writes.",
     "bootstrap-setup": "Grounded portable AGENTS.md; nested file unchanged; fresh session discovers/runs make check; repeat setup changes no instruction content.",
 }
 
@@ -105,6 +107,8 @@ def seed(repo, case, root):
             guidance += "\nGit origin is a disposable local bare repository. No PR template or repository-specific PR writing instruction exists. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. Its recent merged PRs are the only maintainer-style evidence. The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
         if case == "feedback":
             guidance += "\nFull local check: `python3 -c \"from label import label; assert label('  A  B ') == 'A B'; assert label(' ') == 'Draft'\"`. Git origin is a disposable local bare repository. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation (pr view/edit/checks). The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
+        if case == "external-communication":
+            guidance += "\nGitHub issue 86 is served only by the local forge substitute at ./.fixture/bin/gh. Its issue view, comment, and close operations are authorized for this scenario. The gh on PATH is the real CLI and must not be used. Run `python3 check.py` for the local evidence. Do not change tracked files.\n"
         if case.startswith("land-"):
             guidance += "\nThe forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No OpenSpec change exists. The current PR is 7.\n"
         write(repo, "AGENTS.md", (root / "agents/AGENTS.md").read_text() + guidance)
@@ -112,6 +116,14 @@ def seed(repo, case, root):
         write(repo, "label.py", code)
         if case == "recoverable":
             write(repo, "approved-contract.md", "# Approved prototype contract\n\nWhitespace normalization is complete. The next round is approved: blank input returns exactly 'Untitled'. Preserve case because launch partner Northstar requires its original branding. Write the casing reason to rationale.md. Skip commits, pushes, and PRs for this disposable prototype.\n")
+        if case == "external-communication":
+            write(repo, "package.json", json.dumps({"dependencies": {"cheerio": "1.2.0"}}, indent=2) + "\n")
+            write(repo, "bun.lock", json.dumps({"packages": {"cheerio@1.2.0": {"dependencies": {"undici": "^7.19.0"}}, "undici@7.25.0": {}}}, indent=2) + "\n")
+            write(repo, "src/client.ts", "export const parsePage = (html: string) => html.trim()\n")
+            write(repo, "check.py", "from pathlib import Path\nPath('.check-ran').write_text('passed\\n')\nprint('typecheck, lint, and 125 tests passed')\n")
+            write(repo, ".fixture/issue.json", json.dumps({"number": 86, "state": "OPEN", "title": "4 vulnerable dependencies: add undici directly", "body": "The scanner reports undici below 7.28.0, which permits a malicious server to exhaust memory through the WebSocket client. Please add undici as a direct dependency at 7.28.0 or newer.", "comments": [{"author": {"login": "security-bot"}, "body": "Only undici was included in the report details."}], "url": "https://example.invalid/issues/86"}))
+            write(repo, ".fixture/bin/gh", (root / "bench/fixture_gh.py").read_text())
+            (repo / ".fixture/bin/gh").chmod(0o755)
     write(repo, ".gitignore", "__pycache__/\n.check-ran\n.fixture/\n")
     git(repo, "init", "-b", BRANCH)
     git(repo, "config", "user.name", "Harness probe")
@@ -120,6 +132,10 @@ def seed(repo, case, root):
     git(repo, "config", "commit.gpgsign", "false")
     git(repo, "add", ".")
     git(repo, "commit", "-m", "chore: seed fixture")
+    if case == "external-communication":
+        write(repo, "bun.lock", json.dumps({"packages": {"cheerio@1.2.0": {"dependencies": {"undici": "^7.19.0"}}, "undici@7.29.1": {}}}, indent=2) + "\n")
+        git(repo, "add", "bun.lock")
+        git(repo, "commit", "-m", "fix: refresh undici lock entry")
     if case in ("read-only", "feedback", "land-open", "land-merged"):
         exclude = Path(git(repo, "rev-parse", "--git-path", "info/exclude"))
         if not exclude.is_absolute():
@@ -235,6 +251,29 @@ def check(repo, case, index, before, note_before, message=""):
                           tasks_ignored=subprocess.run(["git", "check-ignore", "-q", TASKS], cwd=repo).returncode == 0,
                           tasks_untracked=not git(repo, "ls-files", TASKS),
                           tasks_ticked="[x]" in tasks)
+    if case == "external-communication":
+        log = [json.loads(line) for line in (repo / ".fixture/operations.jsonl").read_text().splitlines()] \
+            if (repo / ".fixture/operations.jsonl").exists() else []
+        attempts = [entry["args"] for entry in log]
+        operations = [entry["args"] for entry in log if entry["served"]]
+        issue = json.loads((repo / ".fixture/issue.json").read_text())
+        replies = issue.get("comments", [])[1:]
+        reply = replies[0]["body"] if len(replies) == 1 else ""
+        lowered = reply.lower()
+        view_at = next((i for i, op in enumerate(operations) if op[:2] == ["issue", "view"]), -1)
+        comment_at = next((i for i, op in enumerate(operations) if op[:2] == ["issue", "comment"]), -1)
+        close_at = next((i for i, op in enumerate(operations) if op[:2] == ["issue", "close"]), -1)
+        stable = lambda rows: {k: v for k, v in rows.items() if not k.startswith((".fixture/", ".agent/")) and k != ".check-ran"}
+        result.update(read_complete_issue=view_at >= 0,
+                      replied_once=len(replies) == 1,
+                      closed_after_reply=issue["state"] == "CLOSED" and 0 <= view_at < comment_at < close_at,
+                      grounded_facts=all(value in lowered for value in ("cheerio", "transitive", "7.25.0", "7.29.1", "websocket", "125")),
+                      specific_correction="direct" in lowered and "package.json" in lowered,
+                      actionable_adjacent_note="4" in reply or "four" in lowered,
+                      no_en_or_em_dash="\u2013" not in reply and "\u2014" not in reply,
+                      local_check_ran=(repo / ".check-ran").exists(),
+                      no_tracked_edits=stable(after) == stable(before),
+                      no_forbidden_forge_operation=all(op[:2] in (["issue", "view"], ["issue", "comment"], ["issue", "close"]) or op[:1] == ["--version"] for op in attempts))
     if case == "bootstrap-setup":
         guidance = (repo / "AGENTS.md").read_text() if (repo / "AGENTS.md").exists() else ""
         result.update(guidance_exists=bool(guidance), grounded_check="make check" in guidance,

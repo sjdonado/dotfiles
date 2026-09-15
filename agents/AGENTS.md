@@ -117,6 +117,19 @@ Include a real screenshot for a runnable UI or TUI change whenever practical. Sh
 
 Unless the human explicitly requests a draft, open a normal PR with `WIP:` at the start of its title while remote checks run, so draft-only CI restrictions do not suppress pipelines. Remove `WIP:` only after the resolved oracle and mergeability checks are green. An explicitly requested draft uses the forge's draft state and does not need the title marker.
 
+## External communication
+
+These rules apply whenever an agent drafts or sends a message to a person or external system on the user's behalf, including issues, pull requests, tickets, email, chat, support messages, forms, comments, and questions. They govern the message after the owning workflow authorizes the external write; they do not grant permission to send, post, reply, close, or otherwise change external state.
+
+- Read the complete thread and relevant surrounding context before writing.
+- Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
+- Write for the recipient. Acknowledge useful input when natural, then give the finding, supporting evidence, action taken, and relevant verification. Keep only what helps the recipient understand or act.
+- When rejecting a suggestion, be respectful and specific. Explain why it does not fit, give the correct alternative, and state what evidence would change the conclusion.
+- When asking a question as the user's agent, include the relevant context, what was already checked, and the exact decision or information needed.
+- Mention an adjacent inconsistency only when resolving it prevents confusion or gives the recipient something actionable.
+- Never invent the user's beliefs, relationships, authority, experience, or intent. Do not expose internal reasoning, loaded skills, or harness mechanics to the recipient.
+- Match the platform's conventions and the user's established voice without forcing the message into a fixed template.
+
 ## When to ask, and when to decide
 
 Asking is not caution, it is a cost transfer. Ask only when both of these hold:
@@ -234,7 +247,7 @@ Use `caveman-commit` only for git commit messages: Conventional Commits format, 
 
 ## Writing
 
-Never use em-dashes (—) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
+Never use en dashes (`U+2013`) or em dashes (`U+2014`) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
 
 Never hard-wrap prose. Let each paragraph run as one line and leave wrapping to whatever renders it. A break belongs in written output only where it carries meaning: a new paragraph, a list item, a heading, a code block. Do not insert one to keep a line under some column. This applies to Markdown, commit message bodies, PR text, code comments, and issue or review text.
 

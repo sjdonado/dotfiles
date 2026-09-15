@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MODEL = "gpt-5.6-luna"
 MODELS = (MODEL, "gpt-6-astra")
 BATCH = ROOT / "bench/runs/effectiveness-v1"
-LIMIT = 30
+LIMIT = 32
 
 
 def analyze(path):
@@ -302,7 +302,7 @@ def main():
     mode = verifier.add_mutually_exclusive_group(required=True)
     mode.add_argument("--local", action="store_true")
     mode.add_argument("--behavior", action="store_true")
-    verifier.add_argument("--run", action="store_true", help="Explicitly authorize missing model sessions, capped at 30 per retained batch")
+    verifier.add_argument("--run", action="store_true", help="Explicitly authorize missing model sessions, capped at 32 per retained batch")
     verifier.add_argument("--batch", type=Path, default=BATCH)
     reader = commands.add_parser("analyze")
     reader.add_argument("transcripts", nargs="+")
