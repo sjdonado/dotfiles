@@ -1,4 +1,4 @@
-> Blazyinly fast Development Setup 🚀
+> Blazingly Fast Development Setup 🚀
 
 ## Getting started
 

@@ -119,7 +119,7 @@ Unless the human explicitly requests a draft, open a normal PR with `WIP:` at th
 
 ## External communication
 
-These rules apply whenever an agent drafts or sends a message to a person or external system on the user's behalf, including issues, pull requests, tickets, email, chat, support messages, forms, comments, and questions. They govern the message after the owning workflow authorizes the external write; they do not grant permission to send, post, reply, close, or otherwise change external state.
+These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message after the owning workflow authorizes the external write; they do not grant permission to send, post, reply, close, or otherwise change external state.
 
 - Read the complete thread and relevant surrounding context before writing.
 - Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
@@ -246,6 +246,10 @@ That command is for a diff this session did not write: someone else's pull reque
 Use `caveman-commit` only for git commit messages: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. Never apply its style to Markdown, READMEs, AGENTS.md, OpenSpec artifacts, PR text, or other human-facing prose. No AI attribution, filler, or emoji in commits.
 
 ## Writing
+
+For agent-user chat, use Caveman lite in every commentary and final response: lead with the outcome, cut filler, restatement, and incidental uncertainty, but keep articles, complete sentences, exact technical terms, and uncertainty that changes a decision. For a small change, summarize the artifact in one short paragraph instead of restating its contents as a list; name only unknowns that affect the documented result. Before sending each chat response, replace any en or em dash with ordinary punctuation. Give the detail the user requests or needs to make a decision. This chat rule does not govern files, commit messages, pull requests, tickets, comments, or messages to others.
+
+For technical Markdown documentation, including architecture documents and technical README sections, use STE-inspired clarity: keep one term for each concept, name the actor and action, split sentences that carry several decisions, and make references unambiguous. Preserve necessary technical vocabulary and the repository's existing voice. Do not claim ASD-STE100 compliance or impose its controlled dictionary. This documentation rule does not govern agent-user chat or external communication.
 
 Never use en dashes (`U+2013`) or em dashes (`U+2014`) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
 
