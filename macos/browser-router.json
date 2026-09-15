@@ -10,6 +10,11 @@
         "^https?://([^/]+\\.)?(pages|workers)\\.dev(/|$)"
       ],
       "browser": "net.imput.helium"
+    },
+    {
+      "match": "^https?://(www\\.)?reddit\\.com/",
+      "browser": "com.apple.Safari",
+      "rewrite": { "pattern": "^https?://(www\\.)?reddit\\.com/", "with": "https://old.reddit.com/" }
     }
   ]
 }

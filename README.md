@@ -10,18 +10,18 @@
 - Linux (remote/dev box): `./linux.sh`
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
 - Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
+- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`, on both platforms. Adding one is a line of TOML rather than an installer block in each script. Homebrew keeps the GUI applications and the macOS-only CLIs; three tools keep their own installers, and `mise.toml` says which and why.
+- Verify a change to an installer before running it for real: `verify/linux/run.sh` provisions a throwaway Ubuntu container, `verify/macos/run.sh` runs `macos.sh --links-only` against a throwaway `HOME`. Both run twice and assert idempotency. See `verify/README.md`.
 
 ### Tool versions
 
-`mise.toml` declares `ttt`, `worktrunk`, `uv`, `bun` and `openspec`, and `mise.lock` records the version and per-platform checksum each machine resolved. These were the five tools installed two different ways: a Homebrew formula here, a hand-rolled `curl | sh` on Linux, each taking whatever was newest on the day the box was built, with nothing recording which. One declaration now covers both, and `mise upgrade` replaces deleting a binary and re-running the setup script.
+`mise.toml` declares the cross-platform tools: the runtimes, the search tools, the editor, the worktree tool, and the agent CLIs that install cleanly. `mise.lock` records the version and per-platform checksum each machine resolved, so two boxes provisioned a month apart get the same tool set, and a locked resolve needs no GitHub API calls at all. The same file says which tools deliberately stay out and why: Claude Code's npm wrapper needs its postinstall step (mise skips it), herdr and moshi-hook ship from their own CDNs, fish and mosh are the login environment rather than project tooling, and rustup keeps rust because a mise shim would shadow `rust-toolchain.toml` pins.
 
-Not in there, on purpose. Claude Code, Codex and OpenCode each self-update into their own directory, so a pin would fight their own updater. herdr hosts every pane including the one running the setup script, and swapping it under a live server is not worth the saved line. `moshi-hook` has no public release, so no backend exists for it.
-
-Everything else stays with Homebrew here and `apt` on Linux. Porting the whole Brewfile to mise's `[bootstrap.packages]` is a real option, since mise reimplements Homebrew rather than wrapping it and writes brew-compatible receipts, but it wants testing on a Linux box before it touches this one.
+`[bootstrap.packages]` and `[dotfiles]` in that file declare the rest, every Brewfile entry, the apt base, and all the links, but they are proven and not yet wired: the scripts still provision everything themselves, so editing one side without the other drifts them apart.
 
 On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 
-A machine provisioned before this still has the four Homebrew copies. The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall ttt worktrunk uv bun`.
+A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, pnpm, bun, ttt, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
 
 ### Agent harness
 

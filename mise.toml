@@ -1,29 +1,266 @@
-# Tool versions shared by macos.sh and linux.sh.
+# Tools this setup installs, declared instead of scripted.
 #
-# These are the tools that were installed two different ways: a Homebrew formula
-# on macOS and a hand-rolled `curl | sh` on Linux, each landing a different
-# version with no record of which. One declaration replaces both, and mise.lock
-# records what a machine actually resolved.
+# Everything here used to be a `curl | sh` block or an apt package in linux.sh
+# with a `have <cmd>` guard around it. mise makes the list the code: one install
+# step provisions all of it, re-running updates it, and the shims directory is
+# the only thing that has to be on PATH.
 #
-# Deliberately absent:
+# Linked to ~/.config/mise/config.toml by the installers, so it is the global
+# tool set for every project on the machine rather than a per-directory one.
+# Both platforms read the same file: on macOS it replaced the Brewfile entries
+# for the same tools, so a version bump happens in one place instead of two.
 #
-#   claude, codex, opencode   each self-updates into its own directory, so a
-#                             pin here would fight its own updater.
-#   herdr                     hosts every pane, including the one running the
-#                             setup script. Swapping it out from under a live
-#                             server is not worth the saved line.
-#   moshi-hook                no public release, so no backend.
+# What is deliberately NOT here, and why, so nobody tries again:
+#   claude    the npm package is a wrapper that fetches a native binary from a
+#             postinstall script; mise does not run those, so `claude --version`
+#             fails with "claude native binary not installed".
+#   opencode  the npm package has the same problem, but its GitHub release does
+#             not: `github:anomalyco/opencode` installs a working binary, and
+#             unlike the official installer it can authenticate, so it does not
+#             fail on a box that has spent the hour's 60 anonymous API calls.
+#   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
+#   moshi-hook  same, cdn.getmoshi.app.
+# Those four keep their official installers. fish and mosh stay with the system
+# package manager: they are the login environment, not project tooling.
 #
-# Everything else stays with Homebrew on macOS and apt on Linux. Porting the
-# whole Brewfile to [bootstrap.packages] is a separate change: mise reimplements
-# Homebrew rather than wrapping it, and that wants testing on a Linux box first.
+# Versions are pinned by mise.lock, which is tracked next to this file. It holds
+# a URL and a sha256 per tool per platform, so two machines provisioned a month
+# apart get the same tool set, and a locked resolve needs no GitHub API calls at
+# all. That last part matters more than reproducibility here: the anonymous
+# GitHub limit is 60 requests an hour per IP and was the one real flake in these
+# installers. Refresh deliberately with `mise lock`, then commit the result.
+#
+# The installers link the lockfile to ~/.config/mise/mise.lock separately,
+# because mise looks for it beside the config it resolved rather than in the
+# repository the config is a link to. Miss that link and the lock is silently
+# ignored.
+#
+# Rust is deliberately absent, and not because mise cannot do it. `rust@latest`
+# installs cleanly and is rustup underneath: it drops rustup in ~/.cargo/bin and
+# runs `rustup default`. The problem is the shim. Measured in a container: in a
+# directory holding a rust-toolchain.toml pinning 1.90.0, mise's shim reports
+# 1.98.1 and rustup's own proxy at ~/.cargo/bin/rustc starts syncing 1.90.0.
+# Shims come first on PATH here by design, so letting mise own rust means a
+# repository that pins a toolchain quietly builds with a different compiler.
+# rustup stays the owner, from Homebrew on macOS; Linux boxes here install no
+# rust at all because nothing on them needs cargo.
 
-[settings]
-lockfile = true
 
 [tools]
-"ubi:eugenioenko/ttt" = "latest"
-"aqua:max-sixty/worktrunk" = "latest"
-"aqua:astral-sh/uv" = "latest"
+# `lts` rather than `latest`: node@latest fails to resolve in mise.
+node = "lts"
 bun = "latest"
+pnpm = "latest"
+uv = "latest"
+
+ripgrep = "latest"
+fd = "latest"
+bat = "latest"
+fzf = "latest"
+jq = "latest"
+
+# The editor and the worktree tool, both straight from their GitHub releases.
+# worktrunk's binary is named `wt`, which the backend cannot guess from the repo
+# name. These two are the only entries that spend GitHub API calls, so a box
+# behind a shared IP wants GITHUB_TOKEN set before provisioning.
+"github:eugenioenko/ttt" = "latest"
+"github:anomalyco/opencode" = "latest"
+"github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
+
+# `opencode upgrade` writes into mise's install directory rather than going
+# through mise, so after a self-upgrade the version mise reports is stale until
+# the next `mise install`. Harmless, but that is why it happens.
+
+# npm-backed CLIs that work without a postinstall step.
+"npm:@openai/codex" = "latest"
 "npm:@fission-ai/openspec" = "latest"
+
+# --- Declarative provisioning (experimental, proven, not yet wired) ---
+# `[bootstrap.packages]` holds every Brewfile formula/cask plus the apt base
+# from linux.sh, each tagged with its platform; `[dotfiles]` holds the links
+# both verify scripts assert, and the shell-rc PATH blocks as edit entries.
+# Proven in a container (apt resolves + installs) and a sandbox HOME
+# (dotfiles status + dry-run apply emit exactly the links lib/links.sh owns).
+# NOT yet the provisioning path: linux.sh and macos.sh still do everything
+# themselves, so these sections are advisory until a change wires
+# `mise bootstrap` into the scripts and deletes the duplication. Until then,
+# editing one side without the other silently drifts them apart.
+#
+# Measured while writing this, not assumed:
+#
+# Measured, not assumed:
+# - `mise bootstrap packages import --manager brew` was NOT used to write this.
+#   It snapshots what is installed, and this Mac still carries everything the
+#   mise migration removed (brew:bat/fd/fzf/node/pnpm/ripgrep/uv/worktrunk/ttt,
+#   oven-sh/bun/bun, anomalyco/tap/opencode) plus stale leftovers (chawan,
+#   difftastic, imagemagick, lazygit, pandoc, whisper-cpp, xcodegen). A blind
+#   import re-declares exactly what Brewfile:5-8 removed on purpose.
+# - 3 taps in the Brewfile declare no formula used here (coder/coder,
+#   tunneltodev/tap, xcodesorg/made) and are dropped. Tap URLs below come from
+#   the import dry-run, which got that part right.
+# - `brew "docker", link: false` has no bootstrap equivalent: mise links what
+#   it pours. Kept as a plain entry; on this machine OrbStack owns `docker`.
+# - The 5 `go` installs have no bootstrap manager. They stay a remainder (a
+#   `[tasks.bootstrap]` running `go install` would also fire on Linux, where
+#   these never existed).
+[bootstrap.packages]
+"apt:git" = { os = "linux" }
+"apt:curl" = { os = "linux" }
+"apt:wget" = { os = "linux" }
+"apt:ca-certificates" = { os = "linux" }
+"apt:fish" = { os = "linux" }
+"apt:mosh" = { os = "linux" }
+"apt:python3" = { os = "linux" }
+"apt:python3-pip" = { os = "linux" }
+"brew:act" = { os = "macos" }
+"brew:ca-certificates" = { os = "macos" }
+"brew:mise" = { os = "macos" }
+"brew:openssl@3" = { os = "macos" }
+"brew:awscli" = { os = "macos" }
+"brew:blueutil" = { os = "macos" }
+"brew:bombardier" = { os = "macos" }
+"brew:caddy" = { os = "macos" }
+"brew:libpng" = { os = "macos" }
+"brew:pixman" = { os = "macos" }
+"brew:cairo" = { os = "macos" }
+"brew:cliclick" = { os = "macos" }
+"brew:cloudflare-wrangler" = { os = "macos" }
+"brew:cloudflared" = { os = "macos" }
+"brew:cmake" = { os = "macos" }
+"brew:cocoapods" = { os = "macos" }
+"brew:coreutils" = { os = "macos" }
+"brew:pkgconf" = { os = "macos" }
+"brew:crystal" = { os = "macos" }
+"brew:curlie" = { os = "macos" }
+"brew:docker" = { os = "macos" }
+"brew:docker-buildx" = { os = "macos" }
+"brew:docker-compose" = { os = "macos" }
+"brew:duckdb" = { os = "macos" }
+"brew:duti" = { os = "macos" }
+"brew:fish" = { os = "macos" }
+"brew:flyctl" = { os = "macos" }
+"brew:gawk" = { os = "macos" }
+"brew:giflib" = { os = "macos" }
+"brew:gh" = { os = "macos" }
+"brew:git-delta" = { os = "macos" }
+"brew:git-lfs" = { os = "macos" }
+"brew:gnu-sed" = { os = "macos" }
+"brew:gnutls" = { os = "macos" }
+"brew:golangci-lint" = { os = "macos" }
+"brew:grpcurl" = { os = "macos" }
+"brew:harfbuzz" = { os = "macos" }
+"brew:herdr" = { os = "macos" }
+"brew:htop" = { os = "macos" }
+"brew:jpeg" = { os = "macos" }
+"brew:jsoncpp" = { os = "macos" }
+"brew:libcoap" = { os = "macos" }
+"brew:libpq" = { os = "macos" }
+"brew:pango" = { os = "macos" }
+"brew:librsvg" = { os = "macos" }
+"brew:llvm" = { os = "macos" }
+"brew:lua" = { os = "macos" }
+"brew:luarocks" = { os = "macos" }
+"brew:mackup" = { os = "macos" }
+"brew:mailpit" = { os = "macos" }
+"brew:mkcert" = { os = "macos" }
+"brew:mole" = { os = "macos" }
+"brew:mosh" = { os = "macos" }
+"brew:neovim" = { os = "macos" }
+"brew:nmap" = { os = "macos" }
+"brew:nss" = { os = "macos" }
+"brew:openjdk" = { os = "macos" }
+"brew:openjdk@11" = { os = "macos" }
+"brew:openjdk@17" = { os = "macos" }
+"brew:p7zip" = { os = "macos" }
+"brew:pipx" = { os = "macos" }
+"brew:poppler" = { os = "macos" }
+"brew:pv" = { os = "macos" }
+"brew:python@3.12" = { os = "macos" }
+"brew:rbenv" = { os = "macos" }
+"brew:rustup" = { os = "macos" }
+"brew:scc" = { os = "macos" }
+"brew:scrcpy" = { os = "macos" }
+"brew:sqlmap" = { os = "macos" }
+"brew:staticcheck" = { os = "macos" }
+"brew:stripe-cli" = { os = "macos" }
+"brew:swaks" = { os = "macos" }
+"brew:telnet" = { os = "macos" }
+"brew:tor" = { os = "macos" }
+"brew:tree" = { os = "macos" }
+"brew:watchman" = { os = "macos" }
+"brew:xq" = { os = "macos" }
+"brew:zig" = { os = "macos" }
+"brew:zig@0.15" = { os = "macos" }
+"brew:amberframework/micrate/micrate" = { os = "macos" }
+"brew:grafana/grafana/gcx" = { os = "macos" }
+"brew:ory/tap/cli" = { os = "macos" }
+"brew:rjyo/moshi/moshi-hook" = { os = "macos" }
+"brew:supabase/tap/supabase" = { os = "macos" }
+"brew-cask:1password" = { os = "macos" }
+"brew-cask:1password-cli" = { os = "macos" }
+"brew-cask:android-commandlinetools" = { os = "macos" }
+"brew-cask:betterdisplay" = { os = "macos" }
+"brew-cask:firefox" = { os = "macos" }
+"brew-cask:gcloud-cli" = { os = "macos" }
+"brew-cask:ghostty" = { os = "macos" }
+"brew-cask:helium-browser" = { os = "macos" }
+"brew-cask:linear" = { os = "macos" }
+"brew-cask:ngrok" = { os = "macos" }
+"brew-cask:nordvpn" = { os = "macos" }
+"brew-cask:notion" = { os = "macos" }
+"brew-cask:orbstack" = { os = "macos" }
+"brew-cask:slack" = { os = "macos" }
+"brew-cask:tablepro" = { os = "macos" }
+"brew-cask:tailscale-app" = { os = "macos" }
+"brew-cask:telegram-desktop" = { os = "macos" }
+"brew-cask:yaak" = { os = "macos" }
+
+[bootstrap.brew.taps]
+"amberframework/micrate" = "https://github.com/amberframework/homebrew-micrate.git"
+"grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
+"ory/tap" = "https://github.com/ory/homebrew-tap.git"
+"rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
+"supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
+
+# Every link both verify scripts assert, minus what bootstrap cannot own:
+# - ~/.config/mise/config.toml + mise.lock stay with the installers.
+#   Self-managing the config mise is reading is a bootstrap footgun, and
+#   linking has to work where mise is not installed yet (every first run).
+# - ~/.local/bin/mise (the mise binary itself on Linux) and the stale-link
+#   prune stay in lib/links.sh: symlink-each would link bin/ fine, but it
+#   cannot distinguish "a script this repo removed" from a stranger's file.
+# - ~/.fish_history, ~/.codex/config.toml, herdr plugins, `bat cache --build`,
+#   `herdr integration install claude` ordering and `bin/codex-config apply`
+#   are generated state or need a running server: a `[tasks.bootstrap]` each.
+# - ~/.ssh/config links on macOS only (linux.sh never linked it), hence the
+#   variant with no default: other platforms skip the entry.
+[dotfiles]
+"~/.gitconfig" = { source = "git/.gitconfig", mode = "symlink" }
+"~/.config/fish/config.fish" = { source = "fish/config.fish", mode = "symlink" }
+"~/.config/fish/functions" = { source = "fish/functions", mode = "symlink-each" }
+"~/.config/ghostty/config" = { source = "ghostty/config", mode = "symlink" }
+"~/.config/ghostty/themes" = { source = "ghostty/themes", mode = "symlink-each" }
+"~/.config/bat/themes" = { source = "bat/themes", mode = "symlink-each" }
+"~/.config/ttt/settings.json" = { source = "ttt/settings.json", mode = "symlink" }
+"~/.config/herdr/config.toml" = { source = "herdr/config.toml", mode = "symlink" }
+"~/.config/worktrunk/config.toml" = { source = "worktrunk/config.toml", mode = "symlink" }
+"~/.docker/config.json" = { source = "docker/config.json", mode = "symlink" }
+"~/.ssh/config" = { source = ".ssh/config", mode = "symlink", variants = [{ os = "macos" }] }
+"~/.config/browser-router/config.json" = { source = "macos/browser-router.json", mode = "symlink", variants = [{ os = "macos" }] }
+"~/.local/bin" = { source = "bin", mode = "symlink-each" }
+"~/.claude/settings.json" = { source = "claude/settings.json", mode = "symlink" }
+"~/.claude/skills" = { source = "agents/skills", mode = "symlink" }
+"~/.claude/CLAUDE.md" = { source = "agents/AGENTS.md", mode = "symlink" }
+"~/.agents/skills" = { source = "agents/skills", mode = "symlink" }
+"~/.codex/AGENTS.md" = { source = "agents/AGENTS.md", mode = "symlink" }
+"~/.config/opencode/opencode.json" = { source = "opencode/opencode.json", mode = "symlink" }
+"~/.config/opencode/tui.json" = { source = "opencode/tui.json", mode = "symlink" }
+"~/.config/opencode/AGENTS.md" = { source = "opencode/AGENTS.md", mode = "symlink" }
+"~/.local/state/opencode/kv.json" = { source = "opencode/kv.json", mode = "symlink" }
+# The shell-rc blocks linux.sh appends behind grep guards, as edit entries.
+# Same content, same files; apply is idempotent by construction (markers), so
+# the "second run doubles nothing" check becomes a property of the tool.
+"~/.profile/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
+"~/.zshenv/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
+"~/.bashrc/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
+"~/.zshrc/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }

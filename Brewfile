@@ -1,5 +1,20 @@
+# Homebrew installs what is macOS-specific: GUI applications, system libraries,
+# and CLIs with no cross-platform equivalent. Everything a Linux box needs too
+# lives in mise.toml instead, so it is declared once and versioned once.
+#
+# Removed from here when mise took them over: bat, node, fd, fzf, ripgrep, uv,
+# worktrunk, pnpm, bun, ttt, opencode, codex. Dropping the line does not
+# uninstall anything, so on a machine provisioned before this change run
+# `brew uninstall` for them once, or keep both and let PATH order decide.
+#
+# Most of the CLIs left here do have a mise backend (act, awscli, caddy, cmake,
+# cloudflared, duckdb, flyctl, gh, git-lfs, golangci-lint, grpcurl, mailpit,
+# mkcert, pipx, staticcheck, stripe-cli, supabase, bombardier, curlie and more).
+# They stay on Homebrew anyway: none of them is needed on the Linux box, moving
+# them saves no shell code, and some are not the same tool under the same name
+# (mise's `coreutils` is uutils, not GNU). The split is by platform, not by
+# which package manager happens to be able.
 tap "amberframework/micrate", trusted: true
-tap "anomalyco/tap"
 tap "coder/coder", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
@@ -11,12 +26,12 @@ tap "xcodesorg/made"
 brew "act"
 # Mozilla CA certificate store
 brew "ca-certificates"
+# Installs everything in mise.toml: the cross-platform half of this setup
+brew "mise"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
 # Official Amazon AWS command-line interface
 brew "awscli"
-# Clone of cat(1) with syntax highlighting and Git integration
-brew "bat"
 # Get/set bluetooth power and discoverable state
 brew "blueutil"
 # Cross-platform HTTP benchmarking tool
@@ -31,8 +46,6 @@ brew "pixman"
 brew "cairo"
 # Tool for emulating mouse and keyboard events
 brew "cliclick"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
 # CLI tool for Cloudflare Workers
 brew "cloudflare-wrangler"
 # Cloudflare Tunnel client (formerly Argo Tunnel)
@@ -59,14 +72,10 @@ brew "docker-compose"
 brew "duckdb"
 # Select default apps for documents and URL schemes on macOS
 brew "duti"
-# Simple, fast and user-friendly alternative to find
-brew "fd"
 # User-friendly command-line shell for UNIX-like operating systems
 brew "fish"
 # Command-line tools for fly.io services
 brew "flyctl"
-# Command-line fuzzy finder written in Go
-brew "fzf"
 # GNU awk utility
 brew "gawk"
 # Library and utilities for processing GIFs
@@ -135,8 +144,6 @@ brew "openjdk@17"
 brew "p7zip"
 # Execute binaries from Python packages in isolated environments
 brew "pipx"
-# Fast, disk space efficient package manager
-brew "pnpm"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
 # Monitor data's progress through a pipe
@@ -145,8 +152,6 @@ brew "pv"
 brew "python@3.12"
 # Ruby version manager
 brew "rbenv"
-# Search tool like grep and The Silver Searcher
-brew "ripgrep"
 # Rust toolchain installer
 brew "rustup"
 # Fast and accurate code counter with complexity and COCOMO estimates
@@ -167,8 +172,6 @@ brew "telnet"
 brew "tor"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
-# Polyglot tool version manager; owns the tools declared in mise.toml
-brew "mise"
 # Watch files and take action when they change
 brew "watchman"
 # Command-line XML and HTML beautifier and content extractor
@@ -179,8 +182,6 @@ brew "zig"
 brew "zig@0.15"
 # Database migration tool written in Crystal
 brew "amberframework/micrate/micrate", trusted: true
-# The AI coding agent built for the terminal.
-brew "anomalyco/tap/opencode", trusted: true
 # Grafana Cloud CLI
 brew "grafana/grafana/gcx", trusted: true
 # Use Ory from your terminal!
@@ -197,8 +198,6 @@ cask "1password-cli"
 cask "android-commandlinetools"
 # Display management tool
 cask "betterdisplay"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
 # Web browser
 cask "firefox"
 # Set of tools to manage resources and applications hosted on Google Cloud
