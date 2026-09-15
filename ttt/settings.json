@@ -6,16 +6,22 @@
     "insertSpaces": true,
     "wordWrap": true,
     "diffMode": "split",
-    "diffContext": "changes",
+    "diffContext": "full",
     "diffWordWrap": true,
     "lineNumbers": true,
     "formatOnSave": false,
     "insertFinalNewline": true,
     "trimTrailingWhitespace": false,
     "focusOnOpen": false,
+    "syntaxHighlight": true,
+    "gitGutter": true,
+    "autoDedent": true,
+    "autoIndent": true,
     "gutterStyle": "compact",
     "borderStyle": "default",
     "bracketPairColorization": false,
+    "showTrailingNewline": true,
+    "menuBar": true,
     "transparentBackground": false
   },
   "search": {
@@ -43,5 +49,14 @@
   },
   "markdown": {
     "wrapWidth": 80
+  },
+  "image": {
+    "protocol": "auto"
+  },
+  "session": {
+    "auto": true
+  },
+  "plugins": {
+    "enabled": true
   }
 }

@@ -14,7 +14,7 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "how should we approach this", a pasted ticket, "triage this" | `triage` |
 | an approved plan or OpenSpec change, a promoted `proto` ledger, a specified ticket, "yolo it", "open a PR" | `yolo` |
 | "implement this", "go build it", "prototype this", "spike it", "let me try it first", anything whose contract is still open | `proto` |
-| a bullet list of changes to work already in a PR | `feedback` |
+| changes, corrections, or follow-up work for an open PR | `feedback` |
 | "address the review comments", "CI is red on my PR" | `address-review` |
 | "the PR merged", "archive the change", "clean up the spec" | `land` |
 | "poke holes in this", "challenge this design" | `grill-me` |
@@ -33,7 +33,7 @@ Announce the routing in one line, so a wrong guess is cheap to correct.
 
 - the human asks for it by name, or asks for a PR
 - an approved OpenSpec change, an approved plan, or a promoted `proto` ledger already fixes the contract
-- the work is well defined and bounded on its own: a specified ticket, a follow-up round on a branch whose PR is already open, a mechanical or small change where the shape is not in question
+- the work is well defined and bounded on its own: a specified ticket, or a mechanical or small change where the shape is not in question and no existing PR owns it
 
 Uncertainty selects `proto`, never `yolo`. If you cannot say what "done" looks like without asking the human, that is the signal: build the slice and let them react to it. The two are not rivals, they are a sequence, and the ledger `proto` finalizes is what makes the later `yolo` run cheap and correct.
 
@@ -41,13 +41,15 @@ Approval is the hinge. Once a contract is agreed, by any route, `yolo` runs to c
 
 Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `yolo` still never merges, read-only workflows still make no edits.
 
+Route before editing. There is no ad hoc implementation lane, including for urgent fixes or production firefighting. The rule against committing to the default branch constrains an authorized workflow; it never grants authority to create a branch, push, or open a PR.
+
 Do not route when the request is conversational or a one-line lookup where the workflow costs more than the answer, or when two workflows match and the choice changes the outcome. In that case name both and ask.
 
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `address-review`.
 
-Implementation reaches a pull request only through the `yolo` skill, never `openspec-apply-change`. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+Implementation reaches a new pull request only through the `yolo` skill, never `openspec-apply-change` or an improvised workflow. `yolo` alone may create or switch to a task branch. Workflows that update an existing PR, such as `feedback` and `address-review`, stay on its current branch and never create another. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
-The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, on a task branch that never ships. It ends by handing a requirements ledger to `yolo`, which runs its full pipeline over the accumulated diff, or by killing the premise. Nothing reaches a PR except through `yolo`.
+The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, in the current worktree without creating or switching branches. It ends by handing the uncommitted diff and requirements ledger to `yolo`, which creates the task branch and runs its full pipeline, or by killing the premise. Nothing reaches a commit or PR from `proto`.
 
 A change archives after its PR merges, through the `land` skill, never before: archiving runs the spec sync, and main specs describe shipped behavior, not behavior that may still change in review. An unarchived change whose PR merged is debt; `openspec/specs/` staying empty while change directories accumulate is what that debt looks like.
 
@@ -101,11 +103,32 @@ Stop early only when implementation reveals that the plan is invalid against rep
 
 Never merge the PR. Leave it open for human review.
 
-Never commit implementation to the default branch, in any mode. `yolo` already branches before editing; the same applies to interactive work: commits land on a task branch and reach the default branch through a PR. Work found sitting on the default branch moves to a branch before pushing, not after. The one exception is `land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
+Never commit implementation to the default branch, in any mode. `proto` may hold uncommitted edits there; on promotion, `yolo` creates the task branch without discarding that working tree, then commits and pushes. No other workflow may turn this prohibition into authority to branch or open a PR. The one exception is `land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
 
-One line of work is one branch and one PR. Once a task branch exists, everything that follows in the session, feedback rounds included, is more commits on that branch. Do not open a second PR for the same work, and never branch away from an open PR without being asked: a second PR fragments the review, leaves the first describing a diff nobody will ship, and costs the human the thread they were reading. Splitting is a human decision, so propose it, name what would go where, and wait for an answer. This holds even when the feedback changes the shape of the work; a branch is not scoped to the plan it started from.
+One line of work is one branch and one PR. Once `yolo` creates a task branch, everything related that follows, including minor fixes and feedback rounds, is more commits on that branch. Before changing branches, inspect the current branch and its open PR. If the request changes that PR, route to `feedback` and stay there. If ownership is unclear, ask once whether to add it to the open PR or start a separate line; do not edit or branch until answered. A new branch is available only after the human chooses a separate line and that work enters `yolo`. Never open a second PR for the same work. This holds even when feedback changes the shape of the work; a branch is not scoped to the plan it started from.
 
 After pushing to a branch whose PR is already open, bring the PR's title and body back in line with the diff as it now stands. A description that stopped matching the code is how a reviewer ends up approving something else.
+
+### Pull requests
+
+PR titles and bodies are human-facing prose. Follow the repository's explicit template or instructions. When none exist, sample recent merged PRs from a maintainer and match their structure, tone, length, and level of context; if several maintainers qualify, pick one, preferring the one with more contributions. Explain the problem, resulting behavior, and verification clearly. For an external open source contribution, add a brief, natural thanks when it fits the repository's tone.
+
+Include a real screenshot for a runnable UI or TUI change whenever practical. Show the changed interface itself, not terminal text standing in for it. Command output may be pasted as text.
+
+Unless the human explicitly requests a draft, open a normal PR with `WIP:` at the start of its title while remote checks run, so draft-only CI restrictions do not suppress pipelines. Remove `WIP:` only after the resolved oracle and mergeability checks are green. An explicitly requested draft uses the forge's draft state and does not need the title marker.
+
+## External communication
+
+These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message after the owning workflow authorizes the external write; they do not grant permission to send, post, reply, close, or otherwise change external state.
+
+- Read the complete thread and relevant surrounding context before writing.
+- Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
+- Write for the recipient. Acknowledge useful input when natural, then give the finding, supporting evidence, action taken, and relevant verification. Keep only what helps the recipient understand or act.
+- When rejecting a suggestion, be respectful and specific. Explain why it does not fit, give the correct alternative, and state what evidence would change the conclusion.
+- When asking a question as the user's agent, include the relevant context, what was already checked, and the exact decision or information needed.
+- Mention an adjacent inconsistency only when resolving it prevents confusion or gives the recipient something actionable.
+- Never invent the user's beliefs, relationships, authority, experience, or intent. Do not expose internal reasoning, loaded skills, or harness mechanics to the recipient.
+- Match the platform's conventions and the user's established voice without forcing the message into a fixed template.
 
 ## When to ask, and when to decide
 
@@ -220,11 +243,15 @@ That command is for a diff this session did not write: someone else's pull reque
 
 ## Commit messages
 
-When writing any git commit message, follow the `caveman-commit` skill: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. No AI attribution, no filler, no emoji.
+Use `caveman-commit` only for git commit messages: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. Never apply its style to Markdown, READMEs, AGENTS.md, OpenSpec artifacts, PR text, or other human-facing prose. No AI attribution, filler, or emoji in commits.
 
 ## Writing
 
-Never use em-dashes (—) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
+For agent-user chat, use Caveman lite in every commentary and final response: lead with the outcome, cut filler, restatement, and incidental uncertainty, but keep articles, complete sentences, exact technical terms, and uncertainty that changes a decision. For a small change, summarize the artifact in one short paragraph instead of restating its contents as a list; name only unknowns that affect the documented result. Before sending each chat response, replace any en or em dash with ordinary punctuation. Give the detail the user requests or needs to make a decision. This chat rule does not govern files, commit messages, pull requests, tickets, comments, or messages to others.
+
+For technical Markdown documentation, including architecture documents and technical README sections, use STE-inspired clarity: keep one term for each concept, name the actor and action, split sentences that carry several decisions, and make references unambiguous. Preserve necessary technical vocabulary and the repository's existing voice. Do not claim ASD-STE100 compliance or impose its controlled dictionary. This documentation rule does not govern agent-user chat or external communication.
+
+Never use en dashes (`U+2013`) or em dashes (`U+2014`) in any prose, commit message, PR text, code comment, or other written output. Rewrite the sentence, or use a comma, colon, parentheses, or a period instead.
 
 Never hard-wrap prose. Let each paragraph run as one line and leave wrapping to whatever renders it. A break belongs in written output only where it carries meaning: a new paragraph, a list item, a heading, a code block. Do not insert one to keep a line under some column. This applies to Markdown, commit message bodies, PR text, code comments, and issue or review text.
 

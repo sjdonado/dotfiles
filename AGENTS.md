@@ -12,13 +12,21 @@ This repository provisions personal developer tools and maintains shared agent i
 - verify/: the setup checks. verify/linux/ provisions a throwaway Ubuntu container, verify/macos/ runs macos.sh against a throwaway HOME. verify/README.md explains why the two differ.
 - claude/, opencode/, and other application directories: tool-specific configuration. Inspect the relevant installer links before changing managed files.
 
+## Updating the harness
+
+Start from an observed failure and name the decision that should change. Trace every instruction that can control that decision before editing: shared invariants belong once in agents/AGENTS.md, workflow-specific procedure belongs in the owning agents/skills/<name>/SKILL.md, and repository commands or paths belong here. Replace conflicting guidance at its source instead of appending a later exception. Search for stale variants after the edit.
+
+Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
+
+Prove the behavior through the smallest existing disposable scenario that covers the decision. Add a new case only for an observed gap, declare its artifact and tool-action assertions before running it, and keep prompts limited to the context the agent would actually receive. Run `bench/measure verify --local` first, then follow bench/README.md for paid behavioral runs and transcript review. Never edit generated run evidence or reset a batch to make a failure disappear.
+
 ## Verification
 
 Run checks from the repository root. The benchmark uses Python 3's standard library. Git and an authenticated Codex CLI with access to the requested models are needed for behavioral probes; OpenSpec is needed to validate change artifacts.
 
 For bench/ code: `bench/measure verify --local` compiles the Python modules, runs their offline regression checks, and checks whitespace in tracked and untracked bench and instruction files. For an OpenSpec change under openspec/changes/: `openspec validate <change-id> --strict`. For a skill under agents/skills/: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. It ships with the Codex system skills, not this repository, and is unavailable without Codex and uv. No general application build or repository-wide test suite is declared.
 
-For changes to agent instructions: `bench/measure verify --behavior` inspects existing scenario results and returns nonzero for missing, stale, failing, or unreviewed coverage. Local tooling success does not establish harness acceptance. Follow bench/README.md for the transcript review record and the active change's scenarios. `bench/measure verify --behavior --run` explicitly starts missing paid model sessions, capped at 30 per retained batch. Never reset the batch to hide failure or exceed that budget. Both local and behavioral checks must pass before reporting the harness validated.
+For changes to agent instructions: `bench/measure verify --behavior` inspects existing scenario results and returns nonzero for missing, stale, failing, or unreviewed coverage. Local tooling success does not establish harness acceptance. Follow bench/README.md for the transcript review record and the active change's scenarios. `bench/measure verify --behavior --run` explicitly starts missing paid model sessions, capped at 32 per retained batch. Never reset the batch to hide failure or exceed that budget. Both local and behavioral checks must pass before reporting the harness validated.
 
 Validate edited JSON with python3 -m json.tool <path>. No check should install tools, deploy, expose secrets, or modify external services merely to establish documentation accuracy.
 
