@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 import runpy
+import subprocess
+import sys
 import tempfile
 
 measure = runpy.run_path(str(Path(__file__).with_name("measure")))
@@ -71,6 +73,23 @@ def main():
         manifest["rounds"] = [{"status": "unavailable", "passed": False}]
         measure["save"](run / "result.json", manifest)
         assert measure["acceptance"](run, provenance, 1) == "unavailable"
+
+        forge = Path(directory) / "forge"
+        forge.mkdir()
+        subprocess.run(["git", "init", "-q", str(forge)], check=True)
+        (forge / ".fixture").mkdir()
+        (forge / ".fixture/pr-history.json").write_text(json.dumps([{"title": "Maintainer example"}]))
+        fixture = Path(__file__).with_name("fixture_gh.py")
+
+        def gh(*args):
+            return subprocess.run([sys.executable, str(fixture), *args], cwd=forge, check=True, capture_output=True, text=True).stdout
+
+        assert json.loads(gh("pr", "list"))[0]["title"] == "Maintainer example"
+        gh("pr", "create", "--title", "WIP: Normalize labels", "--body", "## Why\n")
+        assert json.loads((forge / ".fixture/pr.json").read_text())["isDraft"] is False
+        gh("pr", "edit", "--title", "Normalize labels")
+        assert json.loads((forge / ".fixture/pr.json").read_text())["title"] == "Normalize labels"
+
         # A consumed budget cannot start another call, even without usable results.
         exhausted = Path(directory) / "batch" / "interrupted"
         exhausted.mkdir(parents=True)

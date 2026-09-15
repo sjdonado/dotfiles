@@ -25,7 +25,7 @@ Choose the round from the user's request and retain that choice across rounds:
 
 Pick the type at the start of the round: if the input says to finalize or run the checks, run a full round even when more rounds may follow; otherwise, if it says to skip or defer checks or that more rounds are coming, run a deferred round. When the input says neither and this is the first round of the loop, ask once: checks now, or apply and defer? Reuse that answer for later rounds in the same conversation instead of re-asking. Deferred debt must be settled by a full round before the loop finalizes; never leave the loop with unvalidated changes, and never push from a deferred round.
 
-1. Resolve the current branch, its note, and open PR with `gh pr view`; inspect `git status --short`. Update that branch only. If no PR exists or unrelated edits cannot be safely separated, ask how to proceed. Never absorb unrelated changes.
+1. Resolve the current branch, its note, and open PR with `gh pr view`; inspect `git status --short`. Update that branch only. Never create or switch branches and never open another PR. If no PR exists, ownership is unclear, or unrelated edits cannot be safely separated, ask how to proceed. Never absorb unrelated changes.
 
 2. Parse every feedback bullet into a separate actionable item. Investigate the relevant code before deciding how to implement it.
 

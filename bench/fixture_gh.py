@@ -16,12 +16,17 @@ def log():
 
 
 try:
-    pr = json.loads((root / "pr.json").read_text())
+    pr_path = root / "pr.json"
+    pr = json.loads(pr_path.read_text()) if pr_path.exists() else None
+    history_path = root / "pr-history.json"
+    history = json.loads(history_path.read_text()) if history_path.exists() else []
     if args[:2] in (["pr", "view"], ["pr", "list"]):
-        value = [pr] if args[1] == "list" else pr
+        if args[1] == "view" and pr is None:
+            sys.exit("No pull request found")
+        value = ([pr] if pr else []) + history if args[1] == "list" else pr
         if "--jq" in args:
             query = args[args.index("--jq") + 1]
-            if not (query.startswith(".") and query[1:] in pr):
+            if pr is None or not (query.startswith(".") and query[1:] in pr):
                 sys.exit("Unsupported fixture jq expression")
             field = pr[query[1:]]
             print(field if isinstance(field, str) else json.dumps(field))
@@ -30,10 +35,25 @@ try:
         else:
             print(f"{pr['title']} #{pr['number']}\n{pr['state']} · {pr['headRefName']} -> {pr['baseRefName']}\n{pr['url']}")
         served = True
+    elif args[:2] == ["pr", "create"]:
+        def option(name, default=""):
+            return args[args.index(name) + 1] if name in args else default
+
+        body_file = option("--body-file")
+        pr = {"number": 8, "state": "OPEN", "mergedAt": None, "title": option("--title"),
+              "body": Path(body_file).read_text() if body_file else option("--body"),
+              "url": "https://example.invalid/pull/8", "headRefName": "proto/handoff",
+              "baseRefName": option("--base", "main"), "statusCheckRollup": [],
+              "isDraft": "--draft" in args}
+        pr_path.write_text(json.dumps(pr))
+        print(pr["url"])
+        served = True
     elif args[:2] == ["pr", "checks"]:
         print("[]" if "--json" in args else "No required checks")
         served = True
     elif args[:2] == ["pr", "edit"]:
+        if pr is None:
+            sys.exit("No pull request found")
         for option, field in (("--title", "title"), ("--body", "body"), ("--body-file", "body")):
             if option in args:
                 value = args[args.index(option) + 1]
@@ -41,7 +61,7 @@ try:
                 served = True
         if not served:
             sys.exit("Fixture pr edit supports only --title, --body, --body-file")
-        (root / "pr.json").write_text(json.dumps(pr))
+        pr_path.write_text(json.dumps(pr))
         print(pr["url"])
     else:
         sys.exit("Unsupported fixture operation; no external service was called")

@@ -63,7 +63,7 @@ EXPECTED = {
     "land-merged": "Read actual MERGED state; complete and preserve existing note; no application or spec edits.",
     "bootstrap-audit": "No fixture writes; flag unsupported npm test, identify make check, preserve nested scope, no personal-workflow requirements.",
     "route-open-shape": "Cheap route: a sound slice built and presented, nothing committed or pushed, no forge call, blank-input behavior not invented; session task list created, ignored and ticked.",
-    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass, committed, pushed, and a pull request attempted through the forge substitute.",
+    "route-bounded": "Expensive route on bounded work: both specified behaviors land in one pass, committed and pushed; maintainer PR style inspected; a normal PR opens with WIP while checks run and finishes without it.",
     "bootstrap-setup": "Grounded portable AGENTS.md; nested file unchanged; fresh session discovers/runs make check; repeat setup changes no instruction content.",
 }
 
@@ -102,7 +102,7 @@ def seed(repo, case, root):
     else:
         guidance = "\n## Probe repository\n\nLocal oracle: python3 assertions against label.py. No compile, lint, build, or remote CI. Skills are in .agents/skills/. This disposable fixture skips commits when explicitly requested. Do not read the parent directory or benchmark source, manifests, prompts, results, or oracle files outside this repository. The branch note and repository artifacts are the only continuation sources. Do not contact external services.\n"
         if case == "route-bounded":
-            guidance += "\nGit origin is a disposable local bare repository. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
+            guidance += "\nGit origin is a disposable local bare repository. No PR template or repository-specific PR writing instruction exists. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. Its recent merged PRs are the only maintainer-style evidence. The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
         if case == "feedback":
             guidance += "\nFull local check: `python3 -c \"from label import label; assert label('  A  B ') == 'A B'; assert label(' ') == 'Draft'\"`. Git origin is a disposable local bare repository. The forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation (pr view/edit/checks). The gh on PATH is the real CLI and must not be used. No remote checks exist.\n"
         if case.startswith("land-"):
@@ -137,6 +137,7 @@ def seed(repo, case, root):
     if case == "route-bounded":
         write(repo, ".fixture/bin/gh", (root / "bench/fixture_gh.py").read_text())
         (repo / ".fixture/bin/gh").chmod(0o755)
+        write(repo, ".fixture/pr-history.json", json.dumps([{"number": 6, "state": "MERGED", "title": "Handle blank labels", "body": "## Why\n\nBlank labels obscure the underlying problem.\n\n## What changed\n\nDescribe the resulting behavior with context.\n\n## Checks\n\nList the commands that passed.\n", "url": "https://example.invalid/pull/6", "headRefName": "fix/labels", "baseRefName": "main", "author": {"login": "maintainer"}}]))
         remote = repo.parent / "origin.git"
         subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
         git(repo, "remote", "add", "origin", str(remote))
@@ -208,7 +209,15 @@ def check(repo, case, index, before, note_before, message=""):
             result["behavior"] = behavior(repo, "Untitled")
             result["committed"] = head != root_commit
             result["pushed"] = result["committed"] and head == git(repo.parent / "origin.git", "rev-parse", "refs/heads/" + BRANCH)
-            result["pull_request_attempted"] = any(entry["args"][:2] == ["pr", "create"] for entry in log)
+            operations = [entry["args"] for entry in log if entry["served"]]
+            creates = [op for op in operations if op[:2] == ["pr", "create"]]
+            pr = json.loads((repo / ".fixture/pr.json").read_text()) if (repo / ".fixture/pr.json").exists() else {}
+            initial_title = next((op[op.index("--title") + 1] for op in creates if "--title" in op), "")
+            result.update(pr_created=bool(creates), pr_not_draft=all("--draft" not in op for op in creates),
+                          maintainer_style_inspected=any(op[:2] == ["pr", "list"] for op in operations),
+                          wip_during_checks=initial_title.startswith("WIP:"),
+                          wip_removed=bool(pr.get("title")) and not pr["title"].startswith("WIP:"),
+                          maintainer_structure_followed=all(heading in pr.get("body", "") for heading in ("## Why", "## What changed", "## Checks")))
         else:
             # A slice has to be a working slice: the prompt asked for local validation, so
             # an edit that breaks label() is not a passing slice. Blank input is the part

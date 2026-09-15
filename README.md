@@ -40,10 +40,6 @@ OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI
 
 In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
-### Agent usage
-
-Usage and rate limits are on demand, from [herdr-agent-usage](https://github.com/senna-lang/herdr-agent-usage) (pinned at v0.5.11). Nothing lives in the sidebar: always-on quota rows made each agent entry too tall for the Agents panel to keep the focused agent visible when switching workspaces, so the sidebar stays at Herdr's stock two-line layout. `prefix+u` opens the plugin's native usage pane with every agent's context and 5h/7d/30d windows. `ctrl+shift+m` (Control+Shift on Mac, not Command) refreshes the data. Toasts stay off (`enabled = false` in the plugin config), since usage is keymap-only; the setup scripts re-assert that on every run. Numbers follow each CLI's own cache: a provider with no recent turns shows its last reading labeled stale, which is the plugin being honest rather than stuck; a turn, or `/usage` for Claude, refetches.
-
 ### Text editor
 
 - `prefix+e` toggles a dedicated TTT tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `ttt .` directly to open the current directory. herdr's own `edit_scrollback` sits on `prefix+shift+e`.

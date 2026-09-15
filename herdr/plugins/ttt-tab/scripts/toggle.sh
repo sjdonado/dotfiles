@@ -100,4 +100,8 @@ new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // em
 # the title and nothing else.
 new_tab=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.tab_id // empty')
 [ -n "$new_tab" ] || exit 0
+# `plugin pane open --focus` leaves the client showing the previous tab on a
+# first open; only an explicit tab focus switches the view. Harmless when the
+# tab already has focus.
+"$herdr_bin" tab focus "$new_tab" >/dev/null 2>&1 || true
 exec "$herdr_bin" tab rename "$new_tab" "$LABEL"

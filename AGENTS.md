@@ -12,6 +12,14 @@ This repository provisions personal developer tools and maintains shared agent i
 - verify/: the setup checks. verify/linux/ provisions a throwaway Ubuntu container, verify/macos/ runs macos.sh against a throwaway HOME. verify/README.md explains why the two differ.
 - claude/, opencode/, and other application directories: tool-specific configuration. Inspect the relevant installer links before changing managed files.
 
+## Updating the harness
+
+Start from an observed failure and name the decision that should change. Trace every instruction that can control that decision before editing: shared invariants belong once in agents/AGENTS.md, workflow-specific procedure belongs in the owning agents/skills/<name>/SKILL.md, and repository commands or paths belong here. Replace conflicting guidance at its source instead of appending a later exception. Search for stale variants after the edit.
+
+Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
+
+Prove the behavior through the smallest existing disposable scenario that covers the decision. Add a new case only for an observed gap, declare its artifact and tool-action assertions before running it, and keep prompts limited to the context the agent would actually receive. Run `bench/measure verify --local` first, then follow bench/README.md for paid behavioral runs and transcript review. Never edit generated run evidence or reset a batch to make a failure disappear.
+
 ## Verification
 
 Run checks from the repository root. The benchmark uses Python 3's standard library. Git and an authenticated Codex CLI with access to the requested models are needed for behavioral probes; OpenSpec is needed to validate change artifacts.

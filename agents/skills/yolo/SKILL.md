@@ -5,7 +5,7 @@ description: Autonomous requirements-to-PR. Clarify once, understand deeply, imp
 
 Autonomously implement the user's request or the current conversation's approved contract.
 
-This is the expensive workflow and it is entered deliberately, not by default: the human asked for it or for a PR, or the contract is already pinned down by an approved OpenSpec change, an approved plan, a promoted `proto` ledger, a specified ticket, a round on a branch whose PR is open, or a change small and mechanical enough that its shape is not in question. If the contract is still moving, stop and run `proto` instead; a full run against requirements that change produces a PR describing the wrong thing.
+This is the expensive workflow and it is entered deliberately, not by default: the human asked for it or for a PR, or the contract is already pinned down by an approved OpenSpec change, an approved plan, a promoted `proto` ledger, a specified ticket, or a change small and mechanical enough that its shape is not in question. If the contract is still moving, stop and run `proto` instead; a full run against requirements that change produces a PR describing the wrong thing.
 
 Resolve the effective input, cheapest first. No document is ever required, and no depth is ever mandatory:
 
@@ -13,7 +13,7 @@ Resolve the effective input, cheapest first. No document is ever required, and n
 - An issue ID or URL: requirements come from the tracker, description and comment thread together, per `AGENTS.md`.
 - An approved plan in the conversation: the plan is the contract.
 - A `triage` brief, `research` ledger, or handoff: read it and its authoritative artifact references. A handoff that carries no settled contract is `proto`'s input, not this workflow's. Reuse grounded findings; preserve approval state. The user's implementation request or prior approval authorizes work, not the document itself. A planning-only request stays planning-only.
-- A `proto` requirements ledger and its branch: the ledger is the contract. Continue on that branch, squash its WIP checkpoints at commit time, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
+- A `proto` requirements ledger and uncommitted working tree: the ledger is the contract. Preserve the accumulated diff when creating or reusing the task branch, and harden anything the ledger marks prototype-quality. Do not re-derive what the iterations settled.
 - A plain implementation request: resolve its contract per AGENTS.md. Do not turn a request for analysis or planning into implementation. Recover missing requirements from artifacts; ask for any essential requirement that remains unrecoverable.
 - Nothing resolvable: ask, per the escalation contract in `AGENTS.md`.
 
@@ -25,9 +25,9 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 1. Understand first. Investigate the codebase, the actual problem, and repository state before touching anything. Determine what already exists, the real requirement, the smallest sufficient change, and whether `git status --short` contains pre-existing work. Do not design a solution before the problem is clear, and never absorb unrelated changes. If the contract came with an evidence ledger, re-check only the claims it marked refuted or unchecked, or that predate the most recent deploy; a refuted premise is an escalation, not a silent redesign.
 
-2. Clarify only when the escalation contract in `AGENTS.md` says to: the answer is not derivable from repository evidence, telemetry, or convention, AND getting it wrong is expensive to reverse or the choice is not yours. Pre-existing changes that cannot be safely separated, or an unrelated open PR on the current branch, also stop here. Batch every question into one stop, each carrying its evidence. Otherwise proceed without asking.
+2. Clarify only when the escalation contract in `AGENTS.md` says to: the answer is not derivable from repository evidence, telemetry, or convention, AND getting it wrong is expensive to reverse or the choice is not yours. Before changing branches, inspect the current branch and its open PR. If the request changes that PR, stop and route to `feedback` on the same branch. If ownership is unclear, ask whether to add it to the open PR or start a separate line and stop before editing. Pre-existing changes that cannot be safely separated also stop here. Batch every question into one stop. Otherwise proceed without asking.
 
-3. Establish a safe branch before editing, then write the task list per `AGENTS.md` before the second step of the work: the change's `tasks.md` where an OpenSpec change exists, otherwise `.agent/<branch-key>.tasks.md`. Tick it as items land. Resolve the repository's default branch. If currently on the default branch, create a task branch from the current base. If already on a non-default branch with no unrelated PR, use it. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the branch name.
+3. Establish the task branch before staging or committing, then write the task list per `AGENTS.md` before the second step of the work: the change's `tasks.md` where an OpenSpec change exists, otherwise `.agent/<branch-key>.tasks.md`. Tick it as items land. This is the only workflow allowed to create or switch to a task branch. Resolve the repository's default branch. If currently on it, create the branch without losing an accumulated `proto` diff. If already on a non-default branch with no open PR, reuse it. If the human chose a separate line from an open PR, create its branch from the appropriate base and carry only that line's edits. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the branch name.
 
 4. Resolve or reuse the current repository oracle ladder from its instructions and task runner; record it in worktree state if available. Include declared behavioral acceptance: tooling checks alone do not satisfy it. Missing coverage stays incomplete, never a skipped success.
 
@@ -39,7 +39,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 8. Load and follow `adversarial-review`. Triage every finding: fix it, reject it with a specific reason, or escalate it if it is a product decision. Resolve findings in the working tree. Never post them to the forge.
 
-9. Commit per `caveman-commit`, push, and update the branch's existing PR or create one if absent. The PR body states what changed, why, and checks run, plus:
+9. Commit per `caveman-commit`. Follow the PR writing, screenshot, and `WIP:` lifecycle in `AGENTS.md`: mark an existing PR `WIP:` before pushing, or push and create a normal `WIP:` PR when none exists. Fit what changed, why, and checks run into the repository's PR style, plus:
     - **Assumptions**: each decision made without asking, its rejected alternative, and the one fact that would flip it.
     - **Refuted evidence**: any claim production data contradicted, and what changed as a result. Omit if no evidence was gathered.
     - **Rejected review findings**: each adversarial-review finding not fixed, with its reason. Omit if none.
@@ -51,6 +51,8 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
     While watching, also check the PR's merge state (`gh pr view --json mergeable,mergeStateStatus`). A conflicting PR is a failure to fix on the same footing as a red check: rebase onto the base, resolve, and `git push --force-with-lease` (the task branch this run created is not a shared branch). Resolve mechanical conflicts autonomously: adjacent-line collisions, regenerated lockfiles, import order. Escalate a semantic conflict, where both sides changed the same logic and resolution requires choosing between intents; resolving one silently would redesign someone else's concurrent change.
 
     Do not wait for review threads. A PR you just opened has none, and any that appear later arrive after this run has finished. The `address-review` skill owns them, and its approval gate is a deliberate human handoff, not a step to drive through.
+
+    Once every resolved check and mergeability check is green, remove the `WIP:` title prefix before returning.
 
 **Terminal state is every resolved oracle green, not "PR opened."** Report the PR URL and the final state of each rung. If a rung cannot go green, escalate with what each attempt disproved rather than handing back a red PR.
 
