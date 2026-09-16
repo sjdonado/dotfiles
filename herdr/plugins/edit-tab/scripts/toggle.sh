@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
-# Toggle a dedicated nvim tab in the current workspace.
+# Toggle the nvim overlay pane.
 #
-# Three states: absent means open the nvim entrypoint in a new tab, present but
-# unfocused means focus that tab, pressed from inside it means go back to wherever
-# the jump came from. herdr has no "previous tab", so that origin is recorded here
-# per workspace; without it, a second press would leave you parked on the editor
-# with no way back except the tab bar.
+# Two states, because that is all herdr offers for a pane: absent means open nvim
+# as a zoomed overlay over the active pane, present means close it. Closing is what
+# restores the focus and zoom the overlay covered, which is the "go back" half of
+# the toggle. nvim exits with the pane, so the buffers come back through
+# auto-session rather than by staying resident.
+#
+# Overlay takes no target. Passing --workspace or --target-pane makes herdr reject
+# the call with "overlay and popup plugin panes target the active pane", and that
+# silent rejection is what made an earlier version of this script do nothing.
+# herdr resolves the active pane from the invocation context.
+#
+# The open pane is remembered by id, one file per workspace, rather than found by
+# the manifest label. The label is not proof of ownership: a pane opened before
+# this plugin was re-linked keeps the label but loses its plugin ownership, so
+# herdr answers `plugin pane close` with "plugin pane not found", and any pane
+# somebody renamed by hand carries the label too. Matching on the label is what
+# made an earlier version stack a second overlay instead of closing the first.
 set -euo pipefail
 
 # herdr runs plugin commands with the server's PATH, which is whatever started the
@@ -13,85 +25,47 @@ set -euo pipefail
 # bare `herdr` dies with 127. HERDR_BIN_PATH exists for this.
 herdr_bin="${HERDR_BIN_PATH:-herdr}"
 
-# The pane title from the manifest. herdr labels plugin-owned panes with it, which
-# is what makes the tab findable on later presses.
+# The pane id from the manifest. It names the pane and the entrypoint to open.
 LABEL=nvim
 
-# herdr describes the invocation in the environment: the workspace, and the tab the
-# key was pressed in. HERDR_TAB_ID is what makes the toggle exact. The `focused`
-# flag in `tab list` is not usable for this: it only reads true in the workspace the
-# client is currently displaying, so a press in any other workspace would see no
-# focused tab at all and never take the way-back branch.
 context=${HERDR_PLUGIN_CONTEXT_JSON:-}
 workspace=${HERDR_WORKSPACE_ID:-$(printf '%s' "$context" | jq -r '.workspace_id // empty')}
-origin_tab=${HERDR_TAB_ID:-$(printf '%s' "$context" | jq -r '.tab_id // empty')}
-[ -n "$workspace" ] || { echo "no workspace to toggle the $LABEL tab in" >&2; exit 1; }
-
-# Locate the tab by its pane, not by tab label: the tab's own label is whatever
-# herdr numbered it, while the pane carries the manifest title.
-tab_id=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg ws "$workspace" --arg l "$LABEL" \
-  'first(.result.panes[]? | select(.workspace_id == $ws and .label == $l) | .tab_id) // empty')
-
-# A restored pane keeps the label but loses the entrypoint: herdr brings plugin
-# panes back as plain shells rather than re-running `command`, so after a server
-# restart the tab is still there with fish sitting in it. Restarting nvim in it is
-# the panel-revive plugin's job, on the pane.focused event, because the tab is also
-# reachable with the mouse and by prefix+direction, which never run this script.
-# The `tab focus` below therefore repairs the tab as a side effect.
+[ -n "$workspace" ] || workspace=$("$herdr_bin" pane current 2>/dev/null | jq -r '.result.pane.workspace_id // empty')
+[ -n "$workspace" ] || { echo "no workspace to toggle the $LABEL overlay in" >&2; exit 1; }
 
 state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/edit-tab}
-state_file="$state_dir/origin-$workspace"
+state_file="$state_dir/overlay-$workspace"
 
-# Pressed from inside the editor: go back. A stale id (that tab was closed while
-# nvim had focus) falls back to any other tab, so the toggle never strands the user.
-if [ -n "$tab_id" ] && [ "$origin_tab" = "$tab_id" ]; then
-  tabs=$("$herdr_bin" tab list --workspace "$workspace" 2>/dev/null)
-  previous=$(cat "$state_file" 2>/dev/null || true)
-  if [ -z "$previous" ] || [ "$previous" = "$tab_id" ] \
-    || ! printf '%s' "$tabs" | jq -e --arg t "$previous" 'any(.result.tabs[]?; .tab_id == $t)' >/dev/null; then
-    previous=$(printf '%s' "$tabs" | jq -r --arg t "$tab_id" \
-      'first(.result.tabs[]? | select(.tab_id != $t) | .tab_id) // empty')
+pane_id=$(cat "$state_file" 2>/dev/null || true)
+if [ -n "$pane_id" ]; then
+  # Close the overlay this plugin opened here, if it is still open and still ours.
+  if "$herdr_bin" plugin pane close "$pane_id" >/dev/null 2>&1; then
+    rm -f "$state_file"
+    exit 0
   fi
-  [ -n "$previous" ] || exit 0
-  exec "$herdr_bin" tab focus "$previous"
+  # Stale id: the pane is gone, or a re-link dropped its ownership. Drop the note
+  # and fall through to opening a fresh one.
+  rm -f "$state_file"
 fi
 
-if [ -n "$origin_tab" ] && [ "$origin_tab" != "$tab_id" ]; then
-  mkdir -p "$state_dir"
-  printf '%s' "$origin_tab" >"$state_file"
-fi
-
-if [ -n "$tab_id" ]; then
-  exec "$herdr_bin" tab focus "$tab_id"
-fi
-
-# First press in this workspace. The repo root, not the pane's cwd: a pane sitting
-# in a subdirectory should still open the whole project.
+# The repo root, not the pane's cwd: a pane sitting in a subdirectory should still
+# open the whole project.
 pane_cwd=$(printf '%s' "$context" | jq -r '.focused_pane_cwd // .workspace_cwd // empty')
 [ -n "$pane_cwd" ] || pane_cwd=$PWD
 root=$(git -C "$pane_cwd" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$pane_cwd")
 
 # herdr spawns the entrypoint as the pane's process, so nvim owns the pty from the
-# first frame and quitting it closes the tab. `pane run` cannot be used here: it
-# writes into the pty and races the shell's startup, which left `exec nvim` echoed
-# above a bare fish prompt.
+# first frame. `pane run` cannot be used here: it writes into the pty and races the
+# shell's startup, which left `exec nvim` echoed above a bare fish prompt.
 opened=$("$herdr_bin" plugin pane open \
   --plugin edit-tab \
   --entrypoint "$LABEL" \
-  --placement tab \
-  --workspace "$workspace" \
+  --placement overlay \
   --cwd "$root" \
-  --focus 2>/dev/null)
+  --focus)
 
-# `plugin pane open` labels the pane from the manifest title but leaves the tab on
-# herdr's running number, so the tab bar read "5" instead of "nvim". Only the tab
-# carries a visible title here, the pane being alone in it, so name it after the
-# fact. The pane label is what the lookup above keys on, so a failure here costs
-# the title and nothing else.
-new_tab=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.tab_id // empty')
-[ -n "$new_tab" ] || exit 0
-# `plugin pane open --focus` leaves the client showing the previous tab on a
-# first open; only an explicit tab focus switches the view. Harmless when the
-# tab already has focus. Measured with ttt-tab, which hit the same behavior.
-"$herdr_bin" tab focus "$new_tab" >/dev/null 2>&1 || true
-exec "$herdr_bin" tab rename "$new_tab" "$LABEL"
+new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // empty')
+[ -n "$new_pane" ] || exit 0
+
+mkdir -p "$state_dir"
+printf '%s' "$new_pane" >"$state_file"
