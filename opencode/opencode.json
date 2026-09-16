@@ -4,6 +4,9 @@
 	"model": "opencode/gemini-3.8-flash",
 	"plugin": ["opencode-pty"],
 	"instructions": ["./pty.md"],
+	"experimental": {
+		"disable_paste_summary": true
+	},
 	"permission": {
 		"external_directory": "allow",
 		"bash": {
