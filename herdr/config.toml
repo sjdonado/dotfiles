@@ -89,3 +89,42 @@ description = "Agent Usage: refresh usage data"
 # Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.
 kitty_graphics = true
+
+# Herdr Annotate (plannotator/herdr-annotate): comment on terminal selections and
+# on documents or agent replies, then send the annotations back to the agent. It
+# ships no setup action, so these are its documented keys, written by hand.
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "annotate.capture"
+description = "annotate text"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "annotate.copy-context"
+description = "copy annotations as context"
+
+[[keys.command]]
+key = "prefix+ctrl+a"
+type = "plugin_action"
+command = "annotate.copy-archive"
+description = "copy annotations as context and archive them"
+
+[[keys.command]]
+key = "prefix+m"
+type = "plugin_action"
+command = "annotate.manage"
+description = "manage annotations"
+
+[[keys.command]]
+key = "prefix+o"
+type = "plugin_action"
+command = "annotate.open"
+description = "review documents in this folder"
+
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "annotate.last"
+description = "review the agent's last reply"

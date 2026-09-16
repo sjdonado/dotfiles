@@ -943,4 +943,39 @@ end
 -- terminal never delivered it.
 require 'custom.copy-reference'
 
+-- ============================================================
+-- SECTION 11: HERDR ANNOTATE
+-- ============================================================
+-- Hands a visual selection to herdr's annotate plugin, which opens a comment
+-- dialog and can send the annotations back to the agent that wrote the code.
+--
+-- The selection travels in a file rather than through the clipboard: the plugin
+-- runs wherever herdr runs, which over SSH is the server, and a headless server
+-- has no clipboard for it to read. The plugin deletes the file after reading it,
+-- and ignores one older than 15 seconds.
+do
+  local function annotate_selection()
+    if vim.fn.executable 'herdr' == 0 then
+      return vim.notify('herdr is not on PATH; cannot open the annotate dialog', vim.log.levels.ERROR)
+    end
+
+    vim.cmd('normal! "zy')
+
+    -- $XDG_RUNTIME_DIR when the session has one, because that is the directory
+    -- the plugin reads; the temp dir is the fallback for a session without it.
+    local base = vim.env.XDG_RUNTIME_DIR
+    if not base or base == '' then
+      base = vim.fn.fnamemodify(vim.fn.tempname(), ':h')
+    end
+
+    local dir = base .. '/herdr-annotate-' .. vim.uv.getuid()
+    vim.fn.mkdir(dir, 'p', '0700')
+    vim.fn.writefile(vim.split(vim.fn.getreg 'z', '\n'), dir .. '/selection')
+
+    vim.fn.jobstart { 'herdr', 'plugin', 'action', 'invoke', 'annotate.capture' }
+  end
+
+  vim.keymap.set('x', '<leader>a', annotate_selection, { desc = 'Annotate selection in Herdr' })
+end
+
 -- vim: ts=2 sts=2 sw=2 et
