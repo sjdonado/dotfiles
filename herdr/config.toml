@@ -36,10 +36,11 @@ delivery = "terminal"
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
 [theme]
-auto_switch = true
+auto_switch = false
 dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
+name = "catppuccin"
 [terminal]
 default_shell = "fish"
 
@@ -53,6 +54,9 @@ default_shell = "fish"
 # the worktrunk hooks the keyboard path needed.
 [keys]
 settings = "prefix+,"
+# The nvim tab toggle below takes prefix+e, which is also edit_scrollback's
+# default, so scrollback opens one modifier further in rather than losing the key.
+edit_scrollback = "prefix+shift+e"
 
 # Direct chord, no prefix: workspaces are what gets switched between all day, and
 # the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
@@ -65,7 +69,7 @@ switch_workspace = "ctrl+alt+1..9"
 # edit-tab rather than herdr's built-in editor keymap: the toggle returns to the
 # tab it was pressed from, which herdr has no primitive for.
 [[keys.command]]
-key = "prefix+."
+key = "prefix+e"
 type = "plugin_action"
 command = "edit-tab.toggle"
 
