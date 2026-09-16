@@ -93,17 +93,12 @@ link_fish_config() {
   ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
 }
 
-link_ttt_config() {
-  log "Linking TTT config..."
-  # Only the tracked JSON files are linked, not the directory: TTT keeps plugin
-  # state here (plugins.ttt.json and plugins/) and rewrites it as plugins are
-  # installed or toggled, which would land in this repository. Partial settings
-  # and keybindings files are merged over TTT's own defaults, so these hold
-  # overrides only.
-  for f in "$PWD/ttt/"*.json; do
-    [ -f "$f" ] || continue
-    link_managed "$f" "$HOME/.config/ttt/$(basename "$f")"
-  done
+link_nvim_config() {
+  log "Linking Neovim config..."
+  # The directory, not files one by one: init.lua resolves the plugin lockfile
+  # relative to the config dir it was loaded from, and nvim-pack-lock.json is
+  # tracked here, so that path has to be the link itself.
+  link_managed "$PWD/nvim" "$HOME/.config/nvim"
 }
 
 link_worktrunk_config() {
@@ -120,14 +115,14 @@ link_herdr_config() {
 }
 
 # Remove what this repo used to provision, so a machine set up before the editor
-# switch does not keep a dangling ~/.config/nvim or herdr plugins whose
-# directories are gone. Stopping the install is not the same as undoing it. Only
-# links this repo created are touched: a hand-made config that happens to sit at
-# one of these paths is left alone, and the `if` form keeps a false test from
+# switch does not keep a dangling ~/.config/ttt/settings.json or herdr plugins
+# whose directories are gone. Stopping the install is not the same as undoing it.
+# Only links this repo created are touched: a hand-made config that happens to sit
+# at one of these paths is left alone, and the `if` form keeps a false test from
 # tripping `set -e`. The caller passes any platform-specific paths, because
 # lazygit's config lives somewhere different on each.
 prune_stale_links() {
-  for stale in "$HOME/.config/nvim" \
+  for stale in "$HOME/.config/ttt/settings.json" \
     "$HOME/.config/herdr/plugins/config/herdr-lazygit/panel.conf" "$@"; do
     if [ -L "$stale" ]; then
       case "$(readlink "$stale")" in "$PWD"/*) rm -f "$stale" ;; esac
@@ -136,7 +131,7 @@ prune_stale_links() {
     fi
   done
   if have herdr; then
-    for gone in edit-tab lazygit-panel; do
+    for gone in ttt-tab lazygit-panel; do
       herdr plugin unlink "$gone" >/dev/null 2>&1 || true
     done
     herdr plugin uninstall Crokily/herdr-lazygit >/dev/null 2>&1 || true

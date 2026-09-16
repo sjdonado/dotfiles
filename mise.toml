@@ -59,13 +59,19 @@ bat = "latest"
 fzf = "latest"
 jq = "latest"
 
-# The editor and the worktree tool, both straight from their GitHub releases.
-# worktrunk's binary is named `wt`, which the backend cannot guess from the repo
-# name. These two are the only entries that spend GitHub API calls, so a box
-# behind a shared IP wants GITHUB_TOKEN set before provisioning.
-"github:eugenioenko/ttt" = "latest"
+# The editor, the agent, and the worktree tool, all straight from their GitHub
+# releases. worktrunk's binary is named `wt`, which the backend cannot guess from
+# the repo name. These `github:` entries are the ones that spend GitHub API
+# calls, so a box behind a shared IP wants GITHUB_TOKEN set before a lockless
+# first resolve.
+"github:neovim/neovim" = "latest"
 "github:anomalyco/opencode" = "latest"
 "github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
+
+# nvim-treesitter falls back to this CLI to build a parser the platform has no
+# prebuilt for. The pre-switch tree carried it too, and the config asks for
+# parsers on both platforms.
+tree-sitter = "latest"
 
 # `opencode upgrade` writes into mise's install directory rather than going
 # through mise, so after a self-upgrade the version mise reports is stale until
@@ -91,7 +97,7 @@ jq = "latest"
 # Measured, not assumed:
 # - `mise bootstrap packages import --manager brew` was NOT used to write this.
 #   It snapshots what is installed, and this Mac still carries everything the
-#   mise migration removed (brew:bat/fd/fzf/node/pnpm/ripgrep/uv/worktrunk/ttt,
+#   mise migration removed (brew:bat/fd/fzf/node/pnpm/ripgrep/uv/worktrunk/neovim,
 #   oven-sh/bun/bun, anomalyco/tap/opencode) plus stale leftovers (chawan,
 #   difftastic, imagemagick, lazygit, pandoc, whisper-cpp, xcodegen). A blind
 #   import re-declares exactly what Brewfile:5-8 removed on purpose.
@@ -165,7 +171,6 @@ jq = "latest"
 "brew:mkcert" = { os = "macos" }
 "brew:mole" = { os = "macos" }
 "brew:mosh" = { os = "macos" }
-"brew:neovim" = { os = "macos" }
 "brew:nmap" = { os = "macos" }
 "brew:nss" = { os = "macos" }
 "brew:openjdk" = { os = "macos" }
@@ -241,7 +246,7 @@ jq = "latest"
 "~/.config/ghostty/config" = { source = "ghostty/config", mode = "symlink" }
 "~/.config/ghostty/themes" = { source = "ghostty/themes", mode = "symlink-each" }
 "~/.config/bat/themes" = { source = "bat/themes", mode = "symlink-each" }
-"~/.config/ttt/settings.json" = { source = "ttt/settings.json", mode = "symlink" }
+"~/.config/nvim" = { source = "nvim", mode = "symlink" }
 "~/.config/herdr/config.toml" = { source = "herdr/config.toml", mode = "symlink" }
 "~/.config/worktrunk/config.toml" = { source = "worktrunk/config.toml", mode = "symlink" }
 "~/.docker/config.json" = { source = "docker/config.json", mode = "symlink" }

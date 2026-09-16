@@ -1,0 +1,122 @@
+{
+  "plugins": {
+    "auto-session": {
+      "rev": "c8e6139a2e52a38101fecaba6014d7dd75489044",
+      "src": "https://github.com/rmagatti/auto-session"
+    },
+    "blink.cmp": {
+      "rev": "78336bc89ee5365633bcf754d93df01678b5c08f",
+      "src": "https://github.com/saghen/blink.cmp",
+      "version": "1.0.0 - 2.0.0"
+    },
+    "conform.nvim": {
+      "rev": "016802de402556da54c36bd7359b441266b01cdd",
+      "src": "https://github.com/stevearc/conform.nvim"
+    },
+    "fidget.nvim": {
+      "rev": "6f793b2bcd2d35e201c09520f698bb763220908a",
+      "src": "https://github.com/j-hui/fidget.nvim"
+    },
+    "git-conflict.nvim": {
+      "rev": "a1badcd070d176172940eb55d9d59029dad1c5a6",
+      "src": "https://github.com/akinsho/git-conflict.nvim"
+    },
+    "gitsigns.nvim": {
+      "rev": "5be654f2232c10ddcad19c1607a67b6b4b78fc29",
+      "src": "https://github.com/lewis6991/gitsigns.nvim"
+    },
+    "guess-indent.nvim": {
+      "rev": "84a4987ff36798c2fc1169cbaff67960aed9776f",
+      "src": "https://github.com/NMAC427/guess-indent.nvim"
+    },
+    "indent-blankline.nvim": {
+      "rev": "d28a3f70721c79e3c5f6693057ae929f3d9c0a03",
+      "src": "https://github.com/lukas-reineke/indent-blankline.nvim"
+    },
+    "lazydev.nvim": {
+      "rev": "ff2cbcba459b637ec3fd165a2be59b7bbaeedf0d",
+      "src": "https://github.com/folke/lazydev.nvim"
+    },
+    "mason-tool-installer.nvim": {
+      "rev": "443f1ef8b5e6bf47045cb2217b6f748a223cf7dc",
+      "src": "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim"
+    },
+    "mason.nvim": {
+      "rev": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d",
+      "src": "https://github.com/mason-org/mason.nvim"
+    },
+    "mini.nvim": {
+      "rev": "8d86a057fa14681cf7cab74ea7cba894a0abe14f",
+      "src": "https://github.com/nvim-mini/mini.nvim"
+    },
+    "neogit": {
+      "rev": "5adc81b26232954cd7a90f158aa7844c18fc3165",
+      "src": "https://github.com/NeogitOrg/neogit"
+    },
+    "nvim-autopairs": {
+      "rev": "430522f95fe4fb7c511ec64f8c1a90cc6a66c05c",
+      "src": "https://github.com/windwp/nvim-autopairs"
+    },
+    "nvim-lspconfig": {
+      "rev": "221c43884319e791519f0d6c94a7f2fbcd653278",
+      "src": "https://github.com/neovim/nvim-lspconfig"
+    },
+    "nvim-tree.lua": {
+      "rev": "b2aadda94b107480c48e548d6db51c6840b7b33c",
+      "src": "https://github.com/nvim-tree/nvim-tree.lua"
+    },
+    "nvim-treesitter": {
+      "rev": "e82ef6ae2c3eeb96c6916b29917f96bf630b2cdb",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter",
+      "version": "'main'"
+    },
+    "nvim-various-textobjs": {
+      "rev": "dfbf0e9ccab4bad3c87961e1de3c8dc09d8f337a",
+      "src": "https://github.com/chrisgrieser/nvim-various-textobjs"
+    },
+    "plenary.nvim": {
+      "rev": "74b06c6c75e4eeb3108ec01852001636d85a932b",
+      "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "telescope-fzf-native.nvim": {
+      "rev": "b25b749b9db64d375d782094e2b9dce53ad53a40",
+      "src": "https://github.com/nvim-telescope/telescope-fzf-native.nvim"
+    },
+    "telescope-ui-select.nvim": {
+      "rev": "6e51d7da30bd139a6950adf2a47fda6df9fa06d2",
+      "src": "https://github.com/nvim-telescope/telescope-ui-select.nvim"
+    },
+    "telescope.nvim": {
+      "rev": "40aedd8a68c78a656a10a8d62d80c54af59420fb",
+      "src": "https://github.com/nvim-telescope/telescope.nvim"
+    },
+    "todo-comments.nvim": {
+      "rev": "31e3c38ce9b29781e4422fc0322eb0a21f4e8668",
+      "src": "https://github.com/folke/todo-comments.nvim"
+    },
+    "vim-colors-xcode": {
+      "rev": "2329a3ed092b4f72e9361a94567a5431e36e7d9c",
+      "src": "https://github.com/lunacookies/vim-colors-xcode"
+    },
+    "vim-crystal": {
+      "rev": "dc21188ec8c2ee77bb81dffca02e1a29d87cfd9f",
+      "src": "https://github.com/vim-crystal/vim-crystal"
+    },
+    "vim-fetch": {
+      "rev": "b88bc5c4a8652b73bcdb577e0c90700a5064fd00",
+      "src": "https://github.com/wsdjeg/vim-fetch"
+    },
+    "vim-mjml": {
+      "rev": "cb6249b1b49994ecaebd67a7fb421dce923bcd02",
+      "src": "https://github.com/amadeus/vim-mjml"
+    },
+    "which-key.nvim": {
+      "rev": "3aab2147e74890957785941f0c1ad87d0a44c15a",
+      "src": "https://github.com/folke/which-key.nvim"
+    },
+    "zen-mode.nvim": {
+      "rev": "8564ce6d29ec7554eb9df578efa882d33b3c23a7",
+      "src": "https://github.com/folke/zen-mode.nvim"
+    }
+  }
+}

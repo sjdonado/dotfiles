@@ -21,7 +21,7 @@
 
 On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 
-A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, pnpm, bun, ttt, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
+A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
 
 ### Agent harness
 
@@ -42,12 +42,13 @@ In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the ter
 
 ### Text editor
 
-- `prefix+e` toggles a dedicated TTT tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `ttt .` directly to open the current directory. herdr's own `edit_scrollback` sits on `prefix+shift+e`.
-- Right-clicks in that tab reach TTT's own menu rather than herdr's pane menu. herdr has no config default for that, only per-pane state, so the local `ttt-tab` plugin sets it on the pane it opens and `panel-revive` re-asserts it after a session restore. Upstream's `ttt.editor` plugin is deliberately not used: it cannot route right-clicks and has no toggle-back.
-- It covers reading, diffs, staging, commits, and GitHub PR review (`ttt . <pr-url>`), and is operable by mouse and touch, so a phone or tablet terminal works without modal key chords.
-- Settings live in `ttt/settings.json`, linked file by file into `~/.config/ttt/` (a tracked `keybindings.json` is picked up the same way if one is added later). TTT rewrites that file with its complete settings whenever you change something in its settings UI, so the tracked copy is a full snapshot rather than a list of overrides, and a UI change overwrites what is tracked instead of merging with it. TTT also keeps its plugin state (`plugins.ttt.json`, `plugins/`) in that same directory, which is why the directory itself is not linked.
-- `ttt/README.md` covers how highlighting and the outline work, what TTT does not do (images, appearance following), and what is deferred.
-- Plugins are a manual step: install them from TTT's Plugins sidebar (`ctrl+k` then the Plugins panel) or with `Install from URL`. Provisioning them from a script would mean writing pre-granted permissions for third-party Lua into a state file TTT rewrites, which is not worth it for the one plugin in use (Markdown Preview, which is text-only).
+Neovim, configured from `nvim/`, with the whole directory linked into `~/.config/nvim` so its plugin lockfile (`nvim-pack-lock.json`) is written back into this repository.
+
+- `prefix+.` toggles a dedicated nvim tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `nvim` directly.
+- Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. `:MasonToolsSync` installs the language servers and formatters the config declares.
+- Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`), `git-conflict` handles merge markers, and Neogit (`<leader>gg`) covers staging, commits, diffs, log and branches. There is no lazygit panel.
+- Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.
+- A herdr restart restores the tab as a bare shell, so `panel-revive` restarts nvim in it the first time that pane is focused.
 
 ### Default browser
 
@@ -63,7 +64,7 @@ curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/instal
 
 ### Footprint
 
-Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-09-11. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them.
+Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-09-11. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them. The Neovim rows were re-measured on 2026-09-16, when it came back as the editor.
 
 Resident memory per process, ranges across the instances that happened to be running (`ps -Ao rss,comm`; use `args` instead of `comm` to tell a herdr server from its client):
 
@@ -71,22 +72,21 @@ Resident memory per process, ranges across the instances that happened to be run
 | ----------------- | -------------------------------- |
 | Ghostty | 54 MB |
 | `herdr`, server and client together | 14-30 MB each, 44 MB for the pair |
-| `ttt` | 15-26 MB each |
+| `nvim` | ~30 MB per tab |
 | `claude` | 217-479 MB each, ~280 MB typical |
 | `opencode` | 217 MB, one process per TUI |
 | `codex` | not measured; its TUI would not stay resident long enough to sample, and no session was running |
 | `wt` | none, it exits |
 
-So the terminal plus the multiplexer is about 98 MB, and an editor adds roughly 20 MB per open tab. An agent is one to two orders of magnitude heavier than any tool it drives, and sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them.
+So the terminal plus the multiplexer is about 98 MB, and an editor adds roughly 30 MB per open tab. An agent is one to two orders of magnitude heavier than any tool it drives, and sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them.
 
 On-disk, measured after `brew cleanup`, so each formula holds one version:
 
 | | size |
 | ---------------------------------------------- | --------------------------------------------------- |
-| ttt | 14 MB |
+| neovim | 37 MB |
 | herdr | 21 MB |
 | worktrunk | 22 MB |
-| neovim, macOS only, for an edit TTT cannot do | 33 MB |
 | codex | 272 MB |
 | opencode | 137 MB |
 | claude | 310 MB per version, more as legacy releases pile up |
@@ -101,7 +101,7 @@ Worktrees dominate everything else. `~/.herdr/worktrees` was 42 GB, because a si
 
 ### Minimum requirements
 
-Derived from the numbers above, for the full setup (herdr + an agent + TTT + worktrunk):
+Derived from the numbers above, for the full setup (herdr + an agent + nvim + worktrunk):
 
 | RAM   | Concurrent agent streams | Notes                                                                                       |
 | ----- | ------------------------ | ------------------------------------------------------------------------------------------- |

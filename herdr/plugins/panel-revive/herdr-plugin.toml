@@ -2,7 +2,7 @@
 #
 # herdr restores the session's shape, not its processes: a pane that "cannot use a
 # stronger restore path" comes back as a shell in its saved directory, and only
-# agents have such a path (resume_agents_on_restore). So the TTT tab comes back
+# agents have such a path (resume_agents_on_restore). So the nvim tab comes back
 # labelled but empty, sitting at a fish prompt.
 #
 # Restore itself is silent. A probe plugin subscribed to pane.created, tab.created
@@ -14,17 +14,17 @@
 # clicking the tab in the tab bar, walking panes with prefix+direction and pressing
 # the tab's own toggle all end in a focus change, whereas only the last of those
 # runs a plugin action. That is why the tab could look unrepaired even though
-# ttt-tab knows how to repair it: reaching the tab with the mouse never invokes it.
+# edit-tab knew how to repair it: reaching the tab with the mouse never invoked it.
 #
 # The handler stays cheap on the overwhelmingly common path: it drops out on the
 # context alone for a pane that has an agent, then costs one `pane get` (~5ms,
 # server-side, off the UI path) to read the label, and only looks at processes for a
-# pane labelled by one of the two panel plugins.
+# pane labelled by the editor plugin.
 
 id = "panel-revive"
 name = "Panel Revive"
 version = "1.0.0"
-description = "Restart TTT in a restored plugin pane the first time it is focused, and re-assert its right-click routing."
+description = "Restart nvim in a restored plugin pane the first time it is focused."
 min_herdr_version = "0.7.0"
 platforms = ["linux", "macos"]
 

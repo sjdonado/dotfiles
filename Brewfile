@@ -3,7 +3,7 @@
 # lives in mise.toml instead, so it is declared once and versioned once.
 #
 # Removed from here when mise took them over: bat, node, fd, fzf, ripgrep, uv,
-# worktrunk, pnpm, bun, ttt, opencode, codex. Dropping the line does not
+# worktrunk, pnpm, bun, neovim, opencode, codex. Dropping the line does not
 # uninstall anything, so on a machine provisioned before this change run
 # `brew uninstall` for them once, or keep both and let PATH order decide.
 #
@@ -128,8 +128,6 @@ brew "mkcert"
 brew "mole"
 # Remote terminal application
 brew "mosh"
-# Ambitious Vim-fork focused on extensibility and agility
-brew "neovim"
 # Port scanning utility for large networks
 brew "nmap"
 # Libraries for security-enabled client and server applications
