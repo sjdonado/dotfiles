@@ -21,7 +21,7 @@
 
 On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 
-A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
+A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, lazygit, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
 
 ### Agent harness
 
@@ -46,7 +46,7 @@ Neovim, configured from `nvim/`, with the whole directory linked into `~/.config
 
 - `prefix+e` toggles a dedicated nvim tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free.
 - Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. `:MasonToolsSync` installs the language servers and formatters the config declares.
-- Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `gitu` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating terminal over the editor. It comes from Homebrew rather than `mise.toml`, and that file says why. There is no lazygit panel.
+- Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `lazygit` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating window over the editor. It comes from `mise.toml` with the other cross-platform tools. There is no separate lazygit panel.
 - Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.
 - A herdr restart restores the tab as a bare shell, so `panel-revive` restarts nvim in it the first time that pane is focused.
 
@@ -87,7 +87,7 @@ On-disk, measured after `brew cleanup`, so each formula holds one version:
 | neovim | 37 MB |
 | herdr | 21 MB |
 | worktrunk | 22 MB |
-| gitu | 44 MB |
+| lazygit | 18 MB |
 | codex | 272 MB |
 | opencode | 137 MB |
 | claude | 310 MB per version, more as legacy releases pile up |

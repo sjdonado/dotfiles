@@ -543,111 +543,20 @@ do
 end
 
 -- ============================================================
--- SECTION 5: GIT (gitsigns, git-conflict, gitu, blame)
+-- SECTION 5: GIT (gitsigns, git-conflict, lazygit, blame)
 -- ============================================================
 do
   vim.pack.add {
     gh 'lewis6991/gitsigns.nvim',
     gh 'akinsho/git-conflict.nvim',
+    -- lazygit.nvim is a wrapper rather than a reimplementation: :LazyGit runs the
+    -- lazygit binary in a floating window, and takes the window away when lazygit
+    -- quits. Plenary, which draws that window's border, comes from Section 3.
+    gh 'kdheepak/lazygit.nvim',
   }
   require 'kickstart.plugins.git'
 
-  -- gitu is the git surface: staging, commit, diff, log, branch, rebase, all of it
-  -- in a Magit-shaped TUI. It is an external binary in a floating terminal, not a
-  -- vim.pack plugin, and the window is opened BEFORE the job starts so the pty is
-  -- born at the size of the float. Starting the job first and resizing after is
-  -- what makes a TUI's viewport drift away from its window.
-  local gitu = {}
-
-  local function gitu_close()
-    if gitu.win and vim.api.nvim_win_is_valid(gitu.win) then
-      vim.api.nvim_win_close(gitu.win, true)
-    end
-    -- Deleting the buffer, not just the window, is what ends the job: a closed
-    -- window alone would leave gitu running against a terminal nobody can see.
-    if gitu.buf and vim.api.nvim_buf_is_valid(gitu.buf) then
-      vim.api.nvim_buf_delete(gitu.buf, { force = true })
-    end
-    gitu.win, gitu.buf = nil, nil
-  end
-
-  local function gitu_geometry()
-    return math.floor(vim.o.columns * 0.9), math.floor(vim.o.lines * 0.85)
-  end
-
-  local function gitu_open()
-    local root = vim.fn.systemlist { 'git', 'rev-parse', '--show-toplevel' }
-    if vim.v.shell_error ~= 0 or root[1] == nil then
-      return vim.notify('gitu: not inside a git repository', vim.log.levels.WARN)
-    end
-
-    local width, height = gitu_geometry()
-    gitu.buf = vim.api.nvim_create_buf(false, true)
-    gitu.win = vim.api.nvim_open_win(gitu.buf, true, {
-      relative = 'editor',
-      width = width,
-      height = height,
-      row = math.floor((vim.o.lines - height) / 2) - 1,
-      col = math.floor((vim.o.columns - width) / 2),
-      style = 'minimal',
-      border = 'rounded',
-    })
-
-    -- The editor is named for the job rather than inherited: gitu reads
-    -- VISUAL/EDITOR/GIT_EDITOR for commit messages, and $EDITOR inside a herdr
-    -- pane can still be the editor this setup retired.
-    vim.fn.jobstart({ 'gitu' }, {
-      term = true,
-      cwd = root[1],
-      env = { VISUAL = 'nvim', EDITOR = 'nvim', GIT_EDITOR = 'nvim' },
-    })
-
-    vim.keymap.set('t', '<Esc>', gitu_close, { buffer = gitu.buf, desc = 'Close gitu' })
-    vim.keymap.set('n', 'q', gitu_close, { buffer = gitu.buf, desc = 'Close gitu' })
-  end
-
-  local gitu_group = vim.api.nvim_create_augroup('kickstart-gitu', { clear = true })
-
-  -- gitu quits on its own with its own key, and the float should follow it out
-  -- rather than sit there holding a dead terminal. The buffer is compared rather
-  -- than assumed, because any other terminal closing in this editor would
-  -- otherwise take the float with it.
-  vim.api.nvim_create_autocmd('TermClose', {
-    group = gitu_group,
-    callback = function(args)
-      if gitu.buf and args.buf == gitu.buf then
-        gitu_close()
-      end
-    end,
-  })
-
-  -- A terminal resize moves the editor's edges, not the float's, so the float is
-  -- cut to the new geometry and Neovim resizes the pty to match.
-  vim.api.nvim_create_autocmd('VimResized', {
-    group = gitu_group,
-    callback = function()
-      if not (gitu.win and vim.api.nvim_win_is_valid(gitu.win)) then
-        return
-      end
-      local width, height = gitu_geometry()
-      vim.api.nvim_win_set_config(gitu.win, {
-        relative = 'editor',
-        width = width,
-        height = height,
-        row = math.floor((vim.o.lines - height) / 2) - 1,
-        col = math.floor((vim.o.columns - width) / 2),
-        border = 'rounded',
-      })
-    end,
-  })
-
-  vim.keymap.set('n', '<leader>gg', function()
-    if gitu.win and vim.api.nvim_win_is_valid(gitu.win) then
-      gitu_close()
-    else
-      gitu_open()
-    end
-  end, { desc = '[G]it [G]ui (gitu)' })
+  vim.keymap.set('n', '<leader>gg', '<cmd>LazyGit<CR>', { desc = '[G]it [G]ui (lazygit)' })
 end
 
 -- ============================================================

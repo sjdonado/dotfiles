@@ -20,9 +20,6 @@
 #             fail on a box that has spent the hour's 60 anonymous API calls.
 #   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
 #   moshi-hook  same, cdn.getmoshi.app.
-#   gitu      upstream publishes no linux-arm64 build, and the Linux check under
-#             verify/ runs arm64, so a [tools] entry would fail there. Homebrew
-#             carries it on macOS; an amd64 Linux box can `mise use -g gitu`.
 # Those four keep their official installers. fish and mosh stay with the system
 # package manager: they are the login environment, not project tooling.
 #
@@ -62,11 +59,12 @@ bat = "latest"
 fzf = "latest"
 jq = "latest"
 
-# The editor, the agent, and the worktree tool, all straight from their GitHub
-# releases. worktrunk's binary is named `wt`, which the backend cannot guess from
-# the repo name. These `github:` entries are the ones that spend GitHub API
-# calls, so a box behind a shared IP wants GITHUB_TOKEN set before a lockless
-# first resolve.
+# The editor, the git TUI, the agent, and the worktree tool, all straight from
+# their GitHub releases. worktrunk's binary is named `wt`, which the backend
+# cannot guess from the repo name. These `github:` entries are the ones that spend
+# GitHub API calls, so a box behind a shared IP wants GITHUB_TOKEN set before a
+# lockless first resolve.
+"github:jesseduffield/lazygit" = "latest"
 "github:neovim/neovim" = "latest"
 "github:anomalyco/opencode" = "latest"
 "github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
