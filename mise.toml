@@ -20,6 +20,9 @@
 #             fail on a box that has spent the hour's 60 anonymous API calls.
 #   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
 #   moshi-hook  same, cdn.getmoshi.app.
+#   gitu      upstream publishes no linux-arm64 build, and the Linux check under
+#             verify/ runs arm64, so a [tools] entry would fail there. Homebrew
+#             carries it on macOS; an amd64 Linux box can `mise use -g gitu`.
 # Those four keep their official installers. fish and mosh stay with the system
 # package manager: they are the login environment, not project tooling.
 #
