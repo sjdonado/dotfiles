@@ -35,7 +35,7 @@ linked() {
 }
 
 group "tools from mise.toml"
-for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec ttt wt opencode; do runs "$c"; done
+for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec nvim tree-sitter wt opencode; do runs "$c"; done
 
 group "tools with their own installers"
 for c in claude herdr; do runs "$c"; done
@@ -58,7 +58,7 @@ linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
 linked "$HOME/.config/opencode/pty.md" "$DOTFILES/opencode/pty.md"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
-linked "$HOME/.config/ttt/settings.json"      "$DOTFILES/ttt/settings.json"
+linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
 # Linked by the shared lib/links.sh rather than by either script, so both checks
 # assert them: a refactor that drops the call is otherwise invisible.
 for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
@@ -66,7 +66,7 @@ for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$
 group "non-interactive shells resolve the tools"
 # The reason shims are used instead of `mise activate`: this is the shell an
 # agent hook or a herdr pane gets, and it sources no rc file at all.
-for c in rg ttt wt codex claude; do
+for c in rg nvim wt codex claude; do
   if bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
   if env -i HOME="$HOME" bash -c ". ~/.profile >/dev/null 2>&1; command -v $c" >/dev/null 2>&1; then
     ok "a bare shell sourcing ~/.profile finds $c"
@@ -74,7 +74,7 @@ for c in rg ttt wt codex claude; do
     bad "~/.profile does not put $c on PATH"
   fi
 done
-if fish -c 'type -q rg; and type -q ttt' 2>/dev/null; then ok "fish finds rg and ttt"; else bad "fish cannot find rg or ttt"; fi
+if fish -c 'type -q rg; and type -q nvim' 2>/dev/null; then ok "fish finds rg and nvim"; else bad "fish cannot find rg or nvim"; fi
 
 group "the lockfile is the one being used"
 # The point of the lock is a resolve that needs no GitHub API call, which is the
@@ -85,11 +85,11 @@ if out=$(env -u GITHUB_TOKEN -u GH_TOKEN mise ls --current 2>&1); then
 else
   bad "resolving without a token failed: $(printf '%s' "$out" | tail -1 | cut -c1-80)"
 fi
-locked_ttt=$(grep -A3 '"github:eugenioenko/ttt"' "$DOTFILES/mise.lock" 2>/dev/null | grep -m1 version | tr -d ' ",' | cut -d= -f2)
-if [ -n "$locked_ttt" ] && ttt --version 2>/dev/null | grep -q "$locked_ttt"; then
-  ok "ttt is the locked version ($locked_ttt)"
+locked_nvim=$(grep -A3 '"github:neovim/neovim"' "$DOTFILES/mise.lock" 2>/dev/null | grep -m1 version | tr -d ' ",' | cut -d= -f2)
+if [ -n "$locked_nvim" ] && nvim --version 2>/dev/null | grep -q "$locked_nvim"; then
+  ok "nvim is the locked version ($locked_nvim)"
 else
-  bad "ttt is not the locked version (lock says '$locked_ttt', binary says '$(ttt --version 2>&1 | head -1)')"
+  bad "nvim is not the locked version (lock says '$locked_nvim', binary says '$(nvim --version 2>&1 | head -1)')"
 fi
 
 group "git identity comes from the tracked gitconfig"

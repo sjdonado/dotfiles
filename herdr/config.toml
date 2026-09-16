@@ -53,9 +53,6 @@ default_shell = "fish"
 # the worktrunk hooks the keyboard path needed.
 [keys]
 settings = "prefix+,"
-# Moved off its default prefix+e, which the TTT tab toggle below now owns, the
-# same way settings moved off prefix+s when the lazygit panel still held it.
-edit_scrollback = "prefix+shift+e"
 
 # Direct chord, no prefix: workspaces are what gets switched between all day, and
 # the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
@@ -65,13 +62,12 @@ edit_scrollback = "prefix+shift+e"
 # so the chord the fingers press is cmd, and the chord on the wire is ctrl+alt.
 switch_workspace = "ctrl+alt+1..9"
 
-# ttt-tab rather than upstream's ttt.editor plugin: the toggle returns to the tab
-# it was pressed from, and it routes right-clicks into TTT, which herdr can only
-# be told per pane and which upstream's open action does not do.
+# edit-tab rather than herdr's built-in editor keymap: the toggle returns to the
+# tab it was pressed from, which herdr has no primitive for.
 [[keys.command]]
-key = "prefix+e"
+key = "prefix+."
 type = "plugin_action"
-command = "ttt-tab.toggle"
+command = "edit-tab.toggle"
 
 # Agent Usage is on demand, not in the sidebar: the always-on quota rows made
 # each agent entry too tall for the Agents panel to keep the focused agent

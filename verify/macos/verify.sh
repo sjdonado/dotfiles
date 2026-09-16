@@ -58,7 +58,7 @@ group "bat themes"
 for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
 
 group "editor, multiplexer, worktrees"
-for f in "$DOTFILES/ttt/"*.json; do linked "$HOME/.config/ttt/$(basename "$f")" "$f"; done
+linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
 linked "$HOME/.config/herdr/config.toml"     "$DOTFILES/herdr/config.toml"
 linked "$HOME/.config/worktrunk/config.toml" "$DOTFILES/worktrunk/config.toml"
 

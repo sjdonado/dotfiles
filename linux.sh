@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Remote Ubuntu setup for herdr + Claude Code + Codex + OpenCode + ttt, wired to these dotfiles.
+# Remote Ubuntu setup for herdr + Claude Code + Codex + OpenCode + nvim, wired to these dotfiles.
 # Idempotent. Safe to re-run. macOS-only steps from macos.sh are omitted.
 #
 # End goal: connect from your local terminal with `herdr --remote <user>@<host>`.
@@ -34,8 +34,8 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-# Kept for the guard alone: every installer that used the normalized names went with
-# Neovim, lazygit, tree-sitter and difftastic, but refusing an unsupported arch up
+# Kept for the guard alone: every installer that needed the normalized names went
+# with lazygit, tree-sitter and difftastic, but refusing an unsupported arch up
 # front still beats failing halfway through a provisioning run.
 case "$(uname -m)" in
   x86_64|amd64|aarch64|arm64) ;;
@@ -180,7 +180,7 @@ EOF
 link_git_config
 link_bat_themes
 link_fish_config
-link_ttt_config
+link_nvim_config
 prune_stale_links "$HOME/.config/lazygit/config.yml"
 link_herdr_config
 link_worktrunk_config

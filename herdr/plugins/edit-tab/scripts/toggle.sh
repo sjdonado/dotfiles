@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Toggle a dedicated TTT tab in the current workspace.
+# Toggle a dedicated nvim tab in the current workspace.
 #
-# Three states: absent means open the TTT entrypoint in a new tab, present but
+# Three states: absent means open the nvim entrypoint in a new tab, present but
 # unfocused means focus that tab, pressed from inside it means go back to wherever
 # the jump came from. herdr has no "previous tab", so that origin is recorded here
 # per workspace; without it, a second press would leave you parked on the editor
@@ -10,12 +10,12 @@ set -euo pipefail
 
 # herdr runs plugin commands with the server's PATH, which is whatever started the
 # server. On a remote box that is often a system PATH without ~/.local/bin, so a
-# bare `herdr` dies with 127. HERDR_BIN_PATH exists for exactly this.
+# bare `herdr` dies with 127. HERDR_BIN_PATH exists for this.
 herdr_bin="${HERDR_BIN_PATH:-herdr}"
 
 # The pane title from the manifest. herdr labels plugin-owned panes with it, which
 # is what makes the tab findable on later presses.
-LABEL=ttt
+LABEL=nvim
 
 # herdr describes the invocation in the environment: the workspace, and the tab the
 # key was pressed in. HERDR_TAB_ID is what makes the toggle exact. The `focused`
@@ -34,16 +34,16 @@ tab_id=$("$herdr_bin" pane list 2>/dev/null | jq -r --arg ws "$workspace" --arg 
 
 # A restored pane keeps the label but loses the entrypoint: herdr brings plugin
 # panes back as plain shells rather than re-running `command`, so after a server
-# restart the tab is still there with fish sitting in it. Restarting TTT in it is
+# restart the tab is still there with fish sitting in it. Restarting nvim in it is
 # the panel-revive plugin's job, on the pane.focused event, because the tab is also
 # reachable with the mouse and by prefix+direction, which never run this script.
 # The `tab focus` below therefore repairs the tab as a side effect.
 
-state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/ttt-tab}
+state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/edit-tab}
 state_file="$state_dir/origin-$workspace"
 
 # Pressed from inside the editor: go back. A stale id (that tab was closed while
-# TTT had focus) falls back to any other tab, so the toggle never strands the user.
+# nvim had focus) falls back to any other tab, so the toggle never strands the user.
 if [ -n "$tab_id" ] && [ "$origin_tab" = "$tab_id" ]; then
   tabs=$("$herdr_bin" tab list --workspace "$workspace" 2>/dev/null)
   previous=$(cat "$state_file" 2>/dev/null || true)
@@ -71,30 +71,20 @@ pane_cwd=$(printf '%s' "$context" | jq -r '.focused_pane_cwd // .workspace_cwd /
 [ -n "$pane_cwd" ] || pane_cwd=$PWD
 root=$(git -C "$pane_cwd" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$pane_cwd")
 
-# herdr spawns the entrypoint as the pane's process, so TTT owns the pty from the
+# herdr spawns the entrypoint as the pane's process, so nvim owns the pty from the
 # first frame and quitting it closes the tab. `pane run` cannot be used here: it
-# writes into the pty and races the shell's startup, which left `exec ttt` echoed
+# writes into the pty and races the shell's startup, which left `exec nvim` echoed
 # above a bare fish prompt.
 opened=$("$herdr_bin" plugin pane open \
-  --plugin ttt-tab \
+  --plugin edit-tab \
   --entrypoint "$LABEL" \
   --placement tab \
   --workspace "$workspace" \
   --cwd "$root" \
   --focus 2>/dev/null)
 
-# Right-clicks go to TTT rather than herdr's pane menu. This is what makes the
-# editor usable with a pointer, and it is per pane: herdr has no config default
-# for it, only this call and the "Send right-clicks to pane" entry in the menu,
-# which would otherwise have to be picked by hand for every TTT tab opened.
-# Non-fatal, since a tab without it still edits, but stderr is left alone so a
-# failure shows up in `herdr plugin log` instead of vanishing: this call is the
-# whole reason the plugin exists rather than upstream's.
-new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // empty')
-[ -n "$new_pane" ] && "$herdr_bin" pane input --pane "$new_pane" --right-click pane >/dev/null || true
-
 # `plugin pane open` labels the pane from the manifest title but leaves the tab on
-# herdr's running number, so the tab bar read "5" instead of "ttt". Only the tab
+# herdr's running number, so the tab bar read "5" instead of "nvim". Only the tab
 # carries a visible title here, the pane being alone in it, so name it after the
 # fact. The pane label is what the lookup above keys on, so a failure here costs
 # the title and nothing else.
@@ -102,6 +92,6 @@ new_tab=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.tab_id // empt
 [ -n "$new_tab" ] || exit 0
 # `plugin pane open --focus` leaves the client showing the previous tab on a
 # first open; only an explicit tab focus switches the view. Harmless when the
-# tab already has focus.
+# tab already has focus. Measured with ttt-tab, which hit the same behavior.
 "$herdr_bin" tab focus "$new_tab" >/dev/null 2>&1 || true
 exec "$herdr_bin" tab rename "$new_tab" "$LABEL"
