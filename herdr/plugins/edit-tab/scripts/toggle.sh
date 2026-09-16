@@ -67,5 +67,11 @@ opened=$("$herdr_bin" plugin pane open \
 new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // empty')
 [ -n "$new_pane" ] || exit 0
 
+# Right-click routing is per-pane state, the default for a new pane is herdr's own
+# menu, and `plugin pane open` carries no field for it. So it is set here, once the
+# pane exists, or every right-click into the editor is swallowed by herdr first.
+# panel-revive re-asserts the same thing after a restore, where it does not survive.
+"$herdr_bin" pane input --pane "$new_pane" --right-click pane >/dev/null 2>&1 || true
+
 mkdir -p "$state_dir"
 printf '%s' "$new_pane" >"$state_file"
