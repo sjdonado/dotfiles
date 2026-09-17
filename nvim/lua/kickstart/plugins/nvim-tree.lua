@@ -69,7 +69,13 @@ require('nvim-tree').setup {
       if vim.fn.getmousepos().winid ~= vim.api.nvim_get_current_win() then
         return
       end
-      vim.cmd 'normal! <Esc>'
+      -- Ending the selection the press started goes through feedkeys, not
+      -- `:normal!`: the tree's buffer is not modifiable, and an ex command there
+      -- surfaced as E21 on a real click. The x flag processes the key now, while
+      -- the tree is still the current window.
+      if vim.fn.mode() ~= 'n' then
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'nx', false)
+      end
       api.node.open.edit()
     end, opts 'Open (single click)')
   end,
