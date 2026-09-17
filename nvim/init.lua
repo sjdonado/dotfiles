@@ -543,6 +543,23 @@ do
     require 'kickstart.plugins.nvim-tree'
     vim.cmd 'NvimTreeFindFileToggle'
   end, { desc = 'Toggle Nvim Tree' })
+
+  -- The right-click menu is Neovim's own PopUp menu, defined by menu.vim, and
+  -- menu.vim reinstalls its items with `aunmenu PopUp` whenever it is sourced. So
+  -- this waits for VimEnter and then one event-loop tick, which puts it after the
+  -- startup that would otherwise clear it. The action loads the tree the same lazy
+  -- way <leader>e does, so either entry point can be first.
+  vim.api.nvim_create_autocmd('VimEnter', {
+    once = true,
+    callback = function()
+      vim.schedule(function()
+        vim.cmd.menu {
+          'PopUp.Toggle\\ Nvim\\ Tree',
+          "<Cmd>lua require('kickstart.plugins.nvim-tree'); require('nvim-tree.api').tree.toggle()<CR>",
+        }
+      end)
+    end,
+  })
 end
 
 -- ============================================================
