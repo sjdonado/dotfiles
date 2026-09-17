@@ -107,13 +107,27 @@ else
   mkdir -p "$HOME/.config/browser-router"
   ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
 
-  # Rebuilds and re-registers on every run, which is how it picks up an upstream
-  # change. --no-default-prompt keeps provisioning non-interactive; making it the
-  # default browser is a one-time system prompt, answered by running the installer
-  # by hand or by opening ~/Applications/BrowserRouter.app.
-  curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh \
-    | sh -s -- --no-default-prompt \
+  # Built from source by the tap formula rather than poured, so bumping the tag is
+  # a rebuild instead of a wait on a bottle. The formula stops at the signed bundle
+  # inside the Homebrew prefix; telling macOS about it is deliberately not its job,
+  # and the last step, making it the default browser, is a system prompt no script
+  # can answer.
+  brew install --build-from-source sjdonado/tap/browser-router \
     || log "  BrowserRouter install failed; links will open in whatever macOS considers the default browser"
+
+  app="$(brew --prefix)/opt/browser-router/BrowserRouter.app"
+  if [ -d "$app" ]; then
+    mkdir -p "$HOME/Applications"
+    rm -rf "$HOME/Applications/BrowserRouter.app"
+    cp -R "$app" "$HOME/Applications/"
+    # LaunchServices is what lets a bundle outside /Applications open links at all.
+    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+      -f "$HOME/Applications/BrowserRouter.app" \
+      || log "  lsregister failed; links may not reach BrowserRouter yet"
+    log "  registered ~/Applications/BrowserRouter.app; open it once to answer the default-browser prompt"
+  else
+    log "  BrowserRouter.app is not under the Homebrew prefix; skipping registration"
+  fi
 fi
 
 if [ "$LINKS_ONLY" = 1 ]; then

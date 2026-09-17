@@ -54,12 +54,12 @@ Neovim, configured from `nvim/`, with the whole directory linked into `~/.config
 
 Links are routed by [BrowserRouter](https://github.com/sjdonado/browser-router), its own repository now rather than a folder in here: it is the system default browser, matches every link against regexes and hands it to the browser that rule names. Nothing resident, no UI. Config reference and measured footprint are in that README.
 
-What is local to this setup: the rules live at `macos/browser-router.json`, linked to `~/.config/browser-router/config.json`, so a routing change is a commit rather than a machine-local edit. Local dev servers and Cloudflare previews go to Helium, everything else to a Safari tab. `macos.sh` links that config and then rebuilds and re-registers the app on every run, non-interactively.
+What is local to this setup: the rules live at `macos/browser-router.json`, linked to `~/.config/browser-router/config.json`, so a routing change is a commit rather than a machine-local edit. Local dev servers and Cloudflare previews go to Helium, everything else to a Safari tab. `macos.sh` links that config, installs the app from the `sjdonado/tap` formula built from source, and registers the bundle with LaunchServices.
 
-Making it the *default* browser is a system prompt, and so is letting it control Safari the first time. Neither can be answered by a script, which is why `macos.sh` passes `--no-default-prompt` and the first install is worth running by hand:
+Making it the *default* browser is a system prompt, and so is letting it control Safari the first time. Neither can be answered by a script, which is why `macos.sh` stops at registration: the bundle is built and registered by then, and answering that prompt is the one step left.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh | sh
+open ~/Applications/BrowserRouter.app
 ```
 
 ### Footprint
