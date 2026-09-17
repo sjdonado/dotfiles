@@ -107,14 +107,15 @@ else
   mkdir -p "$HOME/.config/browser-router"
   ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
 
-  # Built from source by the tap formula rather than poured, so bumping the tag is
-  # a rebuild instead of a wait on a bottle. The formula stops at the signed bundle
-  # inside the Homebrew prefix; telling macOS about it is deliberately not its job,
-  # and the last step, making it the default browser, is a system prompt no script
-  # can answer.
-  brew install --build-from-source sjdonado/tap/browser-router \
-    || log "  BrowserRouter install failed; links will open in whatever macOS considers the default browser"
-
+  # The app arrives with the Brewfile, which declares the sjdonado/tap formula
+  # beside the other tapped ones. There is no bottle for it, so brew compiles it
+  # with swiftc rather than pouring one, and --build-from-source would say nothing
+  # the formula does not already do.
+  #
+  # What stays here is registration, which is not install: the formula stops at the
+  # signed bundle inside the Homebrew prefix, and telling macOS about a bundle is
+  # deliberately not its job. The last step, making it the default browser, is a
+  # system prompt no script can answer.
   app="$(brew --prefix)/opt/browser-router/BrowserRouter.app"
   if [ -d "$app" ]; then
     mkdir -p "$HOME/Applications"
