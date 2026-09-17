@@ -379,9 +379,25 @@ do
   vim.pack.add { gh 'chrisgrieser/nvim-various-textobjs' }
   require('various-textobjs').setup { keymaps = { useDefaults = true } }
 
-  -- Auto session
+  -- Auto session. nvim-tree is not session state: it is opened on demand by
+  -- <leader>e or the right-click menu, and a session that captured its buffer
+  -- would restore a window whose plugin was never loaded. So its filetype is
+  -- closed on save, and the tree is opened again after a restore, rooted at the
+  -- directory the session restored. The module is required first because the tree
+  -- is lazy and its API only exists once its setup has run.
   vim.pack.add { gh 'rmagatti/auto-session' }
-  require('auto-session').setup()
+  require('auto-session').setup {
+    close_filetypes_on_save = { 'NvimTree' },
+    post_restore_cmds = {
+      function()
+        require 'kickstart.plugins.nvim-tree'
+        local api = require 'nvim-tree.api'
+        api.tree.open()
+        api.tree.change_root(vim.fn.getcwd())
+        api.tree.reload()
+      end,
+    },
+  }
   vim.keymap.set('n', '<leader>wr', '<cmd>AutoSession search<CR>', { desc = 'Session search' })
   vim.keymap.set('n', '<leader>ws', '<cmd>AutoSession save<CR>', { desc = 'Save session' })
   vim.keymap.set('n', '<leader>wa', '<cmd>AutoSession toggle<CR>', { desc = 'Toggle autosave' })
