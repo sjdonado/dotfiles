@@ -44,7 +44,7 @@ In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the ter
 
 Neovim, configured from `nvim/`, with the whole directory linked into `~/.config/nvim` so its plugin lockfile (`nvim-pack-lock.json`) is written back into this repository.
 
-- `prefix+e` toggles a dedicated nvim tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free.
+- `prefix+e` toggles nvim as an overlay over the active pane: it opens on the first press and closes on the next, and closing restores the focus and zoom it covered. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free, and right-clicks inside the overlay reach the editor rather than herdr's pane menu.
 - Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. `:MasonToolsSync` installs the language servers and formatters the config declares.
 - Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `lazygit` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating window over the editor. It comes from `mise.toml` with the other cross-platform tools. There is no separate lazygit panel.
 - Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.

@@ -71,7 +71,8 @@ new_pane=$(printf '%s' "$opened" | jq -r '.result.plugin_pane.pane.pane_id // em
 # menu, and `plugin pane open` carries no field for it. So it is set here, once the
 # pane exists, or every right-click into the editor is swallowed by herdr first.
 # panel-revive re-asserts the same thing after a restore, where it does not survive.
-"$herdr_bin" pane input --pane "$new_pane" --right-click pane >/dev/null 2>&1 || true
+"$herdr_bin" pane input --pane "$new_pane" --right-click pane >/dev/null 2>&1 \
+  || echo "edit-tab: could not route right-clicks into $new_pane" >&2
 
 mkdir -p "$state_dir"
 printf '%s' "$new_pane" >"$state_file"

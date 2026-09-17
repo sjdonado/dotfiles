@@ -116,7 +116,11 @@ else
   # signed bundle inside the Homebrew prefix, and telling macOS about a bundle is
   # deliberately not its job. The last step, making it the default browser, is a
   # system prompt no script can answer.
-  app="$(brew --prefix)/opt/browser-router/BrowserRouter.app"
+  # Guarded rather than substituted inline: under `set -e` a failing substitution
+  # in the assignment aborts the run, and no brew means this step is simply absent,
+  # not fatal.
+  brew_prefix="$(brew --prefix 2>/dev/null || true)"
+  app="${brew_prefix:+$brew_prefix/opt/browser-router/BrowserRouter.app}"
   if [ -d "$app" ]; then
     mkdir -p "$HOME/Applications"
     rm -rf "$HOME/Applications/BrowserRouter.app"

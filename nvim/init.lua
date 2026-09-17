@@ -131,7 +131,8 @@ end
 if not vim.pack then
   vim.notify(
     'This config requires Neovim >= 0.12 for vim.pack (currently '
-      .. tostring(vim.version()) .. '). Run linux.sh --install (Linux) or the '
+      .. tostring(vim.version())
+      .. '). Run linux.sh --install (Linux) or the '
       .. 'macOS setup to fetch a current Neovim; skipping plugin setup.',
     vim.log.levels.ERROR
   )
@@ -274,8 +275,10 @@ do
   vim.api.nvim_create_autocmd('TermResponse', {
     group = xcode_theme,
     callback = function(ev)
-      local red, green, blue = ev.data.sequence:match('^\027%]11;rgb:(%x+)/(%x+)/(%x+)$')
-      if not red then return end
+      local red, green, blue = ev.data.sequence:match '^\027%]11;rgb:(%x+)/(%x+)/(%x+)$'
+      if not red then
+        return
+      end
       local function channel(value)
         return tonumber(value, 16) / (16 ^ #value - 1)
       end
@@ -484,7 +487,7 @@ do
 
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>p', function()
+  vim.keymap.set('n', 'gp', function()
     builtin.find_files { hidden = true }
   end, { desc = '[S]earch Files' })
   vim.keymap.set('n', 'g/', function()
@@ -510,9 +513,9 @@ do
     }
   end, { desc = '[S]earch by [E]xpand Grep' })
   vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-  vim.keymap.set('n', '<leader>ss', builtin.resume, { desc = '[S]earch Resume' })
+  vim.keymap.set('n', '<leader><leader>', builtin.resume, { desc = '[S]earch Resume' })
   vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files' })
-  vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+  vim.keymap.set('n', 'gb', builtin.buffers, { desc = '[ ] Find existing buffers' })
   vim.keymap.set('n', '<leader>/', function()
     load()
     builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown { winblend = 10, previewer = false })
@@ -551,7 +554,8 @@ do
     gh 'akinsho/git-conflict.nvim',
     -- lazygit.nvim is a wrapper rather than a reimplementation: :LazyGit runs the
     -- lazygit binary in a floating window, and takes the window away when lazygit
-    -- quits. Plenary, which draws that window's border, comes from Section 3.
+    -- quits. It brings no dependency of its own; plenary, already here from
+    -- Section 3, is only for its optional border style.
     gh 'kdheepak/lazygit.nvim',
   }
   require 'kickstart.plugins.git'
@@ -956,13 +960,18 @@ do
       return vim.notify('herdr is not on PATH; cannot open the annotate dialog', vim.log.levels.ERROR)
     end
 
-    vim.cmd('normal! "zy')
+    vim.cmd 'normal! "zy'
 
-    -- $XDG_RUNTIME_DIR when the session has one, because that is the directory
-    -- the plugin reads; the temp dir is the fallback for a session without it.
+    -- The plugin's reader is `$XDG_RUNTIME_DIR` when set, else the system temp
+    -- dir, then `/herdr-annotate-<uid>/selection`. That temp dir is the temp ROOT:
+    -- `tempname()` is not a substitute, because Neovim answers with a per-session
+    -- directory under it, and a file written there is one the plugin never opens.
     local base = vim.env.XDG_RUNTIME_DIR
     if not base or base == '' then
-      base = vim.fn.fnamemodify(vim.fn.tempname(), ':h')
+      base = vim.env.TMPDIR
+    end
+    if not base or base == '' then
+      base = '/tmp'
     end
 
     local dir = base .. '/herdr-annotate-' .. vim.uv.getuid()

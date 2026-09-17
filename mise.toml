@@ -227,6 +227,7 @@ tree-sitter = "latest"
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
 "rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
+"sjdonado/tap" = "https://github.com/sjdonado/homebrew-tap.git"
 "supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
 
 # Every link both verify scripts assert, minus what bootstrap cannot own:
