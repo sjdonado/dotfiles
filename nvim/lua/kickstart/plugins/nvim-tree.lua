@@ -57,6 +57,21 @@ require('nvim-tree').setup {
     vim.keymap.set('n', 'E', api.tree.expand_all, opts 'Expand All')
     vim.keymap.set('n', 'q', api.tree.close, opts 'Close')
     vim.keymap.set('n', 'g?', api.tree.toggle_help, opts 'Help')
+
+    -- The plugin ships <2-LeftMouse> only, because Vim reserves a single left
+    -- click for moving the cursor. A tree is where one click should act on the row
+    -- under it, and the plugin's own docs give <LeftRelease> as the way to get that
+    -- without touching 'mousemodel'. Both modes are mapped because 'mousemodel' is
+    -- extend, so the press has already started a selection by the time the release
+    -- arrives; the window check keeps a release that ends a drag elsewhere from
+    -- acting on whatever the cursor happens to sit on.
+    vim.keymap.set({ 'n', 'x' }, '<LeftRelease>', function()
+      if vim.fn.getmousepos().winid ~= vim.api.nvim_get_current_win() then
+        return
+      end
+      vim.cmd 'normal! <Esc>'
+      api.node.open.edit()
+    end, opts 'Open (single click)')
   end,
 }
 
