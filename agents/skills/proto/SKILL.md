@@ -17,7 +17,7 @@ Load and follow the `ponytail` skill. Prototype code is still the laziest code t
 
 1. Stay in the current worktree and do not create or switch branches. Inspect the current branch and its open PR before editing. Related work belongs to `feedback` on that branch, not `proto`; if ownership is unclear, ask whether the request belongs to the open PR or a separate line and stop before editing. Otherwise prototype as uncommitted changes, including on the default branch. `yolo` creates the task branch only after promotion.
 2. Resolve the local rungs of the oracle ladder (type check, lint, tests) per `AGENTS.md`. Record them in worktree state if available. The remote rungs do not exist in this workflow.
-3. Read the branch note and the session task list, or write both per `AGENTS.md` continuity rules before the second iteration, adding `/.agent/` to `info/exclude` first. Tick the list as each iteration lands, so the next session sees what the loop already settled. Put confirmed/assumed requirements and deferred behavior in Contract, and non-reconstructible rationale in Carry forward. On continuation, recover missing state from artifacts; ask for an unrecoverable requirement before changing dependent behavior.
+3. Read the branch note and the session task list, or write both per `AGENTS.md` continuity rules before the second step, adding `/.agent/` to `info/exclude` first. Tick the list as each iteration lands, so the next session sees what the loop already settled. Open Contract with the three fixed lines Purpose, End state, and Key tasks, filled from the request and repository evidence before asking the human for any of them, then confirmed and assumed requirements and deferred behavior; put non-reconstructible rationale in Carry forward. Rewrite End state before the next slice whenever feedback changes what done means. On continuation, recover missing state from artifacts; ask for an unrecoverable requirement before changing dependent behavior.
 
 ## The loop
 
@@ -29,11 +29,15 @@ Each iteration:
 4. **Present**: what was built, how to try it (load and follow the `run` skill when seeing it live helps), what this iteration taught, and what it changed in the requirements ledger. Then stop and wait. This is the one workflow where stopping for the human every round is the design, not a failure of autonomy.
 5. **Fold feedback in.** Feedback may change the code, the requirements, or both. Update the ledger: what survived, what changed and why, what died. A requirement the human reversed twice is a grilling target, not a coin to keep flipping; say so.
 
+## Fork iteration, optional
+
+When the End state line is written and two or more approaches are plausible enough that the human would want to see the tradeoff, build them side by side: one subagent per approach, each at a tier below this one, each in its own worktree, each given the End state and the local ladder. Compare the results against the End state and present the comparison as the iteration. Nothing is committed, and no fork runs while the End state line is missing; write that line or build the single next slice instead.
+
 ## Exit states
 
 Exactly one of:
 
-- **Promote.** The human is satisfied with the shape. Finalize the requirements ledger: confirmed requirements, decisions made and their rejected alternatives, and anything left deliberately prototype-quality that `yolo` must harden. Hand off the current worktree and ledger; `yolo` treats the ledger as its contract, creates or reuses the authorized task branch without losing the diff, and runs its full pipeline (adversarial review, commits, PR, remote checks). Nothing is weakened by the cheap iterations, because yolo's adversarial round covers the final accumulated diff regardless of how it was built.
+- **Promote.** The human said the shape is right. Finalize the requirements ledger: confirmed requirements, decisions made and their rejected alternatives, and anything left deliberately prototype-quality that `yolo` must harden. Then present it and wait: the ledger is the agent's own output, so it never promotes on its own, and promotion happens only once the user accepts that scope, per `AGENTS.md`, **Publication authority**. On acceptance, hand off the current worktree and ledger; `yolo` treats the ledger as its contract, creates or reuses the authorized task branch without losing the diff, and runs its full pipeline (adversarial review, commits, PR, remote checks). Nothing is weakened by the cheap iterations, because yolo's adversarial round covers the final accumulated diff regardless of how it was built.
 - **Kill.** The prototype disproved the premise. That is a success. Record what died and the evidence, leave the working tree intact unless the human authorizes cleanup, and offer `create-ticket` or explore for whatever replaces it.
 
 Never create or switch a branch, commit, push, open a PR, or merge from this workflow. If the human asks to ship directly from here, route to `yolo` with the ledger instead.

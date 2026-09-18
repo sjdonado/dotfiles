@@ -19,7 +19,7 @@ Scale to blast radius:
 
 ## Reviewer A: does it do the job
 
-Give it the diff **and** the requirements. Nothing else.
+Give it the diff **and** the requirements, verbatim from their source. Nothing else. Take the requirements from the first of these that exists: the OpenSpec change's delta specs and `tasks.md`; else the branch note's Contract block, meaning its Purpose, End state, and Key tasks lines; else the ticket description and its comment thread. Never substitute a summary written for the occasion.
 
 > Assume this diff fails to do what the requirements say. Find where.
 

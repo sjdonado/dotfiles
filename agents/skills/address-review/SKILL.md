@@ -34,7 +34,7 @@ Steps:
 
 5. Outdated branch: if `mergeStateStatus` is `BEHIND` (or base has moved), prepare an update plan but do not update yet. Default to merging the actual base branch into the PR branch after approval to preserve history and avoid rewriting pushed commits. Never assume the base is `main`.
 
-6. STOP before external writes: present the verdicts, fixes, checks, branch-update plan, and every reply for approval. Save the branch note with that pending action before returning. Approval covers only the presented scope; it includes the PR-description refresh after the approved push, never replies beyond those shown.
+6. STOP before external writes, per `AGENTS.md`, **Publication authority**: present the verdicts, fixes, checks, branch-update plan, and every reply for approval. Save the branch note with that pending action before returning. Approval covers only the presented scope; it includes the PR-description refresh after the approved push, never replies beyond those shown.
 
 7. After approval: update the branch if needed, resolve conflicts without dropping either side, rerun relevant local checks, push, rerun remote CI only where needed, then reply inside each existing unresolved thread using its existing comment ID and the GitHub review-comment reply endpoint (`POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies`):
    - Fixed: reply with the fixing commit hash, e.g. `Fixed in <shorthash>.` Add one short note only when the change is not obvious.

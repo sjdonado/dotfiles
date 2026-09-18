@@ -13,7 +13,7 @@ It is the natural place for a cheaper tier: the contract is fixed, the oracle is
 
 Run it in a subagent when delegation is worth it, or in the current session when it is not; either way it is this workflow, so the cost is attributable. Dispatched, it gets the work to verify and not the conversation. Give it, and nothing else:
 
-- the branch or diff under test, and where the contract lives (an OpenSpec change directory, a task list, a ticket, or a one-line statement of what the change is meant to do)
+- the branch or diff under test, and the path where the contract lives: an OpenSpec change directory, the branch note whose Contract opens with Purpose, End state, and Key tasks, a task list, or a ticket. Pass the path, not a summary of it
 - the resolved oracle ladder if the caller already resolved it, so it is not re-derived
 - any check the caller already knows is failing for an unrelated reason
 
