@@ -79,7 +79,7 @@ For work spanning sessions or rounds, keep one ignored note at `.agent/<branch-k
 
 Keep **Contract** (requirements and artifact references), **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews). Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks, naming the task list's path in State so a reader of the note finds it. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
 
-Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved handoff without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and preserves it for explicit cleanup.
+Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved note without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and preserves it for explicit cleanup.
 
 ### The task list
 
