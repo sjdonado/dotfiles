@@ -19,6 +19,7 @@ tap "coder/coder", trusted: true
 tap "grafana/grafana", trusted: true
 tap "ory/tap", trusted: true
 tap "rjyo/moshi", trusted: true
+tap "sjdonado/tap", trusted: true
 tap "supabase/tap", trusted: true
 tap "tunneltodev/tap", trusted: true
 tap "xcodesorg/made"
@@ -186,6 +187,8 @@ brew "grafana/grafana/gcx", trusted: true
 brew "ory/tap/cli", trusted: true
 # Portable daemon + CLI that bridges AI coding agents to the Moshi mobile app
 brew "rjyo/moshi/moshi-hook", trusted: true
+# Smallest possible default browser for macOS: regex-routes links, then exits
+brew "sjdonado/tap/browser-router", trusted: true
 # Supabase CLI
 brew "supabase/tap/supabase", trusted: true
 # Password manager that keeps all passwords secure behind one password

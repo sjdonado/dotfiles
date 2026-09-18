@@ -36,10 +36,11 @@ delivery = "terminal"
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
 [theme]
-auto_switch = true
+auto_switch = false
 dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
+name = "catppuccin"
 [terminal]
 default_shell = "fish"
 
@@ -53,6 +54,9 @@ default_shell = "fish"
 # the worktrunk hooks the keyboard path needed.
 [keys]
 settings = "prefix+,"
+# The nvim tab toggle below takes prefix+e, which is also edit_scrollback's
+# default, so scrollback opens one modifier further in rather than losing the key.
+edit_scrollback = "prefix+shift+e"
 
 # Direct chord, no prefix: workspaces are what gets switched between all day, and
 # the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
@@ -62,10 +66,10 @@ settings = "prefix+,"
 # so the chord the fingers press is cmd, and the chord on the wire is ctrl+alt.
 switch_workspace = "ctrl+alt+1..9"
 
-# edit-tab rather than herdr's built-in editor keymap: the toggle returns to the
-# tab it was pressed from, which herdr has no primitive for.
+# edit-tab rather than herdr's built-in editor keymap: the toggle opens an overlay
+# over the active pane and closes it again, which herdr has no primitive for.
 [[keys.command]]
-key = "prefix+."
+key = "prefix+e"
 type = "plugin_action"
 command = "edit-tab.toggle"
 
@@ -89,3 +93,42 @@ description = "Agent Usage: refresh usage data"
 # Render inline agent images via Kitty graphics; ghostty supports it.
 # Without this, panes show a black gap where the image would be.
 kitty_graphics = true
+
+# Herdr Annotate (plannotator/herdr-annotate): comment on terminal selections and
+# on documents or agent replies, then send the annotations back to the agent. It
+# ships no setup action, so these are its documented keys, written by hand.
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "annotate.capture"
+description = "annotate text"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "annotate.copy-context"
+description = "copy annotations as context"
+
+[[keys.command]]
+key = "prefix+ctrl+a"
+type = "plugin_action"
+command = "annotate.copy-archive"
+description = "copy annotations as context and archive them"
+
+[[keys.command]]
+key = "prefix+m"
+type = "plugin_action"
+command = "annotate.manage"
+description = "manage annotations"
+
+[[keys.command]]
+key = "prefix+o"
+type = "plugin_action"
+command = "annotate.open"
+description = "review documents in this folder"
+
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "annotate.last"
+description = "review the agent's last reply"

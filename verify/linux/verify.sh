@@ -35,7 +35,7 @@ linked() {
 }
 
 group "tools from mise.toml"
-for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec nvim tree-sitter wt opencode; do runs "$c"; done
+for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec nvim tree-sitter lazygit wt opencode; do runs "$c"; done
 
 group "tools with their own installers"
 for c in claude herdr; do runs "$c"; done

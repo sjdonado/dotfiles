@@ -131,7 +131,8 @@ end
 if not vim.pack then
   vim.notify(
     'This config requires Neovim >= 0.12 for vim.pack (currently '
-      .. tostring(vim.version()) .. '). Run linux.sh --install (Linux) or the '
+      .. tostring(vim.version())
+      .. '). Run linux.sh --install (Linux) or the '
       .. 'macOS setup to fetch a current Neovim; skipping plugin setup.',
     vim.log.levels.ERROR
   )
@@ -274,8 +275,10 @@ do
   vim.api.nvim_create_autocmd('TermResponse', {
     group = xcode_theme,
     callback = function(ev)
-      local red, green, blue = ev.data.sequence:match('^\027%]11;rgb:(%x+)/(%x+)/(%x+)$')
-      if not red then return end
+      local red, green, blue = ev.data.sequence:match '^\027%]11;rgb:(%x+)/(%x+)/(%x+)$'
+      if not red then
+        return
+      end
       local function channel(value)
         return tonumber(value, 16) / (16 ^ #value - 1)
       end
@@ -376,9 +379,25 @@ do
   vim.pack.add { gh 'chrisgrieser/nvim-various-textobjs' }
   require('various-textobjs').setup { keymaps = { useDefaults = true } }
 
-  -- Auto session
+  -- Auto session. nvim-tree is not session state: it is opened on demand by
+  -- <leader>e or the right-click menu, and a session that captured its buffer
+  -- would restore a window whose plugin was never loaded. So its filetype is
+  -- closed on save, and the tree is opened again after a restore, rooted at the
+  -- directory the session restored. The module is required first because the tree
+  -- is lazy and its API only exists once its setup has run.
   vim.pack.add { gh 'rmagatti/auto-session' }
-  require('auto-session').setup()
+  require('auto-session').setup {
+    close_filetypes_on_save = { 'NvimTree' },
+    post_restore_cmds = {
+      function()
+        require 'kickstart.plugins.nvim-tree'
+        local api = require 'nvim-tree.api'
+        api.tree.open()
+        api.tree.change_root(vim.fn.getcwd())
+        api.tree.reload()
+      end,
+    },
+  }
   vim.keymap.set('n', '<leader>wr', '<cmd>AutoSession search<CR>', { desc = 'Session search' })
   vim.keymap.set('n', '<leader>ws', '<cmd>AutoSession save<CR>', { desc = 'Save session' })
   vim.keymap.set('n', '<leader>wa', '<cmd>AutoSession toggle<CR>', { desc = 'Toggle autosave' })
@@ -484,7 +503,7 @@ do
 
   vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-  vim.keymap.set('n', '<leader>p', function()
+  vim.keymap.set('n', 'gp', function()
     builtin.find_files { hidden = true }
   end, { desc = '[S]earch Files' })
   vim.keymap.set('n', 'g/', function()
@@ -510,9 +529,9 @@ do
     }
   end, { desc = '[S]earch by [E]xpand Grep' })
   vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-  vim.keymap.set('n', '<leader>ss', builtin.resume, { desc = '[S]earch Resume' })
+  vim.keymap.set('n', '<leader><leader>', builtin.resume, { desc = '[S]earch Resume' })
   vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files' })
-  vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+  vim.keymap.set('n', 'gb', builtin.buffers, { desc = '[ ] Find existing buffers' })
   vim.keymap.set('n', '<leader>/', function()
     load()
     builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown { winblend = 10, previewer = false })
@@ -540,26 +559,41 @@ do
     require 'kickstart.plugins.nvim-tree'
     vim.cmd 'NvimTreeFindFileToggle'
   end, { desc = 'Toggle Nvim Tree' })
+
+  -- The right-click menu is Neovim's own PopUp menu, defined by menu.vim, and
+  -- menu.vim reinstalls its items with `aunmenu PopUp` whenever it is sourced. So
+  -- this waits for VimEnter and then one event-loop tick, which puts it after the
+  -- startup that would otherwise clear it. The action loads the tree the same lazy
+  -- way <leader>e does, so either entry point can be first.
+  vim.api.nvim_create_autocmd('VimEnter', {
+    once = true,
+    callback = function()
+      vim.schedule(function()
+        vim.cmd.menu {
+          'PopUp.Toggle\\ Nvim\\ Tree',
+          "<Cmd>lua require('kickstart.plugins.nvim-tree'); require('nvim-tree.api').tree.toggle()<CR>",
+        }
+      end)
+    end,
+  })
 end
 
 -- ============================================================
--- SECTION 5: GIT (gitsigns, git-conflict, neogit, blame)
+-- SECTION 5: GIT (gitsigns, git-conflict, lazygit, blame)
 -- ============================================================
 do
   vim.pack.add {
     gh 'lewis6991/gitsigns.nvim',
     gh 'akinsho/git-conflict.nvim',
-    gh 'NeogitOrg/neogit',
+    -- lazygit.nvim is a wrapper rather than a reimplementation: :LazyGit runs the
+    -- lazygit binary in a floating window, and takes the window away when lazygit
+    -- quits. It brings no dependency of its own; plenary, already here from
+    -- Section 3, is only for its optional border style.
+    gh 'kdheepak/lazygit.nvim',
   }
   require 'kickstart.plugins.git'
 
-  -- Neogit is the git surface that replaces lazygit: staging, commit, diff, log,
-  -- branch, push/pull, all inside the editor rather than in a herdr pane. It
-  -- needs plenary, which Section 3 adds alongside todo-comments.
-  require('neogit').setup {}
-  vim.keymap.set('n', '<leader>gg', function()
-    require('neogit').open()
-  end, { desc = '[G]it [G]ui (Neogit)' })
+  vim.keymap.set('n', '<leader>gg', '<cmd>LazyGit<CR>', { desc = '[G]it [G]ui (lazygit)' })
 end
 
 -- ============================================================
@@ -942,5 +976,45 @@ end
 -- existed to hold a Ghostty-sent shortcut for the same functions, and the
 -- terminal never delivered it.
 require 'custom.copy-reference'
+
+-- ============================================================
+-- SECTION 11: HERDR ANNOTATE
+-- ============================================================
+-- Hands a visual selection to herdr's annotate plugin, which opens a comment
+-- dialog and can send the annotations back to the agent that wrote the code.
+--
+-- The selection travels in a file rather than through the clipboard: the plugin
+-- runs wherever herdr runs, which over SSH is the server, and a headless server
+-- has no clipboard for it to read. The plugin deletes the file after reading it,
+-- and ignores one older than 15 seconds.
+do
+  local function annotate_selection()
+    if vim.fn.executable 'herdr' == 0 then
+      return vim.notify('herdr is not on PATH; cannot open the annotate dialog', vim.log.levels.ERROR)
+    end
+
+    vim.cmd 'normal! "zy'
+
+    -- The plugin's reader is `$XDG_RUNTIME_DIR` when set, else the system temp
+    -- dir, then `/herdr-annotate-<uid>/selection`. That temp dir is the temp ROOT:
+    -- `tempname()` is not a substitute, because Neovim answers with a per-session
+    -- directory under it, and a file written there is one the plugin never opens.
+    local base = vim.env.XDG_RUNTIME_DIR
+    if not base or base == '' then
+      base = vim.env.TMPDIR
+    end
+    if not base or base == '' then
+      base = '/tmp'
+    end
+
+    local dir = base .. '/herdr-annotate-' .. vim.uv.getuid()
+    vim.fn.mkdir(dir, 'p', '0700')
+    vim.fn.writefile(vim.split(vim.fn.getreg 'z', '\n'), dir .. '/selection')
+
+    vim.fn.jobstart { 'herdr', 'plugin', 'action', 'invoke', 'annotate.capture' }
+  end
+
+  vim.keymap.set('x', '<leader>a', annotate_selection, { desc = 'Annotate selection in Herdr' })
+end
 
 -- vim: ts=2 sts=2 sw=2 et

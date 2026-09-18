@@ -21,7 +21,7 @@
 
 On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 
-A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
+A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, lazygit, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
 
 ### Agent harness
 
@@ -44,9 +44,9 @@ In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the ter
 
 Neovim, configured from `nvim/`, with the whole directory linked into `~/.config/nvim` so its plugin lockfile (`nvim-pack-lock.json`) is written back into this repository.
 
-- `prefix+.` toggles a dedicated nvim tab in herdr: it opens on first press, focuses on the next, and returns you to the tab you came from when pressed inside it. Or run `nvim` directly.
+- `prefix+e` toggles nvim as an overlay over the active pane: it opens on the first press and closes on the next, and closing restores the focus and zoom it covered. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free, and right-clicks inside the overlay reach the editor rather than herdr's pane menu.
 - Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. `:MasonToolsSync` installs the language servers and formatters the config declares.
-- Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`), `git-conflict` handles merge markers, and Neogit (`<leader>gg`) covers staging, commits, diffs, log and branches. There is no lazygit panel.
+- Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `lazygit` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating window over the editor. It comes from `mise.toml` with the other cross-platform tools. There is no separate lazygit panel.
 - Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.
 - A herdr restart restores the tab as a bare shell, so `panel-revive` restarts nvim in it the first time that pane is focused.
 
@@ -54,12 +54,12 @@ Neovim, configured from `nvim/`, with the whole directory linked into `~/.config
 
 Links are routed by [BrowserRouter](https://github.com/sjdonado/browser-router), its own repository now rather than a folder in here: it is the system default browser, matches every link against regexes and hands it to the browser that rule names. Nothing resident, no UI. Config reference and measured footprint are in that README.
 
-What is local to this setup: the rules live at `macos/browser-router.json`, linked to `~/.config/browser-router/config.json`, so a routing change is a commit rather than a machine-local edit. Local dev servers and Cloudflare previews go to Helium, everything else to a Safari tab. `macos.sh` links that config and then rebuilds and re-registers the app on every run, non-interactively.
+What is local to this setup: the rules live at `macos/browser-router.json`, linked to `~/.config/browser-router/config.json`, so a routing change is a commit rather than a machine-local edit. Local dev servers and Cloudflare previews go to Helium, everything else to a Safari tab. `macos.sh` links that config, installs the app from the `sjdonado/tap` formula built from source, and registers the bundle with LaunchServices.
 
-Making it the *default* browser is a system prompt, and so is letting it control Safari the first time. Neither can be answered by a script, which is why `macos.sh` passes `--no-default-prompt` and the first install is worth running by hand:
+Making it the *default* browser is a system prompt, and so is letting it control Safari the first time. Neither can be answered by a script, which is why `macos.sh` stops at registration: the bundle is built and registered by then, and answering that prompt is the one step left.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sjdonado/browser-router/main/install.sh | sh
+open ~/Applications/BrowserRouter.app
 ```
 
 ### Footprint
@@ -87,6 +87,7 @@ On-disk, measured after `brew cleanup`, so each formula holds one version:
 | neovim | 37 MB |
 | herdr | 21 MB |
 | worktrunk | 22 MB |
+| lazygit | 18 MB |
 | codex | 272 MB |
 | opencode | 137 MB |
 | claude | 310 MB per version, more as legacy releases pile up |
