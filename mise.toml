@@ -59,11 +59,12 @@ bat = "latest"
 fzf = "latest"
 jq = "latest"
 
-# The editor, the agent, and the worktree tool, all straight from their GitHub
-# releases. worktrunk's binary is named `wt`, which the backend cannot guess from
-# the repo name. These `github:` entries are the ones that spend GitHub API
-# calls, so a box behind a shared IP wants GITHUB_TOKEN set before a lockless
-# first resolve.
+# The editor, the git TUI, the agent, and the worktree tool, all straight from
+# their GitHub releases. worktrunk's binary is named `wt`, which the backend
+# cannot guess from the repo name. These `github:` entries are the ones that spend
+# GitHub API calls, so a box behind a shared IP wants GITHUB_TOKEN set before a
+# lockless first resolve.
+"github:jesseduffield/lazygit" = "latest"
 "github:neovim/neovim" = "latest"
 "github:anomalyco/opencode" = "latest"
 "github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
@@ -125,6 +126,7 @@ tree-sitter = "latest"
 "brew:awscli" = { os = "macos" }
 "brew:blueutil" = { os = "macos" }
 "brew:bombardier" = { os = "macos" }
+"brew:sjdonado/tap/browser-router" = { os = "macos" }
 "brew:caddy" = { os = "macos" }
 "brew:libpng" = { os = "macos" }
 "brew:pixman" = { os = "macos" }
@@ -225,6 +227,7 @@ tree-sitter = "latest"
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
 "rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
+"sjdonado/tap" = "https://github.com/sjdonado/homebrew-tap.git"
 "supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
 
 # Every link both verify scripts assert, minus what bootstrap cannot own:

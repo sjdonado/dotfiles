@@ -176,6 +176,18 @@ PY
   else
     log "  agent-usage setup failed; usage pane will be absent."
   fi
+
+  # Terminal and document annotation (plannotator/herdr-annotate, pinned). It
+  # fetches its own prebuilt binaries at install time, so there is no runtime to
+  # add; on Linux its clipboard access wants wl-clipboard, xclip or xsel, which
+  # the apt base does not install and this change does not add. Its keybindings
+  # are written by hand in herdr/config.toml because the plugin ships no setup
+  # action.
+  log "Setting up annotate..."
+  herdr plugin install plannotator/herdr-annotate \
+    --ref 7c8f5a177b8285dc56efc471ef04f7ab44a2b4b6 --yes >/dev/null 2>&1 \
+    && log "  installed Herdr plugin: annotate" \
+    || log "  Herdr not running; later run: herdr plugin install plannotator/herdr-annotate"
 }
 
 link_agent_configs() {

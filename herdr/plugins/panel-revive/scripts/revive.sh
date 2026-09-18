@@ -21,6 +21,13 @@ label=$("$herdr_bin" pane get "$pane" 2>/dev/null | jq -r '.result.pane.label //
 # edit-tab's [[panes]] title, and the only plugin pane left to repair.
 [ "$label" = nvim ] || exit 0
 
+# Right-click routing does not survive a restore, so it is re-asserted rather than
+# assumed. This runs before the "already running" exit below, because most focus
+# events land on a healthy pane and stop there, and the routing has to hold on
+# those too. Idempotent, and the same setting edit-tab applies when it opens one.
+"$herdr_bin" pane input --pane "$pane" --right-click pane >/dev/null \
+  || echo "panel-revive: could not restore right-click routing on $pane" >&2
+
 foreground=$("$herdr_bin" pane process-info --pane "$pane" 2>/dev/null \
   | jq -r '[.result.process_info.foreground_processes[]?.name] | join(" ")')
 case " $foreground " in
