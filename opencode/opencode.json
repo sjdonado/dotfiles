@@ -19,6 +19,11 @@
 			"type": "local",
 			"command": ["npx", "-y", "chrome-devtools-mcp@latest"],
 			"enabled": true
+		},
+		"ios-simulator": {
+			"type": "local",
+			"command": ["npx", "-y", "ios-simulator-mcp"],
+			"enabled": true
 		}
 	}
 }

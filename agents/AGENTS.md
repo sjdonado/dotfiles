@@ -261,6 +261,16 @@ A file that is already hard-wrapped is not an exception to this, it is the same 
 
 When rendering a link, always show the complete absolute URL as the visible text, including the scheme and host (for example, `https://example.com/path`). Never hide a URL behind Markdown alias text such as `[test](https://example.com/path)`. Never render relative URLs or bare paths as links.
 
+## MCP server scope
+
+Classify an MCP server before deciding where it is configured, because the two classes live in different places.
+
+A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `chrome-devtools` and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
+
+An account or product server is not global. It reaches a personal account, a product, or a team, so its credentials identify a person (an issue tracker, a hosted API). Keep it where its credentials live, per machine and per account, and never assume another agent, project, or machine has it. `linear` is the current example.
+
+The test is what the server reaches, not how the name reads: a devtool whose config carries a personal login is account-bound, and an unauthenticated server can still be account-bound by intent.
+
 ## Naming MCP tools
 
 These instructions load in more than one harness, and each prefixes MCP tool names differently. Always name a tool as its server plus its bare tool name, for example "the Linear MCP's `save_issue`". Never write a harness-specific prefix.
