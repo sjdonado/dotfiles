@@ -40,6 +40,8 @@ When the user is ready to implement, they must start the apply workflow explicit
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
+   Before asking anything, list the assumptions the proposal depends on, ranked by consequence, and resolve what you can: search the repository for precedent, check history for whether this was tried before, and load and follow the `evidence` skill for any claim about runtime behavior, impact, or frequency. If evidence refutes the premise, say so and stop; that is a success. Ask only about what survives.
+
    If the request contains ambiguity that would materially affect scope, externally observable behavior, compatibility, or acceptance criteria, ask the user before creating the change. For minor details, make a reasonable assumption and record it in the planning artifacts.
 
 2. **Determine the workflow schema**

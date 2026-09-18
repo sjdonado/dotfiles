@@ -21,7 +21,15 @@ import tempfile
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scenarios import CASES, EXPECTED, NOTE, PROMPTS, SANDBOX, SKILLS, check, git, seed, snapshot
+from scenarios import ARCHIVED_NOTE, CASES, CASE_SECTIONS, CASE_SKILLS, EXPECTED, NOTE, PROMPTS, PUBLICATION, SANDBOX, check, git, seed, snapshot
+
+
+def read_note(repo):
+    """land archives a merged note, so the retained evidence follows it there."""
+    for name in (NOTE, ARCHIVED_NOTE):
+        if (repo / name).exists():
+            return (repo / name).read_text()
+    return ""
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = "gpt-5.6-luna"
@@ -101,13 +109,36 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
-def inputs(case, model):
-    """Hash actual sources, not just a commit that may hide local modifications."""
-    files = [ROOT / "agents/AGENTS.md", Path(__file__).resolve(),
-             ROOT / "bench/scenarios.py", ROOT / "bench/fixture_gh.py"]
-    for name in SKILLS:
+def sections(text):
+    """Split an instruction file at its level-two headings, so a case hashes only what it reads."""
+    current, body = "(preamble)", {}
+    for line in text.splitlines(keepends=True):
+        if line.startswith("## "):
+            current = line[3:].strip()
+        body.setdefault(current, []).append(line)
+    return {name: "".join(lines) for name, lines in body.items()}
+
+
+def surfaces(case):
+    """The instruction surfaces this case declares, plus the runner and the fixtures."""
+    files = [Path(__file__).resolve(), ROOT / "bench/scenarios.py", ROOT / "bench/fixture_gh.py"]
+    for name in CASE_SKILLS[case]:
         files.extend(p for p in (ROOT / "agents/skills" / name).rglob("*") if p.is_file())
     sources = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(set(files)) if p.exists()}
+    parts = sections((ROOT / "agents/AGENTS.md").read_text())
+    # A case that declares no section is seeded without agents/AGENTS.md and hashes none of it.
+    # Every other case also hashes the preamble, which precedes every heading and cannot be declared.
+    for name in (("(preamble)",) + tuple(CASE_SECTIONS[case])) if CASE_SECTIONS[case] else ():
+        if name not in parts:
+            # A renamed or deleted section must fail loudly, not silently drop from provenance.
+            raise SystemExit(f"{case} declares agents/AGENTS.md section {name!r}, which no longer exists")
+        sources[f"agents/AGENTS.md#{name}"] = hashlib.sha256(parts[name].encode()).hexdigest()
+    return sources
+
+
+def inputs(case, model):
+    """Hash actual sources, not just a commit that may hide local modifications."""
+    sources = surfaces(case)
     codex_directory = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
     ambient = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
                (codex_directory / "AGENTS.md", codex_directory / "AGENTS.override.md") if p.is_file()}
@@ -141,6 +172,19 @@ def matrix():
     return result
 
 
+def regression():
+    """The rows a publication-authority change can break, within one batch's session cap.
+
+    Editing the runner or bench/scenarios.py stales every case, because both are hashed
+    everywhere; per-case provenance narrows only instruction edits. What this leaves out
+    is handoff-v1 on the second model and its two extra Luna trials, which the design
+    fixes as one first trial rather than re-running.
+    """
+    cases = PUBLICATION + ("route-open-shape", "route-bounded", "external-communication",
+                           "feedback", "land-open", "land-merged", "recoverable", "unrecoverable")
+    return [("handoff-v1", MODEL, 1)] + [(case, model, 1) for model in MODELS for case in cases]
+
+
 def evidence_hash(run_dir):
     return digest({p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                    for p in sorted(run_dir.glob("round-*")) if p.is_file()})
@@ -156,7 +200,7 @@ def run_case(batch, case, model, trial, provenance):
                 "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     save(run_dir / "result.json", manifest)
     # Retain exact instruction contents even after this source checkout changes.
-    for name in provenance["sources"]:
+    for name in sorted({name.split("#")[0] for name in provenance["sources"]}):
         target = run_dir / "sources" / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes((ROOT / name).read_bytes())
@@ -171,7 +215,7 @@ def run_case(batch, case, model, trial, provenance):
     print(run_dir, flush=True)
     for index, prompt in enumerate(PROMPTS[case], 1):
         before = snapshot(repo)
-        note_before = (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
+        note_before = read_note(repo)
         save(run_dir / f"round-{index}.before.json", before)
         (run_dir / f"round-{index}.prompt.txt").write_text(prompt)
         transcript = run_dir / f"round-{index}.jsonl"
@@ -195,8 +239,7 @@ def run_case(batch, case, model, trial, provenance):
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
                 exit_code = 124
-        note = (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
-        (run_dir / f"round-{index}.note.md").write_text(note)
+        (run_dir / f"round-{index}.note.md").write_text(read_note(repo))
         try:
             metrics = analyze(transcript)
             message = last_message(transcript)
@@ -264,13 +307,15 @@ def verify_behavior(batch, execute=False, selected=None):
         exhausted = sessions_used(batch) + len(PROMPTS[case]) > LIMIT if batch.exists() else False
         status = "passed" if statuses and all(s == "passed" for s in statuses) else next((s for s in statuses if s != "passed"), "budget-exhausted" if exhausted else "missing")
         report.append({"case": case, "model": model, "trial": trial, "status": status,
-                       "runs": [str(p) for p in matches], "input_hash": digest(provenance)})
+                       "runs": [str(p) for p in matches], "input_hash": digest(provenance),
+                       "surfaces": sorted(provenance["sources"])})
     used = sessions_used(batch)
     result = {"kind": "behavioral-smoke", "sessions_used": used, "session_cap": LIMIT,
               "passed": used <= LIMIT and all(row["status"] == "passed" for row in report), "results": report}
     print(json.dumps(result, indent=2), flush=True)
-    if batch.exists() and selected is None:  # a single case must not overwrite the matrix record
-        save(batch / "acceptance.json", result)
+    # A single case must not overwrite the matrix record; a named subset keeps its own.
+    if batch.exists() and (selected is None or selected == regression()):
+        save(batch / ("acceptance.json" if selected is None else "acceptance-regression.json"), result)
     return 0 if result["passed"] else 1
 
 
@@ -303,6 +348,7 @@ def main():
     mode.add_argument("--local", action="store_true")
     mode.add_argument("--behavior", action="store_true")
     verifier.add_argument("--run", action="store_true", help="Explicitly authorize missing model sessions, capped at 32 per retained batch")
+    verifier.add_argument("--regression", action="store_true", help="Only the rows a publication-authority change can break")
     verifier.add_argument("--batch", type=Path, default=BATCH)
     reader = commands.add_parser("analyze")
     reader.add_argument("transcripts", nargs="+")
@@ -312,7 +358,7 @@ def main():
     if args.command == "verify":
         if args.local and args.run:
             parser.error("--run requires --behavior")
-        return verify_local() if args.local else verify_behavior(args.batch, args.run)
+        return verify_local() if args.local else verify_behavior(args.batch, args.run, regression() if args.regression else None)
     for path in args.transcripts:
         print(json.dumps(analyze(path)))
     return 0

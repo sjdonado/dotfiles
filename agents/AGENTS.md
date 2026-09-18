@@ -12,7 +12,7 @@ Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with 
 | "look into X", "is it true that", "dig into whether" | `research` |
 | "what does X do", "why does Y happen", one bounded question | `ask` |
 | "how should we approach this", a pasted ticket, "triage this" | `triage` |
-| an approved plan or OpenSpec change, a promoted `proto` ledger, a specified ticket, "yolo it", "open a PR" | `yolo` |
+| "yolo it", "open a PR", or any request whose agreement meets **Publication authority** below | `yolo` |
 | "implement this", "go build it", "prototype this", "spike it", "let me try it first", anything whose contract is still open | `proto` |
 | changes, corrections, or follow-up work for an open PR | `feedback` |
 | "address the review comments", "CI is red on my PR" | `address-review` |
@@ -29,15 +29,11 @@ Announce the routing in one line, so a wrong guess is cheap to correct.
 
 **When a request asks for work and the contract is not settled, the answer is `proto`.** It is the cheap default: a slice, the local rungs green, the human tries it, feedback folds back in. No adversarial review, no push, no PR, nothing to unwind if the direction was wrong. Enter it and say so in one line; do not ask permission to begin.
 
-**`yolo` is for work that is already pinned down, and it is entered deliberately.** It is the expensive run: full understanding pass, adversarial review by blind subagents, commits, a PR, and every remote check driven green. Spending that on requirements that are still moving burns the run and produces a PR describing the wrong thing. Enter it when one of these holds:
-
-- the human asks for it by name, or asks for a PR
-- an approved OpenSpec change, an approved plan, or a promoted `proto` ledger already fixes the contract
-- the work is well defined and bounded on its own: a specified ticket, or a mechanical or small change where the shape is not in question and no existing PR owns it
+**`yolo` is for work that is already pinned down, and it is entered deliberately.** It is the expensive run: full understanding pass, adversarial review by blind subagents, commits, a PR, and every remote check driven green. Spending that on requirements that are still moving burns the run and produces a PR describing the wrong thing. Enter it only when the agreement test in **Publication authority** below holds. What that test requires is the agreement, never a particular artifact: an approved OpenSpec change, an approved plan, a promoted `proto` ledger, or a specified ticket can carry it, and so can the user's message alone when it states a bounded scope and asks for the work.
 
 Uncertainty selects `proto`, never `yolo`. If you cannot say what "done" looks like without asking the human, that is the signal: build the slice and let them react to it. The two are not rivals, they are a sequence, and the ledger `proto` finalizes is what makes the later `yolo` run cheap and correct.
 
-Approval is the hinge. Once a contract is agreed, by any route, `yolo` runs to completion without further prompting, per **Approval means autonomous execution** below.
+Approval is the hinge. Once the user agrees to a contract, by any route, `yolo` runs to completion without further prompting, per **Publication authority** and **Approval means autonomous execution** below.
 
 Routing carries the workflow's constraints, not just its steps. Plain-language entry never downgrades a gate: ticket creation still confirms before writing to the tracker, `yolo` still never merges, read-only workflows still make no edits.
 
@@ -69,17 +65,27 @@ When work looks worth documenting, say so in one line and offer the written rout
 
 Do not do both. An approved OpenSpec change is already the implementation contract, so re-entering plan mode to restate it adds a second approval gate over the same decisions. Go straight from the approved change to `yolo`.
 
-Whichever route, pressure-test before committing to it: run `grill-me`, interactively when you want to drive it, or in self-grill mode so the agent resolves what evidence and a repository search can settle and brings back only the questions that survive.
-
 When a plan brief from `triage`, a finding ledger from `research`, or an OpenSpec change directory is present, treat it as the contract's input, not as a suggestion to re-derive. Do not re-investigate what it already grounded with a `path:line` or a linked number. Carry its verification concerns forward verbatim, and carry its open questions in as decisions with defaults. Re-run only evidence marked refuted or unchecked, or that predates the most recent deploy.
 
 ## Continuity between skills
 
 For work spanning sessions or rounds, keep one ignored note at `.agent/<branch-key>.md`. Encode the exact branch name by replacing `%` with `%25`, then `/` with `%2F`. Before creating it, add `/.agent/` to the file resolved by `git rev-parse --git-path info/exclude`; never commit the note. Read it on continuation unless already current in context. Read-only skills consume without writing; the next authorized writer preserves their relevant conclusions.
 
-Keep **Contract** (requirements and artifact references), **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews). Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks, naming the task list's path in State so a reader of the note finds it. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
+Keep **Contract**, **State** (branch/checkpoint, checks, next action), and **Carry forward** (essential rationale, sourced findings, rejected reviews).
 
-Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved handoff without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and preserves it for explicit cleanup.
+**Contract** opens with three fixed lines, in this order:
+
+- **Purpose**: why this session exists, in one sentence.
+- **End state**: what done looks like, naming the acceptance evidence and making it machine-checkable where that is possible.
+- **Key tasks**: the path of the single task list.
+
+Write those three lines at the first checkpoint of any workflow that edits files. Fill them from the request, the conversation, and repository evidence before asking the human for any of them, and mark as assumed whatever you could not derive. When a human interaction changes the purpose or the end state, rewrite the affected line before making any further edit, and say in one line what changed. Requirements and artifact references follow the three lines. Downstream workflows read these lines by path; never substitute your own summary of them when dispatching a subagent.
+
+Recommend `handoff` in one line, with the reason, at a checkpoint where the purpose or the end state has changed twice in this session or the conversation has been compacted. Continue the current step after saying so.
+
+Specs and `tasks.md` stay authoritative; reference them instead of duplicating tasks, naming the task list's path in State so a reader of the note finds it. Preserve conclusions available only in conversation. A note records approval, never grants it. Check branch/checkpoint against Git; recheck only stale or unresolved claims. Reuse resolved check commands and already-loaded skills while their inputs remain current.
+
+No note is written for the default branch once the work has a branch of its own. `proto` works in the default branch's worktree, so it keeps its note under the default branch key until `yolo` creates the task branch; `yolo` then renames that note to the new branch key rather than leaving a second copy behind. Save the note at the workflow's existing checkpoint before returning, replacing superseded state. Record awaiting feedback/input, failing checks, awaiting review/merge, or completion of the active workflow, with the next owner/action. Report persistence failures; do not claim a saved note without checking the file. At PR updates, reconcile rationale with the diff and checks. After verified merge, `land` completes any existing note, with or without OpenSpec, and moves it to `.agent/archive/`.
 
 ### The task list
 
@@ -93,9 +99,25 @@ One list, one lifetime. Adopting an OpenSpec change mid-flight folds the ledger'
 
 A missing note alone is not a blocker: recover from available authoritative artifacts and current context, then recreate it when authorized. If an essential product requirement cannot be recovered, ask one focused question and leave dependent behavior unchanged. Continue independent work where possible. Never substitute a guess for a referenced requirement or claim it complete. No event log, and no tracking system beyond the note and the one task list described above.
 
+## Publication authority
+
+Publishing means a commit, a push, a pull request, or a message to anyone other than the user. Nothing in this document authorizes a publication on its own. An agreement with the user does, and this section is the only place that says what counts as one. Every other section and every skill defers here.
+
+An agreement authorizes publication when all four of these hold: the purpose of the work is settled; the whole scope is settled, not only the part that was easy to state; the acceptance evidence is named; and an identifiable user message covers that scope. A formal planning document stays optional. A requirements ledger the agent wrote, a passing check run, and a finished diff are the agent's own output, so none of them supplies the agreement, alone or together. When part of a request is settled and part is not, route the whole request to `proto`, name in one line which part is unsettled, and create no branch and no pull request. A settled subtask never promotes the unresolved work travelling with it.
+
+`yolo` is the only workflow exception to confirming a publication separately. An approved `yolo` run already authorizes, for its agreed scope and with no further confirmation, creating the task branch, committing, pushing, opening the pull request, refreshing that pull request's title and body, and driving its required checks to green. Do not stop the run to confirm the first push or the pull request. That authority reaches the task branch and its own pull request, and nothing else: creating or editing an issue, a tracker comment, a top-level pull request comment, and a review reply each need confirmation for that specific act. No run ever merges.
+
+None of the following authorizes an external write: a pull request the user approved earlier; the rule against committing to the default branch, or any other branch hygiene; a workflow's own procedure; an unrelated open or blocked pull request; a branch note recording a past approval. Where only these are available, publish nothing and ask once for that specific act, naming what it would contain, then wait for the answer. A specific authorization already given stays valid, so never ask twice for the same act.
+
+After a pull request is open, feedback accumulates as local iterations on that same branch, validated by the local ladder, and nothing is committed or pushed until the user approves publishing that batch. On approval, commit, push the same branch, refresh that pull request's title and body from the pushed diff, and drive its required checks, with no further confirmation for that batch. A description that stopped matching the code is how a reviewer ends up approving something else. Approval of one batch never carries to the next.
+
+One line of work is one branch and one pull request, because one agreement covers one line of work. Only `yolo` creates or switches to a task branch. A request to keep work off the default branch does not by itself select `yolo` or authorize a pull request. A separate line of work is the user's explicit choice, never a shape the agent infers from the request. Where ownership is unclear, ask once whether the work belongs to the open pull request or to a separate line, and make no edit and no branch until the answer arrives. Feedback that changes the shape of the work stays on the same branch and the same pull request; a branch is not scoped to the plan it started from.
+
+An approved run already in flight keeps its authority. It finishes its authorized scope, including driving its remote checks to green, and publishes nothing from scope that arrived after the approval. That incoming scope becomes the first local feedback batch after the run reaches its terminal state, and the run reports the queued work as its next action. A message that contradicts the premise of the work in flight is a rabbit-hole trip instead: escalate rather than finish.
+
 ## Approval means autonomous execution
 
-Approving a contract is the go-ahead to run to completion. This applies to every surface that can produce one: native plan mode, `ExitPlanMode`, an OpenSpec change proposal, or any skill or command used to reach agreement.
+A user approval that satisfies the agreement test in **Publication authority** is the go-ahead to run to completion. This applies to every surface that can produce one: native plan mode, `ExitPlanMode`, an OpenSpec change proposal, or any skill or command used to reach agreement.
 
 On approval, follow the `yolo` workflow without being asked. Treat the plan's final recommendation as the implementation contract, work fully autonomously, and do not stop until that workflow's terminal state is reached: a PR open with every resolved oracle green. Do not ask for confirmation to begin, between steps, before committing, or before pushing. Do not re-present the plan, summarize it back, or ask which part to start with.
 
@@ -105,9 +127,7 @@ Never merge the PR. Leave it open for human review.
 
 Never commit implementation to the default branch, in any mode. `proto` may hold uncommitted edits there; on promotion, `yolo` creates the task branch without discarding that working tree, then commits and pushes. No other workflow may turn this prohibition into authority to branch or open a PR. The one exception is `land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
 
-One line of work is one branch and one PR. Once `yolo` creates a task branch, everything related that follows, including minor fixes and feedback rounds, is more commits on that branch. Before changing branches, inspect the current branch and its open PR. If the request changes that PR, route to `feedback` and stay there. If ownership is unclear, ask once whether to add it to the open PR or start a separate line; do not edit or branch until answered. A new branch is available only after the human chooses a separate line and that work enters `yolo`. Never open a second PR for the same work. This holds even when feedback changes the shape of the work; a branch is not scoped to the plan it started from.
-
-After pushing to a branch whose PR is already open, bring the PR's title and body back in line with the diff as it now stands. A description that stopped matching the code is how a reviewer ends up approving something else.
+Once `yolo` creates a task branch, everything related that follows, including minor fixes and feedback rounds, is more commits on that branch, per **Publication authority**. Before changing branches, inspect the current branch and its open PR. If the request changes that PR, route to `feedback` and stay there.
 
 ### Pull requests
 
@@ -119,7 +139,7 @@ Unless the human explicitly requests a draft, open a normal PR with `WIP:` at th
 
 ## External communication
 
-These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message after the owning workflow authorizes the external write; they do not grant permission to send, post, reply, close, or otherwise change external state.
+These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message itself. **Publication authority** says what authorizes the write, and nothing in this section grants permission to send, post, reply, close, or otherwise change external state.
 
 - Read the complete thread and relevant surrounding context before writing.
 - Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
@@ -185,19 +205,19 @@ Flaky or timed-out CI (re-run once; only a second failure counts as an attempt).
 
 The capable model earns its cost on understanding the problem, settling the contract, and judging what came back. Carrying out a settled contract and running the checks is mechanical, and paying the top tier to type is where a run's cost goes without buying anything.
 
-So treat yourself as the orchestrator. Before implementation begins, and again before verification begins, offer in one line to hand that stretch to a subagent at a cheaper tier, naming what would go with it, and carry on: this is a line of work, not a gate, and it never becomes a reason to wait for permission. Skip the offer when handing over would cost more than doing it, which is most small tasks; the handover prompt has to carry the whole contract, and that is not free.
+So treat yourself as the orchestrator, and delegate by default. Never offer the handover and never stop to ask about it: the project's own `AGENTS.md` records its preference, and where it records none, the defaults below apply.
 
-Delegate work, never waiting. A subagent told to watch something poll until it finishes burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command belongs in the session that can see it through.
+Under `yolo`, run `verification` in a subagent one tier below the orchestrator. Hand it the contract path, the resolved oracle ladder, and any check already known to fail for an unrelated reason, and nothing else. Keep it in this session only when the project records that, or when the handover prompt would cost more than the checks it carries, which is most small tasks.
 
-Record the human's answer where a later session will find it: the project's own `AGENTS.md` if it is the kind of preference that belongs in the repository, otherwise the durable memory the harness gives you. A preference nobody can find is asked again every session, which is the cost this avoids. Under an autonomous workflow the offer is never made: follow the recorded preference, and where none exists, do the work in this session. Stopping an autonomous run to ask about delegation breaks the one promise that workflow makes.
+Run `adversarial-review` reviewers at the orchestrator's tier. A reviewer too weak to find the bug is not a saving. Record the choice in the PR body only when it deviated from this default.
+
+Delegate work, never waiting. A subagent told to watch a running process or poll for completion burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command runs in the session that can see it through.
 
 The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `adversarial-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
 
-`verification` is the usual candidate for a cheaper tier. It runs the ladder, fixes what the change broke, and reports a verdict, all against a contract that is already settled and an oracle that is machine-checkable, so success there is not a judgement call. `adversarial-review` is the opposite case: a reviewer too weak to find the bug is not a saving, so weigh its tier on what it has to catch.
+Count the subagents a workflow already spawns. `adversarial-review` dispatches up to two reviewers per round at the orchestrator's tier, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
 
-Count the subagents a workflow already spawns. `adversarial-review` dispatches up to two reviewers per round at whatever tier they are given, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
-
-None of this names a model, a reasoning or effort level, or a threshold at which a subagent becomes warranted. Those change faster than these instructions do, and the agent holding the task is better placed to judge it than a rule written in advance.
+None of this names a model or a reasoning effort level. Those change faster than these instructions do, so a concrete tier is recorded in the project's own `AGENTS.md` instead.
 
 ## Oracle ladder
 
@@ -260,6 +280,16 @@ A file that is already hard-wrapped is not an exception to this, it is the same 
 ## Links
 
 When rendering a link, always show the complete absolute URL as the visible text, including the scheme and host (for example, `https://example.com/path`). Never hide a URL behind Markdown alias text such as `[test](https://example.com/path)`. Never render relative URLs or bare paths as links.
+
+## MCP server scope
+
+Classify an MCP server before deciding where it is configured, because the two classes live in different places.
+
+A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `chrome-devtools` and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
+
+An account or product server is not global. It reaches a personal account, a product, or a team, so its credentials identify a person (an issue tracker, a hosted API). Keep it where its credentials live, per machine and per account, and never assume another agent, project, or machine has it. `linear` is the current example.
+
+The test is what the server reaches, not how the name reads: a devtool whose config carries a personal login is account-bound, and an unauthenticated server can still be account-bound by intent.
 
 ## Naming MCP tools
 

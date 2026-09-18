@@ -3,7 +3,7 @@ name: create-ticket
 description: Draft a clear, scoped ticket from a request or research findings, then create it via the tracker MCP after confirmation
 ---
 
-Turn the user's request into a well-formed tracker ticket. Draft first, create only after the user confirms.
+Turn the user's request into a well-formed tracker ticket. Draft first, create only after the user confirms, per `AGENTS.md`, **Publication authority**.
 
 Resolve the effective input:
 

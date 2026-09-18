@@ -130,17 +130,6 @@
           }
         ]
       }
-    ],
-    "SubagentStart": [
-      {
-        "matcher": "tldraw-offline",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node '/Users/sjdonado/skills/tldraw-offline/inject-server-context.mjs' SubagentStart"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
