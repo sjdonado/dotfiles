@@ -7,8 +7,8 @@
 #
 # Linked to ~/.config/mise/config.toml by the installers, so it is the global
 # tool set for every project on the machine rather than a per-directory one.
-# Both platforms read the same file: on macOS it replaced the Brewfile entries
-# for the same tools, so a version bump happens in one place instead of two.
+# Both platforms read the same file, so a version bump happens in one place.
+# On macOS it is also the Homebrew package list: see [bootstrap.packages].
 #
 # What is deliberately NOT here, and why, so nobody tries again:
 #   claude    the npm package is a wrapper that fetches a native binary from a
@@ -82,34 +82,15 @@ tree-sitter = "latest"
 "npm:@openai/codex" = "latest"
 "npm:@fission-ai/openspec" = "latest"
 
-# --- Declarative provisioning (experimental, proven, not yet wired) ---
-# `[bootstrap.packages]` holds every Brewfile formula/cask plus the apt base
-# from linux.sh, each tagged with its platform; `[dotfiles]` holds the links
-# both verify scripts assert, and the shell-rc PATH blocks as edit entries.
-# Proven in a container (apt resolves + installs) and a sandbox HOME
-# (dotfiles status + dry-run apply emit exactly the links lib/links.sh owns).
-# NOT yet the provisioning path: linux.sh and macos.sh still do everything
-# themselves, so these sections are advisory until a change wires
-# `mise bootstrap` into the scripts and deletes the duplication. Until then,
-# editing one side without the other silently drifts them apart.
+# --- Declarative provisioning ---
+# `[bootstrap.packages]` is the macOS package list: macos.sh --install runs `mise bootstrap --only packages,task`, which taps, installs every formula and cask below, then runs `[tasks.bootstrap]`. There is no Brewfile. The apt entries are still advisory: linux.sh installs its own base, so keep both in step until it is wired the same way. `[dotfiles]` stays advisory on both platforms; lib/links.sh owns the links.
 #
-# Measured while writing this, not assumed:
+# Parity with this Mac is the rule: every formula and cask it had installed is declared, including chawan, difftastic, imagemagick, pandoc, whisper.cpp and xcodegen, which an earlier pass had left out as leftovers.
 #
-# Measured, not assumed:
-# - `mise bootstrap packages import --manager brew` was NOT used to write this.
-#   It snapshots what is installed, and this Mac still carries everything the
-#   mise migration removed (brew:bat/fd/fzf/node/pnpm/ripgrep/uv/worktrunk/neovim,
-#   oven-sh/bun/bun, anomalyco/tap/opencode) plus stale leftovers (chawan,
-#   difftastic, imagemagick, lazygit, pandoc, whisper-cpp, xcodegen). A blind
-#   import re-declares exactly what Brewfile:5-8 removed on purpose.
-# - 3 taps in the Brewfile declare no formula used here (coder/coder,
-#   tunneltodev/tap, xcodesorg/made) and are dropped. Tap URLs below come from
-#   the import dry-run, which got that part right.
-# - `brew "docker", link: false` has no bootstrap equivalent: mise links what
-#   it pours. Kept as a plain entry; on this machine OrbStack owns `docker`.
-# - The 5 `go` installs have no bootstrap manager. They stay a remainder (a
-#   `[tasks.bootstrap]` running `go install` would also fire on Linux, where
-#   these never existed).
+# Adding a macOS package: `mise bootstrap packages use brew:<name>` (or `brew-cask:<name>`), then tag it `{ os = "macos" }`. Parity check against this machine: compare `brew leaves` and `brew list --cask` with this list; the only expected difference is the tools `[tools]` owns (bat, bun, fd, fzf, lazygit, neovim, opencode, pnpm, uv, worktrunk, codex), which may linger as Homebrew copies on an older machine.
+#
+# - `brew "docker", link: false` has no bootstrap equivalent: mise links what it pours. Kept as a plain entry; on this machine OrbStack owns `docker`.
+# - The `go install` entries have no bootstrap manager, so they are `[tasks.bootstrap]`, guarded to macOS.
 [bootstrap.packages]
 "apt:git" = { os = "linux" }
 "apt:curl" = { os = "linux" }
@@ -155,6 +136,7 @@ tree-sitter = "latest"
 "brew:gnu-sed" = { os = "macos" }
 "brew:gnutls" = { os = "macos" }
 "brew:golangci-lint" = { os = "macos" }
+"brew:go" = { os = "macos" }
 "brew:grpcurl" = { os = "macos" }
 "brew:harfbuzz" = { os = "macos" }
 "brew:herdr" = { os = "macos" }
@@ -198,6 +180,15 @@ tree-sitter = "latest"
 "brew:xq" = { os = "macos" }
 "brew:zig" = { os = "macos" }
 "brew:zig@0.15" = { os = "macos" }
+"brew:chawan" = { os = "macos" }
+"brew:difftastic" = { os = "macos" }
+"brew:facebook/fb/idb-companion" = { os = "macos" }
+"brew:imagemagick" = { os = "macos" }
+"brew:pandoc" = { os = "macos" }
+"brew:whisper.cpp" = { os = "macos" }
+"brew:xcodegen" = { os = "macos" }
+# Pi is for harness experiments and bench runs only; its config is pi/. homebrew-core tracks it; the npm package lags.
+"brew:pi-coding-agent" = { os = "macos" }
 "brew:amberframework/micrate/micrate" = { os = "macos" }
 "brew:grafana/grafana/gcx" = { os = "macos" }
 "brew:ory/tap/cli" = { os = "macos" }
@@ -221,14 +212,32 @@ tree-sitter = "latest"
 "brew-cask:tailscale-app" = { os = "macos" }
 "brew-cask:telegram-desktop" = { os = "macos" }
 "brew-cask:yaak" = { os = "macos" }
+"brew-cask:annotate" = { os = "macos" }
+"brew-cask:icon-composer" = { os = "macos" }
+"brew-cask:rockxy" = { os = "macos" }
+"brew-cask:driceroland/tap/search" = { os = "macos" }
 
 [bootstrap.brew.taps]
 "amberframework/micrate" = "https://github.com/amberframework/homebrew-micrate.git"
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
 "rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
+"driceroland/tap" = "https://github.com/driceroland/homebrew-tap.git"
+"facebook/fb" = "https://github.com/facebook/homebrew-fb.git"
 "sjdonado/tap" = "https://github.com/sjdonado/homebrew-tap.git"
 "supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
+
+# The Go CLIs Homebrew cannot install; Linux boxes never had them. This is the global config, so the task is visible as `mise run bootstrap` in every project, and every `mise bootstrap` re-runs it, re-resolving `@latest`. golangci-lint comes from Homebrew above, not from here. The old Brewfile's `go "zen-habit/server"` is dropped: that is a local module path with no remote to install from.
+[tasks.bootstrap]
+run = """
+[ "$(uname)" = Darwin ] || exit 0
+command -v go >/dev/null || { echo "go not found: add brew:go and re-run mise bootstrap" >&2; exit 1; }
+status=0
+for pkg in github.com/air-verse/air github.com/bootdotdev/bootdev github.com/pressly/goose/v3/cmd/goose; do
+  go install "$pkg@latest" || { echo "go install $pkg failed" >&2; status=1; }
+done
+exit $status
+"""
 
 # Every link both verify scripts assert, minus what bootstrap cannot own:
 # - ~/.config/mise/config.toml + mise.lock stay with the installers.
@@ -239,7 +248,7 @@ tree-sitter = "latest"
 #   cannot distinguish "a script this repo removed" from a stranger's file.
 # - ~/.fish_history, ~/.codex/config.toml, herdr plugins, `bat cache --build`,
 #   `herdr integration install claude` ordering and `bin/codex-config apply`
-#   are generated state or need a running server: a `[tasks.bootstrap]` each.
+#   are generated state or need a running server, so they stay in lib/links.sh.
 # - ~/.ssh/config links on macOS only (linux.sh never linked it), hence the
 #   variant with no default: other platforms skip the entry.
 [dotfiles]

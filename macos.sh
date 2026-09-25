@@ -1,7 +1,8 @@
 #!/bin/sh
 set -euo pipefail
 
-# The tool list is mise.toml, the macOS-only half of it is the Brewfile, and
+# The tool list is mise.toml, the macOS-only half of it is
+# [bootstrap.packages] in the same file, and
 # every link this repository owns is lib/links.sh, shared with linux.sh. What
 # stays in this file is what is genuinely macOS: Homebrew, the login shell,
 # LaunchServices, launchd, and the defaults.
@@ -70,24 +71,19 @@ export PATH
 
 link_local_bin
 
-# Install dependencies from Brewfile only when requested.
-if [ "$INSTALL" = 1 ]; then
-  if [ -f "$PWD/Brewfile" ]; then
-    log "Installing dependencies from Brewfile..."
-    brew bundle --file="$PWD/Brewfile" || true
-  else
-    log "No Brewfile found, skipping."
-  fi
-fi
-
-# mise owns every tool that is not macOS-specific, from the same mise.toml the
-# Linux box reads: the editor, the agent CLIs, the search tools, the runtimes.
-# Homebrew keeps the GUI applications and the system libraries. Adding a tool is
-# a line of TOML in one file rather than an entry here and another in linux.sh.
+# mise owns every install: `[tools]` in mise.toml is the cross-platform half,
+# `[bootstrap.packages]` the macOS formulae and casks Homebrew pours, and
+# `[tasks.bootstrap]` the go installs. Homebrew only has to supply mise itself.
+# The config is linked first because bootstrap reads the global mise config.
 link_mise_config
-if [ "$INSTALL" = 1 ] && have mise; then
-  log "Installing tools from mise.toml..."
-  mise install --yes || log "  some mise tools failed; re-run: mise install"
+if [ "$INSTALL" = 1 ]; then
+  have mise || brew install mise || log "  brew install mise failed"
+  if have mise; then
+    log "Installing packages from mise.toml [bootstrap.packages]..."
+    mise bootstrap --only packages,task --yes || log "  some packages or go installs failed; re-run: mise bootstrap --only packages,task"
+    log "Installing tools from mise.toml..."
+    mise install --yes || log "  some mise tools failed; re-run: mise install"
+  fi
 fi
 
 log "Setting up Ghostty config..."
@@ -107,7 +103,7 @@ else
   mkdir -p "$HOME/.config/browser-router"
   ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
 
-  # The app arrives with the Brewfile, which declares the sjdonado/tap formula
+  # The app arrives with [bootstrap.packages], which declares the sjdonado/tap formula
   # beside the other tapped ones. There is no bottle for it, so brew compiles it
   # with swiftc rather than pouring one, and --build-from-source would say nothing
   # the formula does not already do.
