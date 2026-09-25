@@ -34,6 +34,7 @@ TOP_LEVEL = [
     "personality",
     "model_reasoning_effort",
     "approvals_reviewer",
+    "check_for_update_on_startup",
 ]
 TABLES = {
     "tui": ["theme", "status_line", "status_line_use_colors"],
