@@ -24,7 +24,11 @@ try:
     pr = json.loads(pr_path.read_text()) if pr_path.exists() else None
     history_path = root / "pr-history.json"
     history = json.loads(history_path.read_text()) if history_path.exists() else []
-    if args[:2] in (["pr", "view"], ["pr", "list"]):
+    if "--help" in args or "-h" in args:
+        # A usage probe must never mutate the forge: route-bounded once created its PR from `gh pr create --help`.
+        print("fixture gh: usage of " + " ".join(args[:2]))
+        served = True
+    elif args[:2] in (["pr", "view"], ["pr", "list"]):
         if args[1] == "view" and pr is None:
             sys.exit("No pull request found")
         value = ([pr] if pr else []) + history if args[1] == "list" else pr
@@ -42,9 +46,13 @@ try:
     elif args[:2] == ["pr", "create"]:
         body_file = option("--body-file")
         pr = {"number": 8, "state": "OPEN", "mergedAt": None, "title": option("--title"),
-              "body": Path(body_file).read_text() if body_file else option("--body"),
-              "url": "https://example.invalid/pull/8", "headRefName": "proto/handoff",
+              "body": (sys.stdin.read() if body_file == "-" else Path(body_file).read_text()) if body_file else option("--body"),
+              "url": "https://example.invalid/pull/8",
+              "headRefName": (option("--head") or option("-H") or "").split(":")[-1] or subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip(),
               "baseRefName": option("--base", "main"), "statusCheckRollup": [],
+              # A fresh branch off the base has nothing to conflict with; without these an agent
+              # correctly refuses to drop WIP:, since mergeability is part of the green gate.
+              "mergeable": "MERGEABLE", "mergeStateStatus": "CLEAN",
               "isDraft": "--draft" in args}
         pr_path.write_text(json.dumps(pr))
         print(pr["url"])

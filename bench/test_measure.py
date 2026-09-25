@@ -123,6 +123,33 @@ def main():
             pass
         else:
             raise AssertionError("Malformed transcripts must fail visibly")
+        # pi --mode json: usage per final assistant message, tools once per tool_execution_end.
+        assistant = {"type": "message_end", "message": {"role": "assistant", "stopReason": "stop",
+                     "content": [{"type": "text", "text": "Done."}], "usage": {"input": 7, "output": 3, "cost": {"total": 0}}}}
+        tool = {"type": "tool_execution_end", "toolName": "bash", "isError": True,
+                "result": {"content": [{"type": "text", "text": "é"}]}}
+        pi = [{"type": "agent_start"}, {"type": "turn_start"}, tool, assistant, {"type": "turn_end"}, assistant, {"type": "agent_settled"}]
+        path.write_text("\n".join(json.dumps(event) for event in pi))
+        row = measure["analyze_pi"](path)
+        assert row["status"] == "completed" and row["tokens"] == {"input": 14, "output": 6}
+        assert row["tool_calls"] == {"bash": 1} and row["failed_items"] == 1 and row["command_output_bytes"] == 2
+        assert measure["last_message_pi"](path) == "Done."
+        path.write_text("\n".join(json.dumps(event) for event in pi[:-1]))
+        assert measure["analyze_pi"](path)["status"] == "incomplete" and measure["analyze_pi"](path)["tokens"] is None
+        failed = {"type": "message_end", "message": {"role": "assistant", "stopReason": "error", "errorMessage": "unauthorized"}}
+        path.write_text("\n".join(json.dumps(event) for event in pi[:2] + [failed, {"type": "agent_settled"}]))
+        assert measure["analyze_pi"](path)["status"] == "failed"
+        # A transient error pi retried and recovered from is not a failure.
+        path.write_text("\n".join(json.dumps(event) for event in pi[:2] + [failed, assistant, {"type": "agent_settled"}]))
+        assert measure["analyze_pi"](path)["status"] == "completed"
+        pi_subset = measure["regression"](("gpt-6-luna",))
+        assert pi_subset[0] == ("handoff-v1", "gpt-6-luna", 1) and len(pi_subset) == 14
+        assert {model for _, model, _ in pi_subset} == {"gpt-6-luna"}
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 15
+        pi_inputs = measure["inputs"]("feedback", "gpt-6-luna", "pi", "medium")
+        assert pi_inputs["sandbox"] == "none" and pi_inputs["network_access"] is True
+        assert measure["inputs"]("read-only", "gpt-5.6-luna") == measure["inputs"]("read-only", "gpt-5.6-luna", "codex", "low")
+        assert measure["inputs"]("read-only", "gpt-6-luna", "pi", "medium")["ambient_instructions"] == {}
         matrix = measure["matrix"]()
         assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 42
         assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
@@ -183,8 +210,14 @@ def main():
             return subprocess.run([sys.executable, str(fixture), *args], cwd=forge, check=True, capture_output=True, text=True).stdout
 
         assert json.loads(gh("pr", "list"))[0]["title"] == "Maintainer example"
-        gh("pr", "create", "--title", "WIP: Normalize labels", "--body", "## Why\n")
-        assert json.loads((forge / ".fixture/pr.json").read_text())["isDraft"] is False
+        # A usage probe must not create a PR, and no oracle may count it as an operation.
+        gh("pr", "create", "--help")
+        assert not (forge / ".fixture/pr.json").exists()
+        assert scenarios.forge_log(forge) == [{"args": ["pr", "list"], "served": True}]
+        gh("pr", "create", "--title", "WIP: Normalize labels", "--head", "fix/LBL-4-labels", "--body", "## Why\n")
+        created = json.loads((forge / ".fixture/pr.json").read_text())
+        assert created["isDraft"] is False and created["headRefName"] == "fix/LBL-4-labels"
+        assert created["mergeable"] == "MERGEABLE"
         gh("pr", "edit", "--title", "Normalize labels")
         assert json.loads((forge / ".fixture/pr.json").read_text())["title"] == "Normalize labels"
 
