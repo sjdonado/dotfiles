@@ -191,7 +191,7 @@ PY
 }
 
 link_agent_configs() {
-  log "Linking Claude Code, Codex, and OpenCode config..."
+  log "Linking Claude Code, Codex, OpenCode, and Pi config..."
   mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$HOME/.config/opencode"
   # claude/settings.json declares a SessionStart hook running herdr's
   # agent-state script, and herdr owns that script. Install it BEFORE the
@@ -225,6 +225,13 @@ link_agent_configs() {
   [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
   mkdir -p "$HOME/.local/state/opencode"
   link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
+  # Pi is for harness experiments and bench runs: only the default model and the
+  # shared policy are tracked. Skills reach it through ~/.agents/skills, and pi
+  # owns the rest of ~/.pi/agent (auth.json, sessions, extensions). pi writes
+  # settings.json itself (lastChangelogVersion on upgrade, defaultModel on
+  # /model), so a diff there is pi, not drift. "light/dark" follows the terminal.
+  link_managed "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
+  link_managed "$PWD/agents/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 }
 
 # --- moshi-hook pairing ------------------------------------------------------
