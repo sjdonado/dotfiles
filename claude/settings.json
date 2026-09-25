@@ -20,7 +20,7 @@
     ],
     "defaultMode": "bypassPermissions"
   },
-  "model": "opus[1m]",
+  "model": "opus",
   "hooks": {
     "PermissionRequest": [
       {
@@ -137,17 +137,6 @@
     "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",
     "padding": 0,
     "refreshInterval": 60
-  },
-  "enabledPlugins": {
-    "caveman@caveman": true
-  },
-  "extraKnownMarketplaces": {
-    "caveman": {
-      "source": {
-        "source": "github",
-        "repo": "JuliusBrussee/caveman"
-      }
-    }
   },
   "syntaxHighlightingDisabled": false,
   "effortLevel": "medium",

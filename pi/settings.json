@@ -1,0 +1,8 @@
+{
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-6-luna",
+  "defaultThinkingLevel": "medium",
+  "quietStartup": true,
+  "lastChangelogVersion": "0.87.1",
+  "theme": "light/dark"
+}

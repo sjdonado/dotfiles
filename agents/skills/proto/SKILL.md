@@ -1,6 +1,6 @@
 ---
 name: proto
-description: Prototype through small human-tested iterations, then hand a requirements ledger to yolo or kill the premise. Use when implementation requirements are still open, including spikes, rough builds, and "let me try it first" work.
+description: Prototype through small human-tested iterations, then hand a requirements ledger to yolo or kill the premise. Use when implementation requirements are still open, such as "implement this", "go build it", "prototype this", "spike it", "let me try it first".
 ---
 
 Prototype from the user's request and current conversation context.

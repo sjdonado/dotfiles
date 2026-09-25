@@ -1,6 +1,6 @@
 ---
 name: triage
-description: From a ticket or a production error signal, understand the request, challenge it with data, and propose an approach with tradeoffs (no implementation)
+description: From a ticket or a production error signal, understand the request, challenge it with data, and propose an approach with tradeoffs (no implementation). Use for a pasted ticket, "triage this", "how should we approach this".
 ---
 
 Triage the user's work item. This is analysis ONLY: no file writes, code edits, tests, commits, or other side-effecting commands. Read-only inspection is allowed.

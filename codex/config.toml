@@ -14,6 +14,9 @@ model = "gpt-5.6-sol"
 personality = "pragmatic"
 model_reasoning_effort = "medium"
 approvals_reviewer = "user"
+# mise installs Codex (mise.toml), so its own updater would guess the wrong package
+# manager; upgrade with `mise upgrade npm:@openai/codex` instead.
+check_for_update_on_startup = false
 
 [tui]
 theme = "ansi"

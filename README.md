@@ -9,15 +9,15 @@
 - macOS: run from the dotfiles directory: `./macos.sh`
 - Linux (remote/dev box): `./linux.sh`
 - Add `--install` to install or update dependencies (`./macos.sh --install` or `./linux.sh --install`). Without it, setup only updates directories, symlinks, and configuration.
-- Update Brewfile: `/opt/homebrew/bin/brew bundle dump --describe --force --file=- > Brewfile`
-- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`, on both platforms. Adding one is a line of TOML rather than an installer block in each script. Homebrew keeps the GUI applications and the macOS-only CLIs; three tools keep their own installers, and `mise.toml` says which and why.
+- Add a macOS package: `mise bootstrap packages use brew:<name>` (or `brew-cask:<name>`), then tag it `{ os = "macos" }` in `mise.toml`.
+- Tools come from `mise.toml`, linked to `~/.config/mise/config.toml`, on both platforms. Adding one is a line of TOML rather than an installer block in each script. `[bootstrap.packages]` in the same file lists the macOS formulae and casks, which `mise bootstrap` installs through Homebrew; three tools keep their own installers, and `mise.toml` says which and why.
 - Verify a change to an installer before running it for real: `verify/linux/run.sh` provisions a throwaway Ubuntu container, `verify/macos/run.sh` runs `macos.sh --links-only` against a throwaway `HOME`. Both run twice and assert idempotency. See `verify/README.md`.
 
 ### Tool versions
 
 `mise.toml` declares the cross-platform tools: the runtimes, the search tools, the editor, the worktree tool, and the agent CLIs that install cleanly. `mise.lock` records the version and per-platform checksum each machine resolved, so two boxes provisioned a month apart get the same tool set, and a locked resolve needs no GitHub API calls at all. The same file says which tools deliberately stay out and why: Claude Code's npm wrapper needs its postinstall step (mise skips it), herdr and moshi-hook ship from their own CDNs, fish and mosh are the login environment rather than project tooling, and rustup keeps rust because a mise shim would shadow `rust-toolchain.toml` pins.
 
-`[bootstrap.packages]` and `[dotfiles]` in that file declare the rest, every Brewfile entry, the apt base, and all the links, but they are proven and not yet wired: the scripts still provision everything themselves, so editing one side without the other drifts them apart.
+`[bootstrap.packages]` is wired on macOS: `./macos.sh --install` runs `mise bootstrap --only packages,task`, which installs every formula and cask and then the go installs in `[tasks.bootstrap]`. There is no Brewfile. The apt entries and `[dotfiles]` are still advisory: linux.sh and lib/links.sh provision those themselves, so editing one side without the other drifts them apart.
 
 On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 

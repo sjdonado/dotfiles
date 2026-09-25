@@ -57,6 +57,8 @@ linked "$HOME/.claude/CLAUDE.md"        "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
 linked "$HOME/.config/opencode/pty.md" "$DOTFILES/opencode/pty.md"
+linked "$HOME/.pi/agent/settings.json" "$DOTFILES/pi/settings.json"
+linked "$HOME/.pi/agent/AGENTS.md"     "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
 linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
 # Linked by the shared lib/links.sh rather than by either script, so both checks

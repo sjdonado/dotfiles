@@ -1,6 +1,6 @@
 ---
 name: ask
-description: Answer one focused question. Investigate if needed, answer directly, no changes until approved.
+description: Answer one focused question. Investigate if needed, answer directly, no changes until approved. Use for "what does X do", "why does Y happen", or one bounded question.
 ---
 
 Answer the user's question. Nothing else.

@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: A relentless interview that attacks the load-bearing assumptions in a plan or design before they become expensive. Two modes, interactive for a human-driven grilling and self-grill for resolving your own open questions with evidence first. Use when a plan needs pressure, when scope feels underspecified, or before committing to an approach.
+description: A relentless interview that attacks the load-bearing assumptions in a plan or design before they become expensive. Two modes, interactive for a human-driven grilling and self-grill for resolving your own open questions with evidence first. Use for "poke holes in this", "challenge this design", when a plan needs pressure, when scope feels underspecified, or before committing to an approach.
 ---
 
 # Grill Me

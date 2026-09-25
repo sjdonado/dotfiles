@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run a disposable harness probe or measure explicit Codex exec JSONL transcripts.
+"""Run a disposable harness probe or measure explicit Codex exec or pi JSONL transcripts.
 
 Usage: bench/measure verify --local
-       bench/measure verify --behavior [--run]
+       bench/measure verify --behavior [--run] [--regression --agent pi --model gpt-6-luna --effort medium]
        bench/measure run [--model gpt-5.6-luna] [--scenario handoff-v1]
        bench/measure analyze SESSION.jsonl [SESSION.jsonl ...]
 """
@@ -36,6 +36,8 @@ MODEL = "gpt-5.6-luna"
 MODELS = (MODEL, "gpt-6-astra")
 BATCH = ROOT / "bench/runs/effectiveness-v1"
 LIMIT = 32
+# pi reaches OpenAI models through its Codex subscription provider.
+PI_PROVIDER = "openai-codex"
 
 
 def analyze(path):
@@ -90,6 +92,60 @@ def analyze(path):
     }
 
 
+def analyze_pi(path):
+    """pi --mode json: usage lives on each final assistant message, tools on tool_execution_end."""
+    usage = collections.Counter()
+    calls = collections.Counter()
+    errors = []
+    failures = result_bytes = turns = 0
+    started = settled = False
+    final_stop = None
+    with open(path) as stream:
+        for line in stream:
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            kind = event.get("type")
+            if kind == "agent_start":
+                started = True
+            elif kind == "agent_settled":
+                settled = True
+            elif kind == "turn_end":
+                turns += 1
+            elif kind == "message_end" and event["message"].get("role") == "assistant":
+                message = event["message"]
+                usage.update({k: v for k, v in (message.get("usage") or {}).items() if isinstance(v, int)})
+                final_stop = message.get("stopReason")
+                if final_stop in ("error", "aborted"):
+                    errors.append({"stopReason": message.get("stopReason"), "error": message.get("errorMessage")})
+            elif kind == "tool_execution_end":
+                calls[event.get("toolName", "unknown")] += 1
+                failures += bool(event.get("isError"))
+                result_bytes += sum(len(part.get("text", "").encode()) for part in (event.get("result") or {}).get("content", []))
+    return {
+        "transcript": str(path), "threads": [],
+        "completed_turns": turns,
+        # pi retries transient provider errors itself, so an earlier error that recovered is not a failure.
+        "status": "failed" if final_stop in ("error", "aborted") else "completed" if started and settled else "incomplete",
+        "tokens": dict(usage) if usage and settled else None,
+        "tool_calls": dict(calls), "tool_calls_total": sum(calls.values()),
+        "failed_items": failures, "command_output_bytes": result_bytes,
+        "errors": errors,
+    }
+
+
+def last_message_pi(path):
+    text = ""
+    with open(path) as stream:
+        for line in stream:
+            if line.strip():
+                event = json.loads(line)
+                if event.get("type") == "message_end" and event["message"].get("role") == "assistant":
+                    content = event["message"].get("content") or []
+                    text = "".join(part.get("text", "") for part in content if part.get("type") == "text") or text
+    return text
+
+
 def last_message(path):
     text = ""
     with open(path) as stream:
@@ -136,26 +192,30 @@ def surfaces(case):
     return sources
 
 
-def inputs(case, model):
+def inputs(case, model, agent="codex", effort="low"):
     """Hash actual sources, not just a commit that may hide local modifications."""
     sources = surfaces(case)
+    # pi runs with an empty agent directory, so no user-level instructions reach it.
     codex_directory = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
-    ambient = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
+    ambient = {} if agent == "pi" else {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in
                (codex_directory / "AGENTS.md", codex_directory / "AGENTS.override.md") if p.is_file()}
-    return {"scenario": case, "prompts": PROMPTS[case], "expected": EXPECTED[case],
-            "model_requested": model, "reasoning_effort": "low", "timeout_seconds": 300,
-            "sandbox": SANDBOX.get(case, "workspace-write"), "network_access": False, "ignore_user_config": True,
+    # pi has no sandbox and needs the network for the model, so its manifest says so.
+    extra = {} if agent == "codex" else {"agent": agent, "provider": PI_PROVIDER}
+    sandbox = {"sandbox": SANDBOX.get(case, "workspace-write"), "network_access": False, "ignore_user_config": True} \
+        if agent == "codex" else {"sandbox": "none", "network_access": True, "ignore_user_config": True}
+    return {"scenario": case, "prompts": PROMPTS[case], "expected": EXPECTED[case], **extra,
+            "model_requested": model, "reasoning_effort": effort, "timeout_seconds": 300, **sandbox,
             "python": sys.version, "platform": sys.platform, "sources": sources, "ambient_instructions": ambient}
 
 
-def cli_version(cache=[]):
-    """Resolve once; verify --behavior must not need Codex installed."""
-    if not cache:
+def cli_version(agent="codex", cache={}):
+    """Resolve once; verify --behavior must not need the agent CLI installed."""
+    if agent not in cache:
         try:
-            cache.append(subprocess.check_output(["codex", "--version"], text=True).strip())
+            cache[agent] = subprocess.check_output([agent, "--version"], text=True).strip()
         except (OSError, subprocess.CalledProcessError):
-            cache.append(None)
-    return cache[0]
+            cache[agent] = None
+    return cache[agent]
 
 
 def sessions_used(batch):
@@ -172,7 +232,7 @@ def matrix():
     return result
 
 
-def regression():
+def regression(models=MODELS):
     """The rows a publication-authority change can break, within one batch's session cap.
 
     Editing the runner or bench/scenarios.py stales every case, because both are hashed
@@ -182,7 +242,7 @@ def regression():
     """
     cases = PUBLICATION + ("route-open-shape", "route-bounded", "external-communication",
                            "feedback", "land-open", "land-merged", "recoverable", "unrecoverable")
-    return [("handoff-v1", MODEL, 1)] + [(case, model, 1) for model in MODELS for case in cases]
+    return [("handoff-v1", models[0], 1)] + [(case, model, 1) for model in models for case in cases]
 
 
 def evidence_hash(run_dir):
@@ -195,7 +255,8 @@ def run_case(batch, case, model, trial, provenance):
     if sessions_used(batch) + len(PROMPTS[case]) > LIMIT:
         return None
     run_dir = Path(tempfile.mkdtemp(prefix=f"{case}-{model}-{trial}-", dir=batch))
-    manifest = {"inputs": provenance, "input_hash": digest(provenance), "trial": trial, "cli": cli_version(),
+    agent = provenance.get("agent", "codex")
+    manifest = {"inputs": provenance, "input_hash": digest(provenance), "trial": trial, "cli": cli_version(agent),
                 "harness_commit": git(ROOT, "rev-parse", "HEAD"), "rounds": [],
                 "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     save(run_dir / "result.json", manifest)
@@ -219,11 +280,30 @@ def run_case(batch, case, model, trial, provenance):
         save(run_dir / f"round-{index}.before.json", before)
         (run_dir / f"round-{index}.prompt.txt").write_text(prompt)
         transcript = run_dir / f"round-{index}.jsonl"
-        command = ["codex", "exec", "--ignore-user-config", "--json", "--ephemeral",
-                   "-m", model, "-c", 'model_reasoning_effort="low"',
-                   "-c", "sandbox_workspace_write.network_access=false",
-                   "-s", SANDBOX.get(case, "workspace-write"), "-C", str(repo), prompt]
         env = os.environ.copy()
+        if agent == "pi":
+            # pi has no sandbox: the fixture's gh substitute, invalid forge credentials, and
+            # local bare remotes are the only boundary. An empty agent directory holding just
+            # the credential link keeps ~/.pi/agent instructions and settings out, and
+            # --no-skills plus the fixture's own skill directory keeps ~/.agents/skills out.
+            agent_dir = Path(tempfile.mkdtemp(prefix="pi-agent-"))
+            credential = Path.home() / ".pi/agent/auth.json"
+            # pi writes auth.json in place, so a token refresh lands in the real file through
+            # the link; its lock lives beside the link, so do not run an interactive pi meanwhile.
+            if credential.exists():
+                (agent_dir / "auth.json").symlink_to(credential)
+            env["PI_CODING_AGENT_DIR"] = str(agent_dir)
+            command = ["pi", "--mode", "json", "-p", "--no-session", "--offline", "--no-approve",
+                       "--no-extensions", "--no-prompt-templates", "--no-themes", "--no-skills",
+                       "--provider", PI_PROVIDER, "--model", model, "--thinking", provenance["reasoning_effort"]]
+            if (repo / ".agents/skills").is_dir():
+                command += ["--skill", str(repo / ".agents/skills")]
+            command.append(prompt)
+        else:
+            command = ["codex", "exec", "--ignore-user-config", "--json", "--ephemeral",
+                       "-m", model, "-c", f'model_reasoning_effort="{provenance.get("reasoning_effort", "low")}"',
+                       "-c", "sandbox_workspace_write.network_access=false",
+                       "-s", SANDBOX.get(case, "workspace-write"), "-C", str(repo), prompt]
         env["PATH"] = str(repo / ".fixture/bin") + os.pathsep + env.get("PATH", "")
         env.update(GH_HOST="example.invalid", GH_TOKEN="fixture-no-real-token", GITHUB_TOKEN="fixture-no-real-token")
         started = time.monotonic()
@@ -232,17 +312,19 @@ def run_case(batch, case, model, trial, provenance):
         save(run_dir / "result.json", manifest)  # An interrupted call consumes its budget.
         with transcript.open("w") as output, (run_dir / f"round-{index}.stderr").open("w") as err:
             process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=output, stderr=err,
-                                       env=env, start_new_session=True)
+                                       env=env, cwd=repo, start_new_session=True)
             try:
                 exit_code = process.wait(timeout=300)
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
                 exit_code = 124
+        if agent == "pi":
+            shutil.rmtree(agent_dir, ignore_errors=True)
         (run_dir / f"round-{index}.note.md").write_text(read_note(repo))
         try:
-            metrics = analyze(transcript)
-            message = last_message(transcript)
+            metrics = analyze_pi(transcript) if agent == "pi" else analyze(transcript)
+            message = last_message_pi(transcript) if agent == "pi" else last_message(transcript)
         except (ValueError, KeyError, TypeError) as error:
             metrics, message = {"status": "invalid", "tokens": None, "error": str(error)}, ""
         try:
@@ -253,14 +335,16 @@ def run_case(batch, case, model, trial, provenance):
             value["passed"] if isinstance(value, dict) else value for value in checks.values())
         stderr = (run_dir / f"round-{index}.stderr").read_text()
         # Access errors are distinguishable from completed turns with wrong artifacts.
-        access = exit_code != 0 and any(word in (stderr + json.dumps(metrics)).lower() for word in ("not supported", "model_not_found", "unauthorized", "authentication", "not available", "not have access"))
+        # pi --mode json exits 0 even when the model call fails, so its failure is the transcript's status.
+        call_failed = exit_code != 0 or (agent == "pi" and metrics["status"] in ("failed", "invalid"))
+        access = call_failed and any(word in (stderr + json.dumps(metrics)).lower() for word in ("not supported", "model_not_found", "unauthorized", "authentication", "not available", "not have access"))
         row.update(exit_code=exit_code, status="unavailable" if access else "finished",
                    wall_seconds=round(time.monotonic() - started, 2), metrics=metrics, checks=checks, passed=passed)
         save(run_dir / f"round-{index}.after.json", snapshot(repo))
         save(run_dir / f"round-{index}.checks.json", checks)
         save(run_dir / "result.json", manifest)
         print(f"{case} {model} trial {trial} round {index}: {'pass' if passed else row['status'] if access else 'fail'}", flush=True)
-        if exit_code != 0:
+        if call_failed:
             break
     manifest["evidence_hash"] = evidence_hash(run_dir)
     shutil.copytree(fixture_dir, run_dir / "fixture")
@@ -290,11 +374,11 @@ def acceptance(run_dir, provenance, trial):
     return "passed" if review.get("passed") is True else "review-failed"
 
 
-def verify_behavior(batch, execute=False, selected=None):
+def verify_behavior(batch, execute=False, selected=None, agent="codex", effort="low", subset=None, record=None):
     batch = Path(batch).resolve()
     report = []
     for case, model, trial in selected or matrix():
-        provenance = inputs(case, model)
+        provenance = inputs(case, model, agent, effort)
         matches = [p.parent for p in sorted(batch.glob("*/result.json"))
                    if (lambda row: row.get("input_hash") == digest(provenance) and row.get("trial") == trial)(json.loads(p.read_text()))]
         # Retry only when every prior attempt never reached the model.
@@ -314,8 +398,9 @@ def verify_behavior(batch, execute=False, selected=None):
               "passed": used <= LIMIT and all(row["status"] == "passed" for row in report), "results": report}
     print(json.dumps(result, indent=2), flush=True)
     # A single case must not overwrite the matrix record; a named subset keeps its own.
-    if batch.exists() and (selected is None or selected == regression()):
-        save(batch / ("acceptance.json" if selected is None else "acceptance-regression.json"), result)
+    if batch.exists() and (selected is None or subset == "regression"):
+        # A non-default agent or model set names its own record, so it never passes for the default one.
+        save(batch / f"acceptance{'-regression' if subset else ''}{'-' + record if record else ''}.json", result)
     return 0 if result["passed"] else 1
 
 
@@ -343,6 +428,8 @@ def main():
     runner.add_argument("--scenario", choices=CASES, default="handoff-v1")
     runner.add_argument("--batch", type=Path, default=BATCH)
     runner.add_argument("--trial", type=int, default=1)
+    runner.add_argument("--agent", choices=("codex", "pi"), default="codex")
+    runner.add_argument("--effort", default="low")
     verifier = commands.add_parser("verify")
     mode = verifier.add_mutually_exclusive_group(required=True)
     mode.add_argument("--local", action="store_true")
@@ -350,17 +437,32 @@ def main():
     verifier.add_argument("--run", action="store_true", help="Explicitly authorize missing model sessions, capped at 32 per retained batch")
     verifier.add_argument("--regression", action="store_true", help="Only the rows a publication-authority change can break")
     verifier.add_argument("--batch", type=Path, default=BATCH)
+    verifier.add_argument("--agent", choices=("codex", "pi"), default="codex")
+    verifier.add_argument("--effort", default="low")
+    verifier.add_argument("--model", action="append", help="Restrict the regression subset to these models (repeatable)")
     reader = commands.add_parser("analyze")
     reader.add_argument("transcripts", nargs="+")
+    reader.add_argument("--agent", choices=("codex", "pi"), default="codex")
     args = parser.parse_args()
     if args.command == "run":
-        return verify_behavior(args.batch, execute=True, selected=[(args.scenario, args.model, args.trial)])
+        return verify_behavior(args.batch, execute=True, selected=[(args.scenario, args.model, args.trial)],
+                               agent=args.agent, effort=args.effort)
     if args.command == "verify":
         if args.local and args.run:
             parser.error("--run requires --behavior")
-        return verify_local() if args.local else verify_behavior(args.batch, args.run, regression() if args.regression else None)
+        if args.model and not args.regression:
+            parser.error("--model requires --regression")
+        if args.local:
+            return verify_local()
+        if args.agent != "codex" and not args.regression:
+            parser.error("the full matrix is Codex-only; pass --regression for another agent")
+        models = tuple(args.model or MODELS)
+        selected = regression(models) if args.regression else None
+        record = None if (args.agent, models, args.effort) == ("codex", MODELS, "low") else "-".join((args.agent, *models, args.effort))
+        return verify_behavior(args.batch, args.run, selected, args.agent, args.effort,
+                               "regression" if args.regression else None, record)
     for path in args.transcripts:
-        print(json.dumps(analyze(path)))
+        print(json.dumps(analyze_pi(path) if args.agent == "pi" else analyze(path)))
     return 0
 
 

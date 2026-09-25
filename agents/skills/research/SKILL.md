@@ -1,6 +1,6 @@
 ---
 name: research
-description: Deeply investigate a question or claim and return a sourced conclusion without making changes
+description: Deeply investigate a question or claim and return a sourced conclusion without making changes. Use for "look into X", "is it true that", "dig into whether".
 ---
 
 Research the user's question or statement.

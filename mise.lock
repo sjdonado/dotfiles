@@ -608,7 +608,7 @@ backend = "npm:@fission-ai/openspec"
 specifiers = ["latest"]
 
 [[tools."npm:@openai/codex"]]
-version = "0.154.0"
+version = "0.156.1"
 backend = "npm:@openai/codex"
 specifiers = ["latest"]
 
