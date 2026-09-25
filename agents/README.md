@@ -19,7 +19,7 @@ flowchart TD
         brief -.->|evidence: kill query first, then confirm or refute| brief
 
         idea_in["an idea worth documenting"] --> explore["openspec-explore"]
-        explore --> propose["openspec-propose / openspec-new-change"]
+        explore --> propose["openspec-propose"]
         propose --> change["openspec/changes/&lt;id&gt;/"]
         change --> grill["grill-me
         interactive, or self-grill:
@@ -100,7 +100,7 @@ Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `op
 
 `yolo` is the expensive run and is entered deliberately, not by default: the human asks for it or for a PR, or the contract is already pinned down by an approved change, an approved plan, a promoted ledger, a specified ticket, a round on a branch whose PR is open, or a change small enough that its shape is not in question. Uncertainty routes to `proto`. The two are a sequence rather than a choice: the ledger is what makes the later run cheap and correct.
 
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. `openspec-apply-change` is installed but never routed to: the path to a pull request goes through `yolo`, which is what carries the oracle ladder, adversarial review, and the escalation contract.
+The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. Only `openspec-explore`, `openspec-propose`, `openspec-update-change`, `openspec-verify-change`, `openspec-sync-specs` and `openspec-archive-change` are installed. `openspec-apply-change` is removed because the path to a pull request goes through `yolo`, which carries the oracle ladder, adversarial review, and the escalation contract. `openspec-new-change` and `openspec-continue-change` duplicate `openspec-propose` step by step, `openspec-ff-change` duplicates it outright, `openspec-bulk-archive-change` duplicates `land`, and `openspec-onboard` is a tutorial. Their descriptions loaded in every session and their bodies cost about 16k tokens when routed to. The hash-locked `openspec-propose` and `openspec-update-change` still suggest `/openspec-apply-change`, `/openspec-continue-change` and `/openspec-new-change`; they cannot be edited in place, so `AGENTS.md` states that implementation goes through `yolo` and those skills are not installed.
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
@@ -108,7 +108,7 @@ Agent-initiated review is adversarial: `adversarial-review` carries both the pro
 
 Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `adversarial-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
 
-The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills are gone from here too, since the caveman plugin owns those bodies.
+The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills and the caveman plugin are gone too: the plugin forced its own "full" chat mode at session start against the lite rule in `AGENTS.md`, and its `caveman-commit` skill existed only in Claude Code. `AGENTS.md` now states both rules itself, so every harness reads the same ones. The chat and commit rules in **Writing** and **Commit messages** adapt the useful parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef) at its "lite" level: the filler and hedging drop-list, short synonyms, exact quoting, the outcome-first pattern, the clarity exceptions for warnings and irreversible steps, and the commit subject and body rules. Its 72-column body wrap is left out, because **Writing** forbids hard wraps.
 
 ## Global versus project
 

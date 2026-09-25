@@ -4,26 +4,7 @@ These are contracts, shapes, and protocols. They must stay project-agnostic. Con
 
 ## Skill routing from plain language
 
-Reusable workflows live in `skills/`. Harnesses can invoke them explicitly with their native syntax, and can auto-invoke them by matching the skill description. Route by intent:
-
-| Plain language | Follow |
-| --- | --- |
-| "create a ticket for this", "file this", "make an issue" | `create-ticket` |
-| "look into X", "is it true that", "dig into whether" | `research` |
-| "what does X do", "why does Y happen", one bounded question | `ask` |
-| "how should we approach this", a pasted ticket, "triage this" | `triage` |
-| "yolo it", "open a PR", or any request whose agreement meets **Publication authority** below | `yolo` |
-| "implement this", "go build it", "prototype this", "spike it", "let me try it first", anything whose contract is still open | `proto` |
-| changes, corrections, or follow-up work for an open PR | `feedback` |
-| "address the review comments", "CI is red on my PR" | `address-review` |
-| "the PR merged", "archive the change", "clean up the spec" | `land` |
-| "poke holes in this", "challenge this design" | `grill-me` |
-| "think this through", "let's explore", an idea with no shape yet | `openspec-explore` |
-| "spec this out", "write it up", a feature worth documenting | `openspec-propose` or `openspec-new-change` |
-| "does the code match the spec" | `openspec-verify-change` |
-| "set up project agent instructions", "audit AGENTS.md" | `harness-boostrap` |
-| "how is the harness doing here", "audit the harness in this project" | `harness-audit` |
-| "agents are on an old binary", "restart the agent panes" | `harness-restart` |
+Reusable workflows live in `skills/`. Harnesses invoke them explicitly with their native syntax, or auto-invoke them by matching the skill description, which carries each workflow's plain-language triggers. Route by intent. The OpenSpec skills route as: an idea with no shape yet ("think this through", "let's explore") to `openspec-explore`; "spec this out", "write it up", or a feature worth documenting to `openspec-propose`; "does the code match the spec" to `openspec-verify-change`.
 
 Announce the routing in one line, so a wrong guess is cheap to correct.
 
@@ -43,7 +24,7 @@ Do not route when the request is conversational or a one-line lookup where the w
 
 Never route into *producing* a code or pull-request review. Review requires explicit human invocation and is never entered by routing or from another workflow. Addressing an existing review is different and is routable: that is `address-review`.
 
-Implementation reaches a new pull request only through the `yolo` skill, never `openspec-apply-change` or an improvised workflow. `yolo` alone may create or switch to a task branch. Workflows that update an existing PR, such as `feedback` and `address-review`, stay on its current branch and never create another. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
+Implementation reaches a new pull request only through the `yolo` skill, never an OpenSpec skill or an improvised workflow. `openspec-apply-change` is not installed, even where an upstream skill suggests it. `yolo` alone may create or switch to a task branch. Workflows that update an existing PR, such as `feedback` and `address-review`, stay on its current branch and never create another. The OpenSpec skills own the input phase and the post-implementation phase (verify, sync, archive); `yolo` owns writing the code, because only it carries the oracle ladder, adversarial review, and the escalation contract. When an OpenSpec change directory exists, `yolo` implements from its artifacts and ticks off `tasks.md` as it goes.
 
 The one exception is the `proto` skill, which writes code before a contract exists because its job is contract discovery by building: cheap human-in-the-loop iterations, validated only by the local ladder rungs, in the current worktree without creating or switching branches. It ends by handing the uncommitted diff and requirements ledger to `yolo`, which creates the task branch and runs its full pipeline, or by killing the premise. Nothing reaches a commit or PR from `proto`.
 
@@ -55,7 +36,7 @@ When a request matches a workflow but omits something the workflow needs, follow
 
 Every change needs an agreed contract before implementation. There are two ways to reach one, and exactly one of them is required. A third path exists for requirements that cannot be settled on paper: `proto` discovers the contract by building, and its finalized requirements ledger is the contract `yolo` consumes.
 
-**A written spec, for work worth documenting.** Use the `openspec-*` skills: explore to think it through, then propose or new-change to produce the artifacts, then update-change to fold in what grilling or evidence changes. The change directory under `openspec/changes/<id>/` is the contract, it is durable, and it is reviewable by a teammate. Prefer this for a large feature, anything touching several surfaces, or anything whose reasoning is worth keeping after the PR merges.
+**A written spec, for work worth documenting.** Use the `openspec-*` skills: explore to think it through, then propose to produce the artifacts, then update-change to fold in what grilling or evidence changes. The change directory under `openspec/changes/<id>/` is the contract, it is durable, and it is reviewable by a teammate. Prefer this for a large feature, anything touching several surfaces, or anything whose reasoning is worth keeping after the PR merges.
 
 Never run `openspec init`. The `openspec-*` skills are installed globally and are already available in every repository, so init only scaffolds redundant per-project command files. Create `openspec/changes/<id>/` directly when a change needs it.
 
@@ -103,11 +84,13 @@ A missing note alone is not a blocker: recover from available authoritative arti
 
 Publishing means a commit, a push, a pull request, or a message to anyone other than the user. Nothing in this document authorizes a publication on its own. An agreement with the user does, and this section is the only place that says what counts as one. Every other section and every skill defers here.
 
-An agreement authorizes publication when all four of these hold: the purpose of the work is settled; the whole scope is settled, not only the part that was easy to state; the acceptance evidence is named; and an identifiable user message covers that scope. A formal planning document stays optional. A requirements ledger the agent wrote, a passing check run, and a finished diff are the agent's own output, so none of them supplies the agreement, alone or together. When part of a request is settled and part is not, route the whole request to `proto`, name in one line which part is unsettled, and create no branch and no pull request. A settled subtask never promotes the unresolved work travelling with it.
+An agreement authorizes publication when all four of these hold: the purpose of the work is settled; the whole scope is settled, not only the part that was easy to state; the acceptance evidence is named; and an identifiable user message covers that scope. A formal planning document stays optional. A requirements ledger the agent wrote, a passing check run, and a finished diff are the agent's own output, so none of them supplies the agreement, alone or together. A user message that only points at such an artifact ("carry on with plan.md", "continue", "keep going") continues the work, not the publication: it accepts a ledger only when it answers that ledger's open acceptance question or names the publication it approves. An artifact that says it is awaiting acceptance is still awaiting it. When part of a request is settled and part is not, route the whole request to `proto`, name in one line which part is unsettled, and create no branch and no pull request. A settled subtask never promotes the unresolved work travelling with it.
 
 `yolo` is the only workflow exception to confirming a publication separately. An approved `yolo` run already authorizes, for its agreed scope and with no further confirmation, creating the task branch, committing, pushing, opening the pull request, refreshing that pull request's title and body, and driving its required checks to green. Do not stop the run to confirm the first push or the pull request. That authority reaches the task branch and its own pull request, and nothing else: creating or editing an issue, a tracker comment, a top-level pull request comment, and a review reply each need confirmation for that specific act. No run ever merges.
 
 None of the following authorizes an external write: a pull request the user approved earlier; the rule against committing to the default branch, or any other branch hygiene; a workflow's own procedure; an unrelated open or blocked pull request; a branch note recording a past approval. Where only these are available, publish nothing and ask once for that specific act, naming what it would contain, then wait for the answer. A specific authorization already given stays valid, so never ask twice for the same act.
+
+Withholding a publication is half the rule; the final message is the other half. When you keep work local because the agreement test fails, end that message by (1) naming each justification the request or context offered that does not authorize the write (an earlier approval, a blocked or unrelated pull request, branch hygiene, a ledger or plan the agent wrote) and saying it does not authorize it, and (2) asking one direct question for the specific agreement or act that would, naming what it would publish. Saying only that the work stayed uncommitted is not enough: the human has to see what is missing and be able to answer it.
 
 After a pull request is open, feedback accumulates as local iterations on that same branch, validated by the local ladder, and nothing is committed or pushed until the user approves publishing that batch. On approval, commit, push the same branch, refresh that pull request's title and body from the pushed diff, and drive its required checks, with no further confirmation for that batch. A description that stopped matching the code is how a reviewer ends up approving something else. Approval of one batch never carries to the next.
 
@@ -142,6 +125,7 @@ Unless the human explicitly requests a draft, open a normal PR with `WIP:` at th
 These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message itself. **Publication authority** says what authorizes the write, and nothing in this section grants permission to send, post, reply, close, or otherwise change external state.
 
 - Read the complete thread and relevant surrounding context before writing.
+- Send a message body through a file or stdin (`--body-file`), never an interpolated shell string, so quoting cannot alter it. Read back what was sent; if it is malformed, correct that same message where the platform allows, and say so rather than posting a second one.
 - Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
 - Write for the recipient. Acknowledge useful input when natural, then give the finding, supporting evidence, action taken, and relevant verification. Keep only what helps the recipient understand or act.
 - When rejecting a suggestion, be respectful and specific. Explain why it does not fit, give the correct alternative, and state what evidence would change the conclusion.
@@ -263,11 +247,17 @@ That command is for a diff this session did not write: someone else's pull reque
 
 ## Commit messages
 
-Use `caveman-commit` only for git commit messages: Conventional Commits format, terse and exact, imperative subject <=50 chars, body only when the "why" is non-obvious. Never apply its style to Markdown, READMEs, AGENTS.md, OpenSpec artifacts, PR text, or other human-facing prose. No AI attribution, filler, or emoji in commits.
+Write git commit messages in Conventional Commits format, terse and exact, why over what:
+
+- Subject: `<type>(<scope>): <imperative summary>`, scope optional. Types: `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `chore`, `build`, `ci`, `style`, `revert`; `!` after the scope marks a breaking change. Imperative mood ("add", not "added"), at most 50 characters where possible and never over 72, no trailing period, capitalization after the colon matching the project.
+- Body only when the "why" is non-obvious, and always for a breaking change (`BREAKING CHANGE:` line), a security fix, a data migration, or a revert. Bullets use `-`. Issue references go last (`Closes #42`, `Refs #17`).
+- Never: "This commit does X", "I", "we", "now", "currently", restating the file the scope already names, AI attribution, filler, or emoji unless the project uses them.
+
+Never apply this style to Markdown, READMEs, AGENTS.md, OpenSpec artifacts, PR text, or other human-facing prose.
 
 ## Writing
 
-For agent-user chat, use Caveman lite in every commentary and final response: lead with the outcome, cut filler, restatement, and incidental uncertainty, but keep articles, complete sentences, exact technical terms, and uncertainty that changes a decision. For a small change, summarize the artifact in one short paragraph instead of restating its contents as a list; name only unknowns that affect the documented result. Before sending each chat response, replace any en or em dash with ordinary punctuation. Give the detail the user requests or needs to make a decision. This chat rule does not govern files, commit messages, pull requests, tickets, comments, or messages to others.
+For agent-user chat, write tersely in every commentary and final response, and hold that register for the whole session rather than drifting back to padding after many turns. Lead with the outcome, in the shape thing, action, reason, next step. Cut filler words (just, really, basically, actually, simply), pleasantries (sure, certainly, happy to, great question), hedging, restatement of the request, and incidental uncertainty. Prefer the short word ("fix", not "implement a solution for"; "big", not "extensive"). Keep articles, complete sentences, exact technical terms, and uncertainty that changes a decision. Quote errors, commands, and code exactly and leave code blocks unchanged. Drop terseness where compression could mislead: a security warning, a confirmation before an irreversible action, ordered steps whose sequence matters, or a user asking for clarification or repeating a question. Write that part in full, then return to the terse register. For a small change, summarize the artifact in one short paragraph instead of restating its contents as a list; name only unknowns that affect the documented result. Before sending each chat response, replace any en or em dash with ordinary punctuation. Give the detail the user requests or needs to make a decision. This chat rule does not govern files, commit messages, pull requests, tickets, comments, or messages to others.
 
 For technical Markdown documentation, including architecture documents and technical README sections, use STE-inspired clarity: keep one term for each concept, name the actor and action, split sentences that carry several decisions, and make references unambiguous. Preserve necessary technical vocabulary and the repository's existing voice. Do not claim ASD-STE100 compliance or impose its controlled dictionary. This documentation rule does not govern agent-user chat or external communication.
 

@@ -1,6 +1,6 @@
 ---
 name: address-review
-description: Address open PR review threads, reply only inside those threads, and fix red CI or an outdated branch
+description: Address open PR review threads, reply only inside those threads, and fix red CI or an outdated branch. Use for "address the review comments", "CI is red on my PR".
 ---
 Address review feedback on a pull request. Use the `gh` CLI for all PR interaction (comments, CI status, branch state).
 

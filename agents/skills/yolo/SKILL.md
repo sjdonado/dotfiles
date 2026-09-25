@@ -1,6 +1,6 @@
 ---
 name: yolo
-description: Autonomous requirements-to-PR. Clarify once, understand deeply, implement lazily, then drive every check green with no further input
+description: Autonomous requirements-to-PR. Clarify once, understand deeply, implement lazily, then drive every check green with no further input. Use for "yolo it", "open a PR", or work whose agreement meets Publication authority in AGENTS.md.
 ---
 
 Autonomously implement the user's request or the current conversation's approved contract.
@@ -29,7 +29,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 2. Clarify only when the escalation contract in `AGENTS.md` says to: the answer is not derivable from repository evidence, telemetry, or convention, AND getting it wrong is expensive to reverse or the choice is not yours. Before changing branches, inspect the current branch and its open PR. If the request changes that PR, stop and route to `feedback` on the same branch. If ownership is unclear, ask whether to add it to the open PR or start a separate line and stop before editing. Pre-existing changes that cannot be safely separated also stop here. Batch every question into one stop. Otherwise proceed without asking.
 
-3. Establish the task branch before staging or committing. Then write the branch note for the new branch key, opening its Contract with Purpose, End state and Key tasks per `AGENTS.md`, carrying over any note `proto` kept under the default branch key rather than leaving a second copy. Write the task list before the second step of the work: the change's `tasks.md` where an OpenSpec change exists, otherwise `.agent/<branch-key>.tasks.md`. Tick it as items land. This is the only workflow allowed to create or switch to a task branch. Resolve the repository's default branch. If currently on it, create the branch without losing an accumulated `proto` diff. If already on a non-default branch with no open PR, reuse it. If the human chose a separate line from an open PR, create its branch from the appropriate base and carry only that line's edits. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the branch name.
+3. Establish the task branch before staging or committing. Then write the branch note for the new branch key, opening its Contract with Purpose, End state and Key tasks per `AGENTS.md`, carrying over any note `proto` kept under the default branch key rather than leaving a second copy. Write the task list before the second step of the work: the change's `tasks.md` where an OpenSpec change exists, otherwise `.agent/<branch-key>.tasks.md`. Tick it as items land. This is the only workflow allowed to create or switch to a task branch. Resolve the repository's default branch. If currently on it, create the branch without losing an accumulated `proto` diff. If already on a non-default branch with no open PR, reuse it. If the human chose a separate line from an open PR, create its branch from the appropriate base and carry only that line's edits. Never implement directly on `main`, `master`, or another default branch. When the run is bound to a tracker issue, put the identifier in the name of a branch you create; a reused branch keeps its name.
 
 4. Resolve or reuse the current repository oracle ladder from its instructions and task runner; record it in worktree state if available. Include declared behavioral acceptance: tooling checks alone do not satisfy it. Missing coverage stays incomplete, never a skipped success.
 
@@ -41,7 +41,7 @@ Flow: understand the problem, clarify requirements ONCE if needed, then run to c
 
 8. Load and follow `adversarial-review`. Triage every finding: fix it, reject it with a specific reason, or escalate it if it is a product decision. Resolve findings in the working tree. Never post them to the forge.
 
-9. Commit per `caveman-commit`. Follow the PR writing, screenshot, and `WIP:` lifecycle in `AGENTS.md`: mark an existing PR `WIP:` before pushing, or push and create a normal `WIP:` PR when none exists. Fit what changed, why, and checks run into the repository's PR style, plus:
+9. Commit per **Commit messages** in `AGENTS.md`. Follow the PR writing, screenshot, and `WIP:` lifecycle in `AGENTS.md`: mark an existing PR `WIP:` before pushing, or push and create a normal `WIP:` PR when none exists. Fit what changed, why, and checks run into the repository's PR style, plus:
     - **Assumptions**: each decision made without asking, its rejected alternative, and the one fact that would flip it.
     - **Refuted evidence**: any claim production data contradicted, and what changed as a result. Omit if no evidence was gathered.
     - **Rejected review findings**: each adversarial-review finding not fixed, with its reason. Omit if none.

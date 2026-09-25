@@ -7,53 +7,17 @@
       "skillPath": "skills/productivity/handoff/SKILL.md",
       "computedHash": "20e5f4afdef502637510bc5c64d27645d3c85c88df9cb006824bbb0980166319"
     },
-    "openspec-apply-change": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-apply-change/SKILL.md",
-      "computedHash": "657951ff2bf91de7eea99a8300ad046906745e571c00b842c78a5097311ca56a"
-    },
     "openspec-archive-change": {
       "source": "Fission-AI/OpenSpec",
       "sourceType": "github",
       "skillPath": "skills/openspec-archive-change/SKILL.md",
       "computedHash": "ae48ad632d04d0880a0ec699559f89f2daae4d717ac2dda3d42ffdeef1203795"
     },
-    "openspec-bulk-archive-change": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-bulk-archive-change/SKILL.md",
-      "computedHash": "af858fcd8022e7a5d945af6557ad69d6c8a69aeffdcfb3c1f10f3d844ca8db5e"
-    },
-    "openspec-continue-change": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-continue-change/SKILL.md",
-      "computedHash": "756b1204fe592aec5aceab1667b1e93fb6e07ca6df9ccd4bb7815de9e5c9b579"
-    },
     "openspec-explore": {
       "source": "Fission-AI/OpenSpec",
       "sourceType": "github",
       "skillPath": "skills/openspec-explore/SKILL.md",
       "computedHash": "52cb631a39b20ad4fe718d39508f2f8f1dc58b05dc0d274f5d0670fb18cfe672"
-    },
-    "openspec-ff-change": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-ff-change/SKILL.md",
-      "computedHash": "7d0e01a1f80e8d48f12e816e678d2f23b7e93815468412c2aeea8b6f6ebf00e6"
-    },
-    "openspec-new-change": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-new-change/SKILL.md",
-      "computedHash": "c2c2e14c8ea57ee6e8c18aeaec0929656602f9da985c973d251c7b7657a0c353"
-    },
-    "openspec-onboard": {
-      "source": "Fission-AI/OpenSpec",
-      "sourceType": "github",
-      "skillPath": "skills/openspec-onboard/SKILL.md",
-      "computedHash": "e01a8314a444fb8ec0c373d29244ce845a4c0ef8c975c64da8ce1085c89a75f7"
     },
     "openspec-propose": {
       "source": "Fission-AI/OpenSpec",

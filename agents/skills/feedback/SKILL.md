@@ -1,6 +1,6 @@
 ---
 name: feedback
-description: Apply bullet-list feedback locally on the current PR's branch, report the checks, and publish the batch only once the user approves it
+description: Apply bullet-list feedback locally on the current PR's branch, report the checks, and publish the batch only once the user approves it. Use for changes, corrections, or follow-up work on an open PR.
 ---
 
 Apply the user's implementation feedback.
@@ -41,6 +41,6 @@ Pick the type at the start of the round: if the input says to finalize or run th
 
 7. On approval for this batch, and with no further confirmation: commit with conventional messages, push the current branch, then drive required remote checks green. A red required check is a failure to fix, not a result to report. Do not open or merge a PR. Approval of this batch does not carry to the next one.
 
-8. After that push, refresh the existing PR title and body from the pushed diff and check results per AGENTS.md. Preserve issue links, closing keywords, checklists, and human-written context. Use `gh pr edit`; it is part of the approved publication, not a separate gate. Save the branch note with the PR, validated checkpoint, remaining debt, and next action. If more rounds are already expected, return awaiting feedback; otherwise ask whether the loop is finalized. Do not invoke the human review command.
+8. After that push, refresh the existing PR title and body from the pushed diff and check results per AGENTS.md. Read the current body first and edit it in place rather than replacing it: preserve issue links, closing keywords, checklists, and human-written context. Use `gh pr edit`; it is part of the approved publication, not a separate gate. Save the branch note with the PR, validated checkpoint, remaining debt, and next action. If more rounds are already expected, return awaiting feedback; otherwise ask whether the loop is finalized. Do not invoke the human review command.
 
 9. Report the final result and stop. If the human wants a review, they must explicitly request it in a new top-level message. Never post inline or line comments, create a review, or add top-level PR comments from this workflow. Replying at line level is allowed only through the `address-review` skill, and only inside an existing unresolved review thread.
