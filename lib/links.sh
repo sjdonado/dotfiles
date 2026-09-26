@@ -185,7 +185,7 @@ PY
   # action.
   log "Setting up annotate..."
   herdr plugin install plannotator/herdr-annotate \
-    --ref 7c8f5a177b8285dc56efc471ef04f7ab44a2b4b6 --yes >/dev/null 2>&1 \
+    --ref 1bc258353f0a7af0781493e1c1ffca09b71666bc --yes >/dev/null 2>&1 \
     && log "  installed Herdr plugin: annotate" \
     || log "  Herdr not running; later run: herdr plugin install plannotator/herdr-annotate"
 }
