@@ -255,6 +255,37 @@ Write git commit messages in Conventional Commits format, terse and exact, why o
 
 Never apply this style to Markdown, READMEs, AGENTS.md, OpenSpec artifacts, PR text, or other human-facing prose.
 
+## git-bug
+
+These rules apply when a repository tracks issues with git-bug. `git bug push` publishes every bug and every identity in the local store, so it is a publication under **Publication authority**. Setting git-bug up is configuration only: it creates no bug and pushes nothing. If `git bug version` fails, stop and report that git-bug is missing. The rules below were checked on v0.11; on another minor version, confirm the transport and identity behavior before relying on them.
+
+- **Transport.** git-bug's built-in git client never uses git's credential helper. Over HTTPS it is anonymous, so a private repository fails with "authentication required". Over SSH it uses only keys already loaded in ssh-agent. When `origin` is an HTTPS forge URL, change only its URL to the SSH form (`git remote set-url origin git@<host>:<owner>/<repo>.git`) and leave every other remote setting alone. When `origin` is not on a forge the user's SSH config covers, ask before changing it. Never edit `~/.ssh/config`.
+- **Key in the agent.** Before a `git bug pull` or `git bug push`, run a plain git command over SSH against the same remote, such as `git fetch origin`, so the SSH config loads the key into ssh-agent. Confirm with `ssh-add -l`. The error "ssh: handshake failed ... no supported methods remain" means the agent is empty: fetch again and retry once. If the agent is still empty, ask the human; never load a key yourself.
+- **One identity.** Pull before creating an identity, because the remote may already hold one. Run `git bug user` and match on `git config user.email`. If a matching identity exists, adopt it with `git bug user adopt <id>` when it is not active, and never create a second. If none exists, create exactly one with `git bug user new --non-interactive -n "<user.name>" -e "<user.email>"`.
+- **CLI only.** Drive git-bug only through its non-interactive CLI commands, with `--non-interactive` where the command accepts it. Never launch `termui` or `webui`: they hold the repository lock for as long as they run, and a first-run prompt with no active identity creates a duplicate identity that the next push publishes. When a command fails with "already locked by the process pid <n>", report that pid to the human and retry after they release it; never kill it.
+- **Writing bugs.** Create and comment with `-t` and `-m` only. Never use `-F`: it deletes every line that starts with `#` and takes the first line as the title.
+- **Bug shape.** One defect per bug. Search open bugs first (`git bug bug status:open`) and comment on a duplicate instead of filing a second. The title is the observable symptom, prefixed with its surface: `<surface>: <what goes wrong>`, for example `watch: recording stops after 60 s`. The body uses these labeled lines, in this order, and omits a line only when it has nothing to say, never `Repro`, `Expected`, or `Actual`:
+
+  ```
+  Repro: numbered steps from a known state, or "not reproduced" and how often it happens
+  Expected: what should happen
+  Actual: what happens, with exact error text
+  Env: commit or build, device, OS version
+  Evidence: log excerpt, screenshot path, or a path:line suspect
+  ```
+
+  Add one `area/<surface>` label with `git bug bug label new <id> area/<surface>`, and the `kind/bug` label. Record the cause or fix in a comment, never by rewriting the original report.
+- **Feature shape.** A feature request is filed the same way, with the `kind/feature` label instead of `kind/bug`. The title is the capability in the user's terms, prefixed with its surface, for example `watch: pause and resume a recording`. The body always has `Problem` and `Done when`:
+
+  ```
+  Problem: who hits what today, and why it matters
+  Proposal: the suggested behavior, if one exists
+  Done when: observable acceptance checks, one per line
+  Out of scope: what this request deliberately excludes
+  ```
+
+  `Problem` describes the need, not the solution, so a better proposal can replace the first one without rewriting the request.
+
 ## Writing
 
 For agent-user chat, write tersely in every commentary and final response, and hold that register for the whole session rather than drifting back to padding after many turns. Lead with the outcome, in the shape thing, action, reason, next step. Cut filler words (just, really, basically, actually, simply), pleasantries (sure, certainly, happy to, great question), hedging, restatement of the request, and incidental uncertainty. Prefer the short word ("fix", not "implement a solution for"; "big", not "extensive"). Keep articles, complete sentences, exact technical terms, and uncertainty that changes a decision. Quote errors, commands, and code exactly and leave code blocks unchanged. Drop terseness where compression could mislead: a security warning, a confirmation before an irreversible action, ordered steps whose sequence matters, or a user asking for clarification or repeating a question. Write that part in full, then return to the terse register. For a small change, summarize the artifact in one short paragraph instead of restating its contents as a list; name only unknowns that affect the documented result. Before sending each chat response, replace any en or em dash with ordinary punctuation. Give the detail the user requests or needs to make a decision. This chat rule does not govern files, commit messages, pull requests, tickets, comments, or messages to others.
