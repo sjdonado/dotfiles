@@ -32,7 +32,7 @@
 		},
 		"git-bug": {
 			"type": "local",
-			"command": ["bun", "run", "/Users/sjdonado/.config/dotfiles/git-bug-mcp/index.ts"],
+			"command": ["bun", "run", "{env:HOME}/.config/dotfiles/git-bug-mcp/index.ts"],
 			"enabled": true
 		}
 	}
