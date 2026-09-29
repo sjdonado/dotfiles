@@ -70,7 +70,7 @@ async function git(repo: string, args: string[]): Promise<string> {
   return r.stdout;
 }
 
-// git object hashes may not exist (e.g. malformed tree); tolerate failure.
+// Throws when the object is missing; callers let that fail the whole read.
 async function catBlob(repo: string, hash: string): Promise<string> {
   return git(repo, ["cat-file", "-p", hash]);
 }
@@ -188,7 +188,7 @@ async function listBugRefs(repo: string): Promise<string[]> {
 
 async function loadBug(repo: string, ref: string): Promise<Bug | null> {
   const id = ref.split("/").pop()!;
-  const commits = (await git(repo, ["rev-list", "--reverse", ref])).split("\n").filter(Boolean);
+  const commits = (await git(repo, ["rev-list", "--reverse", "--topo-order", ref])).split("\n").filter(Boolean);
   if (commits.length === 0) return null;
 
   let bug: Bug | null = null;
@@ -285,7 +285,7 @@ async function loadBug(repo: string, ref: string): Promise<Bug | null> {
         default:
           break;
       }
-      if (bug) bug.updatedAt = op.timestamp;
+      if (bug) bug.updatedAt = Math.max(bug.updatedAt, op.timestamp);
     }
   }
 
@@ -323,7 +323,8 @@ interface LockStatus {
 }
 
 async function checkLock(repo: string): Promise<LockStatus> {
-  const gitDir = (await git(repo, ["rev-parse", "--git-dir"])).trim();
+  // Absolute, so the lock is read inside `repo` and not the server's cwd.
+  const gitDir = (await git(repo, ["rev-parse", "--absolute-git-dir"])).trim();
   const lockPath = `${gitDir}/git-bug/lock`;
   const file = Bun.file(lockPath);
   if (!(await file.exists())) return { locked: false };
@@ -352,13 +353,14 @@ async function requireUnlocked(repo: string): Promise<void> {
 
 // ---------- ssh key check ----------
 
+// Plain git over SSH loads the key into ssh-agent (AddKeysToAgent), which
+// git-bug's own client needs. ls-remote does that without touching any ref.
 async function ensureSshKeyLoaded(repo: string, remote: string): Promise<void> {
-  const r = await run(["git", "-C", repo, "fetch", remote]);
-  const combined = r.stdout + r.stderr;
-  if (/handshake failed|no supported methods remain/i.test(combined)) {
+  const r = await run(["git", "-C", repo, "ls-remote", remote, "HEAD"]);
+  if (r.code !== 0) {
     throw new Error(
-      `SSH key for remote "${remote}" is not loaded in ssh-agent (git fetch failed: ${combined.trim()}). ` +
-        `Load the key and try again; this tool will not load one for you.`,
+      `Cannot reach remote "${remote}" over git (${r.stderr.trim()}). ` +
+        `If the SSH key is not loaded in ssh-agent, load it and try again; this tool will not load one for you.`,
     );
   }
 }
@@ -371,6 +373,16 @@ const repoParam = z
   .string()
   .optional()
   .describe("Path to the git repository. Defaults to this server's cwd.");
+
+// Values reach git and git-bug argv as positionals; anything starting with
+// "-" would be parsed as a flag (e.g. `--upload-pack=...` or `-F <file>`).
+const idParam = z.string().regex(/^[0-9a-f]{1,64}$/, "a bug id or hex prefix");
+const labelParam = z.string().min(1).refine((v) => !v.startsWith("-"), "labels cannot start with '-'");
+const remoteParam = z
+  .string()
+  .regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/, "a configured remote name")
+  .optional()
+  .default("origin");
 
 function repoOrCwd(repo?: string): string {
   return repo ?? process.cwd();
@@ -446,7 +458,7 @@ server.registerTool(
       "Show full detail for one bug by id prefix, reading git plumbing directly (lock-free). Errors on an ambiguous prefix.",
     inputSchema: {
       repo: repoParam,
-      id: z.string().describe("Bug id or a unique prefix of it (e.g. the 7-char short id)."),
+      id: idParam.describe("Bug id or a unique prefix of it (e.g. the 7-char short id)."),
     },
   },
   async ({ repo, id }) => {
@@ -554,7 +566,7 @@ server.registerTool(
       repo: repoParam,
       title: z.string(),
       message: z.string(),
-      labels: z.array(z.string()).optional().default([]),
+      labels: z.array(labelParam).optional().default([]),
     },
   },
   async ({ repo, title, message, labels }) => {
@@ -567,11 +579,12 @@ server.registerTool(
       );
       if (r.code !== 0) throw new Error(r.stderr.trim() || r.stdout.trim());
       const created = r.stdout.trim();
-      const idMatch = created.match(/^([0-9a-f]{7,})/);
-      const id = idMatch?.[1];
-      if (id && labels && labels.length > 0) {
+      const id = created.match(/^([0-9a-f]{7,})/)?.[1];
+      if (!id) throw new Error(`bug created but its id could not be read from: ${created}`);
+      if (labels && labels.length > 0) {
         const lr = await run(["git-bug", "bug", "label", "new", id, ...labels], { cwd: repoPath });
-        if (lr.code !== 0) throw new Error(lr.stderr.trim() || lr.stdout.trim());
+        // The bug exists now: report its id so a retry labels it instead of filing a duplicate.
+        if (lr.code !== 0) return errorText(`created ${id}, but labeling failed: ${lr.stderr.trim() || lr.stdout.trim()}`);
       }
       return text({ created });
     } catch (err) {
@@ -585,7 +598,7 @@ server.registerTool(
   {
     title: "Comment on a git-bug bug",
     description: "Add a comment through the real `git bug` CLI (non-interactive). Refuses if git-bug's lock is held.",
-    inputSchema: { repo: repoParam, id: z.string(), message: z.string() },
+    inputSchema: { repo: repoParam, id: idParam, message: z.string() },
   },
   async ({ repo, id, message }) => {
     try {
@@ -610,9 +623,9 @@ server.registerTool(
     description: "Add and/or remove labels through the real `git bug` CLI. Refuses if git-bug's lock is held.",
     inputSchema: {
       repo: repoParam,
-      id: z.string(),
-      add: z.array(z.string()).optional().default([]),
-      remove: z.array(z.string()).optional().default([]),
+      id: idParam,
+      add: z.array(labelParam).optional().default([]),
+      remove: z.array(labelParam).optional().default([]),
     },
   },
   async ({ repo, id, add, remove }) => {
@@ -642,7 +655,7 @@ server.registerTool(
   {
     title: "Open or close a git-bug bug",
     description: "Set a bug's status through the real `git bug` CLI. Refuses if git-bug's lock is held.",
-    inputSchema: { repo: repoParam, id: z.string(), status: z.enum(["open", "closed"]) },
+    inputSchema: { repo: repoParam, id: idParam, status: z.enum(["open", "closed"]) },
   },
   async ({ repo, id, status }) => {
     try {
@@ -663,7 +676,7 @@ server.registerTool(
   {
     title: "Rename a git-bug bug",
     description: "Edit a bug's title through the real `git bug` CLI (non-interactive). Refuses if git-bug's lock is held.",
-    inputSchema: { repo: repoParam, id: z.string(), title: z.string() },
+    inputSchema: { repo: repoParam, id: idParam, title: z.string() },
   },
   async ({ repo, id, title }) => {
     try {
@@ -686,8 +699,8 @@ server.registerTool(
   {
     title: "Push git-bug refs to a remote",
     description:
-      "PUBLISHES every local bug and identity: runs plain `git push <remote> refs/bugs/*:refs/bugs/* refs/identities/*:refs/identities/*` (lock-free, no git-bug CLI involved). Never force-pushes. A rejected (non-fast-forward) ref is reported, not retried; run bug_pull first.",
-    inputSchema: { repo: repoParam, remote: z.string().optional().default("origin") },
+      "PUBLISHES every local bug and identity to everyone with access to the remote, so call it only when the user approved this push: runs plain `git push <remote> refs/bugs/*:refs/bugs/* refs/identities/*:refs/identities/*` (lock-free, no git-bug CLI involved). Never force-pushes. A rejected (non-fast-forward) ref is reported, not retried; run bug_pull first.",
+    inputSchema: { repo: repoParam, remote: remoteParam },
   },
   async ({ repo, remote }) => {
     try {
@@ -716,7 +729,7 @@ server.registerTool(
   {
     title: "Pull git-bug refs from a remote",
     description: "Pull bugs and identities through the real `git bug pull` CLI. Refuses if git-bug's lock is held.",
-    inputSchema: { repo: repoParam, remote: z.string().optional().default("origin") },
+    inputSchema: { repo: repoParam, remote: remoteParam },
   },
   async ({ repo, remote }) => {
     try {
