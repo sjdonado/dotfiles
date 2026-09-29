@@ -188,7 +188,7 @@ async function listBugRefs(repo: string): Promise<string[]> {
 
 async function loadBug(repo: string, ref: string): Promise<Bug | null> {
   const id = ref.split("/").pop()!;
-  const commits = (await git(repo, ["rev-list", "--reverse", "--topo-order", ref])).split("\n").filter(Boolean);
+  const commits = (await git(repo, ["rev-list", "--reverse", ref])).split("\n").filter(Boolean);
   if (commits.length === 0) return null;
 
   let bug: Bug | null = null;
@@ -285,7 +285,7 @@ async function loadBug(repo: string, ref: string): Promise<Bug | null> {
         default:
           break;
       }
-      if (bug) bug.updatedAt = Math.max(bug.updatedAt, op.timestamp);
+      if (bug) bug.updatedAt = op.timestamp;
     }
   }
 
@@ -380,7 +380,7 @@ const idParam = z.string().regex(/^[0-9a-f]{1,64}$/, "a bug id or hex prefix");
 const labelParam = z.string().min(1).refine((v) => !v.startsWith("-"), "labels cannot start with '-'");
 const remoteParam = z
   .string()
-  .regex(/^[A-Za-z0-9_][A-Za-z0-9._-]*$/, "a configured remote name")
+  .regex(/^[A-Za-z0-9_][A-Za-z0-9._\/-]*$/, "a remote name not starting with '-'")
   .optional()
   .default("origin");
 
