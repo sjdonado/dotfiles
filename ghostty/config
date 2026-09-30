@@ -1,15 +1,5 @@
-# TEMPFIX: pinned to dark, no light variant, for two reasons that push the same
-# way. An already-running Claude or OpenCode keeps whatever palette it started
-# with, so a flip leaves it mismatched against the terminal. And plannotator-tui,
-# which renders herdr's annotate reviews, draws its light theme wrong: it keeps
-# dark chrome bars over a light page, which is what finally took the pair off.
-# Staying on one side means nothing can drift. Neovim is unaffected; it tracks a
-# flip on its own from the OSC 11 background the terminal reports.
-#
-# Back to auto light/dark once plannotator-tui's light theme renders correctly.
-# The pair to restore, and what the light half was before this:
-#   theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
-theme = sjdonado-dark.conf
+# Follows macOS appearance. Ghostty's color-scheme report (mode 2031) is what herdr's [theme] auto_switch reads, so this pair and herdr's catppuccin pair must flip together: pinning only one side leaves herdr's chrome on the opposite palette from the panes. plannotator-tui 0.9.2+ detects a light background itself (OSC 11), which was the blocker for this pair. An already-running Claude or OpenCode still keeps the palette it started with; neovim tracks the flip from OSC 11.
+theme = dark:sjdonado-dark.conf,light:sjdonado-light.conf
 
 font-family = Menlo
 font-family = Symbols Nerd Font Mono

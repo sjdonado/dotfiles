@@ -20,9 +20,19 @@
 			"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--headless=true", "--viewport=1280x720", "--no-usage-statistics"],
 			"enabled": true
 		},
+		"safari": {
+			"type": "local",
+			"command": ["/usr/bin/safaridriver", "--mcp"],
+			"enabled": true
+		},
 		"ios-simulator": {
 			"type": "local",
 			"command": ["npx", "-y", "ios-simulator-mcp"],
+			"enabled": true
+		},
+		"git-bug": {
+			"type": "local",
+			"command": ["bun", "run", "{env:HOME}/.config/dotfiles/git-bug-mcp/index.ts"],
 			"enabled": true
 		}
 	}

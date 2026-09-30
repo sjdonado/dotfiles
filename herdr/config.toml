@@ -35,12 +35,13 @@ delivery = "terminal"
 # what the issue reporter settled on too. It costs palette tracking: a ghostty
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
+#
+# auto_switch below still flips between the dark and light catppuccin variants, following the color-scheme report the terminal sends (Ghostty's mode 2031); only the palette itself is Catppuccin's rather than Ghostty's.
 [theme]
-auto_switch = false
+auto_switch = true
 dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
-name = "catppuccin"
 [terminal]
 default_shell = "fish"
 
