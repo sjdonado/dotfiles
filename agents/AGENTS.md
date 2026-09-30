@@ -306,7 +306,7 @@ When rendering a link, always show the complete absolute URL as the visible text
 
 Classify an MCP server before deciding where it is configured, because the two classes live in different places.
 
-A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `chrome-devtools` and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
+A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `browser` (headless Playwright) and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
 
 An account or product server is not global. It reaches a personal account, a product, or a team, so its credentials identify a person (an issue tracker, a hosted API). Keep it where its credentials live, per machine and per account, and never assume another agent, project, or machine has it. `linear` is the current example.
 
