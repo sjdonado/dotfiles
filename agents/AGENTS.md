@@ -88,7 +88,7 @@ An agreement authorizes publication when all four of these hold: the purpose of 
 
 `yolo` is the only workflow exception to confirming a publication separately. An approved `yolo` run already authorizes, for its agreed scope and with no further confirmation, creating the task branch, committing, pushing, opening the pull request, refreshing that pull request's title and body, and driving its required checks to green. Do not stop the run to confirm the first push or the pull request. That authority reaches the task branch and its own pull request, and nothing else: creating or editing an issue, a tracker comment, a top-level pull request comment, and a review reply each need confirmation for that specific act. No run ever merges.
 
-None of the following authorizes an external write: a pull request the user approved earlier; the rule against committing to the default branch, or any other branch hygiene; a workflow's own procedure; an unrelated open or blocked pull request; a branch note recording a past approval. The one carry-over is a `yolo` run handed to an agent in a worktree under **Workspace**: that agent holds the run's authority for the same agreed scope only when its handoff quotes the approving user message verbatim, and otherwise treats the handoff as `proto` input. Where only these are available, publish nothing and ask once for that specific act, naming what it would contain, then wait for the answer. A specific authorization already given stays valid, so never ask twice for the same act.
+None of the following authorizes an external write: a pull request the user approved earlier; the rule against committing to the default branch, or any other branch hygiene; a workflow's own procedure; an unrelated open or blocked pull request; a branch note recording a past approval. Where only these are available, publish nothing and ask once for that specific act, naming what it would contain, then wait for the answer. A specific authorization already given stays valid, so never ask twice for the same act.
 
 Withholding a publication is half the rule; the final message is the other half. When you keep work local because the agreement test fails, end that message by (1) naming each justification the request or context offered that does not authorize the write (an earlier approval, a blocked or unrelated pull request, branch hygiene, a ledger or plan the agent wrote) and saying it does not authorize it, and (2) asking one direct question for the specific agreement or act that would, naming what it would publish. Saying only that the work stayed uncommitted is not enough: the human has to see what is missing and be able to answer it.
 
@@ -100,22 +100,13 @@ An approved run already in flight keeps its authority. It finishes its authorize
 
 ## Workspace
 
-Implementation runs in the current checkout: `yolo` creates the task branch in place. Create a git worktree only when the project's own `AGENTS.md` records that preference or the user asks for one in the current request. A request for a worktree covers that run only, never later runs. Record the choice and its source in the branch note.
+These rules govern where a task branch is checked out. Disposable worktrees a workflow creates for its own subagents or for a bisect, and removes before it returns, are outside them.
 
-Create a worktree only through herdr, so the user sees it as a workspace: `herdr worktree create --branch <task-branch> --base <default-branch ref> --label <task>`. Never run `git worktree add`. Outside herdr (`HERDR_ENV` unset), branch in place instead and say why.
+Implementation runs in the current checkout: `yolo` creates the task branch in place. Create a git worktree only when the project's own `AGENTS.md` records that preference or the user asks for one in the current request, and only from a checkout with no uncommitted changes; with an accumulated `proto` diff, branch in place so the diff travels with the branch. A request for a worktree covers that run only, never later runs. Record the choice and its source in the branch note.
 
-Exactly one session owns a worktree. The session that creates it hands the work to a new agent in that worktree:
+Create a worktree only through herdr, so the user sees it as a workspace: `herdr worktree create --branch <task-branch> --base <default-branch ref> --label <task>`. Never run `git worktree add`. Outside herdr (`HERDR_ENV` unset), branch in place instead and say why. The session that creates the worktree continues the work there itself.
 
-1. Copy the branch note and the task list into the worktree's `.agent/`. Branch notes exist only in the checkout that wrote them.
-2. Write a handoff with the `handoff` skill. When the work is an approved `yolo` run, quote the approving user message verbatim in it.
-3. Start the agent in the new workspace's pane: `herdr agent start <name> --kind <this session's agent kind> --pane <pane> -- "<handoff path>"`.
-4. Record in this session's own note the worktree path, the herdr workspace, the agent name, and that the agent owns the worktree.
-
-The creating session keeps working on its own conversation. It never edits, commits, or pushes in the worktree it handed off. To learn the state of that work, it reads the worktree's note and task list or `herdr agent read <name>`. To change that work, it prompts the owning agent with `herdr agent prompt <name>` or asks the user.
-
-After the pull request merges, the owning session runs `land`, which removes the worktree with `herdr worktree remove`.
-
-Every final report on implementation names where the branch is checked out. When that is not the user's current checkout, give the path and the command to run the work there.
+Every final report on implementation names where the branch is checked out. When that is not the user's current checkout, give the path, the command to run the work there, and the `herdr worktree remove` command to run once the pull request merges.
 
 ## Approval means autonomous execution
 
