@@ -227,41 +227,6 @@ tree-sitter = "latest"
 "supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
 
 # The Go CLIs Homebrew cannot install; Linux boxes never had them. This is the global config, so the task is visible as `mise run bootstrap` in every project, and every `mise bootstrap` re-runs it, re-resolving `@latest`. golangci-lint comes from Homebrew above, not from here. The old Brewfile's `go "zen-habit/server"` is dropped: that is a local module path with no remote to install from.
-# One command for every upgrade: Homebrew's index, the declared bootstrap packages
-# (mise itself is one of them), the [tools] versions (mise.lock), Neovim plugins
-# (nvim-pack-lock.json, written back into this repository) and Mason tools.
-# Review the lockfile diffs afterwards.
-[tasks.upgrade]
-run = """
-status=0
-# mise's GitHub calls hit the anonymous rate limit; reuse the gh login when no token is set.
-if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null; then
-  GITHUB_TOKEN=$(gh auth token 2>/dev/null) && export GITHUB_TOKEN
-fi
-if command -v brew >/dev/null; then brew update || status=1; fi
-# mise mishandles third-party tap formulas (it cannot infer idb-companion's version, and its
-# source build of gcx crashes), and one failure aborts the whole upgrade. So mise upgrades the
-# core formulas and casks, and brew upgrades every tap formula (`brew:owner/tap/name`).
-lists=$(python3 <<'PY'
-import os, tomllib, platform
-osname = {"Darwin": "macos", "Linux": "linux"}.get(platform.system(), "")
-pkgs = tomllib.load(open(os.environ.get("MISE_TASK_FILE", "mise.toml"), "rb")).get("bootstrap", {}).get("packages", {})
-for name, spec in pkgs.items():
-    wanted = spec.get("os") if isinstance(spec, dict) else None
-    if wanted is None or osname in ([wanted] if isinstance(wanted, str) else wanted):
-        tap = name.startswith("brew:") and name.count("/") >= 2
-        print(("brew " + name[len("brew:"):]) if tap else ("mise " + name))
-PY
-)
-mise bootstrap packages upgrade $(printf '%s\n' "$lists" | sed -n 's/^mise //p') || status=1
-taps=$(printf '%s\n' "$lists" | sed -n 's/^brew //p')
-if [ -n "$taps" ] && command -v brew >/dev/null; then brew upgrade $taps || status=1; fi
-mise upgrade || status=1
-nvim --headless -c 'lua vim.pack.update(nil, { force = true })' -c 'qa' || status=1
-nvim --headless -c 'MasonToolsUpgrade' -c 'qa' || status=1
-exit $status
-"""
-
 [tasks.bootstrap]
 run = """
 [ "$(uname)" = Darwin ] || exit 0
@@ -272,6 +237,47 @@ for pkg in github.com/air-verse/air github.com/bootdotdev/bootdev github.com/pre
 done
 exit $status
 """
+
+# One command for every upgrade: Homebrew's index, the declared bootstrap packages (mise itself is one of them), the [tools] versions (mise.lock), Neovim plugins (nvim-pack-lock.json, written back into this repository) and Mason tools. Review the lockfile diffs afterwards.
+[tasks.upgrade]
+run = '''
+status=0
+# mise's GitHub calls hit the anonymous rate limit; reuse the gh login when no token is set.
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null; then
+  GITHUB_TOKEN=$(gh auth token 2>/dev/null) && export GITHUB_TOKEN
+fi
+if command -v brew >/dev/null; then brew update || status=1; fi
+# The bootstrap packages are macOS only, like [tasks.bootstrap]; the apt entries are advisory and linux.sh owns them. mise mishandles third-party tap formulas (it cannot infer idb-companion's version, and its source build of gcx crashes) and one failure aborts the whole upgrade, so mise upgrades the core formulas and casks and brew upgrades every tap formula (`brew:owner/tap/name`).
+if [ "$(uname)" = Darwin ]; then
+  if lists=$(uv run --no-project --python 3.12 python - <<'PY'
+import os, sys, tomllib
+path = os.environ.get("MISE_TASK_FILE")
+if not path:
+    sys.exit("MISE_TASK_FILE is not set: run this through `mise run upgrade`")
+pkgs = tomllib.load(open(path, "rb")).get("bootstrap", {}).get("packages", {})
+for name, spec in pkgs.items():
+    wanted = spec.get("os") if isinstance(spec, dict) else None
+    if wanted is None or "macos" in ([wanted] if isinstance(wanted, str) else wanted):
+        tap = name.startswith("brew:") and name.count("/") >= 2
+        print(("brew " + name[len("brew:"):]) if tap else ("mise " + name))
+PY
+  ); then
+    pkgs=$(printf '%s\n' "$lists" | sed -n 's/^mise //p')
+    taps=$(printf '%s\n' "$lists" | sed -n 's/^brew //p')
+    # Without arguments this would upgrade everything, tap formulas included, so skip it when the list is empty.
+    if [ -n "$pkgs" ]; then mise bootstrap packages upgrade -y $pkgs || status=1; fi
+    if [ -n "$taps" ] && command -v brew >/dev/null; then brew upgrade $taps || status=1; fi
+  else
+    echo "upgrade: could not list the bootstrap packages; skipping them" >&2
+    status=1
+  fi
+fi
+mise upgrade || status=1
+# nvim exits 0 when a -c command errors or init.lua throws while loading, so each step reports failure through cquit, and v:errmsg catches startup errors.
+nvim --headless -c 'lua local ok, err = pcall(vim.pack.update, nil, { force = true }); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa' || status=1
+nvim --headless -c 'lua local ok, err = pcall(vim.cmd, "MasonToolsUpgrade"); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa' || status=1
+exit $status
+'''
 
 # Every link both verify scripts assert, minus what bootstrap cannot own:
 # - ~/.config/mise/config.toml + mise.lock stay with the installers.

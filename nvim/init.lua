@@ -764,11 +764,67 @@ do
     require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
     vim.cmd 'MasonToolsInstall'
   end, { desc = 'Install every Mason tool this config declares' })
-  -- Blocking install-and-update of the same list, for headless runs (`mise run upgrade`).
+  -- Install and update the same list, for headless runs (`mise run upgrade`). MasonToolsUpdateSync loops vim.wait with no deadline, so this starts the async update and waits for its completion event with a 10 minute limit.
   vim.api.nvim_create_user_command('MasonToolsUpgrade', function()
+    if #ensure_installed == 0 then
+      vim.notify('MasonToolsUpgrade: no Mason tools declared, nothing to do', vim.log.levels.WARN)
+      return
+    end
     require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
-    vim.cmd 'MasonToolsUpdateSync'
-  end, { desc = 'Install and update every declared Mason tool, blocking' })
+    local registry = require 'mason-registry'
+    local done, start_err = false, nil
+    local failed = {}
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'MasonToolsUpdateCompleted',
+      once = true,
+      callback = function()
+        done = true
+      end,
+    })
+    -- The installer runs its work inside the registry refresh callback, where a throw (an unknown package name) is not catchable here and would leave the wait running to its limit. Wrap the callback to record the error and end the wait, and subscribe to each package's install:failed event before the installs start.
+    local refresh = registry.refresh
+    registry.refresh = function(callback)
+      return refresh(function(...)
+        local ok, err = pcall(function(...)
+          for _, name in ipairs(ensure_installed) do
+            registry.get_package(name):once('install:failed', function()
+              table.insert(failed, name)
+            end)
+          end
+          callback(...)
+        end, ...)
+        if not ok then
+          start_err = err
+          done = true
+        end
+      end)
+    end
+    -- An ERROR-level vim.notify (the installer's "failed to install") raises inside the wait below and would skip the failure summary, so write notifications to stderr meanwhile.
+    local notify = vim.notify
+    vim.notify = function(msg)
+      io.stderr:write(tostring(msg), '\n')
+    end
+    local started, err = pcall(vim.cmd, 'MasonToolsUpdate')
+    registry.refresh = refresh
+    local finished = started
+      and vim.wait(10 * 60 * 1000, function()
+        return done
+      end, 100)
+    vim.notify = notify
+    if not started then
+      error(err)
+    end
+    if not finished then
+      error 'MasonToolsUpgrade timed out after 10 minutes'
+    end
+    if start_err then
+      error(start_err)
+    end
+    if #failed > 0 then
+      table.sort(failed)
+      error('MasonToolsUpgrade: failed to install ' .. table.concat(failed, ', '))
+    end
+  end, { desc = 'Install and update every declared Mason tool, with a 10 minute limit' })
 
   for name, server in pairs(servers) do
     server.package = nil
