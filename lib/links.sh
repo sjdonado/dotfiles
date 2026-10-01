@@ -229,7 +229,7 @@ link_agent_configs() {
   # shared policy are tracked. Skills reach it through ~/.agents/skills, and pi
   # owns the rest of ~/.pi/agent (auth.json, sessions, extensions). pi writes
   # settings.json itself (lastChangelogVersion on upgrade, defaultModel on
-  # /model), so a diff there is pi, not drift. "light/dark" follows the terminal.
+  # /model), so a diff there is pi, not drift. The default "system" theme follows the terminal light/dark.
   link_managed "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
   link_managed "$PWD/agents/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
 }
