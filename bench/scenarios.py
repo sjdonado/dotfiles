@@ -18,7 +18,7 @@ SKILLS = ("proto", "ponytail", "ask", "feedback", "land", "yolo", "verification"
 # Codex workspace-write denies writes to .git, so every such case runs unsandboxed against
 # a local bare remote with invalid forge credentials and no forge substitute on PATH.
 SANDBOX = dict.fromkeys(("feedback", "gate-mixed-scope", "gate-self-authored", "gate-precedent",
-                         "feedback-local-first", "feedback-approved-batch", "workspace-default", "workspace-requested"), "danger-full-access")
+                         "feedback-local-first", "feedback-approved-batch", "route-bounded", "workspace-default", "workspace-requested"), "danger-full-access")
 # New cases stay after the original nine so their order and evidence remain intact.
 CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded", "external-communication", "gate-mixed-scope", "gate-self-authored", "gate-precedent", "feedback-local-first", "feedback-approved-batch", "workspace-default", "workspace-requested")
 

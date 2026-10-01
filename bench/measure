@@ -3,7 +3,7 @@
 
 Usage: bench/measure verify --local
        bench/measure verify --behavior [--run] [--regression --agent pi --model gpt-6-luna --effort medium]
-       bench/measure run [--model gpt-5.6-luna] [--scenario handoff-v1]
+       bench/measure run [--model gpt-6-luna] [--scenario handoff-v1]
        bench/measure analyze SESSION.jsonl [SESSION.jsonl ...]
 """
 
@@ -32,8 +32,8 @@ def read_note(repo):
     return ""
 
 ROOT = Path(__file__).resolve().parent.parent
-MODEL = "gpt-5.6-luna"
-MODELS = (MODEL, "gpt-6-astra")
+MODEL = "gpt-6-luna"
+MODELS = (MODEL, "gpt-6.1-sol")
 BATCH = ROOT / "bench/runs/effectiveness-v1"
 LIMIT = 32
 # pi reaches OpenAI models through its Codex subscription provider.

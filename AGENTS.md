@@ -26,7 +26,7 @@ Prove the behavior through the smallest existing disposable scenario that covers
 
 ## Verification
 
-Run checks from the repository root. The benchmark uses Python 3's standard library. Git and an authenticated Codex CLI with access to the requested models are needed for behavioral probes; OpenSpec is needed to validate change artifacts.
+Run checks from the repository root. The benchmark uses Python 3's standard library. Git and an authenticated Codex CLI with access to the requested models are needed for behavioral probes; OpenSpec is needed to validate change artifacts. Benchmarks run only on gpt-6.1-sol and gpt-6-luna, never gpt-6-astra.
 
 For bench/ code: `bench/measure verify --local` compiles the Python modules, runs their offline regression checks, and checks whitespace in tracked and untracked bench and instruction files. For an OpenSpec change under openspec/changes/: `openspec validate <change-id> --strict`. For a skill under agents/skills/: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. It ships with the Codex system skills, not this repository, and is unavailable without Codex and uv. No general application build or repository-wide test suite is declared.
 

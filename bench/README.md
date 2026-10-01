@@ -21,7 +21,7 @@ Local success means the benchmark tooling works. It says nothing about the harne
 
 ## The matrix
 
-Nineteen cases in `bench/scenarios.py` run on `gpt-5.6-luna` and `gpt-6-astra` at low reasoning, for 46 sessions total, which is more than one batch's 32-session cap allows. A change is therefore validated against its regression subset rather than the whole matrix; see **Per-case provenance** below. The first nine keep their prompts and fixtures unchanged. Two workspace cases cover the checkout rules, and two routing cases compare an open request with a fully specified one, and the external communication case exercises an authorized issue reply and close. The unchanged handoff-v1 on Luna is always the first trial. Order and prompts are frozen in code; the `handoff-v1` prompts are byte-for-byte the original failed probe.
+Nineteen cases in `bench/scenarios.py` run on `gpt-6-luna` and `gpt-6.1-sol` at low reasoning, for 46 sessions total, which is more than one batch's 32-session cap allows. A change is therefore validated against its regression subset rather than the whole matrix; see **Per-case provenance** below. The first nine keep their prompts and fixtures unchanged. Two workspace cases cover the checkout rules, and two routing cases compare an open request with a fully specified one, and the external communication case exercises an authorized issue reply and close. The unchanged handoff-v1 on Luna is always the first trial. Order and prompts are frozen in code; the `handoff-v1` prompts are byte-for-byte the original failed probe.
 
 | Case | Sessions per model | Expected outcome |
 | --- | ---: | --- |

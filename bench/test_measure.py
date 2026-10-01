@@ -249,15 +249,15 @@ def main():
         assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 17
         pi_inputs = measure["inputs"]("feedback", "gpt-6-luna", "pi", "medium")
         assert pi_inputs["sandbox"] == "none" and pi_inputs["network_access"] is True
-        assert measure["inputs"]("read-only", "gpt-5.6-luna") == measure["inputs"]("read-only", "gpt-5.6-luna", "codex", "low")
+        assert measure["inputs"]("read-only", "gpt-6-luna") == measure["inputs"]("read-only", "gpt-6-luna", "codex", "low")
         assert measure["inputs"]("read-only", "gpt-6-luna", "pi", "medium")["ambient_instructions"] == {}
         matrix = measure["matrix"]()
         assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 46
-        assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
+        assert matrix[0] == ("handoff-v1", "gpt-6-luna", 1)
         subset = measure["regression"]()
         # The batch this change's surfaces need, and the count bench/README.md documents.
         assert sum(len(measure["PROMPTS"][case]) for case, _, _ in subset) == 31
-        assert subset[0] == ("handoff-v1", "gpt-5.6-luna", 1)
+        assert subset[0] == ("handoff-v1", "gpt-6-luna", 1)
         assert set(subset) <= set(matrix) and len(subset) == 30
         assert {("workspace-default", model, 1) for model in measure["MODELS"]} <= set(subset)
 
