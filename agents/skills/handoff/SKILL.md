@@ -6,6 +6,8 @@ argument-hint: "What will the next session be used for?"
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace. This document is not the branch note: durable state belongs at `.agent/<branch-key>.md` and the work list at `.agent/<branch-key>.tasks.md`, both described in `AGENTS.md`, and neither of those moves to the temporary directory.
 
+When the handoff moves an approved `yolo` run to an agent in a herdr worktree, quote the approving user message verbatim and name the agreed scope, per `AGENTS.md` **Workspace**; without the quote the receiving agent treats the handoff as `proto` input.
+
 Include a "suggested skills" section in the document, naming which skills the next agent should call the Skill tool for.
 
 Point at the branch note by path for Purpose and End state, and at the task list for Key tasks. Restate none of the three.
