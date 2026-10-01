@@ -764,6 +764,11 @@ do
     require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
     vim.cmd 'MasonToolsInstall'
   end, { desc = 'Install every Mason tool this config declares' })
+  -- Blocking install-and-update of the same list, for headless runs (`mise run upgrade`).
+  vim.api.nvim_create_user_command('MasonToolsUpgrade', function()
+    require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
+    vim.cmd 'MasonToolsUpdateSync'
+  end, { desc = 'Install and update every declared Mason tool, blocking' })
 
   for name, server in pairs(servers) do
     server.package = nil

@@ -227,6 +227,41 @@ tree-sitter = "latest"
 "supabase/tap" = "https://github.com/supabase/homebrew-tap.git"
 
 # The Go CLIs Homebrew cannot install; Linux boxes never had them. This is the global config, so the task is visible as `mise run bootstrap` in every project, and every `mise bootstrap` re-runs it, re-resolving `@latest`. golangci-lint comes from Homebrew above, not from here. The old Brewfile's `go "zen-habit/server"` is dropped: that is a local module path with no remote to install from.
+# One command for every upgrade: Homebrew's index, the declared bootstrap packages
+# (mise itself is one of them), the [tools] versions (mise.lock), Neovim plugins
+# (nvim-pack-lock.json, written back into this repository) and Mason tools.
+# Review the lockfile diffs afterwards.
+[tasks.upgrade]
+run = """
+status=0
+# mise's GitHub calls hit the anonymous rate limit; reuse the gh login when no token is set.
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null; then
+  GITHUB_TOKEN=$(gh auth token 2>/dev/null) && export GITHUB_TOKEN
+fi
+if command -v brew >/dev/null; then brew update || status=1; fi
+# mise mishandles third-party tap formulas (it cannot infer idb-companion's version, and its
+# source build of gcx crashes), and one failure aborts the whole upgrade. So mise upgrades the
+# core formulas and casks, and brew upgrades every tap formula (`brew:owner/tap/name`).
+lists=$(python3 <<'PY'
+import os, tomllib, platform
+osname = {"Darwin": "macos", "Linux": "linux"}.get(platform.system(), "")
+pkgs = tomllib.load(open(os.environ.get("MISE_TASK_FILE", "mise.toml"), "rb")).get("bootstrap", {}).get("packages", {})
+for name, spec in pkgs.items():
+    wanted = spec.get("os") if isinstance(spec, dict) else None
+    if wanted is None or osname in ([wanted] if isinstance(wanted, str) else wanted):
+        tap = name.startswith("brew:") and name.count("/") >= 2
+        print(("brew " + name[len("brew:"):]) if tap else ("mise " + name))
+PY
+)
+mise bootstrap packages upgrade $(printf '%s\n' "$lists" | sed -n 's/^mise //p') || status=1
+taps=$(printf '%s\n' "$lists" | sed -n 's/^brew //p')
+if [ -n "$taps" ] && command -v brew >/dev/null; then brew upgrade $taps || status=1; fi
+mise upgrade || status=1
+nvim --headless -c 'lua vim.pack.update(nil, { force = true })' -c 'qa' || status=1
+nvim --headless -c 'MasonToolsUpgrade' -c 'qa' || status=1
+exit $status
+"""
+
 [tasks.bootstrap]
 run = """
 [ "$(uname)" = Darwin ] || exit 0
