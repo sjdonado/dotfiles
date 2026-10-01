@@ -15,14 +15,9 @@
 		}
 	},
 	"mcp": {
-		"chrome-devtools": {
+		"browser": {
 			"type": "local",
-			"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--headless=true", "--viewport=1280x720", "--no-usage-statistics"],
-			"enabled": true
-		},
-		"safari": {
-			"type": "local",
-			"command": ["/usr/bin/safaridriver", "--mcp"],
+			"command": ["bun", "run", "{env:HOME}/.config/dotfiles/browser-mcp/index.ts"],
 			"enabled": true
 		},
 		"ios-simulator": {

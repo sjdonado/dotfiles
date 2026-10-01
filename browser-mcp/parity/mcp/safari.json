@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "directTools": true,
+    "scriptMode": false,
+    "namespaceProxyTools": false,
+    "notifyOnStartupConnect": false
+  },
+  "mcpServers": {
+    "safari": {
+      "command": "/usr/bin/safaridriver",
+      "args": [
+        "--mcp"
+      ]
+    }
+  }
+}
