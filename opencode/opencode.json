@@ -17,7 +17,7 @@
 	"mcp": {
 		"browser": {
 			"type": "local",
-			"command": ["bun", "run", "{env:HOME}/.config/dotfiles/browser-mcp/index.ts"],
+			"command": ["bun", "run", "{env:HOME}/Developer/browser-mcp/index.ts"],
 			"enabled": true
 		},
 		"ios-simulator": {
