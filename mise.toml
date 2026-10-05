@@ -131,6 +131,7 @@ tree-sitter = "latest"
 "brew:gawk" = { os = "macos" }
 "brew:giflib" = { os = "macos" }
 "brew:gh" = { os = "macos" }
+"brew:git-bug" = { os = "macos" }
 "brew:git-delta" = { os = "macos" }
 "brew:git-lfs" = { os = "macos" }
 "brew:gnu-sed" = { os = "macos" }

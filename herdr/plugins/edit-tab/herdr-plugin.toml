@@ -11,8 +11,8 @@
 
 id = "edit-tab"
 name = "Edit Tab"
-version = "1.1.0"
-description = "Toggle the nvim overlay pane: open it, or close it again."
+version = "1.2.0"
+description = "Toggle the nvim and git-bug termui overlay panes: open one, or close it again."
 min_herdr_version = "0.7.0"
 platforms = ["linux", "macos"]
 
@@ -28,9 +28,25 @@ title = "nvim"
 placement = "overlay"
 command = ["nvim"]
 
+# git-bug's termui, toggled the same way. termui holds git-bug's repository lock while
+# it runs, so closing the overlay is also what frees git-bug for the CLI and the MCP.
+[[panes]]
+id = "git-bug"
+title = "git-bug"
+placement = "overlay"
+# Plugin panes run with cwd set to the repo, so the guard script is found by plugin root.
+command = ["sh", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/git-bug-tui.sh\""]
+
 [[actions]]
 id = "toggle"
 title = "Toggle the nvim pane"
 description = "Open the nvim overlay over the active pane, or close it when it is already open."
 contexts = ["pane", "workspace"]
 command = ["bash", "scripts/toggle.sh"]
+
+[[actions]]
+id = "toggle-bug"
+title = "Toggle the git-bug termui pane"
+description = "Open git-bug's termui as an overlay over the active pane, or close it when it is already open."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/toggle.sh", "git-bug"]

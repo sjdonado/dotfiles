@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Toggle the nvim overlay pane.
+# Toggle an overlay pane from the manifest: nvim by default, or the one named by $1.
 #
 # Two states, because that is all herdr offers for a pane: absent means open nvim
 # as a zoomed overlay over the active pane, present means close it. Closing is what
@@ -26,7 +26,8 @@ set -euo pipefail
 herdr_bin="${HERDR_BIN_PATH:-herdr}"
 
 # The pane id from the manifest. It names the pane and the entrypoint to open.
-LABEL=nvim
+LABEL=${1:-nvim}
+case "$LABEL" in nvim|git-bug) ;; *) echo "edit-tab: unknown pane $LABEL" >&2; exit 2 ;; esac
 
 context=${HERDR_PLUGIN_CONTEXT_JSON:-}
 workspace=${HERDR_WORKSPACE_ID:-$(printf '%s' "$context" | jq -r '.workspace_id // empty')}
@@ -34,7 +35,9 @@ workspace=${HERDR_WORKSPACE_ID:-$(printf '%s' "$context" | jq -r '.workspace_id 
 [ -n "$workspace" ] || { echo "no workspace to toggle the $LABEL overlay in" >&2; exit 1; }
 
 state_dir=${HERDR_PLUGIN_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/herdr/plugins/edit-tab}
+# nvim keeps its original file name so an overlay opened before this change still closes.
 state_file="$state_dir/overlay-$workspace"
+[ "$LABEL" = nvim ] || state_file="$state_dir/overlay-$LABEL-$workspace"
 
 pane_id=$(cat "$state_file" 2>/dev/null || true)
 if [ -n "$pane_id" ]; then

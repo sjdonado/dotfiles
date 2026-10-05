@@ -58,6 +58,10 @@ settings = "prefix+,"
 # The nvim tab toggle below takes prefix+e, which is also edit_scrollback's
 # default, so scrollback opens one modifier further in rather than losing the key.
 edit_scrollback = "prefix+shift+e"
+# prefix+l toggles git-bug's termui below, which is focus_pane_right's default.
+# Focus-right moves to prefix+ctrl+l (prefix+shift+l is swap_pane_right), so only the
+# right-hand focus key differs from h/j/k; Navigate mode's plain `l` is unchanged.
+focus_pane_right = "prefix+ctrl+l"
 
 # Direct chord, no prefix: workspaces are what gets switched between all day, and
 # the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
@@ -73,6 +77,13 @@ switch_workspace = "ctrl+alt+1..9"
 key = "prefix+e"
 type = "plugin_action"
 command = "edit-tab.toggle"
+
+# git-bug's termui as an overlay, toggled like nvim. Closing it releases git-bug's
+# repository lock, which the CLI and the git-bug MCP need for writes.
+[[keys.command]]
+key = "prefix+l"
+type = "plugin_action"
+command = "edit-tab.toggle-bug"
 
 # Agent Usage is on demand, not in the sidebar: the always-on quota rows made
 # each agent entry too tall for the Agents panel to keep the focused agent
