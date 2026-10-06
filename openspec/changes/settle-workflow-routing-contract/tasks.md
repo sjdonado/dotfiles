@@ -21,7 +21,7 @@
 ## 2b. Give intent a home and read it by path
 
 - [x] 2b.1 In `agents/AGENTS.md` Continuity, define the Contract head: Purpose, End state (with acceptance evidence), Key tasks (task list path); written at the first checkpoint of any editing workflow, filled from request and repository evidence before asking, refreshed before the next edit when a human interaction changes purpose or end state. Verify the section states all three lines and the refresh trigger.
-- [x] 2b.2 Point `proto` setup step 3, `yolo` step 1, `handoff`, `verification`'s contract input, and `adversarial-review` Reviewer A at that block by path; Reviewer A's requirements source is named in priority order (change specs and tasks, else Contract block, else ticket thread), verbatim. Verify each skill names the path and none says "summarize the requirements".
+- [x] 2b.2 Point `proto` setup step 3, `yolo` step 1, `handoff`, `verification`'s contract input, and `agent-review` Reviewer A at that block by path; Reviewer A's requirements source is named in priority order (change specs and tasks, else Contract block, else ticket thread), verbatim. Verify each skill names the path and none says "summarize the requirements".
 - [x] 2b.3 Add the handoff recommendation trigger to Continuity (two intent changes in a session, or a compaction) and remove `disable-model-invocation: true` from `agents/skills/handoff/SKILL.md` or document why it must stay and add the recommendation path instead. Verify the trigger appears once and the handoff skill can be recommended by the agent.
 
 ## 2c. Delegate by default
@@ -53,6 +53,6 @@
 
 ## 5. Ship
 
-- [x] 5.1 Through `yolo`, approved 2026-09-18 for a subagent at the tier below the orchestrator: implement sections 1 through 3 on one branch, run `adversarial-review` on the accumulated diff, and open one pull request. Never merge.
+- [x] 5.1 Through `yolo`, approved 2026-09-18 for a subagent at the tier below the orchestrator: implement sections 1 through 3 on one branch, run `agent-review` on the accumulated diff, and open one pull request. Never merge.
 - [x] 5.2 State in the pull request body what is validated and what is not, which decisions were made without asking (the in-flight overlap rule and the 18-session batch shape), and the competing unarchived changes. Verify the body names the batch authorization actually given.
 - [x] 5.3 Fold this section's items into this change's `tasks.md` as the single task list for the work, and remove the `Routing and publication contract` section from `.agent/docs%2Fhandoff-destination.tasks.md`, preserving the unrelated sections above it. Verify the branch task list no longer duplicates any item here.

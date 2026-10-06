@@ -53,7 +53,7 @@ flowchart TD
         ladder --> implement["implement"]
         implement --> rungs["local rungs green"]
         rungs --> audit["audit diff vs requirements"]
-        audit --> review["adversarial-review
+        audit --> review["agent-review
         2 blind subagents, told the diff is wrong"]
         review --> commit["commit"] --> push["push"] --> pr["open PR
         body: Assumptions / Refuted evidence / Rejected review findings"]
@@ -104,9 +104,9 @@ The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tra
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
-Agent-initiated review is adversarial: `adversarial-review` carries both the protocol and the finding format. The reference it used to make to `caveman-review` is gone, because the skill already wrote the format out itself and the plugin skill advertised the same trigger phrases as the native review command, which is where a review request belongs.
+Agent-initiated review is adversarial: `agent-review` carries both the protocol and the finding format. The reference it used to make to `caveman-review` is gone, because the skill already wrote the format out itself and the plugin skill advertised the same trigger phrases as the native review command, which is where a review request belongs.
 
-Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `adversarial-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
+Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `agent-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
 
 The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills and the caveman plugin are gone too: the plugin forced its own "full" chat mode at session start against the lite rule in `AGENTS.md`, and its `caveman-commit` skill existed only in Claude Code. `AGENTS.md` now states both rules itself, so every harness reads the same ones. The chat and commit rules in **Writing** and **Commit messages** adapt the useful parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef) at its "lite" level: the filler and hedging drop-list, short synonyms, exact quoting, the outcome-first pattern, the clarity exceptions for warnings and irreversible steps, and the commit subject and body rules. Its 72-column body wrap is left out, because **Writing** forbids hard wraps.
 
@@ -153,7 +153,7 @@ Never edit a locked skill body in place, or the next update will report drift or
 
 Deleting the body and leaving the entry is worse than leaving both: the entry is the instruction to fetch, so the next update reinstalls the skill. That is how the `caveman-*` and `code-review` bodies came back months after being removed. Deleting a skill therefore means the directory, the lock entry, and the `.claude/skills` symlink together.
 
-`adversarial-review`, `verification`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
+`agent-review`, `verification`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
 
 There is no progress-tracking skill and no `AGENT_PROGRESS.md`. The ignored `.agent/<branch-key>.tasks.md` ledger is the unspecced counterpart to a change's `tasks.md`, not a second system: one list per line of work, and `land` removes it. Run state is derivable from cheaper sources that cannot go stale: the oracle ladder says what is still failing, `git log` says what landed, `wt config state vars` holds attempts and escalations in `.git`, and a `tasks.md` in an OpenSpec change directory carries the checklist for specced work.
 
