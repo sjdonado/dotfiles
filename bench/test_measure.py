@@ -244,21 +244,22 @@ def main():
         path.write_text("\n".join(json.dumps(event) for event in pi[:2] + [failed, assistant, {"type": "agent_settled"}]))
         assert measure["analyze_pi"](path)["status"] == "completed"
         pi_subset = measure["regression"](("gpt-6-luna",))
-        assert pi_subset[0] == ("handoff-v1", "gpt-6-luna", 1) and len(pi_subset) == 16
+        assert pi_subset[0] == ("handoff-v1", "gpt-6-luna", 1) and len(pi_subset) == 15
         assert {model for _, model, _ in pi_subset} == {"gpt-6-luna"}
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 17
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 16
         pi_inputs = measure["inputs"]("feedback", "gpt-6-luna", "pi", "medium")
         assert pi_inputs["sandbox"] == "none" and pi_inputs["network_access"] is True
         assert measure["inputs"]("read-only", "gpt-6-luna") == measure["inputs"]("read-only", "gpt-6-luna", "codex", "low")
         assert measure["inputs"]("read-only", "gpt-6-luna", "pi", "medium")["ambient_instructions"] == {}
         matrix = measure["matrix"]()
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 46
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 44
         assert matrix[0] == ("handoff-v1", "gpt-6-luna", 1)
         subset = measure["regression"]()
         # The batch this change's surfaces need, and the count bench/README.md documents.
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in subset) == 31
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in subset) == 30
         assert subset[0] == ("handoff-v1", "gpt-6-luna", 1)
-        assert set(subset) <= set(matrix) and len(subset) == 30
+        assert set(subset) <= set(matrix) and len(subset) == 29
+        assert not any(case in measure["UNSAFE"] for case, _, _ in matrix + subset + pi_subset)
         assert {("workspace-default", model, 1) for model in measure["MODELS"]} <= set(subset)
 
         # Per-case provenance: an unlisted section must not stale a case, a listed one must.

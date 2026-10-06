@@ -224,11 +224,17 @@ def sessions_used(batch):
                for row in json.loads(p.read_text())["rounds"] if row.get("status") != "unavailable")
 
 
+# Cases a session cannot run safely yet: they are defined but never started. workspace-requested
+# asks for a worktree, and a session can still reach the real herdr (a login shell's PATH puts it
+# ahead of the stub) and has created a real worktree of the host repository once.
+UNSAFE = ("workspace-requested",)
+
+
 def matrix():
     # Freeze order: the unchanged Luna handoff is always the first model trial.
     result = [(case, model, 1) for model in MODELS for case in CASES[:7]]
     result += [("handoff-v1", MODEL, trial) for trial in (2, 3)]
-    result += [(case, model, 1) for model in MODELS for case in CASES[7:]]
+    result += [(case, model, 1) for model in MODELS for case in CASES[7:] if case not in UNSAFE]
     return result
 
 
@@ -243,9 +249,9 @@ def regression(models=MODELS):
     cases = PUBLICATION + ("route-open-shape", "route-bounded", "external-communication",
                            "feedback", "land-open", "land-merged", "recoverable", "unrecoverable",
                            "workspace-default")
-    # workspace-requested runs on the first model only: that leaves one retry under the cap.
-    return ([("handoff-v1", models[0], 1)] + [(case, model, 1) for model in models for case in cases]
-            + [("workspace-requested", models[0], 1)])
+    # UNSAFE cases stay out (see UNSAFE). workspace-default stays in: it never asks for a
+    # worktree, and no recorded run of it called herdr.
+    return [("handoff-v1", models[0], 1)] + [(case, model, 1) for model in models for case in cases]
 
 
 def evidence_hash(run_dir):
@@ -268,6 +274,8 @@ def session_env(repo, run_dir, base=None):
 
 
 def run_case(batch, case, model, trial, provenance):
+    if case in UNSAFE:
+        raise SystemExit(f"{case} is not safe to run yet; see UNSAFE in bench/measure")
     batch.mkdir(parents=True, exist_ok=True)
     if sessions_used(batch) + len(PROMPTS[case]) > LIMIT:
         return None
@@ -443,7 +451,7 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     runner = commands.add_parser("run")
     runner.add_argument("--model", default=MODEL)
-    runner.add_argument("--scenario", choices=CASES, default="handoff-v1")
+    runner.add_argument("--scenario", choices=[case for case in CASES if case not in UNSAFE], default="handoff-v1")
     runner.add_argument("--batch", type=Path, default=BATCH)
     runner.add_argument("--trial", type=int, default=1)
     runner.add_argument("--agent", choices=("codex", "pi"), default="codex")
