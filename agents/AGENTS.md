@@ -316,7 +316,9 @@ When rendering a link, always show the complete absolute URL as the visible text
 
 Classify an MCP server before deciding where it is configured, because the two classes live in different places.
 
-A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `browser` (headless Playwright) and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
+A developer tool is global. It drives something on this machine (a browser, a simulator, a debugger, a local process), needs no personal login, and belongs in the shared harness config so every agent and every project gets it. `agent-browser`, `chrome-devtools`, and `ios-simulator` are the current examples. A new devtool goes into the shared config, not onto one machine only.
+
+Drive a browser through the `agent-browser` MCP. When the work needs performance profiling, such as a heap snapshot or a performance trace, use the `chrome-devtools` MCP on the browser that agent-browser already runs: open the page with agent-browser first, then call the chrome-devtools tools, which attach to that browser through the fixed profile `~/.agent-browser/profile` that `~/.agent-browser/config.json` sets. Never pass `--session` or `--profile` to agent-browser: every agent shares its default session, and a second browser on that profile fails on Chrome's profile lock. If chrome-devtools cannot connect, no agent-browser browser is running: open one with agent-browser and retry, and never point chrome-devtools at a browser of its own.
 
 An account or product server is not global. It reaches a personal account, a product, or a team, so its credentials identify a person (an issue tracker, a hosted API). Keep it where its credentials live, per machine and per account, and never assume another agent, project, or machine has it. `linear` is the current example.
 

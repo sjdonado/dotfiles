@@ -232,6 +232,11 @@ link_agent_configs() {
   # /model), so a diff there is pi, not drift. The default "system" theme follows the terminal light/dark.
   link_managed "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
   link_managed "$PWD/agents/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
+  # A fixed profile directory, instead of agent-browser's per-launch temp one,
+  # is what lets the chrome-devtools MCP find the running browser: Chrome writes
+  # its debugging port to DevToolsActivePort there, and `--autoConnect
+  # --userDataDir` reads it.
+  link_managed "$PWD/agent-browser/config.json" "$HOME/.agent-browser/config.json"
 }
 
 # --- moshi-hook pairing ------------------------------------------------------

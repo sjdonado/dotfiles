@@ -99,6 +99,13 @@ fi
 log "Installing tools from mise.toml..."
 mise install --yes || log "  some mise tools failed; re-run: mise install"
 rescan
+# Chrome for Testing has no Linux ARM64 build, so there agent-browser needs a system Chromium.
+if [ "$(uname -m)" = aarch64 ]; then
+  log "Skipping agent-browser's Chrome: no Chrome for Testing build for linux/arm64"
+else
+  log "Installing agent-browser's Chrome..."
+  mise exec -- agent-browser install --with-deps || log "  agent-browser install failed; re-run: agent-browser install --with-deps"
+fi
 
 # --- installers mise cannot replace ------------------------------------------
 # Claude Code publishes an npm wrapper that fetches its real binary in a

@@ -52,6 +52,7 @@ linked "$HOME/.config/opencode/AGENTS.md"     "$DOTFILES/opencode/AGENTS.md"
 linked "$HOME/.local/state/opencode/kv.json"  "$DOTFILES/opencode/kv.json"
 linked "$HOME/.pi/agent/settings.json"      "$DOTFILES/pi/settings.json"
 linked "$HOME/.pi/agent/AGENTS.md"          "$DOTFILES/agents/AGENTS.md"
+linked "$HOME/.agent-browser/config.json" "$DOTFILES/agent-browser/config.json"
 exists "$HOME/.codex/config.toml"
 
 group "bat themes"

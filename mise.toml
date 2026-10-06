@@ -81,6 +81,8 @@ tree-sitter = "latest"
 # npm-backed CLIs that work without a postinstall step.
 "npm:@openai/codex" = "latest"
 "npm:@fission-ai/openspec" = "latest"
+# Browser automation for agents, as a CLI and as the `agent-browser` MCP server. The package needs no postinstall, but the Chrome it drives is a separate download: both installers run `agent-browser install` after `mise install`.
+"npm:agent-browser" = "latest"
 
 # --- Declarative provisioning ---
 # `[bootstrap.packages]` is the macOS package list: macos.sh --install runs `mise bootstrap --only packages,task`, which taps, installs every formula and cask below, then runs `[tasks.bootstrap]`. There is no Brewfile. The apt entries are still advisory: linux.sh installs its own base, so keep both in step until it is wired the same way. `[dotfiles]` stays advisory on both platforms; lib/links.sh owns the links.
@@ -273,6 +275,8 @@ PY
   fi
 fi
 mise upgrade || status=1
+# A newer agent-browser can expect a newer Chrome for Testing. There is no Linux ARM64 build to fetch.
+if [ "$(uname -m)" != aarch64 ]; then agent-browser install || status=1; fi
 # nvim exits 0 when a -c command errors or init.lua throws while loading, so each step reports failure through cquit, and v:errmsg catches startup errors.
 nvim --headless -c 'lua local ok, err = pcall(vim.pack.update, nil, { force = true }); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa' || status=1
 nvim --headless -c 'lua local ok, err = pcall(vim.cmd, "MasonToolsUpgrade"); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa' || status=1
@@ -298,6 +302,7 @@ exit $status
 "~/.config/ghostty/config" = { source = "ghostty/config", mode = "symlink" }
 "~/.config/ghostty/themes" = { source = "ghostty/themes", mode = "symlink-each" }
 "~/.config/bat/themes" = { source = "bat/themes", mode = "symlink-each" }
+"~/.agent-browser/config.json" = { source = "agent-browser/config.json", mode = "symlink" }
 "~/.config/nvim" = { source = "nvim", mode = "symlink" }
 "~/.config/herdr/config.toml" = { source = "herdr/config.toml", mode = "symlink" }
 "~/.config/worktrunk/config.toml" = { source = "worktrunk/config.toml", mode = "symlink" }

@@ -623,6 +623,11 @@ version = "0.159.2"
 backend = "npm:@openai/codex"
 specifiers = ["latest"]
 
+[[tools."npm:agent-browser"]]
+version = "0.38.2"
+backend = "npm:agent-browser"
+specifiers = ["latest"]
+
 [[tools.pnpm]]
 version = "12.8.1"
 backend = "aqua:pnpm/pnpm"
