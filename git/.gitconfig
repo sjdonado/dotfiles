@@ -30,7 +30,6 @@
   required = true
 [safe]
 	directory = /opt/homebrew
-	directory = /opt/homebrew/Library/Taps/amberframework/homebrew-micrate
 	directory = /opt/homebrew/Library/Taps/oven-sh/homebrew-bun
 	directory = /opt/homebrew
 

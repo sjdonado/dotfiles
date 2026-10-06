@@ -192,7 +192,6 @@ tree-sitter = "latest"
 "brew:xcodegen" = { os = "macos" }
 # Pi is for harness experiments and bench runs only; its config is pi/. homebrew-core tracks it; the npm package lags.
 "brew:pi-coding-agent" = { os = "macos" }
-"brew:amberframework/micrate/micrate" = { os = "macos" }
 "brew:grafana/grafana/gcx" = { os = "macos" }
 "brew:ory/tap/cli" = { os = "macos" }
 "brew:rjyo/moshi/moshi-hook" = { os = "macos" }
@@ -219,7 +218,6 @@ tree-sitter = "latest"
 "brew-cask:driceroland/tap/search" = { os = "macos" }
 
 [bootstrap.brew.taps]
-"amberframework/micrate" = "https://github.com/amberframework/homebrew-micrate.git"
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
 "rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
@@ -249,7 +247,7 @@ if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null; then
   GITHUB_TOKEN=$(gh auth token 2>/dev/null) && export GITHUB_TOKEN
 fi
 if command -v brew >/dev/null; then brew update || status=1; fi
-# The bootstrap packages are macOS only, like [tasks.bootstrap]; the apt entries are advisory and linux.sh owns them. mise mishandles third-party tap formulas (it cannot infer idb-companion's version, and its source build of gcx crashes) and one failure aborts the whole upgrade, so mise upgrades the core formulas and casks and brew upgrades every tap formula (`brew:owner/tap/name`).
+# The bootstrap packages are macOS only, like [tasks.bootstrap]; the apt entries are advisory and linux.sh owns them. mise mishandles third-party tap formulas (it cannot infer idb-companion's version, and its source build of gcx crashes) and one failure aborts the whole upgrade, so mise upgrades the core formulas and casks and brew handles every tap formula (`brew:owner/tap/name`). That includes installing one bootstrap never installed: `brew upgrade` fails on a formula that is not installed, while `brew install` installs a missing one and, by Homebrew's default (unless HOMEBREW_NO_INSTALL_UPGRADE is set), upgrades an outdated one.
 if [ "$(uname)" = Darwin ]; then
   if lists=$(uv run --no-project --python 3.12 python - <<'PY'
 import os, sys, tomllib
@@ -268,7 +266,7 @@ PY
     taps=$(printf '%s\n' "$lists" | sed -n 's/^brew //p')
     # Without arguments this would upgrade everything, tap formulas included, so skip it when the list is empty.
     if [ -n "$pkgs" ]; then mise bootstrap packages upgrade -y $pkgs || status=1; fi
-    if [ -n "$taps" ] && command -v brew >/dev/null; then brew upgrade $taps || status=1; fi
+    if [ -n "$taps" ] && command -v brew >/dev/null; then brew install $taps || status=1; fi
   else
     echo "upgrade: could not list the bootstrap packages; skipping them" >&2
     status=1
