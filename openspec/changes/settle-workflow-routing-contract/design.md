@@ -21,7 +21,7 @@ The prior round of this work also established that a behavioral oracle can fail 
 **Non-Goals:**
 
 - No change to the proto-versus-yolo routing default, or to the session task ledger.
-- No change to the oracle ladder's shape or to the review protocol itself; `adversarial-review` and `verification` change only in where their inputs come from and at which tier they run.
+- No change to the oracle ladder's shape or to the review protocol itself; `agent-review` and `verification` change only in where their inputs come from and at which tier they run.
 - No new gate on reads, local edits, or local check runs. This change adds confirmation only around writes that leave the machine.
 - No merge authority anywhere.
 

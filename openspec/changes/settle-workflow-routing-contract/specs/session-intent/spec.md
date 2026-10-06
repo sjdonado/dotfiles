@@ -29,7 +29,7 @@ When a human interaction changes the purpose or the end state, the agent SHALL u
 
 ### Requirement: Downstream workflows read intent by path, not paraphrase
 
-`yolo`'s understanding step, `verification`'s contract input, `handoff`, and Reviewer A in `adversarial-review` SHALL read Purpose, End state, and Key tasks from the note by path, or from the OpenSpec change's artifacts where one exists. An agent SHALL NOT substitute its own summary of the requirements for those sources when dispatching a subagent.
+`yolo`'s understanding step, `verification`'s contract input, `handoff`, and Reviewer A in `agent-review` SHALL read Purpose, End state, and Key tasks from the note by path, or from the OpenSpec change's artifacts where one exists. An agent SHALL NOT substitute its own summary of the requirements for those sources when dispatching a subagent.
 
 #### Scenario: Reviewer A dispatched under proto promotion
 

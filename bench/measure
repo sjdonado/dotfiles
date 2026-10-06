@@ -3,7 +3,7 @@
 
 Usage: bench/measure verify --local
        bench/measure verify --behavior [--run] [--regression --agent pi --model gpt-6-luna --effort medium]
-       bench/measure run [--model gpt-5.6-luna] [--scenario handoff-v1]
+       bench/measure run [--model gpt-6-luna] [--scenario handoff-v1]
        bench/measure analyze SESSION.jsonl [SESSION.jsonl ...]
 """
 
@@ -32,8 +32,8 @@ def read_note(repo):
     return ""
 
 ROOT = Path(__file__).resolve().parent.parent
-MODEL = "gpt-5.6-luna"
-MODELS = (MODEL, "gpt-6-astra")
+MODEL = "gpt-6-luna"
+MODELS = (MODEL, "gpt-6.1-sol")
 BATCH = ROOT / "bench/runs/effectiveness-v1"
 LIMIT = 32
 # pi reaches OpenAI models through its Codex subscription provider.
@@ -224,11 +224,17 @@ def sessions_used(batch):
                for row in json.loads(p.read_text())["rounds"] if row.get("status") != "unavailable")
 
 
+# Cases a session cannot run safely yet: they are defined but never started. workspace-requested
+# asks for a worktree, and a session can still reach the real herdr (a login shell's PATH puts it
+# ahead of the stub) and has created a real worktree of the host repository once.
+UNSAFE = ("workspace-requested",)
+
+
 def matrix():
     # Freeze order: the unchanged Luna handoff is always the first model trial.
     result = [(case, model, 1) for model in MODELS for case in CASES[:7]]
     result += [("handoff-v1", MODEL, trial) for trial in (2, 3)]
-    result += [(case, model, 1) for model in MODELS for case in CASES[7:]]
+    result += [(case, model, 1) for model in MODELS for case in CASES[7:] if case not in UNSAFE]
     return result
 
 
@@ -241,7 +247,10 @@ def regression(models=MODELS):
     fixes as one first trial rather than re-running.
     """
     cases = PUBLICATION + ("route-open-shape", "route-bounded", "external-communication",
-                           "feedback", "land-open", "land-merged", "recoverable", "unrecoverable")
+                           "feedback", "land-open", "land-merged", "recoverable", "unrecoverable",
+                           "workspace-default")
+    # UNSAFE cases stay out (see UNSAFE). workspace-default stays in: it never asks for a
+    # worktree, and no recorded run of it called herdr.
     return [("handoff-v1", models[0], 1)] + [(case, model, 1) for model in models for case in cases]
 
 
@@ -250,7 +259,23 @@ def evidence_hash(run_dir):
                    for p in sorted(run_dir.glob("round-*")) if p.is_file()})
 
 
+def session_env(repo, run_dir, base=None):
+    """The environment a session runs in: outside herdr, with no way to reach the operator's server.
+
+    An inherited HERDR_* (env flag, pane id, socket, binary) would let a session drive the real
+    herdr, and herdr also finds the live server through its default socket, so the socket path is
+    pointed somewhere that cannot exist and a failing herdr stub leads PATH. The stub is seeded with
+    the fixture (before any snapshot), in .fixture/herdr-bin, so this writes nothing.
+    """
+    env = {k: v for k, v in (os.environ if base is None else base).items() if not k.startswith("HERDR_")}
+    env["HERDR_SOCKET_PATH"] = str(Path(run_dir) / "no-herdr.sock")
+    env["PATH"] = str(Path(repo) / ".fixture/herdr-bin") + os.pathsep + env.get("PATH", "")
+    return env
+
+
 def run_case(batch, case, model, trial, provenance):
+    if case in UNSAFE:
+        raise SystemExit(f"{case} is not safe to run yet; see UNSAFE in bench/measure")
     batch.mkdir(parents=True, exist_ok=True)
     if sessions_used(batch) + len(PROMPTS[case]) > LIMIT:
         return None
@@ -280,7 +305,7 @@ def run_case(batch, case, model, trial, provenance):
         save(run_dir / f"round-{index}.before.json", before)
         (run_dir / f"round-{index}.prompt.txt").write_text(prompt)
         transcript = run_dir / f"round-{index}.jsonl"
-        env = os.environ.copy()
+        env = session_env(repo, run_dir)
         if agent == "pi":
             # pi has no sandbox: the fixture's gh substitute, invalid forge credentials, and
             # local bare remotes are the only boundary. An empty agent directory holding just
@@ -328,7 +353,8 @@ def run_case(batch, case, model, trial, provenance):
         except (ValueError, KeyError, TypeError) as error:
             metrics, message = {"status": "invalid", "tokens": None, "error": str(error)}, ""
         try:
-            checks = check(repo, case, index, before, note_before, message)
+            checks = check(repo, case, index, before, note_before, message,
+                           [run_dir / f"round-{n}.jsonl" for n in range(1, index + 1)])
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             checks = {"oracle_error": {"passed": False, "error": str(error)}}
         passed = exit_code == 0 and metrics["status"] == "completed" and all(
@@ -425,7 +451,7 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     runner = commands.add_parser("run")
     runner.add_argument("--model", default=MODEL)
-    runner.add_argument("--scenario", choices=CASES, default="handoff-v1")
+    runner.add_argument("--scenario", choices=[case for case in CASES if case not in UNSAFE], default="handoff-v1")
     runner.add_argument("--batch", type=Path, default=BATCH)
     runner.add_argument("--trial", type=int, default=1)
     runner.add_argument("--agent", choices=("codex", "pi"), default="codex")

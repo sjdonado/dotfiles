@@ -27,11 +27,11 @@ Reversed on 2026-09-11 after the first pass had it backwards; the change id pred
 - [x] 3.2 Specify the two offer points (before implementation, before verification) as a line of work rather than a blocking question, naming what would be handed over.
 - [x] 3.3 Specify the autonomous behavior: `yolo` never stops for the offer, follows a recorded project preference, and continues undelegated when none exists.
 - [x] 3.4 Specify that an answer is recorded as the project's preference so the question is asked once.
-- [x] 3.5 State that the subagents a workflow already spawns, including `adversarial-review`'s reviewers, count toward the run's cost when deciding what else to delegate.
+- [x] 3.5 State that the subagents a workflow already spawns, including `agent-review`'s reviewers, count toward the run's cost when deciding what else to delegate.
 
 ## 3b. Name the verification subagent
 
-- [x] 3b.1 Add `agents/skills/verification/SKILL.md`: the counterpart to `adversarial-review`, running the ladder, repairing in scope, and reporting a verdict, with the never-redesign, never-push and unverified-not-passing constraints.
+- [x] 3b.1 Add `agents/skills/verification/SKILL.md`: the counterpart to `agent-review`, running the ladder, repairing in scope, and reporting a verdict, with the never-redesign, never-push and unverified-not-passing constraints.
 - [x] 3b.2 Point `yolo`'s ladder step at it, so the checks half is attributable whether or not it is delegated.
 - [x] 3b.3 State in `AGENTS.md` that the two delegatable stretches are named, that `verification` is the usual cheap-tier candidate, and that a weak reviewer is not a saving.
 - [x] 3b.4 State that waiting is never delegated, from this change's own bench run.

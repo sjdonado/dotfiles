@@ -34,7 +34,7 @@ None. `openspec/specs/` is empty: every change so far archives after merge, and 
 
 ## Impact
 
-Edits `agents/AGENTS.md` (routing entry conditions, planning, continuity, approval, external communication, orchestration) and the `yolo`, `proto`, `feedback`, `address-review`, `adversarial-review`, `verification`, `handoff`, `land`, and `openspec-propose` skills under `agents/skills/`, plus root `AGENTS.md` for the recorded delegation preference and `bench/measure` for per-case provenance. The audit that motivated the additions is recorded in the branch note `.agent/docs%2Fhandoff-destination.md`, Carry forward. No installer, dependency, CI, or application configuration changes.
+Edits `agents/AGENTS.md` (routing entry conditions, planning, continuity, approval, external communication, orchestration) and the `yolo`, `proto`, `feedback`, `address-review`, `agent-review`, `verification`, `handoff`, `land`, and `openspec-propose` skills under `agents/skills/`, plus root `AGENTS.md` for the recorded delegation preference and `bench/measure` for per-case provenance. The audit that motivated the additions is recorded in the branch note `.agent/docs%2Fhandoff-destination.md`, Carry forward. No installer, dependency, CI, or application configuration changes.
 
 Behavioral acceptance governs whether this change can be called validated: these are agent instructions, so `bench/measure verify --behavior` applies per `bench/README.md`, and that is a paid batch the user must authorize. The earlier estimate of 14 sessions plus the existing matrix is stale, because the feedback and publication scope changed after it was written; the batch is recomputed in `design.md` and spent only on explicit authorization.
 

@@ -20,11 +20,11 @@ Under `yolo`, the `verification` stretch SHALL run in a subagent at a tier below
 
 ### Requirement: Reviewers stay at the orchestrator's tier
 
-`adversarial-review` reviewers SHALL run at the orchestrator's tier unless the project records otherwise, because a reviewer too weak to find the bug is not a saving.
+`agent-review` reviewers SHALL run at the orchestrator's tier unless the project records otherwise, because a reviewer too weak to find the bug is not a saving.
 
 #### Scenario: Reviewers dispatched
 
-- **WHEN** `adversarial-review` dispatches its reviewers
+- **WHEN** `agent-review` dispatches its reviewers
 - **THEN** they run at the orchestrator's tier and the run records that choice in the PR body only if it deviated
 
 ### Requirement: Competing approaches fork to lower-tier subagents

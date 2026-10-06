@@ -5,7 +5,7 @@ description: Drive a change's checks to green and report back, in a subagent or 
 
 # Verification
 
-Running checks and chasing their failures is mechanical work against a settled contract. It is the other half of what a run spends outside implementation, and until it has a name it is indistinguishable from every other subagent, so nobody can say what verification costs. This skill gives it one, the way `adversarial-review` names the review half.
+Running checks and chasing their failures is mechanical work against a settled contract. It is the other half of what a run spends outside implementation, and until it has a name it is indistinguishable from every other subagent, so nobody can say what verification costs. This skill gives it one, the way `agent-review` names the review half.
 
 It is the natural place for a cheaper tier: the contract is fixed, the oracle is machine-checkable, and success is not a judgement call.
 

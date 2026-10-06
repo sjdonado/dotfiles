@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import runpy
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -87,6 +88,106 @@ def publication_oracles(base):
         assert not verdict(scenarios.check(repo, case, 1, before, note_before, "Done."))
 
 
+TRIMMED = "def label(text):\n    return text.strip()\n"
+
+
+def workspace_run(base, case, name, branch="fix/lbl-5-trim", worktree=False, on_default=False, message="Done.", commands=(), unpushed=False, back_to_main=False):
+    """One simulated run of a workspace case; returns the oracle verdict dict."""
+    repo = base / name / "repo"
+    repo.parent.mkdir(parents=True)
+    before = scenarios.seed(repo, case, ROOT)
+    work = repo
+    if worktree:
+        work = repo.parent / "wt"
+        scenarios.git(repo, "worktree", "add", "-q", "-b", branch, str(work), "main")
+    elif not on_default:
+        scenarios.git(repo, "checkout", "-q", "-b", branch)
+    (work / "label.py").write_text(TRIMMED)
+    scenarios.git(work, "add", "-A")
+    scenarios.git(work, "commit", "-m", "fix: trim label ends")
+    if not unpushed:
+        scenarios.git(work, "push", "-q", "origin", "main" if on_default else branch)
+    subprocess.run([sys.executable, str(repo / ".fixture/bin/gh"), "pr", "create", "--title", "Trim labels", "--head", "main" if on_default else branch,
+                    "--body", "## Why\n"], cwd=repo, check=True, capture_output=True)
+    if back_to_main and not worktree:
+        scenarios.git(repo, "checkout", "-q", "main")
+    transcript = repo.parent / "round-1.jsonl"
+    transcript.write_text("\n".join(json.dumps({"type": "item.completed", "item": {"type": "command_execution", "command": command}}) for command in commands)
+                          + "\n" + json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "I never ran git worktree add."}}) + "\n")
+    return scenarios.check(repo, case, 1, before, "", message.replace("<repo>", str(repo.resolve())).replace("<link>", str(repo)), [transcript])
+
+
+def workspace_oracles(base):
+    """Each workspace case must pass a compliant run and fail each violating one."""
+    base.mkdir(parents=True)
+    runs = {
+        "workspace-default": ("Opened the pull request. The branch is checked out at <repo>.", "Done."),
+        "workspace-requested": ("No worktree was made: herdr is unavailable here, so I branched in place, checked out fix/lbl-5-trim in the current checkout, and opened the pull request.", "Opened the pull request."),
+    }
+    for case, (good, mute) in runs.items():
+        assert verdict(workspace_run(base, case, case + "-ok", message=good)), case
+        assert not verdict(workspace_run(base, case, case + "-worktree", worktree=True, message=good)), case
+        assert not verdict(workspace_run(base, case, case + "-default", on_default=True, message=good)), case
+        assert not verdict(workspace_run(base, case, case + "-mute", message=mute)), case
+        # A worktree added and removed again leaves no trace on disk; the transcript still shows it.
+        for command in ("git worktree add ../wt -b x main", "herdr worktree create --branch x"):
+            assert not verdict(workspace_run(base, case, case + "-gone-" + command.split()[0], message=good, commands=[command])), (case, command)
+        # A worktree command only counts at a command start, also inside a shell wrapper; a grep for it does not.
+        for command in ("/bin/zsh -lc 'cd x && git worktree add ../wt main'", 'bash -lc "herdr worktree create --branch x"', "git status; git worktree add ../wt"):
+            assert not verdict(workspace_run(base, case, case + "-wrapped-" + str(abs(hash(command))), message=good, commands=[command])), (case, command)
+        for command in ("""/bin/zsh -lc 'grep -n "git worktree add" AGENTS.md'""", 'grep -rn "herdr worktree create" .', "echo git worktree add"):
+            assert verdict(workspace_run(base, case, case + "-grep-" + str(abs(hash(command))), message=good, commands=[command])), (case, command)
+        # A PR opened for a branch that was never pushed fails; so does a branch whose origin tip differs.
+        assert not verdict(workspace_run(base, case, case + "-unpushed", message=good, unpushed=True)), case
+        # Returning to the default branch after pushing is allowed.
+        assert verdict(workspace_run(base, case, case + "-back", message=good, back_to_main=True)), case
+        # A command that merely mentions it in an agent message, or an unrelated command, is fine.
+        assert verdict(workspace_run(base, case, case + "-clean", message=good, commands=["git status", "git worktree list"])), case
+        # "git checkout -b ..." alone is not a report of where the branch is checked out.
+        assert not verdict(workspace_run(base, case, case + "-cob", message="I ran git checkout -b fix/lbl-5-trim. herdr is unavailable, so no worktree was made.")), case
+        # The branch name alone, or "checkout" alone, is not a report either.
+        assert not verdict(workspace_run(base, case, case + "-bare", message="Branch fix/lbl-5-trim is open. herdr is unavailable, so no worktree was made. The checkout is clean.")), case
+        # The symlinked and the resolved spelling both count.
+        assert verdict(workspace_run(base, case, case + "-link", message="herdr is unavailable, so no worktree was made. Checked out in <link>.")), case
+    # The default branch on the bare origin must still equal the seeded root.
+    for case in runs:
+        repo = base / (case + "-origin") / "repo"
+        repo.parent.mkdir(parents=True)
+        before = scenarios.seed(repo, case, ROOT)
+        scenarios.git(repo, "checkout", "-q", "-b", "fix/lbl-5-trim")
+        (repo / "label.py").write_text(TRIMMED)
+        scenarios.git(repo, "commit", "-qam", "fix: trim label ends")
+        scenarios.git(repo, "push", "-q", "origin", "fix/lbl-5-trim")
+        subprocess.run([sys.executable, str(repo / ".fixture/bin/gh"), "pr", "create", "--title", "t", "--head", "fix/lbl-5-trim", "--body", "b"], cwd=repo, check=True, capture_output=True)
+        good = runs[case][0].replace("<repo>", str(repo.resolve()))
+        assert verdict(scenarios.check(repo, case, 1, before, "", good)), case
+        scenarios.git(repo, "push", "-q", "origin", "fix/lbl-5-trim:main")
+        assert not verdict(scenarios.check(repo, case, 1, before, "", good)), case
+    # Sessions run outside herdr: no HERDR_* except a dead socket, and `herdr` resolves to the failing stub.
+    scenarios.seed(base / "env-repo", "workspace-requested", ROOT)
+    env = measure["session_env"](base / "env-repo", base / "env-run", {"HERDR_ENV": "1", "HERDR_PANE_ID": "p", "HERDR_SOCKET_PATH": "/live/herdr.sock", "PATH": "/usr/bin:/bin"})
+    assert {k for k in env if k.startswith("HERDR_")} == {"HERDR_SOCKET_PATH"}
+    assert env["HERDR_SOCKET_PATH"] == str(base / "env-run/no-herdr.sock") and not Path(env["HERDR_SOCKET_PATH"]).exists()
+    stub = shutil.which("herdr", path=env["PATH"])
+    assert stub == str(base / "env-repo/.fixture/herdr-bin/herdr")
+    run = subprocess.run(["herdr", "workspace", "list"], env=env, capture_output=True, text=True)
+    assert run.returncode == 1 and "herdr is unavailable in the bench" in run.stderr
+
+
+def stub_snapshot(base):
+    """The herdr stub is seeded before the first snapshot, so building the env never changes it."""
+    repo = base / "stub" / "repo"
+    repo.parent.mkdir(parents=True)
+    before = scenarios.seed(repo, "workspace-requested", ROOT)
+    assert ".fixture/herdr-bin/herdr" in before and not (repo / ".fixture/bin/herdr").exists()
+    for round_number in (1, 2):
+        env = measure["session_env"](repo, base / "stub-run", {"PATH": "/usr/bin:/bin"})
+        assert env["PATH"].split(":")[0] == str(repo / ".fixture/herdr-bin")
+        assert scenarios.snapshot(repo) == before, round_number
+    other = base / "stub" / "other"
+    assert ".fixture/bin/herdr" not in scenarios.seed(other, "feedback", ROOT)
+
+
 def main():
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "events.jsonl"
@@ -143,21 +244,23 @@ def main():
         path.write_text("\n".join(json.dumps(event) for event in pi[:2] + [failed, assistant, {"type": "agent_settled"}]))
         assert measure["analyze_pi"](path)["status"] == "completed"
         pi_subset = measure["regression"](("gpt-6-luna",))
-        assert pi_subset[0] == ("handoff-v1", "gpt-6-luna", 1) and len(pi_subset) == 14
+        assert pi_subset[0] == ("handoff-v1", "gpt-6-luna", 1) and len(pi_subset) == 15
         assert {model for _, model, _ in pi_subset} == {"gpt-6-luna"}
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 15
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in pi_subset) == 16
         pi_inputs = measure["inputs"]("feedback", "gpt-6-luna", "pi", "medium")
         assert pi_inputs["sandbox"] == "none" and pi_inputs["network_access"] is True
-        assert measure["inputs"]("read-only", "gpt-5.6-luna") == measure["inputs"]("read-only", "gpt-5.6-luna", "codex", "low")
+        assert measure["inputs"]("read-only", "gpt-6-luna") == measure["inputs"]("read-only", "gpt-6-luna", "codex", "low")
         assert measure["inputs"]("read-only", "gpt-6-luna", "pi", "medium")["ambient_instructions"] == {}
         matrix = measure["matrix"]()
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 42
-        assert matrix[0] == ("handoff-v1", "gpt-5.6-luna", 1)
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in matrix) == 44
+        assert matrix[0] == ("handoff-v1", "gpt-6-luna", 1)
         subset = measure["regression"]()
         # The batch this change's surfaces need, and the count bench/README.md documents.
-        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in subset) == 28
-        assert subset[0] == ("handoff-v1", "gpt-5.6-luna", 1)
-        assert set(subset) <= set(matrix)
+        assert sum(len(measure["PROMPTS"][case]) for case, _, _ in subset) == 30
+        assert subset[0] == ("handoff-v1", "gpt-6-luna", 1)
+        assert set(subset) <= set(matrix) and len(subset) == 29
+        assert not any(case in measure["UNSAFE"] for case, _, _ in matrix + subset + pi_subset)
+        assert {("workspace-default", model, 1) for model in measure["MODELS"]} <= set(subset)
 
         # Per-case provenance: an unlisted section must not stale a case, a listed one must.
         split = measure["sections"]
@@ -230,6 +333,8 @@ def main():
         assert json.loads(issue_path.read_text())["state"] == "CLOSED"
 
         publication_oracles(Path(directory) / "publication")
+        workspace_oracles(Path(directory) / "workspace")
+        stub_snapshot(Path(directory) / "stub-snapshot")
 
         # A consumed budget cannot start another call, even without usable results.
         exhausted = Path(directory) / "batch" / "interrupted"

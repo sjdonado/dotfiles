@@ -98,6 +98,16 @@ One line of work is one branch and one pull request, because one agreement cover
 
 An approved run already in flight keeps its authority. It finishes its authorized scope, including driving its remote checks to green, and publishes nothing from scope that arrived after the approval. That incoming scope becomes the first local feedback batch after the run reaches its terminal state, and the run reports the queued work as its next action. A message that contradicts the premise of the work in flight is a rabbit-hole trip instead: escalate rather than finish.
 
+## Workspace
+
+These rules govern where a task branch is checked out. Disposable worktrees a workflow creates for its own subagents or for a bisect, and removes before it returns, are outside them.
+
+Implementation runs in the current checkout: `yolo` creates the task branch in place. Create a git worktree only when the project's own `AGENTS.md` records that preference or the user asks for one in the current request, and only from a checkout with no uncommitted changes; with an accumulated `proto` diff, branch in place so the diff travels with the branch. A request for a worktree covers that run only, never later runs. Record the choice and its source in the branch note.
+
+Create a worktree only through herdr, so the user sees it as a workspace: `herdr worktree create --branch <task-branch> --base <default-branch ref> --label <task>`. Never run `git worktree add`. Outside herdr (`HERDR_ENV` unset), branch in place instead and say why. The session that creates the worktree continues the work there itself.
+
+Every final report on implementation names where the branch is checked out. When that is not the user's current checkout, give the path, the command to run the work there, and the `herdr worktree remove` command to run once the pull request merges.
+
 ## Approval means autonomous execution
 
 A user approval that satisfies the agreement test in **Publication authority** is the go-ahead to run to completion. This applies to every surface that can produce one: native plan mode, `ExitPlanMode`, an OpenSpec change proposal, or any skill or command used to reach agreement.
@@ -193,13 +203,13 @@ So treat yourself as the orchestrator, and delegate by default. Never offer the 
 
 Under `yolo`, run `verification` in a subagent one tier below the orchestrator. Hand it the contract path, the resolved oracle ladder, and any check already known to fail for an unrelated reason, and nothing else. Keep it in this session only when the project records that, or when the handover prompt would cost more than the checks it carries, which is most small tasks.
 
-Run `adversarial-review` reviewers at the orchestrator's tier. A reviewer too weak to find the bug is not a saving. Record the choice in the PR body only when it deviated from this default.
+Run `agent-review` reviewers at the orchestrator's tier. A reviewer too weak to find the bug is not a saving. Record the choice in the PR body only when it deviated from this default.
 
 Delegate work, never waiting. A subagent told to watch a running process or poll for completion burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command runs in the session that can see it through.
 
-The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `adversarial-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
+The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `agent-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
 
-Count the subagents a workflow already spawns. `adversarial-review` dispatches up to two reviewers per round at the orchestrator's tier, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
+Count the subagents a workflow already spawns. `agent-review` dispatches up to two reviewers per round at the orchestrator's tier, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
 
 None of this names a model or a reasoning effort level. Those change faster than these instructions do, so a concrete tier is recorded in the project's own `AGENTS.md` instead.
 
@@ -239,11 +249,11 @@ One successful scenario is a smoke test, not proof of efficiency. Compare repeat
 
 ## Code reviews
 
-Agent-initiated review is adversarial and uses the `adversarial-review` skill, which carries both the protocol and the one-line finding format. It never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
+Agent-initiated review is adversarial and uses the `agent-review` skill, which carries both the protocol and the one-line finding format. It never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
 
 Human-requested review uses the harness's native review command. Never invoke it from another workflow or loop, and never ask for consent on its behalf.
 
-That command is for a diff this session did not write: someone else's pull request, a branch inherited from another agent, or code landing from outside. A diff produced here has already been through `adversarial-review` before it was pushed, by blind reviewers holding neither the plan nor the rationale, so running the native command over it again buys a weaker second opinion from a reviewer that does have all that context. Re-review the same diff only when a human asks for it explicitly, or when the diff has changed since the adversarial round.
+That command is for a diff this session did not write: someone else's pull request, a branch inherited from another agent, or code landing from outside. A diff produced here has already been through `agent-review` before it was pushed, by blind reviewers holding neither the plan nor the rationale, so running the native command over it again buys a weaker second opinion from a reviewer that does have all that context. Re-review the same diff only when a human asks for it explicitly, or when the diff has changed since the adversarial round.
 
 ## Commit messages
 

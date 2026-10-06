@@ -3,6 +3,6 @@
   "defaultModel": "gpt-6-luna",
   "defaultThinkingLevel": "medium",
   "quietStartup": true,
-  "lastChangelogVersion": "0.87.1",
-  "theme": "light/dark"
+  "lastChangelogVersion": "0.99.1",
+  "deviceId": "64cb139b-04e6-430e-a801-d348f9855fb9"
 }

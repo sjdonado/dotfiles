@@ -1,5 +1,5 @@
 ---
-name: adversarial-review
+name: agent-review
 description: Agent-initiated adversarial review of a diff before pushing. Spawns blind reviewers told to assume the code is wrong, then triages their findings. Use when a workflow needs to check its own work, not when a human asks for a review.
 ---
 

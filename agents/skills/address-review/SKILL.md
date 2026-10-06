@@ -30,7 +30,7 @@ Steps:
 
    A PR whose only problem is red CI is a valid entry point: skip thread processing entirely and go straight to this step.
 
-   Once fixes are in, load and follow `adversarial-review` on the accumulated diff and triage every finding, so step 6's summary reports what it found. Resolve findings in the working tree; never post them to the forge.
+   Once fixes are in, load and follow `agent-review` on the accumulated diff and triage every finding, so step 6's summary reports what it found. Resolve findings in the working tree; never post them to the forge.
 
 5. Outdated branch: if `mergeStateStatus` is `BEHIND` (or base has moved), prepare an update plan but do not update yet. Default to merging the actual base branch into the PR branch after approval to preserve history and avoid rewriting pushed commits. Never assume the base is `main`.
 
