@@ -83,6 +83,8 @@ if [ "$INSTALL" = 1 ]; then
     mise bootstrap --only packages,task --yes || log "  some packages or go installs failed; re-run: mise bootstrap --only packages,task"
     log "Installing tools from mise.toml..."
     mise install --yes || log "  some mise tools failed; re-run: mise install"
+    log "Installing agent-browser's Chrome..."
+    mise exec -- agent-browser install || log "  agent-browser install failed; re-run: agent-browser install"
   fi
 fi
 

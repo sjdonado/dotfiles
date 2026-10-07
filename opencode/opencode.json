@@ -15,9 +15,14 @@
 		}
 	},
 	"mcp": {
-		"browser": {
+		"agent-browser": {
 			"type": "local",
-			"command": ["bun", "run", "{env:HOME}/Developer/browser-mcp/index.ts"],
+			"command": ["agent-browser", "mcp"],
+			"enabled": true
+		},
+		"chrome-devtools": {
+			"type": "local",
+			"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--autoConnect", "--userDataDir", "{env:HOME}/.agent-browser/profile", "--no-usage-statistics", "--no-performance-crux"],
 			"enabled": true
 		},
 		"ios-simulator": {

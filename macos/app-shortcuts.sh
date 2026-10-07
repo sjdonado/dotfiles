@@ -1,31 +1,26 @@
 #!/bin/sh
-# Set macOS app shortcuts (System Settings → Keyboard → Keyboard Shortcuts → App Shortcuts)
-# Encoding: @=Cmd $=Shift ~=Opt ^=Ctrl. Uppercase letter implies Shift.
+# macOS App Shortcuts (System Settings > Keyboard > Keyboard Shortcuts > App Shortcuts).
+# Each app's dictionary and the list of apps are replaced, not merged, so this file is the whole set: a shortcut added in System Settings for a listed app is dropped on the next run, and one for an unlisted app keeps working but disappears from the App Shortcuts pane.
+# Encoding: @=Cmd $=Shift ~=Opt ^=Ctrl. A title must match its menu item exactly. Apps pick up changes when relaunched.
 set -eu
 
-# All Applications — stored in NSGlobalDomain
-defaults write -g NSUserKeyEquivalents -dict-add "Show Help menu"            '@$/'
-defaults write -g NSUserKeyEquivalents -dict-add "Zoom In"                   '@='
-defaults write -g NSUserKeyEquivalents -dict-add "Zoom Out"                  '@-'
-defaults write -g NSUserKeyEquivalents -dict-add "Actual Size"               '@0'
-defaults write -g NSUserKeyEquivalents -dict-add "Open sidebar"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Close sidebar"             '@.'
-defaults write -g NSUserKeyEquivalents -dict-add "Hide sidebar"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Hide Sidebar"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Hide Folders"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Show Folders"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Show Sidebar"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Show sidebar"              '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Show/Hide Sidebar"         '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Toggle sidebar"            '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Toggle Sidebar"            '@`'
-defaults write -g NSUserKeyEquivalents -dict-add "Toggle Left Sidebar"       '@.'
-defaults write -g NSUserKeyEquivalents -dict-add "Expand navigation sidebar" '@`'
+# Sandboxed apps and the Accessibility domain fail with a permissions error unless the running terminal has Full Disk Access.
+shortcuts() {
+  domain=$1
+  shift
+  defaults write "$domain" NSUserKeyEquivalents -dict "$@" ||
+    echo "  ! skipped $domain shortcuts (on a permissions error, grant Full Disk Access to the terminal, then rerun)"
+}
 
-# Notes.app (sandboxed — requires Full Disk Access on the running terminal)
-if ! defaults write com.apple.Notes NSUserKeyEquivalents -dict-add "Note List Search..." '@k' 2>/dev/null; then
-  echo "  ! skipped Notes.app shortcut (grant Full Disk Access to terminal, then rerun)"
-fi
+shortcuts -g "Show Help menu" '@$/' "Zoom In" '@=' "Zoom Out" '@-' "Actual Size" '@0'
+# "..." matches the menu's "…" title: the binding below is live with it. Cmd-S for the sidebar replaces Safari's Save As.
+shortcuts com.apple.Notes "Note List Search..." '@k' "Show Sidebar" '@s' "Hide Sidebar" '@s'
+shortcuts com.apple.Safari "Show Sidebar" '@s' "Hide Sidebar" '@s'
+shortcuts com.apple.reminders "Show Sidebar" '@s' "Hide Sidebar" '@s'
 
-# Reload prefs daemon so changes take effect without logout
+# The apps System Settings lists under App Shortcuts.
+defaults write com.apple.universalaccess com.apple.custommenu.apps -array NSGlobalDomain com.apple.Notes com.apple.Safari com.apple.reminders ||
+  echo "  ! skipped the App Shortcuts app list (on a permissions error, grant Full Disk Access to the terminal, then rerun)"
+
+# Reload the preferences daemon so changes take effect without logging out.
 killall cfprefsd 2>/dev/null || true

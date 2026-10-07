@@ -35,7 +35,17 @@ linked() {
 }
 
 group "tools from mise.toml"
-for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec nvim tree-sitter lazygit wt opencode; do runs "$c"; done
+for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec agent-browser nvim tree-sitter lazygit wt opencode; do runs "$c"; done
+
+group "agent-browser's Chrome"
+# Chrome for Testing has no Linux ARM64 build, so there the download is expected to fail.
+if [ "$(uname -m)" = aarch64 ]; then
+  printf '  skip Chrome for Testing has no linux/arm64 build\n'
+elif ls -d "$HOME"/.agent-browser/browsers/chrome-* >/dev/null 2>&1; then
+  ok "Chrome downloaded to ~/.agent-browser/browsers"
+else
+  bad "agent-browser install left no Chrome in ~/.agent-browser/browsers"
+fi
 
 group "tools with their own installers"
 for c in claude herdr; do runs "$c"; done
@@ -59,6 +69,7 @@ linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
 linked "$HOME/.config/opencode/pty.md" "$DOTFILES/opencode/pty.md"
 linked "$HOME/.pi/agent/settings.json" "$DOTFILES/pi/settings.json"
 linked "$HOME/.pi/agent/AGENTS.md"     "$DOTFILES/agents/AGENTS.md"
+linked "$HOME/.agent-browser/config.json" "$DOTFILES/agent-browser/config.json"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
 linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
 # Linked by the shared lib/links.sh rather than by either script, so both checks
