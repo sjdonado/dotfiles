@@ -1,6 +1,6 @@
 // route-bounded: full specified slice ships (code + commit + push + PR + report).
-const { git, json, operations, behavior, validated } = require('./state');
-module.exports = (output, context) => {
+import { git, json, operations, behavior, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const head = git(dir, 'rev-parse', 'HEAD'), branch = git(dir, 'branch', '--show-current');

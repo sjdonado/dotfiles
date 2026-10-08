@@ -1,11 +1,11 @@
 // route-open-shape: a working slice, nothing shipped, blank behavior not invented,
 // session task list created, ignored and ticked.
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { git, behavior, operations, validated } = require('./state');
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as crypto from 'node:crypto';
+import { git, behavior, operations, validated } from './state';
 const TASKS = '.agent/proto%2Fhandoff.tasks.md';
-module.exports = (output, context) => {
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const head = git(dir, 'rev-parse', 'HEAD');

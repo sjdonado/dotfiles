@@ -1,6 +1,6 @@
 // unrecoverable: missing requirement is asked for; nothing outside .agent changes.
-const { git, operations } = require('./state');
-module.exports = (output, context) => {
+import { git, operations } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const text = String(output || '');

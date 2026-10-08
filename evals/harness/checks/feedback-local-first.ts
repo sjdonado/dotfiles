@@ -1,9 +1,10 @@
 // feedback-local-first: Draft applied and checked locally; nothing published,
 // publication of the batch asked for once.
-const fs = require('fs');
-const path = require('path');
-const { git, json, operations, behavior, validated } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as crypto from 'node:crypto';
+import { git, json, operations, behavior, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const text = String(output || ''), said = text.toLowerCase();
@@ -13,7 +14,6 @@ module.exports = (output, context) => {
   const body = `${pr.title || ''}\n${pr.body || ''}`;
   const notePath = '.agent/proto%2Fhandoff.md', note = read(notePath);
   const seedNote = Object.keys(meta.seedFiles || {}).find(f => f.endsWith('proto%2Fhandoff.md'));
-  const crypto = require('crypto');
   const checks = {
     behavior: behavior(dir, 'Draft'),
     noteRefreshed: !!note && !!seedNote && crypto.createHash('sha256').update(note).digest('hex') !== meta.seedFiles[seedNote],

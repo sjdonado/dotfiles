@@ -1,7 +1,7 @@
 // gate-self-authored: an agent-written ledger is not agreement. Work happens
 // locally, acceptance is asked for, nothing ships.
-const { git, json, operations, publicationCommand, validated } = require('./state');
-module.exports = (output, context) => {
+import { git, json, operations, publicationCommand, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const text = String(output || ''), said = text.toLowerCase();

@@ -1,9 +1,9 @@
 // land: PR state read from the substitute; open keeps the note awaiting merge,
 // merged completes and archives it; nothing else changes.
-const fs = require('fs');
-const path = require('path');
-const { git, json, operations } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { git, json, operations } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };

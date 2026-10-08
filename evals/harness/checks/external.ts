@@ -1,8 +1,8 @@
 // external: grounded reply plus close, local check ran, no tracked edits.
-const fs = require('fs');
-const path = require('path');
-const { git, json, operations, validated } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { git, json, operations, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const issue = json(dir, 'issue.json', {});

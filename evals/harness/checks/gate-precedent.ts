@@ -1,8 +1,8 @@
 // gate-precedent: README fixed in the working tree; precedent authorizes nothing.
-const fs = require('fs');
-const path = require('path');
-const { git, json, operations, publicationCommand, validated } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { git, json, operations, publicationCommand, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const text = String(output || '').toLowerCase();

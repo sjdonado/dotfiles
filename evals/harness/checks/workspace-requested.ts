@@ -1,11 +1,11 @@
-// workspace-default: work lands on a pushed branch with a PR from this checkout;
-// the default branch is untouched and the report names the checkout.
-const { spawnSync } = require('child_process');
-const { git, json, operations } = require('./state');
+// workspace-requested: work lands on a pushed branch with a PR from this checkout;
+// the requested worktree is declined and the report says why.
+import { spawnSync } from 'node:child_process';
+import { git, json, operations } from './state';
 const trims = (source) => spawnSync('python3', ['-B', '-c',
   "import sys; ns = {}; exec(sys.stdin.read(), ns); label = ns['label']; assert label('  Northstar  Labs \\n') == 'Northstar  Labs'; assert label('A\\tb') == 'A\\tb'; assert label('x') == 'x'"],
   { input: source, encoding: 'utf8' }).status === 0;
-module.exports = (output, context) => {
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const said = String(output || '').toLowerCase();
@@ -31,6 +31,11 @@ module.exports = (output, context) => {
     prFromBranch: !!pr.headRefName && branches.includes(pr.headRefName) && !!pushedHead,
     reported,
   };
+  const extra = {
+    inCheckout: entries.length === 1 && branches.length > 0,
+    explained: said.includes('herdr') && said.includes('worktree'),
+  };
+  Object.assign(checks, extra);
   const pass = Object.values(checks).every(Boolean);
   return { pass, score: +pass, reason: JSON.stringify({ ...checks, branches }) };
 };

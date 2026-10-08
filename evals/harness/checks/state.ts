@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const { spawnSync } = require('child_process');
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
 const git = (dir, ...args) => {
   const result = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
   return result.status === 0 ? result.stdout.trim() : '';
@@ -56,4 +56,4 @@ const validated = (meta, script = false) => (meta.successfulCommands || []).some
   return (localFile || i >= 0 || words.includes('-') || words.some(word => word.startsWith('<<'))) &&
     /(?:^|[;\n])\s*assert\s+/.test(code) && /\blabel\s*\(/.test(code);
 }));
-module.exports = { git, json, operations, behavior, publicationCommand, validated };
+export { git, json, operations, behavior, publicationCommand, validated };

@@ -1,10 +1,10 @@
 // bootstrap-setup: round 1 writes grounded portable instructions; round 2 runs the
 // check and leaves the instructions alone. Round is inferred from the seed.
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const { git } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as crypto from 'node:crypto';
+import { git } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };

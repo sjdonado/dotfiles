@@ -1,8 +1,8 @@
 // recoverable: deferred Untitled fallback + Northstar rationale recovered, stops for feedback.
-const fs = require('fs');
-const path = require('path');
-const { git, json, operations, behavior, publicationCommand, validated } = require('./state');
-module.exports = (output, context) => {
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { git, json, operations, behavior, publicationCommand, validated } from './state';
+export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };
