@@ -6,7 +6,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 - agents/skills/: reusable skill entry points and their supporting resources.
 - agents/AGENTS.md: shared workflow conventions, linked by macos.sh and linux.sh.
-- bench/: disposable agent scenarios, transcript analysis, and verification instructions in bench/README.md. Generated runs are ignored.
+- evals/harness/: disposable agent scenarios (scenarios.json), fixtures, artifact checks (checks/), and the Bun runner (run.ts). Results under results-*/ are ignored.
 - openspec/changes/: proposed contracts and implementation tasks. Main specs describe merged work only.
 - macos.sh, linux.sh, mise.toml and lib/links.sh: machine provisioning. mise.toml declares every tool that is not platform-specific and both scripts install from it; lib/links.sh holds every symlink this repository owns and is sourced by both, so each script keeps only what is genuinely platform-specific. These scripts change the host; do not run them as validation, run the checks under verify/ instead.
 - verify/: the setup checks. verify/linux/ provisions a throwaway Ubuntu container, verify/macos/ runs macos.sh against a throwaway HOME. verify/README.md explains why the two differ.
@@ -14,7 +14,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 ## Delegation
 
-Mechanical stretches go to a subagent one tier below the orchestrator: the `verification` skill, bench scenario and fixture work, and transcript review. Adversarial reviewers stay at the orchestrator's tier, because a reviewer that misses the bug saves nothing. A paid bench batch runs in the session that started it and never in a subagent, since killing the subagent kills the batch and its budget.
+Mechanical stretches go to a subagent one tier below the orchestrator: the `verification` skill, evals scenario and fixture work, and transcript review. Adversarial reviewers stay at the orchestrator's tier, because a reviewer that misses the bug saves nothing. A paid eval run starts in the session that started it and never in a subagent, since killing the subagent kills the run.
 
 ## Updating the harness
 
@@ -22,15 +22,15 @@ Start from an observed failure and name the decision that should change. Trace e
 
 Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
 
-Prove the behavior through the smallest existing disposable scenario that covers the decision. Add a new case only for an observed gap, declare its artifact and tool-action assertions before running it, and keep prompts limited to the context the agent would actually receive. Run `bench/measure verify --local` first, then follow bench/README.md for paid behavioral runs and transcript review. Never edit generated run evidence or reset a batch to make a failure disappear.
+Prove the behavior through the smallest existing disposable scenario that covers the decision. Add a new case only for an observed gap, declare its artifact and tool-action assertions before running it, and keep prompts limited to the context the agent would actually receive. Run the free wiring check `bun evals/harness/run.ts --dry-run` first, then run the paid scenarios and review their transcripts. Never edit generated run evidence.
 
 ## Verification
 
-Run checks from the repository root. The benchmark uses Python 3's standard library. Git and an authenticated Codex CLI with access to the requested models are needed for behavioral probes; OpenSpec is needed to validate change artifacts. Benchmarks run only on gpt-6.1-sol and gpt-6-luna, never gpt-6-astra.
+Run checks from the repository root. The eval runner is Bun with standard-library TypeScript; label.py behavior probes still execute python3. Git and authenticated pi (via pi-agent) with access to the requested models are needed for behavioral runs; OpenSpec is needed to validate change artifacts. Eval providers run gpt-6.1-sol and gpt-6-luna, never gpt-6-astra.
 
-For bench/ code: `bench/measure verify --local` compiles the Python modules, runs their offline regression checks, and checks whitespace in tracked and untracked bench and instruction files. For an OpenSpec change under openspec/changes/: `openspec validate <change-id> --strict`. For a skill under agents/skills/: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. It ships with the Codex system skills, not this repository, and is unavailable without Codex and uv. No general application build or repository-wide test suite is declared.
+For evals/ code: `bun evals/harness/run.ts --dry-run` seeds every fixture and runs each check against seed state (expect failures there; it proves the wiring, not the behavior), and `node --check` validates touched files under checks/. For an OpenSpec change under openspec/changes/: `openspec validate <change-id> --strict`. For a skill under agents/skills/: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. It ships with the Codex system skills, not this repository, and is unavailable without Codex and uv. No general application build or repository-wide test suite is declared.
 
-For changes to agent instructions: `bench/measure verify --behavior` inspects existing scenario results and returns nonzero for missing, stale, failing, or unreviewed coverage. The full matrix no longer fits one batch, so the per-change gate is `bench/measure verify --behavior --regression --batch <new-dir>`, which selects the rows a publication-authority change can break. Local tooling success does not establish harness acceptance. Follow bench/README.md for the transcript review record and the active change's scenarios. Adding `--run` explicitly starts missing paid model sessions, capped at 32 per batch. Never reset a batch to hide failure or exceed that budget. Both the local checks and that behavioral gate must pass before reporting the harness validated.
+For changes to agent instructions: `bun evals/harness/run.ts --run` executes the paid scenarios and retains ignored results-*/ evidence with transcripts; review every transcript before claiming acceptance. Local dry-run success does not establish harness acceptance. `--run` starts real sessions and consumes usage allowance. Both the local checks and that behavioral evidence must pass before reporting the harness validated.
 
 Validate edited JSON with python3 -m json.tool <path>. No check should install tools, deploy, expose secrets, or modify external services merely to establish documentation accuracy.
 

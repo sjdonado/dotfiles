@@ -33,7 +33,6 @@ linked "$HOME/.config/mise/mise.lock" "$DOTFILES/mise.lock"
 
 group "shell and terminal"
 linked "$HOME/.config/fish/config.fish" "$DOTFILES/fish/config.fish"
-linked "$HOME/.config/fish/conf.d/opencode-codemode.fish" "$DOTFILES/fish/conf.d/opencode-codemode.fish"
 linked "$HOME/.config/ghostty/config"   "$DOTFILES/ghostty/config"
 linked "$HOME/.gitconfig"               "$DOTFILES/git/.gitconfig"
 linked "$HOME/.docker/config.json"      "$DOTFILES/docker/config.json"

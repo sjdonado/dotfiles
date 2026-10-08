@@ -14,7 +14,7 @@ const operations = (dir) => {
   return fs.existsSync(file) ? fs.readFileSync(file, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
 };
 const behavior = (dir, blank) => spawnSync('python3', ['-B', '-c',
-  `from label import label; assert label('  Northstar   Labs  ') == 'Northstar Labs'; assert label('a\\tb\\nc') == 'a b c'; assert label(' ') == ${JSON.stringify(blank)}`], { cwd: dir }).status === 0;
+  `from label import label; assert label('  Northstar   Labs  ') == 'Northstar Labs'; assert label('a\\tb\\nc') == 'a b c'; assert label('   ') == ${JSON.stringify(blank)}`], { cwd: dir }).status === 0;
 // ponytail: shell words cover direct commands and heredocs, not arbitrary scripts; transcript review checks indirection.
 const commandWords = (command) => {
   const source = command.replace(/(<<-?\s*(['"]?)(\w+)\2[^\n]*\n)[\s\S]*?\n\3(?:\n|$)/g, '$1\n');

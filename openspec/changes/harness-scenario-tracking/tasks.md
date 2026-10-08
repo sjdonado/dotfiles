@@ -98,3 +98,8 @@
 
 - [x] 15.1 Replace `[tasks.pi-sync]` with `[tasks.pss-sync]` running the scheme's own `install.sh` from GitHub; wire `macos.sh` and `linux.sh` after the tool installs
 - [x] 15.2 Remove the stale `bin/pi` delegate (its checkout is gone) so `pi` resolves to upstream; `pi-agent` unchanged
+
+## 16. Paid matrix evidence and pss update
+
+- [x] 16.1 Run the full 48-session matrix and document the 26/48 tally, spend, and fix backlog in `evals/harness/RUNS.md`
+- [x] 16.2 Update the pss checkout to latest main and verify `pss --check`
