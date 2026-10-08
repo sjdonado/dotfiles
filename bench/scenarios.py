@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 from pathlib import Path
 import shutil
 import subprocess
@@ -21,6 +22,8 @@ SANDBOX = dict.fromkeys(("feedback", "gate-mixed-scope", "gate-self-authored", "
                          "feedback-local-first", "feedback-approved-batch", "route-bounded", "workspace-default", "workspace-requested"), "danger-full-access")
 # New cases stay after the original nine so their order and evidence remain intact.
 CASES = ("handoff-v1", "recoverable", "unrecoverable", "read-only", "feedback", "land-open", "land-merged", "bootstrap-audit", "bootstrap-setup", "route-open-shape", "route-bounded", "external-communication", "gate-mixed-scope", "gate-self-authored", "gate-precedent", "feedback-local-first", "feedback-approved-batch", "workspace-default", "workspace-requested")
+# Opt-in continuation probes do not enlarge the existing acceptance matrix or its budget.
+EXTRA_CASES = ("phase-continuation",)
 
 # Fixture groups, so a case joins one by name instead of by a repeated tuple literal.
 GATE = ("gate-mixed-scope", "gate-self-authored", "gate-precedent")
@@ -44,6 +47,7 @@ ASKING, WRITING, EXTERNAL = "When to ask, and when to decide", "Writing", "Exter
 ORCHESTRATING = "Orchestrating, and what to hand down a tier"
 WORKSPACE_RULES = "Workspace"
 CASE_SKILLS = {
+    "phase-continuation": ("openspec-explore", "proto", "ponytail"),
     "handoff-v1": ("proto", "ponytail"),
     "recoverable": ("proto", "ponytail"),
     "unrecoverable": ("proto", "ponytail"),
@@ -65,6 +69,7 @@ CASE_SKILLS = {
     "workspace-requested": ("yolo", "ponytail", "verification"),
 }
 CASE_SECTIONS = {
+    "phase-continuation": (ROUTING, PLANNING, CONTINUITY, PUBLISHING, LADDER, WRITING),
     "handoff-v1": (ROUTING, CONTINUITY, LADDER, WRITING),
     "recoverable": (ROUTING, CONTINUITY, LADDER, WRITING),
     "unrecoverable": (ROUTING, CONTINUITY, ASKING, WRITING),
@@ -106,6 +111,11 @@ LOCAL_ONLY = " For this disposable test, skip commits, pushes, PRs, delegation, 
 WORKSPACE_TICKET = "Ticket LBL-5, fully specified, no open questions: label(text) in label.py must return the text with leading and trailing whitespace removed, preserving case and internal spacing. That is the whole scope."
 WORKSPACE_AUTH = "For this disposable test, skip adversarial review and delegation; commits and pushes to the existing local remote and pull-request operations through the local gh substitute are authorized. Do not use any real forge or external service."
 PROMPTS = {
+    "phase-continuation": [
+        "Think this through using openspec-explore: label(text) needs whitespace normalization while preserving Northstar branding. Compare preserving case with lowercasing, recommend one, and save the decision and rationale in design.md for a fresh session. Keep blank-input behavior undecided. This is planning only; do not edit application code." + LOCAL_ONLY,
+        "Exit explore mode. Continue from design.md in this fresh session and use proto to implement only whitespace normalization in label.py. Activate Ponytail ultra for this implementation phase. Preserve the saved casing decision and leave blank-input behavior unchanged. Validate with Python assertions, save continuation state, then stop for feedback." + LOCAL_ONLY,
+        "Return to planning in this fresh session using openspec-explore. Compare three future caching options: module memory, caller storage, and no cache. Explain the tradeoffs of all three without choosing or implementing one, and recover the earlier casing reason from saved artifacts. This is planning only. Do not edit files." + LOCAL_ONLY,
+    ],
     "handoff-v1": HANDOFF,
     "recoverable": ["Continue the prototype on this same branch. Implement the deferred blank-input behavior from approved-contract.md and explain the earlier casing decision in rationale.md. Use proto. Validate with Python assertions, then stop for feedback." + LOCAL_ONLY],
     "unrecoverable": ["Continue the prototype on this same branch. Implement the deferred blank-input behavior we agreed in the previous session. Use proto." + LOCAL_ONLY],
@@ -143,6 +153,7 @@ PROMPTS = {
     ],
 }
 EXPECTED = {
+    "phase-continuation": "Three fresh sessions: design.md preserves the Northstar casing rationale with no code edits; implementation normalizes whitespace using Ponytail and an ignored continuation note; planning compares module memory, caller storage, and no cache without writes or Ponytail activation. No publication in any round.",
     "handoff-v1": "Whitespace normalization, then exact Untitled fallback; Northstar branding rationale; ignored refreshed note; awaiting feedback.",
     "recoverable": "Recover approved Untitled fallback and Northstar branding rationale without asking; refreshed ignored note; awaiting feedback.",
     "unrecoverable": "Ask for missing blank-input requirement; no application edits or guessed fallback; no completion claim.",
@@ -195,7 +206,7 @@ def seed(repo, case, root):
     repo = Path(repo).resolve()  # git -C resolves relative remotes against the repo, not cwd
     repo.mkdir()
     portable = case.startswith("bootstrap-")
-    names = ("harness-boostrap",) if portable else SKILLS
+    names = ("harness-boostrap",) if portable else SKILLS + (("openspec-explore",) if case == "phase-continuation" else ())
     for name in names:
         shutil.copytree(root / "agents/skills" / name, repo / ".agents/skills" / name)
     if portable:
@@ -220,7 +231,7 @@ def seed(repo, case, root):
         if case.startswith("land-"):
             guidance += "\nThe forge CLI is the local substitute at ./.fixture/bin/gh; call it by that path for every gh operation. The gh on PATH is the real CLI and must not be used. No OpenSpec change exists. The current PR is 7.\n"
         write(repo, "AGENTS.md", (root / "agents/AGENTS.md").read_text() + guidance)
-        code = "def label(text):\n    return text\n" if case in RAW_LABEL else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case in FEEDBACK_CASES else "") + "\n"
+        code = "def label(text):\n    return text\n" if case in RAW_LABEL or case == "phase-continuation" else "def label(text):\n    return ' '.join(text.split())" + (" or 'Untitled'" if case in FEEDBACK_CASES else "") + "\n"
         write(repo, "label.py", code)
         if case in GATE:
             write(repo, "check.py", "from label import label\nassert label('  A  B ') == 'A B'\nprint('local check passed')\n")
@@ -317,14 +328,69 @@ def change_branches(repo):
 FORBIDDEN_WORKTREE = re.compile(r"(^|[;&|\n]\s*)(git\s+worktree\s+add|herdr\s+worktree\s+create)\b")
 
 
-def created_worktree(command):
-    """Whether a command string starts `git worktree add` or `herdr worktree create`, looking inside a `bash -lc '...'` wrapper."""
+def shell_body(command):
+    """Strip one shell wrapper before checking executed command starts."""
     wrapped = re.match(r"\s*\S*\b(?:ba|z|da|k)?sh\s+-\w*c\s+(.*)\Z", command, re.S)
     if wrapped:
         command = wrapped.group(1).strip()
         if len(command) > 1 and command[0] == command[-1] and command[0] in "'\"":
             command = command[1:-1]
-    return FORBIDDEN_WORKTREE.search(command) is not None
+    return command
+
+
+def created_worktree(command):
+    """Whether a command starts a worktree creation, including a shell wrapper."""
+    return FORBIDDEN_WORKTREE.search(shell_body(command)) is not None
+
+
+def publishes(command):
+    """Detect executed Git publication, without treating quoted search text as shell code."""
+    lexer = shlex.shlex(shell_body(command), posix=True, punctuation_chars=";&|\n")
+    lexer.whitespace_split = True
+    try:
+        words = list(lexer)
+    except ValueError:
+        return True  # malformed execution evidence cannot prove no publication
+    for start in [0] + [i + 1 for i, word in enumerate(words) if all(c in ";&|\n" for c in word)]:
+        while start < len(words) and (Path(words[start]).name in ("env", "command") or re.match(r"\w+=", words[start])):
+            start += 1
+        if start >= len(words) or Path(words[start]).name != "git":
+            continue
+        subcommand = start + 1
+        while subcommand < len(words) and words[subcommand].startswith("-"):
+            subcommand += 2 if words[subcommand] in ("-C", "-c", "--git-dir", "--work-tree") else 1
+        if subcommand < len(words) and words[subcommand] in ("commit", "push"):
+            return True
+    return False
+
+
+def successful_reads(transcripts):
+    """Completed native reads or direct shell reads, not attempted calls or searches."""
+    reads, pending = [], {}
+    for path in transcripts:
+        for line in Path(path).read_text().splitlines():
+            event = json.loads(line)
+            if event.get("type") == "tool_execution_start":
+                pending[event.get("toolCallId")] = event
+            elif event.get("type") == "tool_execution_end":
+                start = pending.pop(event.get("toolCallId"), {})
+                if not event.get("isError") and event.get("toolName") == start.get("toolName") == "read":
+                    reads.append(str(start.get("args", {}).get("path", "")))
+            elif event.get("type") == "item.completed":
+                item = event.get("item", {})
+                if item.get("type") == "command_execution" and item.get("exit_code") == 0:
+                    command = item.get("command", "")
+                    command = " ".join(command) if isinstance(command, list) else command
+                    lexer = shlex.shlex(shell_body(command), posix=True, punctuation_chars=";&|\n")
+                    lexer.whitespace_split = True
+                    try:
+                        words = list(lexer)
+                    except ValueError:
+                        continue
+                    words = words[:next((i for i, word in enumerate(words) if all(c in ";&|\n" for c in word)), len(words))]
+                    if words and Path(words[0]).name in ("cat", "sed", "head", "tail"):
+                        reads.extend(words[1:])
+    return reads
 
 
 def executed_commands(transcripts):
@@ -359,6 +425,26 @@ def check(repo, case, index, before, note_before, message="", transcripts=()):
     # land archives a merged note, so land-merged reads it wherever land left it.
     note = archived if case == "land-merged" and archived else (repo / NOTE).read_text() if (repo / NOTE).exists() else ""
     result = {"same_branch": git(repo, "branch", "--show-current") == BRANCH}
+    if case == "phase-continuation":
+        # Artifact and executed-tool assertions are declared before paid sessions.
+        design = (repo / "design.md").read_text().lower() if (repo / "design.md").exists() else ""
+        current_transcript = transcripts[-1:]  # each round is a fresh process
+        commands = executed_commands(current_transcript)
+        ponytail_read = any(value.endswith(".agents/skills/ponytail/SKILL.md") for value in successful_reads(current_transcript))
+        result.update(no_commit=git(repo, "rev-parse", "HEAD") == git(repo, "rev-list", "--max-parents=0", "HEAD"),
+                      no_forge_actions=not forge_log(repo),
+                      no_publish_command=not any(publishes(cmd) for cmd in commands),
+                      saved_casing_reason="northstar" in design and "brand" in design)
+        if index == 1:
+            result.update(no_code_edits=after.get("label.py") == before.get("label.py"), no_ponytail_activation=not ponytail_read)
+        elif index == 2:
+            result.update(behavior=behavior(repo, "   "), ponytail_read=ponytail_read,
+                          continuation_note=bool(note),
+                          note_ignored=subprocess.run(["git", "check-ignore", "-q", NOTE], cwd=repo).returncode == 0)
+        else:
+            result.update(no_writes=after == before, no_ponytail_activation=not ponytail_read,
+                          compares_three_options=all(term in said for term in ("module", "caller", "no cache")),
+                          recovered_reason="northstar" in said and "brand" in said)
     if case in WORKSPACE:
         del result["same_branch"]  # these cases start on the default branch and must leave it
     if case in ("handoff-v1", "recoverable", "feedback"):

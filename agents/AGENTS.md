@@ -126,7 +126,7 @@ Once `yolo` creates a task branch, everything related that follows, including mi
 
 PR titles and bodies are human-facing prose. Follow the repository's explicit template or instructions. When none exist, sample recent merged PRs from a maintainer and match their structure, tone, length, and level of context; if several maintainers qualify, pick one, preferring the one with more contributions. Explain the problem, resulting behavior, and verification clearly. For an external open source contribution, add a brief, natural thanks when it fits the repository's tone.
 
-Include a real screenshot for a runnable UI or TUI change whenever practical. Show the changed interface itself, not terminal text standing in for it. Command output may be pasted as text.
+Include a real screenshot for a runnable UI or TUI change whenever practical. Show the changed interface itself, not terminal text standing in for it. Command output may be pasted as text. Never commit the image into the repository for the PR: attach it with `gh pr edit <number> --attach '<file>#<alt text>'`, which uploads the asset and rewrites a matching body reference to it. Repeat the flag for multiple files.
 
 Unless the human explicitly requests a draft, open a normal PR with `WIP:` at the start of its title while remote checks run, so draft-only CI restrictions do not suppress pipelines. Remove `WIP:` only after the resolved oracle and mergeability checks are green. An explicitly requested draft uses the forge's draft state and does not need the title marker.
 

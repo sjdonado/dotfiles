@@ -1,0 +1,4 @@
+results*.json
+results-*/
+transcript-*.jsonl
+.promptfoo/

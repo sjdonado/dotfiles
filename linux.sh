@@ -99,6 +99,8 @@ fi
 log "Installing tools from mise.toml..."
 mise install --yes || log "  some mise tools failed; re-run: mise install"
 rescan
+log "Installing the PSS Pi scheme from GitHub..."
+mise run pss-sync || log "  PSS sync failed; re-run: mise run pss-sync"
 # Chrome for Testing has no Linux ARM64 build, so there agent-browser needs a system Chromium.
 if [ "$(uname -m)" = aarch64 ]; then
   log "Skipping agent-browser's Chrome: no Chrome for Testing build for linux/arm64"
@@ -111,8 +113,8 @@ fi
 # Claude Code publishes an npm wrapper that fetches its real binary in a
 # postinstall script, which mise does not run: installed that way it fails at
 # startup with "native binary not installed". It also manages its own updates
-# and shell integration. herdr and moshi-hook ship from their own CDNs with no
-# GitHub release for any mise backend to read. All three keep their installers,
+# and shell integration. herdr ships from its own CDN with no
+# GitHub release for any mise backend to read. Both keep their installers,
 # and none of them aborts the run: losing one tool should cost that tool, not
 # the rest of the provisioning.
 install_tool() {
@@ -124,7 +126,6 @@ install_tool() {
 }
 install_tool claude    'curl -fsSL https://claude.ai/install.sh | bash'
 install_tool herdr     'curl -fsSL https://herdr.dev/install.sh | sh'
-install_tool moshi-hook 'curl -fsSL https://getmoshi.app/install.sh | sh'
 else
   log "Skipping dependency installation (use --install to enable)."
 fi
@@ -216,11 +217,6 @@ EOF
   done
 fi
 
-# No systemd user bus in a Coder workspace, so `moshi-hook service` cannot run
-# the daemon: start it here as a bare background process, and fish/config.fish
-# restarts it on the first shell after a workspace rebuild.
-pair_moshi_hook 'pgrep -x moshi-hook >/dev/null 2>&1 || (nohup moshi-hook serve >/dev/null 2>&1 &)'
-
 cat <<'NOTE'
 
 ==> Base setup done.
@@ -235,9 +231,6 @@ MANUAL STEPS (sensitive — not scripted):
 
   2. Secrets / env (only if your workflow needs them):
        - Copy any private .env values by hand.
-       - Moshi push: add `export MOSHI_DEVICE_TOKEN=<token>` to .env (token from
-         Settings -> Hooks in the iOS app), re-run this script, then start the
-         daemon with `moshi-hook serve`.
        - SSH keys / ~/.ssh/config: create or copy manually if you push over SSH
          (dotfiles cloned over public HTTPS, so clone itself needs nothing).
 

@@ -19,8 +19,7 @@
 #             unlike the official installer it can authenticate, so it does not
 #             fail on a box that has spent the hour's 60 anonymous API calls.
 #   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
-#   moshi-hook  same, cdn.getmoshi.app.
-# Those four keep their official installers. fish and mosh stay with the system
+# Those three keep their official installers. fish and mosh stay with the system
 # package manager: they are the login environment, not project tooling.
 #
 # Versions are pinned by mise.lock, which is tracked next to this file. It holds
@@ -45,6 +44,13 @@
 # rustup stays the owner, from Homebrew on macOS; Linux boxes here install no
 # rust at all because nothing on them needs cargo.
 
+
+[env]
+# OpenCode v1's native MCP code mode. Applies to mise exec and tool shims.
+OPENCODE_EXPERIMENTAL_CODE_MODE = "true"
+# Pi background tasks manage processes only; subagents are a separate package.
+PI_BG_FEATURES = "process"
+PI_BG_POSIX_SHELL = "bash"
 
 [tools]
 # `lts` rather than `latest`: node@latest fails to resolve in mise.
@@ -190,11 +196,10 @@ tree-sitter = "latest"
 "brew:pandoc" = { os = "macos" }
 "brew:whisper.cpp" = { os = "macos" }
 "brew:xcodegen" = { os = "macos" }
-# Pi is for harness experiments and bench runs only; its config is pi/. homebrew-core tracks it; the npm package lags.
+# Pi supports daily coding and harness experiments; its config is pi/. Homebrew core tracks it.
 "brew:pi-coding-agent" = { os = "macos" }
 "brew:grafana/grafana/gcx" = { os = "macos" }
 "brew:ory/tap/cli" = { os = "macos" }
-"brew:rjyo/moshi/moshi-hook" = { os = "macos" }
 "brew:supabase/tap/supabase" = { os = "macos" }
 "brew-cask:1password" = { os = "macos" }
 "brew-cask:1password-cli" = { os = "macos" }
@@ -220,7 +225,6 @@ tree-sitter = "latest"
 [bootstrap.brew.taps]
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
-"rjyo/moshi" = "https://github.com/rjyo/homebrew-moshi.git"
 "driceroland/tap" = "https://github.com/driceroland/homebrew-tap.git"
 "facebook/fb" = "https://github.com/facebook/homebrew-fb.git"
 "sjdonado/tap" = "https://github.com/sjdonado/homebrew-tap.git"
@@ -236,6 +240,13 @@ for pkg in github.com/air-verse/air github.com/bootdotdev/bootdev github.com/pre
   go install "$pkg@latest" || { echo "go install $pkg failed" >&2; status=1; }
 done
 exit $status
+"""
+
+# PSS (pi-skin-sjdonado) is the Pi harness scheme: provisioning runs its own install.sh straight from GitHub so there is exactly one install path. Cross-platform: sh plus curl, git and bun. Run alone with `mise run pss-sync`; provisioners run it after the tool installs.
+[tasks.pss-sync]
+run = """
+set -eu
+curl -fsSL https://raw.githubusercontent.com/sjdonado/pi-skin-sjdonado/main/install.sh | sh
 """
 
 # One command for every upgrade: Homebrew's index, the declared bootstrap packages (mise itself is one of them), the [tools] versions (mise.lock), Neovim plugins (nvim-pack-lock.json, written back into this repository) and Mason tools. Review the lockfile diffs afterwards.
@@ -296,6 +307,9 @@ exit $status
 [dotfiles]
 "~/.gitconfig" = { source = "git/.gitconfig", mode = "symlink" }
 "~/.config/fish/config.fish" = { source = "fish/config.fish", mode = "symlink" }
+"~/.config/fish/conf.d/opencode-codemode.fish" = { source = "fish/conf.d/opencode-codemode.fish", mode = "symlink" }
+"~/.config/fish/conf.d/pi-harness.fish" = { source = "fish/conf.d/pi-harness.fish", mode = "symlink" }
+"~/.config/fish/conf.d/pi-background.fish" = { source = "fish/conf.d/pi-background.fish", mode = "symlink" }
 "~/.config/fish/functions" = { source = "fish/functions", mode = "symlink-each" }
 "~/.config/ghostty/config" = { source = "ghostty/config", mode = "symlink" }
 "~/.config/ghostty/themes" = { source = "ghostty/themes", mode = "symlink-each" }
@@ -317,6 +331,9 @@ exit $status
 "~/.config/opencode/tui.json" = { source = "opencode/tui.json", mode = "symlink" }
 "~/.config/opencode/AGENTS.md" = { source = "opencode/AGENTS.md", mode = "symlink" }
 "~/.local/state/opencode/kv.json" = { source = "opencode/kv.json", mode = "symlink" }
+"~/.pi/agent/settings.json" = { source = "pi/settings.json", mode = "symlink" }
+"~/.pi/agent/mcp.json" = { source = "pi/mcp.json", mode = "symlink" }
+"~/.pi/agent/AGENTS.md" = { source = "agents/AGENTS.md", mode = "symlink" }
 # The shell-rc blocks linux.sh appends behind grep guards, as edit entries.
 # Same content, same files; apply is idempotent by construction (markers), so
 # the "second run doubles nothing" check becomes a property of the tool.

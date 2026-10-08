@@ -15,7 +15,7 @@ Linux containerises, so the Linux check is the real thing: bare Ubuntu, no tooli
 
 macOS does not containerise. There is no macOS Docker image, and Docker on a Mac is a Linux VM, so anything claiming otherwise is emulating an x86 Hackintosh under KVM, which does not run on Apple silicon at all. A real macOS VM means [tart](https://tart.run) or UTM on Virtualization.framework: an Apple-silicon VM from a ~20 GB image, licensed for two VMs per host. That is a genuine option for a full from-scratch rehearsal before wiping a machine, and far too slow to be the loop that catches a broken symlink.
 
-So `macos.sh` grew a `--links-only` flag instead: the half of the script that only writes inside `$HOME`. Point `HOME` at a temporary directory, run it, and assert every link. Everything that touches the machine itself (the login shell, `/etc/shells`, macOS defaults, launchd agents, default-app bindings, the browser router, moshi-hook pairing) is skipped, and the check asserts that it really was skipped.
+So `macos.sh` grew a `--links-only` flag instead: the half of the script that only writes inside `$HOME`. Point `HOME` at a temporary directory, run it, and assert every link. Everything that touches the machine itself (the login shell, `/etc/shells`, macOS defaults, launchd agents, default-app bindings, the browser router) is skipped, and the check asserts that it really was skipped.
 
 That leaves Homebrew, mise's installs, and every system-level step verified only by running the script for real on a Mac. The gap is deliberate and named rather than papered over.
 
