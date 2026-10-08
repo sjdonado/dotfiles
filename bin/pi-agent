@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -eu
+# Leave the package-manager-owned binary intact. Exclude our launcher directories.
+if [ -n "${PI_AGENT_BIN:-}" ]; then
+  if [ "${1:-}" = "--upstream-path" ]; then printf '%s\n' "$PI_AGENT_BIN"; exit 0; fi
+  exec "$PI_AGENT_BIN" "$@"
+fi
+ROOT="${DOTFILES:-$HOME/.config/dotfiles}"
+SELF_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+SEARCH=""
+OLD_IFS="$IFS"
+IFS=:
+for DIR in $PATH; do
+  case "$DIR" in "$SELF_DIR"|"$HOME/.local/bin"|"$ROOT/bin"|"") continue ;; esac
+  SEARCH="${SEARCH:+$SEARCH:}$DIR"
+done
+IFS="$OLD_IFS"
+UPSTREAM="$(PATH="$SEARCH" command -v pi || true)"
+if [ -z "$UPSTREAM" ]; then
+  printf '%s\n' 'Upstream Pi is missing. Install pi-coding-agent or set PI_AGENT_BIN.' >&2
+  exit 1
+fi
+if [ "${1:-}" = "--upstream-path" ]; then printf '%s\n' "$UPSTREAM"; exit 0; fi
+exec "$UPSTREAM" "$@"

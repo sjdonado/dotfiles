@@ -1,0 +1,1 @@
+[{"author":{"login":"maintainer"},"baseRefName":"main","body":"## Why\n\nBlank labels obscure the underlying problem.\n\n## What changed\n\nDescribe the resulting behavior with context.\n\n## Checks\n\nList the commands that passed.\n","headRefName":"fix/labels","number":6,"state":"MERGED","title":"Handle blank labels","url":"https://example.invalid/pull/6"}]

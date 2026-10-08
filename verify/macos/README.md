@@ -9,7 +9,7 @@ It stages a copy of the working tree (no `.git`) in `/tmp`, creates an ephemeral
 
 ## What `--links-only` means
 
-The half of `macos.sh` that only writes inside `$HOME`: directories, symlinks, and generated config. It skips, and says it is skipping, every block that changes the machine: the login shell and `/etc/shells`, macOS `defaults`, app shortcuts, `duti` default-app bindings, the launchd agents, BrowserRouter, herdr plugin linking, and moshi-hook pairing. `--install` is not implied and Homebrew is never invoked.
+The half of `macos.sh` that only writes inside `$HOME`: directories, symlinks, and generated config. It skips, and says it is skipping, every block that changes the machine: the login shell and `/etc/shells`, macOS `defaults`, app shortcuts, `duti` default-app bindings, the launchd agents, BrowserRouter, and herdr plugin linking. `--install` is not implied and Homebrew is never invoked.
 
 The flag exists for this check. A sandboxed run of the whole script would `chsh` a real user and load real launch agents, which is not a test, it is an accident.
 

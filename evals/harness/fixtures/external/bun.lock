@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "cheerio@1.2.0": {
+      "dependencies": {
+        "undici": "^7.19.0"
+      }
+    },
+    "undici@7.29.1": {}
+  }
+}

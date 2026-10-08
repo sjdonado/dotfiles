@@ -14,7 +14,7 @@ usage() { echo "Usage: $0 [--install] [--links-only]"; }
 # --links-only does the half of this script that only writes inside $HOME:
 # directories, symlinks, generated config. It skips everything that changes the
 # machine itself (the login shell, /etc/shells, macOS defaults, launchd agents,
-# default-app bindings, the browser router, moshi-hook pairing) and installs
+# default-app bindings, the browser router) and installs
 # nothing. That is what makes this script testable: verify/macos/run.sh points
 # HOME at a throwaway directory and runs it, which would otherwise mean chsh'ing
 # a real user and loading real launch agents.
@@ -83,6 +83,8 @@ if [ "$INSTALL" = 1 ]; then
     mise bootstrap --only packages,task --yes || log "  some packages or go installs failed; re-run: mise bootstrap --only packages,task"
     log "Installing tools from mise.toml..."
     mise install --yes || log "  some mise tools failed; re-run: mise install"
+    log "Installing the PSS Pi scheme from GitHub..."
+    mise run pss-sync || log "  PSS sync failed; re-run: mise run pss-sync"
     log "Installing agent-browser's Chrome..."
     mise exec -- agent-browser install || log "  agent-browser install failed; re-run: agent-browser install"
   fi
@@ -270,14 +272,6 @@ else
 fi
 
 touch "$PWD/.env"
-
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping moshi-hook pairing (--links-only)."
-else
-  # Homebrew has a launchd service for the daemon, which is the one part of
-  # pairing that differs from Linux.
-  pair_moshi_hook 'brew services start moshi-hook'
-fi
 
 touch "$HOME/.hushlogin"
 

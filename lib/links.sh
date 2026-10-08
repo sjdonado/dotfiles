@@ -88,8 +88,10 @@ link_bat_themes() {
 
 link_fish_config() {
   log "Linking fish config..."
-  mkdir -p "$HOME/.config/fish/functions"
+  mkdir -p "$HOME/.config/fish/functions" "$HOME/.config/fish/conf.d"
   ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
+  link_managed "$PWD/fish/conf.d/opencode-codemode.fish" "$HOME/.config/fish/conf.d/opencode-codemode.fish"
+  link_managed "$PWD/fish/conf.d/pi-harness.fish" "$HOME/.config/fish/conf.d/pi-harness.fish"
   ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
 }
 
@@ -225,45 +227,19 @@ link_agent_configs() {
   [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
   mkdir -p "$HOME/.local/state/opencode"
   link_managed "$PWD/opencode/kv.json" "$HOME/.local/state/opencode/kv.json"
-  # Pi is for harness experiments and bench runs: only the default model and the
-  # shared policy are tracked. Skills reach it through ~/.agents/skills, and pi
-  # owns the rest of ~/.pi/agent (auth.json, sessions, extensions). pi writes
+  # pi opens the Durable host; pi-agent retains the upstream CLI for evals and login.
+  # Skills reach it through ~/.agents/skills; Pi owns auth, sessions and extensions.
+  # Pi writes
   # settings.json itself (lastChangelogVersion on upgrade, defaultModel on
   # /model), so a diff there is pi, not drift. The default "system" theme follows the terminal light/dark.
   link_managed "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
+  link_managed "$PWD/pi/mcp.json" "$HOME/.pi/agent/mcp.json"
+  mkdir -p "$HOME/.pi/agent/extensions/subagent"
+  link_managed "$PWD/pi/subagent-config.json" "$HOME/.pi/agent/extensions/subagent/config.json"
   link_managed "$PWD/agents/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
   # A fixed profile directory, instead of agent-browser's per-launch temp one,
   # is what lets the chrome-devtools MCP find the running browser: Chrome writes
   # its debugging port to DevToolsActivePort there, and `--autoConnect
   # --userDataDir` reads it.
   link_managed "$PWD/agent-browser/config.json" "$HOME/.agent-browser/config.json"
-}
-
-# --- moshi-hook pairing ------------------------------------------------------
-# The device token is a secret, so it lives in the gitignored .env as
-# MOSHI_DEVICE_TOKEN, not here. Pairing is skipped silently when it is unset, so
-# a fresh box still finishes setup; re-run the script after adding it.
-# NOTE: `moshi-hook install` REPLACES ~/.claude/settings.json with a real file,
-# breaking the symlink into this repo, so re-link right after. The hooks it
-# writes are tracked in claude/settings.json, which is why re-linking keeps them
-# instead of dropping them.
-#
-# The caller passes the command that starts the daemon, because that is the one
-# real difference: macOS has `brew services`, and a Coder workspace has no
-# systemd user bus at all, so there it is a bare background process.
-pair_moshi_hook() {
-  have moshi-hook || return 0
-  # shellcheck disable=SC1091
-  [ -f "$PWD/.env" ] && . "$PWD/.env"
-  if [ -z "${MOSHI_DEVICE_TOKEN:-}" ]; then
-    log "MOSHI_DEVICE_TOKEN unset in .env; skipping moshi-hook pairing."
-    return 0
-  fi
-  log "Pairing moshi-hook..."
-  moshi-hook pair --token "$MOSHI_DEVICE_TOKEN" >/dev/null 2>&1 \
-    && moshi-hook install >/dev/null 2>&1 \
-    && link_managed "$PWD/claude/settings.json" "$HOME/.claude/settings.json" \
-    && sh -c "$1" >/dev/null 2>&1 \
-    && log "  moshi-hook paired and running" \
-    || log '  moshi-hook setup failed; run: moshi-hook pair --token <token>'
 }

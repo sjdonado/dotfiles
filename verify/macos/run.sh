@@ -19,8 +19,7 @@
 #
 # Needs sudo once (user create/delete). No other system state is touched:
 # --links-only skips the login shell, /etc/shells, defaults, launchd,
-# default-app bindings, the browser router and moshi-hook pairing, and the
-# check asserts the skipped paths stayed absent.
+# default-app bindings and the browser router. The check asserts the skipped paths stayed absent.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -52,7 +51,7 @@ mkdir -p "$SANDBOX/repo" "$SANDBOX/home" "$SANDBOX/tmp"
 # .git is a worktree pointer file here, not a dir; either way it must not
 # travel. .agent holds local-only proto notes, .fseventsd is volume noise.
 # .env* and .ssh/private.conf are gitignored secrets the check never needs
-# (pairing skips gracefully without a token); the sandbox user must not be
+# (the check needs no private environment values); the sandbox user must not be
 # able to read them. Exclusion lists mirror verify/linux/run.sh; keep both in
 # sync when a new secret-bearing name appears.
 rsync -a --exclude .git --exclude .agent --exclude .fseventsd --exclude .Trashes --exclude .env --exclude '.env.*' --exclude .ssh/private.conf "$ROOT/" "$SANDBOX/repo/"

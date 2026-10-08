@@ -23,7 +23,7 @@ Do not pass the implementation rationale. A verifier that knows why you believe 
 
 1. Resolve the ladder per `AGENTS.md` if it was not handed over: the project's own instructions, else its declared task runner, else the toolchain. Record what was inferred.
 2. Ascend one rung at a time, cheapest first, each green before the next. Re-derive the failure list on every pass; never work from a stale one.
-3. Fix what this change broke. Auto-fix lint and format, rebase when the branch is behind its base, re-run provisioning on an install, cache or port failure, and re-run a flake once before counting it as an attempt, per the do-not-escalate list in `AGENTS.md`.
+3. Fix what this change broke. Load `ponytail` when writing a code fix; diagnosis and contract clarification do not use its ladder. Auto-fix lint and format, rebase when the branch is behind its base, re-run provisioning on an install, cache or port failure, and re-run a flake once before counting it as an attempt, per the do-not-escalate list in `AGENTS.md`.
 4. Stop on a rabbit-hole trip: the same check failing three times under three different fixes, two attempts that produced no new information, a diff growing past roughly three times what the change implied, or a fix that would touch a surface outside the stated intent.
 
 ## What it never does

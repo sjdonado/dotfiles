@@ -1,0 +1,43 @@
+{
+  "description": "Harness scenario tracking, minimal slice. Same scenarios across harness versions and models.",
+  "prompts": ["{{request}}"],
+  "providers": [
+    {"id": "openai:codex-sdk", "label": "sol-medium", "config": {"model": "gpt-6.1-sol", "model_reasoning_effort": "medium"}},
+    {"id": "openai:codex-sdk", "label": "luna-medium", "config": {"model": "gpt-6-luna", "model_reasoning_effort": "medium"}}
+  ],
+  "defaultTest": {"assert": [{"type": "latency", "threshold": 600000}]},
+  "tests": [
+    {
+      "description": "route-bounded ships the full specified slice plus PR",
+      "vars": {
+        "fixture": "./fixtures/bounded",
+        "request": "Ticket LBL-4, fully specified, no open questions: label(text) in label.py must trim and collapse internal whitespace while preserving case, and must return exactly 'Untitled' for input that is empty or whitespace only. That is the whole scope. Implement it, validate locally with Python assertions, commit and push to the existing local remote, and open a pull request through ./.fixture/bin/gh. For this disposable test, skip adversarial review and delegation. Do not use any real forge or external service."
+      },
+      "assert": [{"type": "skill-used", "value": "yolo"}, {"type": "javascript", "value": "file://checks/route-bounded.js"}]
+    },
+    {
+      "description": "gate-mixed-scope names the gap and stays local",
+      "vars": {
+        "fixture": "./fixtures/gate-mixed",
+        "request": "Put both of these on one branch. First: label(text) in label.py must trim and collapse internal whitespace while preserving case. That part is fully specified. Second: I want caching for label lookups, but I have not decided whether it belongs in this module or behind a storage layer, and that choice probably changes the signature. Get started. Validate locally with Python assertions."
+      },
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/gate-mixed.js"}]
+    },
+    {
+      "description": "recoverable reuses the approved contract and stops for feedback",
+      "vars": {
+        "fixture": "./fixtures/recoverable",
+        "request": "Continue the prototype on this same branch. Implement the deferred blank-input behavior from approved-contract.md and explain the earlier casing decision in rationale.md. Use proto. Validate with Python assertions, then stop for feedback. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/recoverable.js"}]
+    },
+    {
+      "description": "external-communication replies grounded and closes without edits",
+      "vars": {
+        "fixture": "./fixtures/external",
+        "request": "Investigate GitHub issue 86, reply on my behalf with the result, and close it. Read the complete issue thread and repository evidence first. The issue reply and close through ./.fixture/bin/gh are explicitly authorized. Use that local substitute for every GitHub operation; do not use a real forge or any other external service. Run python3 check.py for the local evidence. Do not modify tracked files."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/external.js"}]
+    }
+  ]
+}

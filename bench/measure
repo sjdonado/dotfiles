@@ -21,7 +21,7 @@ import tempfile
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scenarios import ARCHIVED_NOTE, CASES, CASE_SECTIONS, CASE_SKILLS, EXPECTED, NOTE, PROMPTS, PUBLICATION, SANDBOX, check, git, seed, snapshot
+from scenarios import ARCHIVED_NOTE, CASES, EXTRA_CASES, CASE_SECTIONS, CASE_SKILLS, EXPECTED, NOTE, PROMPTS, PUBLICATION, SANDBOX, check, git, seed, snapshot
 
 
 def read_note(repo):
@@ -201,6 +201,12 @@ def inputs(case, model, agent="codex", effort="low"):
                (codex_directory / "AGENTS.md", codex_directory / "AGENTS.override.md") if p.is_file()}
     # pi has no sandbox and needs the network for the model, so its manifest says so.
     extra = {} if agent == "codex" else {"agent": agent, "provider": PI_PROVIDER}
+    if agent == "pi":
+        settings_path = ROOT / "pi/settings.json"
+        sources["pi/settings.json"] = hashlib.sha256(settings_path.read_bytes()).hexdigest()
+        managed = json.loads(settings_path.read_text())
+        extra["settings"] = {key: managed[key] for key in ("defaultTools", "codemode")}
+        extra["mcp"] = {"mcpServers": {}}
     sandbox = {"sandbox": SANDBOX.get(case, "workspace-write"), "network_access": False, "ignore_user_config": True} \
         if agent == "codex" else {"sandbox": "none", "network_access": True, "ignore_user_config": True}
     return {"scenario": case, "prompts": PROMPTS[case], "expected": EXPECTED[case], **extra,
@@ -212,7 +218,7 @@ def cli_version(agent="codex", cache={}):
     """Resolve once; verify --behavior must not need the agent CLI installed."""
     if agent not in cache:
         try:
-            cache[agent] = subprocess.check_output([agent, "--version"], text=True).strip()
+            cache[agent] = subprocess.check_output(["pi-agent" if agent == "pi" else agent, "--version"], text=True).strip()
         except (OSError, subprocess.CalledProcessError):
             cache[agent] = None
     return cache[agent]
@@ -312,14 +318,17 @@ def run_case(batch, case, model, trial, provenance):
             # the credential link keeps ~/.pi/agent instructions and settings out, and
             # --no-skills plus the fixture's own skill directory keeps ~/.agents/skills out.
             agent_dir = Path(tempfile.mkdtemp(prefix="pi-agent-"))
+            save(agent_dir / "settings.json", provenance["settings"])
+            save(agent_dir / "mcp.json", provenance["mcp"])
             credential = Path.home() / ".pi/agent/auth.json"
             # pi writes auth.json in place, so a token refresh lands in the real file through
             # the link; its lock lives beside the link, so do not run an interactive pi meanwhile.
             if credential.exists():
                 (agent_dir / "auth.json").symlink_to(credential)
             env["PI_CODING_AGENT_DIR"] = str(agent_dir)
-            command = ["pi", "--mode", "json", "-p", "--no-session", "--offline", "--no-approve",
+            command = ["pi-agent", "--mode", "json", "-p", "--no-session", "--offline", "--no-approve",
                        "--no-extensions", "--no-prompt-templates", "--no-themes", "--no-skills",
+                       "--extension", "builtin:codemode", "--extension", "builtin:mcp",
                        "--provider", PI_PROVIDER, "--model", model, "--thinking", provenance["reasoning_effort"]]
             if (repo / ".agents/skills").is_dir():
                 command += ["--skill", str(repo / ".agents/skills")]
@@ -451,7 +460,7 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     runner = commands.add_parser("run")
     runner.add_argument("--model", default=MODEL)
-    runner.add_argument("--scenario", choices=[case for case in CASES if case not in UNSAFE], default="handoff-v1")
+    runner.add_argument("--scenario", choices=[case for case in CASES + EXTRA_CASES if case not in UNSAFE], default="handoff-v1")
     runner.add_argument("--batch", type=Path, default=BATCH)
     runner.add_argument("--trial", type=int, default=1)
     runner.add_argument("--agent", choices=("codex", "pi"), default="codex")
