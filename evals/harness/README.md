@@ -4,10 +4,10 @@ Minimal declarative regression slice: same four scenarios run against each harne
 
 ## Layout
 
-- `scenarios.json`: scenario source of truth using the existing Promptfoo shape (providers, tests, assertions). Two providers (`sol-medium`, `luna-medium`), four tests, JavaScript artifact checks and a default latency assertion. The runner supports `openai:codex-sdk` entries through Pi's `openai-codex` provider; unknown providers and empty selections fail.
+- `scenarios.json`: scenario source of truth using the existing Promptfoo shape (providers, tests, assertions). Two providers (`sol-medium`, `luna-medium`), four tests, TypeScript artifact checks and a default latency assertion. The runner supports `openai:codex-sdk` entries through Pi's `openai-codex` provider; unknown providers and empty selections fail.
 - `run.ts`: Bun runner with no packages. Copies fixture artifacts, materializes current repository instructions, seed commits them, creates a local bare remote and live forge substitute, spawns isolated `pi-agent --mode json`, and runs artifact checks. `pi-agent` remains the upstream CLI; `pi` now opens the custom Durable harness.
 - `inputs.ts`: copies current `agents/AGENTS.md` and skill trees, appends fixture guidance, and records SHA-256 hashes of these inputs plus the runner, scenario JSON, forge substitute, checks and selected fixture. Obsolete fixture skill copies have been removed; historical run evidence remains intact.
-- `checks/*.js`: artifact assertions shared via `(output, {providerResponse: {metadata: {workingDir, seedHead, workspaceDiff}}})`. Git commit and remote heads, the forge operation log, and posted issue bodies determine publication and closure. Final prose names the unresolved caching decision, checkout location and feedback checkpoint.
+- `checks/*.ts`: artifact assertions shared via `(output, {providerResponse: {metadata: {workingDir, seedHead, workspaceDiff}}})`. Git commit and remote heads, the forge operation log, and posted issue bodies determine publication and closure. Final prose names the unresolved caching decision, checkout location and feedback checkpoint.
 - Bounded work requires a successful `yolo` read, committed and clean `label.py`, validation execution, a matching pushed head before PR creation, and a checkout report naming the fixture path or branch in the same sentence. Mixed scope requires a successful `proto` read, local validation, unchanged branches and no observed publication command. Recoverable work requires grounded rationale, an ignored updated note, validation, no publication, and a stop or acceptance question backed by the saved feedback state.
 
 ## Models
@@ -22,17 +22,9 @@ Free, run anytime:
 bun run.ts --list
 bun run.ts --dry-run
 bun run.ts --dry-run --filter-pattern recoverable
-bun test gh.test.ts
-bun test checks.test.ts
-bun test run.test.ts
-bun test setup.test.ts
-bun test codemode.test.ts
-bun test opencode.test.ts
 python3 -m json.tool scenarios.json >/dev/null
-node --check checks/route-bounded.js && node --check checks/gate-mixed.js && node --check checks/recoverable.js && node --check checks/external.js
+bun build checks/*.ts --outdir /tmp/tscheck-build && rm -rf /tmp/tscheck-build
 ```
-
-From the repository root, run the full local test slice with `bun test evals/harness/*.test.ts`. Select the top-level test files explicitly: retained evidence can contain historical source snapshots ending in `.test.ts`, so recursive discovery would execute those snapshots as tests. New snapshots use `.txt`; old evidence is never rewritten or deleted to fix discovery.
 
 Paid, only when explicitly authorized (recoverable smoke is 2 sessions, full side by side is 8):
 
@@ -50,10 +42,6 @@ Validation evidence comes from successful completed native Bash calls that run t
 ## Native code mode
 
 Both Pi eval paths explicitly load `builtin:codemode` and `builtin:mcp` despite `--no-extensions`. The isolated agent directory receives only managed `defaultTools: ["+codemode"]`, `codemode.mode: "on"` and an empty `mcp.json`. Native read, Bash, edit and write tools remain direct. Do not replace this selection with Pi 1.0.2's CLI `--tools` allowlist: it prevents later-registering MCP tools from becoming callable inside code mode. No live browser, simulator, git-bug or personal-account server is connected by the eval runner. Results record effective settings, the complete command and the managed settings hash. The four paid JSON scenarios and their model settings are unchanged; earlier evidence remains historical, not acceptance of this new configuration.
-
-`bun test codemode.test.ts` runs the installed Pi CLI with a deterministic local provider and a disposable stdio MCP server, without credentials or paid calls. The predeclared assertions require native code mode in the model-facing catalog, no direct fixture MCP tool, successful parent-linked native reads and Bash calls, and two dependent MCP calls through the real agent pipeline. Unique ignored `results-codemode-*` directories retain the prompt, versions, exact inputs, settings, stdout, stderr and verdict, including failures. This proves adapter integration, not model behavior, efficiency or cross-client parity. A fresh paid scenario batch and transcript review remain necessary for behavioral acceptance.
-
-`bun test opencode.test.ts` checks the installed OpenCode v1.18.34 native adapter with the same stdio MCP fixture. Isolated `debug agent build --tool execute` fails with the code-mode flag disabled and executes two dependent MCP calls with it enabled. Unique ignored `results-opencode-*` directories retain the input, fixture, hashes, configuration, commands, version, stdout, stderr and verdict. This path does not invoke an LLM. It verifies native adapter execution, not the model-facing session catalog or interactive permission prompts. The two clients use different interpreters and tool syntax; matching MCP definitions do not establish behavioral parity.
 
 ## Phase continuation
 

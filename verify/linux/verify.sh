@@ -54,7 +54,6 @@ group "system packages"
 for c in git fish mosh python3; do runs "$c"; done
 
 group "linked config"
-linked "$HOME/.config/fish/conf.d/opencode-codemode.fish" "$DOTFILES/fish/conf.d/opencode-codemode.fish"
 linked "$HOME/.config/mise/config.toml" "$DOTFILES/mise.toml"
 # Linked separately from the config, and silently ignored if it is not: mise
 # looks for the lock beside the config it resolved, not in this repository.

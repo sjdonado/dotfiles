@@ -90,8 +90,6 @@ link_fish_config() {
   log "Linking fish config..."
   mkdir -p "$HOME/.config/fish/functions" "$HOME/.config/fish/conf.d"
   ln -snf "$PWD/fish/config.fish" "$HOME/.config/fish/config.fish"
-  link_managed "$PWD/fish/conf.d/opencode-codemode.fish" "$HOME/.config/fish/conf.d/opencode-codemode.fish"
-  link_managed "$PWD/fish/conf.d/pi-harness.fish" "$HOME/.config/fish/conf.d/pi-harness.fish"
   ln -snf "$PWD/fish/functions/"* "$HOME/.config/fish/functions/" 2>/dev/null || true
 }
 
@@ -234,8 +232,6 @@ link_agent_configs() {
   # /model), so a diff there is pi, not drift. The default "system" theme follows the terminal light/dark.
   link_managed "$PWD/pi/settings.json" "$HOME/.pi/agent/settings.json"
   link_managed "$PWD/pi/mcp.json" "$HOME/.pi/agent/mcp.json"
-  mkdir -p "$HOME/.pi/agent/extensions/subagent"
-  link_managed "$PWD/pi/subagent-config.json" "$HOME/.pi/agent/extensions/subagent/config.json"
   link_managed "$PWD/agents/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
   # A fixed profile directory, instead of agent-browser's per-launch temp one,
   # is what lets the chrome-devtools MCP find the running browser: Chrome writes

@@ -46,11 +46,6 @@
 
 
 [env]
-# OpenCode v1's native MCP code mode. Applies to mise exec and tool shims.
-OPENCODE_EXPERIMENTAL_CODE_MODE = "true"
-# Pi background tasks manage processes only; subagents are a separate package.
-PI_BG_FEATURES = "process"
-PI_BG_POSIX_SHELL = "bash"
 
 [tools]
 # `lts` rather than `latest`: node@latest fails to resolve in mise.
@@ -307,9 +302,6 @@ exit $status
 [dotfiles]
 "~/.gitconfig" = { source = "git/.gitconfig", mode = "symlink" }
 "~/.config/fish/config.fish" = { source = "fish/config.fish", mode = "symlink" }
-"~/.config/fish/conf.d/opencode-codemode.fish" = { source = "fish/conf.d/opencode-codemode.fish", mode = "symlink" }
-"~/.config/fish/conf.d/pi-harness.fish" = { source = "fish/conf.d/pi-harness.fish", mode = "symlink" }
-"~/.config/fish/conf.d/pi-background.fish" = { source = "fish/conf.d/pi-background.fish", mode = "symlink" }
 "~/.config/fish/functions" = { source = "fish/functions", mode = "symlink-each" }
 "~/.config/ghostty/config" = { source = "ghostty/config", mode = "symlink" }
 "~/.config/ghostty/themes" = { source = "ghostty/themes", mode = "symlink-each" }

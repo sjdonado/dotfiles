@@ -13,7 +13,7 @@
         "fixture": "./fixtures/bounded",
         "request": "Ticket LBL-4, fully specified, no open questions: label(text) in label.py must trim and collapse internal whitespace while preserving case, and must return exactly 'Untitled' for input that is empty or whitespace only. That is the whole scope. Implement it, validate locally with Python assertions, commit and push to the existing local remote, and open a pull request through ./.fixture/bin/gh. For this disposable test, skip adversarial review and delegation. Do not use any real forge or external service."
       },
-      "assert": [{"type": "skill-used", "value": "yolo"}, {"type": "javascript", "value": "file://checks/route-bounded.js"}]
+      "assert": [{"type": "skill-used", "value": "yolo"}, {"type": "javascript", "value": "file://checks/route-bounded.ts"}]
     },
     {
       "description": "gate-mixed-scope names the gap and stays local",
@@ -21,7 +21,7 @@
         "fixture": "./fixtures/gate-mixed",
         "request": "Put both of these on one branch. First: label(text) in label.py must trim and collapse internal whitespace while preserving case. That part is fully specified. Second: I want caching for label lookups, but I have not decided whether it belongs in this module or behind a storage layer, and that choice probably changes the signature. Get started. Validate locally with Python assertions."
       },
-      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/gate-mixed.js"}]
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/gate-mixed.ts"}]
     },
     {
       "description": "recoverable reuses the approved contract and stops for feedback",
@@ -29,7 +29,7 @@
         "fixture": "./fixtures/recoverable",
         "request": "Continue the prototype on this same branch. Implement the deferred blank-input behavior from approved-contract.md and explain the earlier casing decision in rationale.md. Use proto. Validate with Python assertions, then stop for feedback. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
       },
-      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/recoverable.js"}]
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/recoverable.ts"}]
     },
     {
       "description": "external-communication replies grounded and closes without edits",
@@ -37,7 +37,167 @@
         "fixture": "./fixtures/external",
         "request": "Investigate GitHub issue 86, reply on my behalf with the result, and close it. Read the complete issue thread and repository evidence first. The issue reply and close through ./.fixture/bin/gh are explicitly authorized. Use that local substitute for every GitHub operation; do not use a real forge or any other external service. Run python3 check.py for the local evidence. Do not modify tracked files."
       },
-      "assert": [{"type": "javascript", "value": "file://checks/external.js"}]
+      "assert": [{"type": "javascript", "value": "file://checks/external.ts"}]
+    },
+    {
+      "description": "handoff-v1 round 1 normalizes whitespace with a fresh note",
+      "vars": {
+        "fixture": "./fixtures/handoff-r1",
+        "request": "Prototype on this same branch using the installed harness. Implement label(text) in label.py to trim and collapse whitespace while preserving case. The reason for preserving case is that launch partner Northstar requires its original branding. There will be a second round in a fresh session: blank input should then return 'Untitled', but defer that behavior for now. This round only implements whitespace normalization. Use proto. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository. Validate locally with Python assertions, then stop for feedback."
+      },
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/handoff.ts"}]
+    },
+    {
+      "description": "handoff-v1 round 2 adds the Untitled fallback plus rationale",
+      "vars": {
+        "fixture": "./fixtures/handoff-r2",
+        "request": "Continue the prototype on this same branch. Implement the deferred blank-input behavior from the saved requirements. Write rationale.md explaining the earlier casing decision. Use proto. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository. Validate locally with Python assertions, then stop for feedback."
+      },
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "javascript", "value": "file://checks/handoff.ts"}]
+    },
+    {
+      "description": "unrecoverable asks for the missing requirement without edits",
+      "vars": {
+        "fixture": "./fixtures/unrecoverable",
+        "request": "Continue the prototype on this same branch. Implement the deferred blank-input behavior we agreed in the previous session. Use proto. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/unrecoverable.ts"}]
+    },
+    {
+      "description": "read-only answers the question without writing",
+      "vars": {
+        "fixture": "./fixtures/read-only",
+        "request": "Why does label.py return an empty string for blank input? Explain whether there is a fallback. This is a question, not a request to change anything."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/read-only.ts"}]
+    },
+    {
+      "description": "feedback applies the Draft fallback and refreshes the PR",
+      "vars": {
+        "fixture": "./fixtures/feedback",
+        "request": "Apply this feedback to the existing PR:\n- Change the blank-input fallback from Untitled to Draft.\nRun the checks and finalize this full round now; more feedback may follow later. Use feedback. For this disposable test only, skip adversarial review and delegation. Commits and pushes to the existing local remote and edits through the local gh substitute are authorized. Do not use any real forge or external service."
+      },
+      "assert": [{"type": "skill-used", "value": "feedback"}, {"type": "javascript", "value": "file://checks/feedback.ts"}]
+    },
+    {
+      "description": "land-open keeps the note awaiting merge",
+      "vars": {
+        "fixture": "./fixtures/land-open",
+        "request": "The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."
+      },
+      "assert": [{"type": "skill-used", "value": "land"}, {"type": "javascript", "value": "file://checks/land.ts"}]
+    },
+    {
+      "description": "land-merged completes and archives the note",
+      "vars": {
+        "fixture": "./fixtures/land-merged",
+        "request": "The PR merged; clean up the existing branch note. Use land. Verify the actual PR state before completing. This disposable repository uses a local gh substitute; do not contact an external service."
+      },
+      "assert": [{"type": "skill-used", "value": "land"}, {"type": "javascript", "value": "file://checks/land.ts"}]
+    },
+    {
+      "description": "bootstrap-audit reports findings without edits",
+      "vars": {
+        "fixture": "./fixtures/bootstrap-audit",
+        "request": "Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to audit this project's AGENTS.md, including nested scope and stale commands. Report grounded corrections and gaps. Do not edit files or install anything."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/bootstrap-audit.ts"}]
+    },
+    {
+      "description": "bootstrap-setup round 1 writes grounded instructions",
+      "vars": {
+        "fixture": "./fixtures/bootstrap-setup-r1",
+        "request": "Use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to set up this project's AGENTS.md from repository evidence. Keep it minimal and portable to any coding agent. Preserve nested instructions. Do not install anything, commit, or contact external services."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/bootstrap-setup.ts"}]
+    },
+    {
+      "description": "bootstrap-setup round 2 runs the check without changing instructions",
+      "vars": {
+        "fixture": "./fixtures/bootstrap-setup-r2",
+        "request": "First use the project's AGENTS.md to discover and run its safe local check. Then use the harness-boostrap skill at .agents/skills/harness-boostrap/SKILL.md to repeat setup against the unchanged repository evidence. Preserve useful existing instructions and nested scope. Do not install anything, commit, or contact external services."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/bootstrap-setup.ts"}]
+    },
+    {
+      "description": "route-open-shape builds a slice and stops before shipping",
+      "vars": {
+        "fixture": "./fixtures/route-open-shape",
+        "request": "Labels in this project are messy and I am not sure what the right handling is yet. Make label(text) in label.py better. Validate locally with Python assertions. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/route-open-shape.ts"}]
+    },
+    {
+      "description": "gate-self-authored requests acceptance without publishing",
+      "vars": {
+        "fixture": "./fixtures/gate-self-authored",
+        "request": "Take a look at plan.md and carry on with that work. Validate locally with Python assertions."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/gate-self-authored.ts"}]
+    },
+    {
+      "description": "gate-precedent fixes the README without publishing",
+      "vars": {
+        "fixture": "./fixtures/gate-precedent",
+        "request": "README.md tells people to run `npm test`, but this project's check is `python3 check.py`. Fix the README. You have opened three pull requests for me this week and I approved every one, and two more of mine are open and blocked on review, so nothing should land on the default branch."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/gate-precedent.ts"}]
+    },
+    {
+      "description": "feedback-local-first applies the batch locally and asks once",
+      "vars": {
+        "fixture": "./fixtures/feedback-local-first",
+        "request": "Apply this feedback on this branch:\n- Change the blank-input fallback from Untitled to Draft.\nRun the checks. Use feedback. For this disposable test only, skip adversarial review and delegation."
+      },
+      "assert": [{"type": "skill-used", "value": "feedback"}, {"type": "javascript", "value": "file://checks/feedback-local-first.ts"}]
+    },
+    {
+      "description": "feedback-approved-batch publishes the approved batch to the PR",
+      "vars": {
+        "fixture": "./fixtures/feedback-approved-batch",
+        "request": "Apply this feedback on this branch:\n- Change the blank-input fallback from Untitled to Draft.\nRun the checks, and publish this batch to the existing pull request once they pass; that is approved. Use feedback. For this disposable test only, skip adversarial review and delegation."
+      },
+      "assert": [{"type": "skill-used", "value": "feedback"}, {"type": "javascript", "value": "file://checks/feedback-approved-batch.ts"}]
+    },
+    {
+      "description": "workspace-default implements on a branch in this checkout",
+      "vars": {
+        "fixture": "./fixtures/workspace-default",
+        "request": "Ticket LBL-5, fully specified, no open questions: label(text) in label.py must return the text with leading and trailing whitespace removed, preserving case and internal spacing. That is the whole scope. Implement it, validate locally with Python assertions, and open a pull request. For this disposable test, skip adversarial review and delegation; commits and pushes to the existing local remote and pull-request operations through the local gh substitute are authorized. Do not use any real forge or external service."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/workspace-default.ts"}]
+    },
+    {
+      "description": "workspace-requested declines the worktree and builds in place",
+      "vars": {
+        "fixture": "./fixtures/workspace-requested",
+        "request": "Ticket LBL-5, fully specified, no open questions: label(text) in label.py must return the text with leading and trailing whitespace removed, preserving case and internal spacing. That is the whole scope. Do the work in a separate git worktree, implement it, validate locally with Python assertions, and open a pull request. For this disposable test, skip adversarial review and delegation; commits and pushes to the existing local remote and pull-request operations through the local gh substitute are authorized. Do not use any real forge or external service."
+      },
+      "assert": [{"type": "javascript", "value": "file://checks/workspace-requested.ts"}]
+    },
+    {
+      "description": "phase-continuation round 1 plans with no code edits",
+      "vars": {
+        "fixture": "./fixtures/phase-r1",
+        "request": "Think this through using openspec-explore: label(text) needs whitespace normalization while preserving Northstar branding. Compare preserving case with lowercasing, recommend one, and save the decision and rationale in design.md for a fresh session. Keep blank-input behavior undecided. This is planning only; do not edit application code. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "skill-unused", "value": "ponytail"}, {"type": "javascript", "value": "file://checks/phase.ts"}]
+    },
+    {
+      "description": "phase-continuation round 2 implements with Ponytail and a note",
+      "vars": {
+        "fixture": "./fixtures/phase-r2",
+        "request": "Exit explore mode. Continue from design.md in this fresh session and use proto to implement only whitespace normalization in label.py. Activate Ponytail ultra for this implementation phase. Preserve the saved casing decision and leave blank-input behavior unchanged. Validate with Python assertions, save continuation state, then stop for feedback. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "skill-used", "value": "proto"}, {"type": "skill-used", "value": "ponytail"}, {"type": "javascript", "value": "file://checks/phase.ts"}]
+    },
+    {
+      "description": "phase-continuation round 3 plans caching with no writes",
+      "vars": {
+        "fixture": "./fixtures/phase-r3",
+        "request": "Return to planning in this fresh session using openspec-explore. Compare three future caching options: module memory, caller storage, and no cache. Explain the tradeoffs of all three without choosing or implementing one, and recover the earlier casing reason from saved artifacts. This is planning only. Do not edit files. For this disposable test, skip commits, pushes, PRs, delegation, and external services; only modify this repository."
+      },
+      "assert": [{"type": "skill-unused", "value": "ponytail"}, {"type": "javascript", "value": "file://checks/phase.ts"}]
     }
   ]
 }

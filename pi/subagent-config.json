@@ -1,8 +1,0 @@
-{
-  "defaultSubagentContext": "fresh",
-  "asyncByDefault": false,
-  "globalConcurrencyLimit": 2,
-  "maxSubagentDepth": 1,
-  "toolDescriptionMode": "compact",
-  "scheduledRuns": { "enabled": false }
-}

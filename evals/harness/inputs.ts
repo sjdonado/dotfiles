@@ -3,17 +3,21 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 // Frozen fixture skills are historical evidence, never execution inputs.
-export function materialize(workdir: string, root: string) {
+export const DEFAULT_SKILLS = ["proto", "ponytail", "ask", "feedback", "land", "yolo", "verification", "address-review", "harness-boostrap"];
+export function materialize(workdir: string, root: string, opts: { prepend?: boolean; skills?: string[] } = {}) {
+  const prepend = opts.prepend ?? true, names = opts.skills ?? DEFAULT_SKILLS;
   const hashes: Record<string, string> = {};
   const record = (source: string, target: string, key: string) => {
     const body = readFileSync(source);
     writeFileSync(target, body);
     hashes[key] = createHash("sha256").update(body).digest("hex");
   };
-  const guidance = readFileSync(join(workdir, "AGENTS.md"), "utf8");
-  record(join(root, "agents/AGENTS.md"), join(workdir, "AGENTS.md"), "agents/AGENTS.md");
-  writeFileSync(join(workdir, "AGENTS.md"), readFileSync(join(workdir, "AGENTS.md"), "utf8") + "\n" + guidance);
-  const names = ["proto", "ponytail", "ask", "feedback", "land", "yolo", "verification", "address-review", "harness-boostrap"];
+  if (prepend) {
+    const guidance = readFileSync(join(workdir, "AGENTS.md"), "utf8");
+    record(join(root, "agents/AGENTS.md"), join(workdir, "AGENTS.md"), "agents/AGENTS.md");
+    writeFileSync(join(workdir, "AGENTS.md"), readFileSync(join(workdir, "AGENTS.md"), "utf8") + "\n" + guidance);
+    hashes["materialized/AGENTS.md"] = createHash("sha256").update(readFileSync(join(workdir, "AGENTS.md"))).digest("hex");
+  }
   const walk = (source: string, target: string, key: string) => {
     mkdirSync(target, { recursive: true });
     for (const entry of readdirSync(source, { withFileTypes: true })) {
@@ -22,7 +26,6 @@ export function materialize(workdir: string, root: string) {
     }
   };
   for (const name of names) walk(join(root, "agents/skills", name), join(workdir, ".agents/skills", name), `agents/skills/${name}`);
-  hashes["materialized/AGENTS.md"] = createHash("sha256").update(readFileSync(join(workdir, "AGENTS.md"))).digest("hex");
   return hashes;
 }
 

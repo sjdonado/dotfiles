@@ -1,8 +1,9 @@
 // Bun + JSON, no packages. Only --run starts paid Pi sessions.
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { materialize, sourceHashes } from "./inputs";
+import { materialize, sourceHashes, DEFAULT_SKILLS } from "./inputs";
 
 const ROOT = resolve(import.meta.dir), CONFIG = join(ROOT, "scenarios.json");
 const TIMEOUT_MS = 300_000;
@@ -70,6 +71,10 @@ export async function assertion(a: Assert, output: string, ctx: any, parsed?: Re
     const pass = parsed?.skillRead(a.value) ?? false;
     return { pass, reason: pass ? "successful read executed" : "no successful native SKILL.md read" };
   }
+  if (a.type === "skill-unused" && typeof a.value === "string") {
+    const pass = !(parsed?.skillRead(a.value) ?? false);
+    return { pass, reason: pass ? "no SKILL.md read executed" : "unexpected native SKILL.md read" };
+  }
   if (a.type === "latency" && typeof a.threshold === "number")
     return { pass: wallMs !== undefined && wallMs <= a.threshold, reason: wallMs === undefined ? "latency unknown" : `${wallMs}ms <= ${a.threshold}ms` };
   return { pass: false, reason: `unsupported assertion: ${a.type}` };
@@ -91,7 +96,8 @@ async function runPi(workdir: string, model: string, effort: string, prompt: str
     row.pi = { version: sh(workdir, ["pi-agent", "--version"]).trim(), command: cmd, settings, mcp: { mcpServers: {} },
       settingsSource: "isolated agent directory; managed codemode setting only; no live MCPs or project settings", timeoutMs: TIMEOUT_MS };
     save(join(attempt, "result.json"), row);
-    const env = { ...process.env, PI_CODING_AGENT_DIR: agentDir, PATH: `${join(workdir, ".fixture/bin")}:${process.env.PATH ?? ""}`,
+    const herdrBin = join(workdir, ".fixture/herdr-bin");
+    const env = { ...process.env, PI_CODING_AGENT_DIR: agentDir, PATH: `${join(workdir, ".fixture/bin")}${existsSync(herdrBin) ? `:${herdrBin}` : ""}:${process.env.PATH ?? ""}`,
       GH_HOST: "example.invalid", GH_TOKEN: "fixture-no-real-token", GITHUB_TOKEN: "fixture-no-real-token" };
     const started = Date.now();
     const proc = Bun.spawn(cmd, { cwd: workdir, stdin: "ignore", stdout: "pipe", stderr: "pipe", env });
@@ -142,18 +148,42 @@ export async function main(args = process.argv.slice(2)) {
     save(join(attempt, "result.json"), row);
     try {
       cpSync(join(ROOT, t.vars.fixture), workdir, { recursive: true, filter: path => !path.includes("/.agents/") });
-      row.inputHashes = { ...sourceHashes(ROOT, t.vars.fixture), ...materialize(workdir, resolve(ROOT, "../..")) };
+      const fixtureSrc = join(ROOT, t.vars.fixture);
+      const readList = (name: string) => existsSync(join(fixtureSrc, name))
+        ? readFileSync(join(fixtureSrc, name), "utf8").split("\n").map(s => s.trim()).filter(Boolean) : null;
+      const onlySkills = readList(".skills") ?? (existsSync(join(fixtureSrc, ".portable")) ? ["harness-boostrap"] : DEFAULT_SKILLS);
+      const extraSkills = readList(".extra-skills") ?? [];
+      const skills = [...onlySkills, ...extraSkills];
+      row.inputHashes = { ...sourceHashes(ROOT, t.vars.fixture), ...materialize(workdir, resolve(ROOT, "../.."), { prepend: !existsSync(join(fixtureSrc, ".portable")), skills }) };
       mkdirSync(join(workdir, ".fixture", "bin"), { recursive: true });
       cpSync(join(ROOT, "gh.ts"), join(workdir, ".fixture/bin/gh"));
       chmodSync(join(workdir, ".fixture/bin/gh"), 0o755);
+      if (existsSync(join(workdir, ".fixture/herdr-bin/herdr"))) chmodSync(join(workdir, ".fixture/herdr-bin/herdr"), 0o755);
       for (const cmd of [["init", "-q", "-b", "main"], ["config", "user.name", "Harness probe"],
         ["config", "user.email", "probe@example.invalid"], ["config", "core.hooksPath", "/dev/null"],
-        ["config", "commit.gpgsign", "false"], ["add", "-A"], ["commit", "-qm", "seed"],
-        ["init", "--bare", join(attempt, "origin.git")], ["remote", "add", "origin", join(attempt, "origin.git")],
+        ["config", "commit.gpgsign", "false"], ["add", "-A"], ["commit", "-qm", "seed"]]) sh(workdir, ["git", ...cmd]);
+      const hashFile = (f: string) => createHash("sha256").update(readFileSync(join(workdir, f))).digest("hex");
+      // Bench seeds the branch note after the seed commit, untracked and ignored.
+      // Fold it out of the seed commit so check-ignore and status oracles behave the same.
+      const agentFiles = existsSync(join(workdir, ".agent"))
+        ? sh(workdir, ["git", "ls-files", ".agent"]).split("\n").filter(Boolean) : [];
+      const seedNotes = Object.fromEntries(agentFiles.map(f => [f, hashFile(f)]));
+      if (agentFiles.length) {
+        sh(workdir, ["git", "rm", "-q", "--cached", "--", ...agentFiles]);
+        sh(workdir, ["git", "commit", "-qm", "seed", "--amend", "--no-edit"]);
+      }
+      for (const cmd of [["init", "--bare", join(attempt, "origin.git")], ["remote", "add", "origin", join(attempt, "origin.git")],
         ["push", "-u", "origin", "main"]]) sh(workdir, ["git", ...cmd]);
       row.seedHead = sh(workdir, ["git", "rev-parse", "HEAD"]).trim();
       row.seedBranch = sh(workdir, ["git", "branch", "--show-current"]).trim();
       row.seedBranches = sh(workdir, ["git", "for-each-ref", "--format=%(refname)", "refs/heads"]).trim();
+      if (existsSync(join(workdir, ".agent"))) {
+        const exclude = sh(workdir, ["git", "rev-parse", "--git-path", "info/exclude"]).trim();
+        appendFileSync(exclude.startsWith("/") ? exclude : join(workdir, exclude), "\n/.agent/\n");
+      }
+      row.seedFiles = Object.fromEntries(sh(workdir, ["git", "ls-files"]).split("\n").filter(Boolean).map(f =>
+        [f, hashFile(f)]));
+      Object.assign(row.seedFiles, seedNotes);
       save(join(attempt, "result.json"), row);
       const parsed = paid ? await runPi(workdir, row.model, row.thinking, t.vars.request, attempt, row) : undefined;
       row.output = parsed?.text ?? ""; row.usage = parsed?.usage ?? null; row.tools = parsed?.tools ?? []; row.commands = parsed?.commands ?? [];
@@ -161,7 +191,7 @@ export async function main(args = process.argv.slice(2)) {
       row.providerErrors = parsed?.errors ?? [];
       if (paid && (row.exitCode !== 0 || parsed?.error)) throw new Error(parsed?.error || `pi exit ${row.exitCode}`);
       const ctx = { providerResponse: { metadata: { workingDir: workdir, seedHead: row.seedHead,
-        seedBranch: row.seedBranch, seedBranches: row.seedBranches, commands: row.commands, successfulCommands: row.successfulCommands,
+        seedBranch: row.seedBranch, seedBranches: row.seedBranches, seedFiles: row.seedFiles, commands: row.commands, successfulCommands: row.successfulCommands,
         workspaceDiff: sh(workdir, ["git", "diff", "HEAD"]) } } };
       for (const a of [...(cfg.defaultTest?.assert ?? []), ...t.assert])
         row.assertions.push({ ...a, ...await assertion(a, row.output, ctx, parsed, row.wallMs) });

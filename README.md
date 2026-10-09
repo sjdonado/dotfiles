@@ -39,9 +39,7 @@ opencode mcp add
 
 OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI models and Claude Code for Anthropic models. See `agents/README.md` for harness details.
 
-OpenCode v1.18.34 uses its built-in `execute` adapter for MCP code mode, enabled with `OPENCODE_EXPERIMENTAL_CODE_MODE=true` in both mise and the default Fish shell. Native file and shell tools remain direct. Start a new Fish shell, use `mise exec -- opencode`, or set the flag explicitly when launching a Homebrew binary from another shell. Existing sessions must restart to pick up the flag. This is an experimental native feature, not an extra plugin: https://github.com/anomalyco/opencode/blob/v1.18.34/packages/opencode/src/effect/runtime-flags.ts .
-
-`pss` opens the PSS Pi harness scheme from its own repository at `~/Developer/pi-skin-sjdonado` (https://github.com/sjdonado/pi-skin-sjdonado); `pi` stays the upstream Pi CLI and `pi-agent` retains it for login and evals. The custom host reuses subscription auth, shared instructions/skills and the same developer MCP servers as OpenCode, exposed through code mode. It includes Durable child conversations and supervised background processes. See `pi/README.md` for setup, commands and prototype limitations. Provisioning clones or updates the checkout via `mise run pi-sync` (GitHub source, Bun install, launcher link). The shared installer links configuration on both platforms; upstream Pi installation remains macOS-only. Paid evals use isolated settings and empty MCP inputs instead of live servers.
+`pss` opens the PSS Pi harness scheme from its own repository at `~/Developer/pi-skin-sjdonado` (https://github.com/sjdonado/pi-skin-sjdonado); `pi` stays the upstream Pi CLI and `pi-agent` retains it for login and evals.
 
 In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
