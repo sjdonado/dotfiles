@@ -20,28 +20,26 @@
 
 `[bootstrap.packages]` is wired on macOS: `./macos.sh --install` runs `mise bootstrap --only packages,task`, which installs every formula and cask and then the go installs in `[tasks.bootstrap]`. There is no Brewfile. The apt entries and `[dotfiles]` are still advisory: linux.sh and lib/links.sh provision those themselves, so editing one side without the other drifts them apart.
 
-On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it, so nothing here touches `PATH`. On Linux the setup script puts `~/.local/share/mise/shims` on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
+On macOS, Homebrew installs mise and its fish `vendor_conf.d` activates it. The fish configuration also puts mise shims first so a legacy curl or Homebrew binary cannot override a managed tool. On Linux the setup script puts `~/.local/share/mise/shims` first on `PATH` instead of using `mise activate`, because shims work in any shell without a hook, which is what herdr's non-login panes get.
 
 A machine provisioned before this still has the Homebrew copies of the tools mise took over (bat, node, fd, fzf, ripgrep, uv, worktrunk, lazygit, pnpm, bun, neovim, opencode, codex). The mise versions shadow them, so nothing breaks; clear them when convenient with `brew uninstall` for each.
 
 ### Agent harness
 
-Claude Code, Codex, and OpenCode share skills and global instructions from `agents/`. Run the platform setup script to link them into all three harnesses.
+OpenCode v2 is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the platform setup scripts link the managed configuration into each harness.
 
-Authenticate providers and configure MCP servers manually:
+Authenticate OpenCode's provider with `/connect` or the CLI. The four configured MCP servers start automatically; authenticate any server that requires it:
 
 ```sh
-claude
-codex login
 opencode auth login
-opencode mcp add
+opencode mcp auth <server>
 ```
 
-OpenCode defaults to Gemini 3.8 Flash through OpenCode Zen. Use Codex for OpenAI models and Claude Code for Anthropic models. See `agents/README.md` for harness details.
+OpenCode v2 defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and all four MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
 
-`pss` opens the PSS Pi harness scheme from its own repository at `~/Developer/pi-skin-sjdonado` (https://github.com/sjdonado/pi-skin-sjdonado); `pi` stays the upstream Pi CLI and `pi-agent` retains it for login and evals.
+Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
 
-In Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
+When experimenting with Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
 ### Text editor
 
@@ -49,7 +47,7 @@ Neovim, configured from `nvim/`, with the whole directory linked into `~/.config
 
 - `prefix+e` toggles nvim as an overlay over the active pane: it opens on the first press and closes on the next, and closing restores the focus and zoom it covered. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free, and right-clicks inside the overlay reach the editor rather than herdr's pane menu.
 - `prefix+l` toggles git-bug's termui the same way (macOS only: git-bug comes from `[bootstrap.packages]`). It refuses, with a message, outside a git repository or when no git-bug identity is active, so its first-run prompt never creates a stray identity; closing it frees git-bug's repository lock. herdr's `focus_pane_right` moves to `prefix+ctrl+l` (`prefix+shift+l` stays `swap_pane_right`).
-- Agents drive a browser through agent-browser, https://github.com/vercel-labs/agent-browser. It comes from `mise.toml`, and the installers download the Chrome it drives with `agent-browser install`. `agent-browser/config.json` gives that Chrome a fixed profile directory, `~/.agent-browser/profile`, so the `chrome-devtools` MCP server can attach to the running browser for heap snapshots and performance traces instead of launching its own. That profile persists cookies and logins across agent sessions, unlike a per-launch temporary one. `opencode/opencode.json` registers both servers. Claude Code and Codex keep MCP servers in their own untracked config, so remove the old `browser` server there (`claude mcp remove -s user browser`, `codex mcp remove browser`) and register both once, with `claude mcp add -s user` and `codex mcp add` followed by the same arguments: `agent-browser -- agent-browser mcp`, and `chrome-devtools -- npx -y chrome-devtools-mcp@latest --autoConnect --userDataDir ~/.agent-browser/profile --no-usage-statistics --no-performance-crux`.
+- OpenCode drives a browser through agent-browser, https://github.com/vercel-labs/agent-browser. It comes from `mise.toml`, and the installers download the Chrome it drives with `agent-browser install`. `agent-browser/config.json` gives that Chrome a fixed profile directory, `~/.agent-browser/profile`, so the `chrome-devtools` MCP server can attach to the running browser for heap snapshots and performance traces instead of launching its own. That profile persists cookies and logins across agent sessions, unlike a per-launch temporary one. `opencode/opencode.json` registers both servers. For experiments with Claude Code or Codex, MCP registrations live in their own untracked config. If needed, remove the old `browser` server there (`claude mcp remove -s user browser`, `codex mcp remove browser`) and register both once, with `claude mcp add -s user` and `codex mcp add` followed by the same arguments: `agent-browser -- agent-browser mcp`, and `chrome-devtools -- npx -y chrome-devtools-mcp@latest --autoConnect --userDataDir ~/.agent-browser/profile --no-usage-statistics --no-performance-crux`.
 - Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. `:MasonToolsSync` installs the language servers and formatters the config declares.
 - Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `lazygit` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating window over the editor. It comes from `mise.toml` with the other cross-platform tools. There is no separate lazygit panel.
 - Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.
@@ -71,6 +69,8 @@ open ~/Applications/BrowserRouter.app
 
 Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-09-11. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them. The Neovim rows were re-measured on 2026-09-16, when it came back as the editor.
 
+These measurements predate the OpenCode v2 migration. The OpenCode figures describe v1, not the current shared-server setup.
+
 Resident memory per process, ranges across the instances that happened to be running (`ps -Ao rss,comm`; use `args` instead of `comm` to tell a herdr server from its client):
 
 | process | RSS |
@@ -79,11 +79,11 @@ Resident memory per process, ranges across the instances that happened to be run
 | `herdr`, server and client together | 14-30 MB each, 44 MB for the pair |
 | `nvim` | ~30 MB per tab |
 | `claude` | 217-479 MB each, ~280 MB typical |
-| `opencode` | 217 MB, one process per TUI |
+| `opencode` v1 | 217 MB, one process per TUI |
 | `codex` | not measured; its TUI would not stay resident long enough to sample, and no session was running |
 | `wt` | none, it exits |
 
-So the terminal plus the multiplexer is about 98 MB, and an editor adds roughly 30 MB per open tab. An agent is one to two orders of magnitude heavier than any tool it drives, and sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them.
+In that measurement, the terminal plus the multiplexer used about 98 MB, and an editor added roughly 30 MB per open tab. Sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them. This is a historical comparison, not the current OpenCode-only workflow.
 
 On-disk, measured after `brew cleanup`, so each formula holds one version:
 
@@ -94,7 +94,7 @@ On-disk, measured after `brew cleanup`, so each formula holds one version:
 | worktrunk | 22 MB |
 | lazygit | 18 MB |
 | codex | 272 MB |
-| opencode | 137 MB |
+| opencode v1 | 137 MB |
 | claude | 310 MB per version, more as legacy releases pile up |
 | `~/.claude` (transcripts, skills, history) | 1.7 GB |
 | `~/.local/share/opencode` | 1.7 GB |

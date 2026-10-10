@@ -82,6 +82,13 @@ if [ "$SHELL_ONLY" = 1 ]; then
 fi
 
 echo "==> first run: linux.sh --install"
+echo "==> seeding legacy owned PATH blocks and a conflicting local binary"
+run 'for rc in ~/.profile ~/.zshenv ~/.bashrc ~/.zshrc; do
+  cat ~/.config/dotfiles/verify/path/legacy-env.sh >> "$rc"
+done
+mkdir -p ~/.local/bin
+cp ~/.config/dotfiles/verify/path/legacy-opencode.sh ~/.local/bin/opencode
+chmod +x ~/.local/bin/opencode'
 time run '~/.config/dotfiles/linux.sh --install'
 
 echo "==> verifying"

@@ -15,7 +15,7 @@ group() { printf '\n== %s\n' "$1"; }
 runs() {
   # A tool counts as installed only if it runs: an npm wrapper whose postinstall
   # never happened is on PATH and still broken, which is exactly the failure
-  # that kept claude and opencode out of mise.toml.
+  # that requires an explicit build-script approval for OpenCode v2.
   local cmd=$1 out
   if ! command -v "$cmd" >/dev/null 2>&1; then bad "$cmd not on PATH"; return; fi
   if out=$("$cmd" --version 2>&1) && [ -n "$out" ]; then
@@ -36,6 +36,11 @@ linked() {
 
 group "tools from mise.toml"
 for c in mise rg fd bat fzf jq bun pnpm uv node codex openspec agent-browser nvim tree-sitter lazygit wt opencode; do runs "$c"; done
+if opencode --version 2>/dev/null | grep -q '^opencode v2\.'; then
+  ok "OpenCode is v2"
+else
+  bad "OpenCode is not v2"
+fi
 
 group "agent-browser's Chrome"
 # Chrome for Testing has no Linux ARM64 build, so there the download is expected to fail.
@@ -69,7 +74,12 @@ linked "$HOME/.claude/skills"           "$DOTFILES/agents/skills"
 linked "$HOME/.claude/CLAUDE.md"        "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
-linked "$HOME/.config/opencode/pty.md" "$DOTFILES/opencode/pty.md"
+linked "$HOME/.config/opencode/cli.json" "$DOTFILES/opencode/cli.json"
+if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ] && [ -f "$HOME/.config/opencode/plugins/herdr-agent-state.js" ] && jq -e '.plugins | index("./herdr-opencode") != null' "$HOME/.config/opencode/cli.json" >/dev/null; then
+  ok "Herdr's generated v2 client and server integration are installed"
+else
+  bad "Herdr's OpenCode integration is incomplete"
+fi
 linked "$HOME/.pi/agent/settings.json" "$DOTFILES/pi/settings.json"
 linked "$HOME/.pi/agent/AGENTS.md"     "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.agent-browser/config.json" "$DOTFILES/agent-browser/config.json"
@@ -80,6 +90,13 @@ linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
 for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
 
 group "non-interactive shells resolve the tools"
+for rc in "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc"; do
+  if grep -Fxq 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"' "$rc" && ! grep -Fxq 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' "$rc"; then
+    ok "${rc##*/} migrates the owned legacy PATH block"
+  else
+    bad "${rc##*/} still has an unmigrated owned PATH block"
+  fi
+done
 # The reason shims are used instead of `mise activate`: this is the shell an
 # agent hook or a herdr pane gets, and it sources no rc file at all.
 for c in rg nvim wt codex claude; do

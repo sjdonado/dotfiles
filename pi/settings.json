@@ -1,14 +1,22 @@
 {
-	"defaultProvider": "openai",
-	"defaultModel": "gpt-6-luna",
-	"defaultThinkingLevel": "medium",
-	"enabledModels": ["openai/gpt-6.1-sol", "openai/gpt-6-luna"],
-	"defaultTools": ["+codemode"],
-	"codemode": {
-		"mode": "on"
-	},
-	"quietStartup": true,
-	"lastChangelogVersion": "1.0.2",
-	"deviceId": "64cb139b-04e6-430e-a801-d348f9855fb9",
-	"packages": []
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-6-luna",
+  "defaultThinkingLevel": "medium",
+  "enabledModels": [
+    "openai/gpt-6.1-sol",
+    "openai/gpt-6-luna"
+  ],
+  "defaultTools": [
+    "+codemode"
+  ],
+  "codemode": {
+    "mode": "on"
+  },
+  "quietStartup": true,
+  "lastChangelogVersion": "1.1.0",
+  "deviceId": "64cb139b-04e6-430e-a801-d348f9855fb9",
+  "packages": [
+    "npm:pi-web-search",
+    "npm:@monotykamary/pi-better-openai"
+  ]
 }

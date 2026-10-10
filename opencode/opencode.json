@@ -1,39 +1,44 @@
 {
 	"$schema": "https://opencode.ai/config.json",
-	"autoupdate": true,
-	"model": "opencode-go/deepseek-v4.1-flash",
-	"plugin": ["opencode-pty"],
-	"instructions": ["./pty.md"],
-	"experimental": {
-		"disable_paste_summary": true
-	},
-	"permission": {
-		"external_directory": "allow",
-		"bash": {
-			"opencode *": "deny",
-			"*/opencode *": "deny"
-		}
-	},
+	"update": "disable",
+	"model": "openai/gpt-6.1-sol",
+	"lsp": false,
+	"formatter": false,
+	"snapshots": false,
+	"permissions": [
+		{ "action": "external_directory", "resource": "*", "effect": "allow" },
+		{ "action": "execute", "resource": "*", "effect": "allow" },
+		{ "action": "shell", "resource": "opencode *", "effect": "deny" },
+		{ "action": "shell", "resource": "*/opencode *", "effect": "deny" },
+		{ "action": "shell", "resource": "opencode2 *", "effect": "deny" },
+		{ "action": "shell", "resource": "*/opencode2 *", "effect": "deny" }
+	],
 	"mcp": {
-		"agent-browser": {
-			"type": "local",
-			"command": ["agent-browser", "mcp"],
-			"enabled": true
-		},
-		"chrome-devtools": {
-			"type": "local",
-			"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--autoConnect", "--userDataDir", "{env:HOME}/.agent-browser/profile", "--no-usage-statistics", "--no-performance-crux"],
-			"enabled": true
-		},
-		"ios-simulator": {
-			"type": "local",
-			"command": ["npx", "-y", "ios-simulator-mcp"],
-			"enabled": true
-		},
-		"git-bug": {
-			"type": "local",
-			"command": ["bun", "run", "{env:HOME}/.config/dotfiles/git-bug-mcp/index.ts"],
-			"enabled": true
+		"servers": {
+			"agent-browser": {
+				"type": "local",
+				"command": ["agent-browser", "mcp"],
+				"disabled": false,
+				"codemode": true
+			},
+			"chrome-devtools": {
+				"type": "local",
+				"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--autoConnect", "--userDataDir", "{env:HOME}/.agent-browser/profile", "--no-usage-statistics", "--no-performance-crux"],
+				"disabled": false,
+				"codemode": true
+			},
+			"ios-simulator": {
+				"type": "local",
+				"command": ["npx", "-y", "ios-simulator-mcp"],
+				"disabled": false,
+				"codemode": true
+			},
+			"git-bug": {
+				"type": "local",
+				"command": ["bun", "run", "{env:HOME}/.config/dotfiles/git-bug-mcp/index.ts"],
+				"disabled": false,
+				"codemode": true
+			}
 		}
 	}
 }

@@ -14,12 +14,8 @@
 #   claude    the npm package is a wrapper that fetches a native binary from a
 #             postinstall script; mise does not run those, so `claude --version`
 #             fails with "claude native binary not installed".
-#   opencode  the npm package has the same problem, but its GitHub release does
-#             not: `github:anomalyco/opencode` installs a working binary, and
-#             unlike the official installer it can authenticate, so it does not
-#             fail on a box that has spent the hour's 60 anonymous API calls.
 #   herdr     ships from its own CDN behind herdr.dev/latest.json, no GitHub release.
-# Those three keep their official installers. fish and mosh stay with the system
+# Those two keep their official installers. fish and mosh stay with the system
 # package manager: they are the login environment, not project tooling.
 #
 # Versions are pinned by mise.lock, which is tracked next to this file. It holds
@@ -60,14 +56,13 @@ bat = "latest"
 fzf = "latest"
 jq = "latest"
 
-# The editor, the git TUI, the agent, and the worktree tool, all straight from
+# The editor, the git TUI, and the worktree tool, all straight from
 # their GitHub releases. worktrunk's binary is named `wt`, which the backend
 # cannot guess from the repo name. These `github:` entries are the ones that spend
 # GitHub API calls, so a box behind a shared IP wants GITHUB_TOKEN set before a
 # lockless first resolve.
 "github:jesseduffield/lazygit" = "latest"
 "github:neovim/neovim" = "latest"
-"github:anomalyco/opencode" = "latest"
 "github:max-sixty/worktrunk" = { version = "latest", exe = "wt" }
 
 # nvim-treesitter falls back to this CLI to build a parser the platform has no
@@ -75,9 +70,9 @@ jq = "latest"
 # parsers on both platforms.
 tree-sitter = "latest"
 
-# `opencode upgrade` writes into mise's install directory rather than going
-# through mise, so after a self-upgrade the version mise reports is stale until
-# the next `mise install`. Harmless, but that is why it happens.
+# OpenCode v2 ships as @opencode/cli. Its postinstall selects the native binary;
+# mise must allow that script or the installed launcher cannot run.
+"npm:@opencode/cli" = { version = "2.0.26", allow_builds = ["@opencode/cli"] }
 
 # npm-backed CLIs that work without a postinstall step.
 "npm:@openai/codex" = "latest"
@@ -320,7 +315,7 @@ exit $status
 "~/.agents/skills" = { source = "agents/skills", mode = "symlink" }
 "~/.codex/AGENTS.md" = { source = "agents/AGENTS.md", mode = "symlink" }
 "~/.config/opencode/opencode.json" = { source = "opencode/opencode.json", mode = "symlink" }
-"~/.config/opencode/tui.json" = { source = "opencode/tui.json", mode = "symlink" }
+"~/.config/opencode/cli.json" = { source = "opencode/cli.json", mode = "symlink" }
 "~/.config/opencode/AGENTS.md" = { source = "opencode/AGENTS.md", mode = "symlink" }
 "~/.local/state/opencode/kv.json" = { source = "opencode/kv.json", mode = "symlink" }
 "~/.pi/agent/settings.json" = { source = "pi/settings.json", mode = "symlink" }
@@ -329,7 +324,7 @@ exit $status
 # The shell-rc blocks linux.sh appends behind grep guards, as edit entries.
 # Same content, same files; apply is idempotent by construction (markers), so
 # the "second run doubles nothing" check becomes a property of the tool.
-"~/.profile/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
-"~/.zshenv/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
-"~/.bashrc/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
-"~/.zshrc/tools-on-path" = { block = 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' }
+"~/.profile/tools-on-path" = { block = 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"' }
+"~/.zshenv/tools-on-path" = { block = 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"' }
+"~/.bashrc/tools-on-path" = { block = 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"' }
+"~/.zshrc/tools-on-path" = { block = 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"' }

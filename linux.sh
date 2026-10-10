@@ -51,6 +51,8 @@ mkdir -p "$BIN" "$HOME/.config"
 for d in "$BIN" "$SHIMS" "$HOME/.opencode/bin"; do
   case ":$PATH:" in *":$d:"*) ;; *) PATH="$d:$PATH" ;; esac
 done
+# Mise must win even when a legacy curl install was already first on PATH.
+case "$PATH" in "$SHIMS":*) ;; *) PATH="$SHIMS:$PATH" ;; esac
 export PATH
 rescan() { hash -r 2>/dev/null || true; }
 
@@ -154,11 +156,14 @@ SHELL_RCS="$HOME/.bashrc $HOME/.zshrc"
 
 for F in $SHELL_ENVS $SHELL_RCS; do
   [ -e "$F" ] || touch "$F"
+  if grep -q 'dotfiles: tools on PATH' "$F" && grep -Fxq 'export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"' "$F"; then
+    sed -i 's|^export PATH="\$HOME/\.local/bin:\$HOME/\.local/share/mise/shims:\$HOME/\.opencode/bin:\$PATH"$|export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"|' "$F"
+  fi
   grep -q 'dotfiles: tools on PATH' "$F" || cat >> "$F" <<'EOF'
 
 # dotfiles: tools on PATH. Shims rather than `mise activate`: a shim is a plain
 # executable, so it resolves in non-interactive shells too.
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 EOF
 done
 
@@ -223,11 +228,10 @@ cat <<'NOTE'
 
 MANUAL STEPS (sensitive — not scripted):
 
-  1. Authenticate the coding harnesses:
-       claude
-       codex login
+  1. Authenticate OpenCode and its configured MCP servers:
        opencode auth login
-     Add MCP servers separately with Claude Code and `opencode mcp add`.
+       opencode mcp auth <server>
+     Claude Code, Codex, and Pi are also installed for experiments.
 
   2. Secrets / env (only if your workflow needs them):
        - Copy any private .env values by hand.

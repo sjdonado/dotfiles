@@ -9,6 +9,8 @@ Both provisioning scripts are checked by running them, from scratch, somewhere d
 
 Each has its own README with what it asserts and what it cannot.
 
+For OpenCode migration regressions, run `python3 verify/path/check.py` to check bootstrap and persistent-shell PATH precedence against conflicting v1 binaries, and `bash verify/links/check.sh` to check owned-link cleanup, preservation of local files, and guarded Herdr installation in a disposable HOME. The Linux container runner also seeds old owned PATH blocks and a conflicting local binary before provisioning, then asserts their migration on both passes.
+
 ## Why the two are not symmetrical
 
 Linux containerises, so the Linux check is the real thing: bare Ubuntu, no tooling, `linux.sh --install` installs everything, and the assertions run against a box that did not exist a minute earlier.

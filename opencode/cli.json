@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/v2/cli.json",
+  "plugins": ["./herdr-opencode"],
+  "theme": { "name": "opencode", "mode": "system" },
+  "animations": true,
+  "prompt": { "paste": "full", "image_preview": false },
+  "session": { "sidebar": "hide", "scrollbar": false, "thinking": "show", "image_preview": false },
+  "tabs": { "mode": "off" },
+  "diffs": { "wrap": "word" }
+}
