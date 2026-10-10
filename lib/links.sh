@@ -214,11 +214,16 @@ link_agent_configs() {
   DOTFILES="$PWD" "$PWD/bin/codex-config" apply >/dev/null \
     || log "  codex-config apply failed; ~/.codex/config.toml left as it was"
   link_managed "$PWD/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
-  # pty.md holds opencode's PTY-session instructions for long-running commands.
-  link_managed "$PWD/opencode/pty.md" "$HOME/.config/opencode/pty.md"
-  # Separate file by design: opencode deprecated theme/keybinds/tui keys inside
-  # opencode.json, and this file has its own schema.
-  link_managed "$PWD/opencode/tui.json" "$HOME/.config/opencode/tui.json"
+  # V2 owns background shell jobs and interactive Terminals without a PTY plugin.
+  for obsolete in pty.md pty-v2; do
+    [ "$(readlink "$HOME/.config/opencode/$obsolete" 2>/dev/null || true)" = "$PWD/opencode/$obsolete" ] && unlink "$HOME/.config/opencode/$obsolete" || true
+  done
+  # V2 stores terminal settings in cli.json. Remove only the legacy link we own.
+  [ "$(readlink "$HOME/.config/opencode/tui.json" 2>/dev/null || true)" = "$PWD/opencode/tui.json" ] && unlink "$HOME/.config/opencode/tui.json" || true
+  link_managed "$PWD/opencode/cli.json" "$HOME/.config/opencode/cli.json"
+  if [ "${INSTALL:-0}" = 1 ] && have herdr; then
+    herdr integration install opencode || log "  Herdr integration failed; re-run: herdr integration install opencode"
+  fi
   link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
   [ "$(readlink "$HOME/.claude/commands" 2>/dev/null || true)" = "$PWD/agents/commands" ] && unlink "$HOME/.claude/commands" || true
   [ "$(readlink "$HOME/.config/opencode/commands" 2>/dev/null || true)" = "$PWD/opencode/commands" ] && unlink "$HOME/.config/opencode/commands" || true

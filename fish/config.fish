@@ -46,7 +46,6 @@ else
 end
 
 fish_add_path "$HOME/.local/bin"
-fish_add_path "$HOME/.local/share/mise/shims"
 fish_add_path "$HOME/.opencode/bin"
 fish_add_path /opt/homebrew/bin
 fish_add_path /opt/homebrew/sbin
@@ -55,6 +54,8 @@ fish_add_path "$HOME/.bun/bin"
 fish_add_path "$PNPM_HOME"
 fish_add_path "$HOME/go/bin"
 fish_add_path "$HOME/Library/Android/sdk/platform-tools"
+# Move existing shims too, so legacy curl and Homebrew binaries cannot win.
+fish_add_path --path --move --prepend "$HOME/.local/share/mise/shims"
 
 # Aliases
 alias python=/usr/bin/python3

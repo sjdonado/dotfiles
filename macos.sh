@@ -66,7 +66,7 @@ log "Creating base directories..."
 mkdir -p "$HOME/.config" "$HOME/.ssh" "$HOME/.docker" \
   "$HOME/Library/Keyboard Layouts" "$HOME/.config/ghostty/themes"
 # mise's shims directory carries every tool in mise.toml.
-PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$HOME/.opencode/bin:$PATH"
+PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
 export PATH
 
 link_local_bin
