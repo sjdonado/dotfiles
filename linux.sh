@@ -194,6 +194,7 @@ link_git_config
 link_bat_themes
 link_fish_config
 link_nvim_config
+link_zed_config
 prune_stale_links "$HOME/.config/lazygit/config.yml"
 link_herdr_config
 link_worktrunk_config

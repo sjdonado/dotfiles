@@ -23,10 +23,7 @@
 	"permissions": [
 		{ "action": "external_directory", "resource": "*", "effect": "allow" },
 		{ "action": "execute", "resource": "*", "effect": "allow" },
-		{ "action": "shell", "resource": "opencode *", "effect": "deny" },
-		{ "action": "shell", "resource": "*/opencode *", "effect": "deny" },
-		{ "action": "shell", "resource": "opencode2 *", "effect": "deny" },
-		{ "action": "shell", "resource": "*/opencode2 *", "effect": "deny" }
+		{ "action": "shell", "resource": "*", "effect": "ask" }
 	],
 	"mcp": {
 		"servers": {

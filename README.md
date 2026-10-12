@@ -26,7 +26,7 @@ A machine provisioned before this still has the Homebrew copies of the tools mis
 
 ### Agent harness
 
-OpenCode v2 is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the platform setup scripts link the managed configuration into each harness.
+OpenCode is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the platform setup scripts link the managed configuration into each harness.
 
 Authenticate OpenCode's provider with `/connect` or the CLI. The four configured MCP servers start automatically; authenticate any server that requires it:
 
@@ -35,7 +35,7 @@ opencode auth login
 opencode mcp auth <server>
 ```
 
-OpenCode v2 defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and all four MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
+OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and all four MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
 
 Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
 
@@ -67,57 +67,55 @@ open ~/Applications/BrowserRouter.app
 
 ### Footprint
 
-Measured on an Apple M5 with 32 GB of RAM, macOS 25.5, on 2026-09-11. Numbers are resident memory (RSS) and on-disk size, not virtual size. Reproduce them with the commands under each table; they are worth re-measuring rather than trusting, since every version bump moves them. The Neovim rows were re-measured on 2026-09-16, when it came back as the editor.
+Snapshot taken on an Apple M5 with 32 GiB of RAM and macOS 27.0.1 on 2026-10-10 at 10:51 UTC using OpenCode 2.0.26. These are historical measurements, not a benchmark of the newer pinned version. Memory values are resident memory (RSS), not virtual memory or peak usage. OpenCode processes were identified by their executable paths inside the current mise installation. Experimental agents are excluded from these tables.
 
-These measurements predate the OpenCode v2 migration. The OpenCode figures describe v1, not the current shared-server setup.
-
-Resident memory per process, ranges across the instances that happened to be running (`ps -Ao rss,comm`; use `args` instead of `comm` to tell a herdr server from its client):
-
-| process | RSS |
+| process | RSS at the snapshot |
 | ----------------- | -------------------------------- |
-| Ghostty | 54 MB |
-| `herdr`, server and client together | 14-30 MB each, 44 MB for the pair |
-| `nvim` | ~30 MB per tab |
-| `claude` | 217-479 MB each, ~280 MB typical |
-| `opencode` v1 | 217 MB, one process per TUI |
-| `codex` | not measured; its TUI would not stay resident long enough to sample, and no session was running |
-| `wt` | none, it exits |
+| Ghostty | 95 MiB, one process |
+| `herdr` | 29-43 MiB each, two processes |
+| `nvim` | 5-22 MiB each, two processes |
+| `opencode` | 164-684 MiB each, four processes |
 
-In that measurement, the terminal plus the multiplexer used about 98 MB, and an editor added roughly 30 MB per open tab. Sixteen concurrent `claude` processes accounted for 4.6 GB against 155 MB for the entire terminal, multiplexer and editor stack beneath them. This is a historical comparison, not the current OpenCode-only workflow.
+OpenCode uses a shared server and separate clients, so process count is not the number of agent streams. Its row excludes separate MCP processes and project dev servers. RSS can count shared pages in more than one process; adding rows does not establish unique physical memory usage.
 
-On-disk, measured after `brew cleanup`, so each formula holds one version:
+Inspect a fresh snapshot without dumping process arguments or environments:
 
-| | size |
-| ---------------------------------------------- | --------------------------------------------------- |
-| neovim | 37 MB |
-| herdr | 21 MB |
-| worktrunk | 22 MB |
-| lazygit | 18 MB |
-| codex | 272 MB |
-| opencode v1 | 137 MB |
-| claude | 310 MB per version, more as legacy releases pile up |
-| `~/.claude` (transcripts, skills, history) | 1.7 GB |
-| `~/.local/share/opencode` | 1.7 GB |
-| `~/.codex` | 238 MB |
-| `~/.config/herdr` (logs, session state) | 35 MB |
+```sh
+ps -Ao pid,ppid,rss,comm
+```
 
-What grows is everything the agents cache. `~/.claude` and `~/.local/share/opencode` are 3.4 GB against well under 1 GB of binaries, and Claude Code self-updates into a new directory per release, so its share depends on how many legacy versions have piled up rather than on the size of one install.
+The RSS column from `ps` is in KiB; divide by 1024 for MiB.
 
-Worktrees dominate everything else. `~/.herdr/worktrees` was 42 GB, because a single checkout of one React Native monorepo is 12-15 GB once its dependencies are installed, and each worktree gets its own copy. `wt step copy-ignored` uses APFS clonefile, so a fresh worktree costs almost nothing until files are modified, and `du` still reports the full size for each. Budget by repository, not by worktree count.
+The active tool packages and application state occupied the following space at the same snapshot. Package sizes include the current installed directory, not old Homebrew copies or package-manager caches.
 
-### Minimum requirements
+| component | on-disk size |
+| ---------------------------------------------- | ---------------- |
+| neovim | 37 MiB |
+| herdr | 23 MiB |
+| worktrunk | 45 MiB |
+| lazygit | 18 MiB |
+| opencode | 177 MiB |
+| `~/.local/share/opencode` | 8.6 GiB |
+| `~/.config/herdr` | 65 MiB |
 
-Derived from the numbers above, for the full setup (herdr + an agent + nvim + worktrunk):
+Re-measure installed package and state sizes with `du` (its output is in KiB):
 
-| RAM   | Concurrent agent streams | Notes                                                                                       |
-| ----- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| 8 GB  | 1-2                      | A second agent plus its dev server is what swaps; the editor is not a factor. |
-| 16 GB | 4-6                      | Where parallel worktrees stop being the constraint.                                         |
-| 32 GB | 10+                      | What the numbers above were measured on, with agents, editors and dev servers all resident. |
+```sh
+for tool in npm:@opencode/cli github:neovim/neovim github:max-sixty/worktrunk github:jesseduffield/lazygit; do
+  du -sk "$(mise where "$tool")"
+done
+du -sk "$(brew --prefix herdr)/" "$HOME/.local/share/opencode" "$HOME/.config/herdr"
+```
 
-Disk: about 4.5 GB for the toolchain and agent state, of which 3.7 GB is agent caches and transcripts rather than binaries, then the installed size of one checkout of the repository multiplied by the number of live worktrees. Scale it to the toolchain, not the source: a React Native or Expo app is the expensive case, 10-15 GB per worktree, and almost all of it is prebuilt native modules and platform build artifacts rather than JS. A plain web or Node monorepo of comparable source size is a few hundred MB to 2 GB, and a Go or Rust repository less again.
+The listed packages and state total about 9.0 GiB; OpenCode state accounts for most of it. MCP caches, the terminal application, experimental tools, and project checkouts are additional space.
 
-CPU matters less than either. Agents are I/O and network bound while waiting on a model, so the practical ceiling is memory and disk, not cores.
+### Capacity planning
+
+Budget RAM for the shared OpenCode server, its clients, enabled MCP servers, the editor, and project processes. Measure the workload you run rather than deriving a stream limit from one RSS snapshot.
+
+Budget disk per repository and its dependencies. Worktrees add another checkout and dependency tree. `wt step copy-ignored` uses APFS clonefile, which can share physical storage until files change; filesystem sharing means per-directory `du` totals are not always additive.
+
+The default OpenAI model runs remotely, so local inference is not part of this setup's resource budget. Local builds, tests, dev servers, and MCP tools still need their own CPU and memory allowance.
 
 ### Happy hacking!
 

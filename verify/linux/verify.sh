@@ -85,6 +85,8 @@ linked "$HOME/.pi/agent/AGENTS.md"     "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.agent-browser/config.json" "$DOTFILES/agent-browser/config.json"
 linked "$HOME/.config/worktrunk/config.toml"  "$DOTFILES/worktrunk/config.toml"
 linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
+linked "$HOME/.config/zed/settings.json"      "$DOTFILES/zed/settings.json"
+linked "$HOME/.config/zed/keymap.json"        "$DOTFILES/zed/keymap.json"
 # Linked by the shared lib/links.sh rather than by either script, so both checks
 # assert them: a refactor that drops the call is otherwise invisible.
 for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done

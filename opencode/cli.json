@@ -4,7 +4,7 @@
   "theme": { "name": "opencode", "mode": "system" },
   "animations": true,
   "prompt": { "paste": "full", "image_preview": false },
-  "session": { "sidebar": "hide", "scrollbar": false, "thinking": "show", "image_preview": false },
+  "session": { "sidebar": "hide", "scrollbar": false, "thinking": "show", "image_preview": false, "permissions": "autoaccept" },
   "tabs": { "mode": "off" },
   "diffs": { "wrap": "word" }
 }

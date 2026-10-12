@@ -553,9 +553,9 @@ backend = "npm:@openai/codex"
 specifiers = ["latest"]
 
 [[tools."npm:@opencode/cli"]]
-version = "2.0.26"
+version = "2.0.27"
 backend = "npm:@opencode/cli"
-specifiers = ["2.0.26"]
+specifiers = ["2.0.27"]
 
 [tools."npm:@opencode/cli".options]
 allow_builds = '["@opencode/cli"]'

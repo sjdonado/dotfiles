@@ -101,6 +101,12 @@ link_nvim_config() {
   link_managed "$PWD/nvim" "$HOME/.config/nvim"
 }
 
+link_zed_config() {
+  log "Linking Zed editor config..."
+  link_managed "$PWD/zed/settings.json" "$HOME/.config/zed/settings.json"
+  link_managed "$PWD/zed/keymap.json" "$HOME/.config/zed/keymap.json"
+}
+
 link_worktrunk_config() {
   log "Linking Worktrunk config..."
   mkdir -p "$HOME/.config/worktrunk"
