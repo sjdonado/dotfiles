@@ -8,7 +8,7 @@ import { materialize, sourceHashes, DEFAULT_SKILLS } from "./inputs";
 const ROOT = resolve(import.meta.dir), CONFIG = join(ROOT, "scenarios.json");
 const TIMEOUT_MS = 300_000;
 type Assert = { type: string; value?: string; threshold?: number };
-type Test = { description: string; vars: { fixture: string; request: string }; assert: Assert[] };
+type Test = { description: string; vars: { fixture: string; request: string; branch?: string; continueFrom?: string }; assert: Assert[] };
 type Provider = { id: string; label: string; config: { model: string; model_reasoning_effort?: string } };
 type Config = { providers: Provider[]; tests: Test[]; defaultTest?: { assert?: Assert[] } };
 const save = (path: string, value: unknown) => writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
@@ -20,12 +20,59 @@ export function sh(dir: string, cmd: string[], env = process.env): string {
 }
 
 export function select(cfg: Config, pattern?: string) {
-  if (!cfg.providers?.length || cfg.providers.some(p => p.id !== "openai:codex-sdk" || !p.config?.model || !/^[\w-]+$/.test(p.label)))
-    throw new Error("Empty or unsupported providers; use labeled openai:codex-sdk providers with a model");
+  if (!cfg.providers?.length || cfg.providers.some(p => p.id !== "openai" || !p.config?.model || !/^[\w-]+$/.test(p.label)))
+    throw new Error("Empty or unsupported providers; use labeled openai providers with a model");
   const filter = pattern === undefined ? null : new RegExp(pattern);
-  const tests = cfg.tests.filter(t => !filter || filter.test(t.description));
-  if (!tests.length) throw new Error("No scenarios selected");
+  const selected = cfg.tests.filter(t => !filter || filter.test(t.description));
+  if (!selected.length) throw new Error("No scenarios selected");
+  const tests: Test[] = [], visiting = new Set<Test>();
+  const include = (test: Test) => {
+    if (tests.includes(test)) return;
+    if (visiting.has(test)) throw new Error("Cyclic scenario continuation");
+    visiting.add(test);
+    if (test.vars.continueFrom) {
+      const matches = cfg.tests.filter(t => t.vars.fixture === test.vars.continueFrom);
+      if (matches.length !== 1) throw new Error(`Continuation requires one predecessor: ${test.vars.continueFrom}`);
+      include(matches[0]);
+    }
+    visiting.delete(test);
+    tests.push(test);
+  };
+  selected.forEach(include);
   return { tests, providers: cfg.providers };
+}
+
+export function seedRepository(workdir: string, attempt: string, branch = "main", continuation = false) {
+  if (!continuation) {
+    for (const cmd of [["init", "-q", "-b", "main"], ["config", "user.name", "Harness probe"],
+      ["config", "user.email", "probe@example.invalid"], ["config", "core.hooksPath", "/dev/null"],
+      ["config", "commit.gpgsign", "false"], ["add", "-A"], ["commit", "-qm", "seed"]]) sh(workdir, ["git", ...cmd]);
+    const agentFiles = sh(workdir, ["git", "ls-files", ".agent"]).split("\n").filter(Boolean);
+    if (agentFiles.length) {
+      sh(workdir, ["git", "rm", "-q", "--cached", "--", ...agentFiles]);
+      sh(workdir, ["git", "commit", "-qm", "seed", "--amend", "--no-edit"]);
+    }
+    if (branch !== "main") sh(workdir, ["git", "switch", "-c", branch]);
+  }
+  sh(workdir, ["git", "init", "--bare", join(attempt, "origin.git")]);
+  sh(workdir, ["git", "remote", continuation ? "set-url" : "add", "origin", join(attempt, "origin.git")]);
+  sh(workdir, ["git", "push", "-u", "origin", "--all"]);
+  const exclude = sh(workdir, ["git", "rev-parse", "--git-path", "info/exclude"]).trim();
+  const excludePath = resolve(workdir, exclude);
+  if (!readFileSync(excludePath, "utf8").split("\n").includes("/.agent/")) appendFileSync(excludePath, "\n/.agent/\n");
+  return {
+    seedHead: sh(workdir, ["git", "rev-parse", "HEAD"]).trim(),
+    seedBranch: sh(workdir, ["git", "branch", "--show-current"]).trim(),
+    seedBranches: sh(workdir, ["git", "for-each-ref", "--format=%(refname)", "refs/heads"]).trim(),
+    seedStatus: sh(workdir, ["git", "status", "--porcelain"]).trim(),
+  };
+}
+
+export function continuationSource(previous: Map<string, any>, provider: string, fixture: string, paid: boolean) {
+  const row = previous.get(`${provider}:${fixture}`);
+  if (!row || !existsSync(join(row.attempt, "repo")) || (paid && row.status !== "pass"))
+    throw new Error(`Continuation predecessor unavailable or not accepted: ${provider}:${fixture}`);
+  return row;
 }
 
 export function parsePi(jsonl: string) {
@@ -80,6 +127,15 @@ export async function assertion(a: Assert, output: string, ctx: any, parsed?: Re
   return { pass: false, reason: `unsupported assertion: ${a.type}` };
 }
 
+export function fixtureEnvironment(workdir: string) {
+  const herdrBin = join(workdir, ".fixture/herdr-bin");
+  const env = { ...process.env, PATH: `${join(workdir, ".fixture/bin")}${existsSync(herdrBin) ? `:${herdrBin}` : ""}:${process.env.PATH ?? ""}`,
+    GH_HOST: "example.invalid", GH_TOKEN: "fixture-no-real-token", GITHUB_TOKEN: "fixture-no-real-token" };
+  // These fixtures run outside Herdr; their failing stub must not masquerade as a live workspace.
+  delete env.HERDR_ENV;
+  return env;
+}
+
 async function runPi(workdir: string, model: string, effort: string, prompt: string, attempt: string, row: any) {
   const agentDir = mkdtempSync(join(tmpdir(), "pi-agent-"));
   try {
@@ -92,13 +148,11 @@ async function runPi(workdir: string, model: string, effort: string, prompt: str
     const cmd = ["pi-agent", "--mode", "json", "-p", "--no-session", "--offline", "--no-approve",
       "--no-extensions", "--no-prompt-templates", "--no-themes", "--no-skills",
       "--extension", "builtin:codemode", "--extension", "builtin:mcp",
-      "--provider", "openai-codex", "--model", model, "--thinking", effort, "--skill", join(workdir, ".agents/skills"), prompt];
+      "--provider", "openai", "--model", model, "--thinking", effort, "--skill", join(workdir, ".agents/skills"), prompt];
     row.pi = { version: sh(workdir, ["pi-agent", "--version"]).trim(), command: cmd, settings, mcp: { mcpServers: {} },
       settingsSource: "isolated agent directory; managed codemode setting only; no live MCPs or project settings", timeoutMs: TIMEOUT_MS };
     save(join(attempt, "result.json"), row);
-    const herdrBin = join(workdir, ".fixture/herdr-bin");
-    const env = { ...process.env, PI_CODING_AGENT_DIR: agentDir, PATH: `${join(workdir, ".fixture/bin")}${existsSync(herdrBin) ? `:${herdrBin}` : ""}:${process.env.PATH ?? ""}`,
-      GH_HOST: "example.invalid", GH_TOKEN: "fixture-no-real-token", GITHUB_TOKEN: "fixture-no-real-token" };
+    const env = { ...fixtureEnvironment(workdir), PI_CODING_AGENT_DIR: agentDir };
     const started = Date.now();
     const proc = Bun.spawn(cmd, { cwd: workdir, stdin: "ignore", stdout: "pipe", stderr: "pipe", env });
     const stream = async (source: ReadableStream<Uint8Array>, path: string) => {
@@ -136,6 +190,7 @@ export async function main(args = process.argv.slice(2)) {
     return 0;
   }
   const results: any[] = [], batch = paid ? mkdtempSync(join(ROOT, "results-")) : null;
+  const previous = new Map<string, any>(), dryAttempts: string[] = [];
   if (batch) console.log(`Evidence: ${batch}`);
   for (const t of tests) for (const p of providers) {
     const attempt = mkdtempSync(join(batch ?? tmpdir(), `${p.label}-`));
@@ -147,41 +202,30 @@ export async function main(args = process.argv.slice(2)) {
     writeFileSync(join(attempt, "transcript.jsonl"), ""); writeFileSync(join(attempt, "stderr.txt"), "");
     save(join(attempt, "result.json"), row);
     try {
-      cpSync(join(ROOT, t.vars.fixture), workdir, { recursive: true, filter: path => !path.includes("/.agents/") });
+      const predecessor = t.vars.continueFrom ? continuationSource(previous, p.label, t.vars.continueFrom, paid) : null;
+      cpSync(predecessor ? join(predecessor.attempt, "repo") : join(ROOT, t.vars.fixture), workdir,
+        { recursive: true, filter: path => !path.includes("/.agents/") });
+      row.continuation = predecessor ? { fixture: t.vars.continueFrom, attempt: predecessor.attempt,
+        inputHashes: predecessor.inputHashes, status: predecessor.status } : null;
       const fixtureSrc = join(ROOT, t.vars.fixture);
       const readList = (name: string) => existsSync(join(fixtureSrc, name))
         ? readFileSync(join(fixtureSrc, name), "utf8").split("\n").map(s => s.trim()).filter(Boolean) : null;
       const onlySkills = readList(".skills") ?? (existsSync(join(fixtureSrc, ".portable")) ? ["harness-boostrap"] : DEFAULT_SKILLS);
       const extraSkills = readList(".extra-skills") ?? [];
       const skills = [...onlySkills, ...extraSkills];
-      row.inputHashes = { ...sourceHashes(ROOT, t.vars.fixture), ...materialize(workdir, resolve(ROOT, "../.."), { prepend: !existsSync(join(fixtureSrc, ".portable")), skills }) };
+      row.inputHashes = { ...sourceHashes(ROOT, t.vars.fixture), ...materialize(workdir, resolve(ROOT, "../.."), {
+        prepend: !predecessor && !existsSync(join(fixtureSrc, ".portable")), skills }) };
       mkdirSync(join(workdir, ".fixture", "bin"), { recursive: true });
       cpSync(join(ROOT, "gh.ts"), join(workdir, ".fixture/bin/gh"));
       chmodSync(join(workdir, ".fixture/bin/gh"), 0o755);
       if (existsSync(join(workdir, ".fixture/herdr-bin/herdr"))) chmodSync(join(workdir, ".fixture/herdr-bin/herdr"), 0o755);
-      for (const cmd of [["init", "-q", "-b", "main"], ["config", "user.name", "Harness probe"],
-        ["config", "user.email", "probe@example.invalid"], ["config", "core.hooksPath", "/dev/null"],
-        ["config", "commit.gpgsign", "false"], ["add", "-A"], ["commit", "-qm", "seed"]]) sh(workdir, ["git", ...cmd]);
+      Object.assign(row, seedRepository(workdir, attempt, t.vars.branch, !!predecessor));
       const hashFile = (f: string) => createHash("sha256").update(readFileSync(join(workdir, f))).digest("hex");
-      // Bench seeds the branch note after the seed commit, untracked and ignored.
-      // Fold it out of the seed commit so check-ignore and status oracles behave the same.
+      // Ignored continuation notes remain uncommitted but are acceptance inputs.
       const agentFiles = existsSync(join(workdir, ".agent"))
-        ? sh(workdir, ["git", "ls-files", ".agent"]).split("\n").filter(Boolean) : [];
+        ? sh(workdir, ["git", "ls-files", "--others", "--", ".agent"]).split("\n").filter(Boolean) : [];
       const seedNotes = Object.fromEntries(agentFiles.map(f => [f, hashFile(f)]));
-      if (agentFiles.length) {
-        sh(workdir, ["git", "rm", "-q", "--cached", "--", ...agentFiles]);
-        sh(workdir, ["git", "commit", "-qm", "seed", "--amend", "--no-edit"]);
-      }
-      for (const cmd of [["init", "--bare", join(attempt, "origin.git")], ["remote", "add", "origin", join(attempt, "origin.git")],
-        ["push", "-u", "origin", "main"]]) sh(workdir, ["git", ...cmd]);
-      row.seedHead = sh(workdir, ["git", "rev-parse", "HEAD"]).trim();
-      row.seedBranch = sh(workdir, ["git", "branch", "--show-current"]).trim();
-      row.seedBranches = sh(workdir, ["git", "for-each-ref", "--format=%(refname)", "refs/heads"]).trim();
-      if (existsSync(join(workdir, ".agent"))) {
-        const exclude = sh(workdir, ["git", "rev-parse", "--git-path", "info/exclude"]).trim();
-        appendFileSync(exclude.startsWith("/") ? exclude : join(workdir, exclude), "\n/.agent/\n");
-      }
-      row.seedFiles = Object.fromEntries(sh(workdir, ["git", "ls-files"]).split("\n").filter(Boolean).map(f =>
+      row.seedFiles = Object.fromEntries(sh(workdir, ["git", "ls-files", "--cached", "--others", "--exclude-standard"]).split("\n").filter(Boolean).map(f =>
         [f, hashFile(f)]));
       Object.assign(row.seedFiles, seedNotes);
       save(join(attempt, "result.json"), row);
@@ -191,7 +235,8 @@ export async function main(args = process.argv.slice(2)) {
       row.providerErrors = parsed?.errors ?? [];
       if (paid && (row.exitCode !== 0 || parsed?.error)) throw new Error(parsed?.error || `pi exit ${row.exitCode}`);
       const ctx = { providerResponse: { metadata: { workingDir: workdir, seedHead: row.seedHead,
-        seedBranch: row.seedBranch, seedBranches: row.seedBranches, seedFiles: row.seedFiles, commands: row.commands, successfulCommands: row.successfulCommands,
+        seedBranch: row.seedBranch, seedBranches: row.seedBranches, seedStatus: row.seedStatus, continuation: row.continuation,
+        seedFiles: row.seedFiles, commands: row.commands, successfulCommands: row.successfulCommands,
         workspaceDiff: sh(workdir, ["git", "diff", "HEAD"]) } } };
       for (const a of [...(cfg.defaultTest?.assert ?? []), ...t.assert])
         row.assertions.push({ ...a, ...await assertion(a, row.output, ctx, parsed, row.wallMs) });
@@ -200,10 +245,11 @@ export async function main(args = process.argv.slice(2)) {
       row.status = "error"; row.error = String(error);
       appendFileSync(join(attempt, "stderr.txt"), `${error}\n`);
     } finally {
-      if (batch && existsSync(workdir)) cpSync(workdir, join(attempt, "repo"), { recursive: true });
+      if (existsSync(workdir)) cpSync(workdir, join(attempt, "repo"), { recursive: true });
       save(join(attempt, "result.json"), row);
+      previous.set(`${p.label}:${t.vars.fixture}`, { ...row, attempt });
       rmSync(temporary, { recursive: true, force: true });
-      if (!batch) rmSync(attempt, { recursive: true, force: true });
+      if (!batch) dryAttempts.push(attempt);
     }
     results.push(row);
     console.log(`${row.status.toUpperCase()} ${p.label} :: ${t.description}${row.error ? ` ${row.error}` : ""}`);
@@ -211,6 +257,7 @@ export async function main(args = process.argv.slice(2)) {
     if (batch) save(join(batch, "results.json"), results);
   }
   console.log(`\n${results.filter(r => r.status === "pass").length}/${results.length} passed (${results.filter(r => r.status === "dry").length} dry)`);
+  for (const attempt of dryAttempts) rmSync(attempt, { recursive: true, force: true });
   return results.some(r => ["fail", "error"].includes(r.status)) ? 1 : 0;
 }
 

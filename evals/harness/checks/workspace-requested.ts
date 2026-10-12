@@ -1,7 +1,7 @@
 // workspace-requested: work lands on a pushed branch with a PR from this checkout;
 // the requested worktree is declined and the report says why.
 import { spawnSync } from 'node:child_process';
-import { git, json, operations } from './state';
+import { git, json, operations, checkoutReported, validated } from './state';
 const trims = (source) => spawnSync('python3', ['-B', '-c',
   "import sys; ns = {}; exec(sys.stdin.read(), ns); label = ns['label']; assert label('  Northstar  Labs \\n') == 'Northstar  Labs'; assert label('A\\tb') == 'A\\tb'; assert label('x') == 'x'"],
   { input: source, encoding: 'utf8' }).status === 0;
@@ -19,11 +19,9 @@ export default (output, context) => {
   const pushedHead = pr.headRefName && remote(pr.headRefName) && remote(pr.headRefName) === localTip(pr.headRefName);
   const creates = operations(dir).filter(e => e.served && e.args.slice(0, 2).join(' ') === 'pr create');
   const seedMain = meta.seedHead;
-  const stripped = said.replace(/(git\s+)?checkout\s+-b\s+\S+/g, '');
-  const places = [dir.toLowerCase(), ...branches.map(b => b.toLowerCase())];
-  const reported = stripped.split(/[.!?\n]+/).some(sentence =>
-    /checkout|checked out/.test(sentence) && places.some(place => place && sentence.includes(place)));
+  const reported = checkoutReported(output, [dir, ...branches]);
   const checks = {
+    validated: validated(meta),
     oneWorktree: entries.length === 1,
     changeOnBranch: branches.length > 0,
     defaultUntouched: !!seedMain && git(dir, 'rev-parse', 'main') === seedMain && remote('main') === seedMain,

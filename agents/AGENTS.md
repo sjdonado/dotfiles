@@ -70,7 +70,7 @@ No note is written for the default branch once the work has a branch of its own.
 
 ### The task list
 
-Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end.
+Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end. Tick a check item only after observing its successful completion, never when the check is planned or started.
 
 Writing it is not optional and not a reward for finishing. A list written at the end is a report, and a report cannot be read by the session that needed it. If the work has more than one step, the file exists before the second step starts, and every later checkpoint updates it alongside the note.
 
@@ -134,9 +134,9 @@ Unless the human explicitly requests a draft, open a normal PR with `WIP:` at th
 
 These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message itself. **Publication authority** says what authorizes the write, and nothing in this section grants permission to send, post, reply, close, or otherwise change external state.
 
-- Read the complete thread and relevant surrounding context before writing.
+- Read the complete thread and relevant surrounding context before writing. Before drafting, compare the report's named findings with its documented evidence. If findings are undocumented, state which findings the evidence resolves and request the missing details, even when closing the documented finding; do not imply the whole report is resolved.
 - Send a message body through a file or stdin (`--body-file`), never an interpolated shell string, so quoting cannot alter it. Read back what was sent; if it is malformed, correct that same message where the platform allows, and say so rather than posting a second one.
-- Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. State material inferences and uncertainty as such.
+- Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. Before reporting coverage from an unfamiliar check, inspect its implementation: printed or stubbed success messages do not establish that typecheck, lint, tests, or a scan ran. Report coverage as unverified when its execution is not established. Before claiming evidence is absent, inspect the relevant source-of-truth files and account for search filters that excluded them; an incomplete search means unverified, not absent. State material inferences and uncertainty as such.
 - Write for the recipient. Acknowledge useful input when natural, then give the finding, supporting evidence, action taken, and relevant verification. Keep only what helps the recipient understand or act.
 - When rejecting a suggestion, be respectful and specific. Explain why it does not fit, give the correct alternative, and state what evidence would change the conclusion.
 - When asking a question as the user's agent, include the relevant context, what was already checked, and the exact decision or information needed.
@@ -207,6 +207,8 @@ Run `agent-review` reviewers at the orchestrator's tier. A reviewer too weak to 
 
 Delegate work, never waiting. A subagent told to watch a running process or poll for completion burns its context on the watching and returns nothing the caller could not see, and stopping it can kill whatever it started. A long-running command runs in the session that can see it through.
 
+Run preview servers through managed background shells, never detached processes. In OpenCode, call the `shell` tool with `background: true`; do not detach with `&`, `nohup`, `disown`, or `setsid`. Managed shells capture stdout and stderr and provide an output log path; do not redirect to a second file unless the program or a later consumer requires that named artifact. Before handing over the preview URL, verify that the harness registered the background shell and that the server is ready. Leave it running for feedback. If registration cannot be confirmed, report the blocker instead of claiming a managed preview is running.
+
 The two stretches worth delegating have names, so their cost is attributable rather than buried in a pile of general-purpose subagents: `agent-review` for the review half, `verification` for the checks half. Use the named skill rather than an unnamed subagent doing the same job, even when you run it in this session: the name is what later lets anyone say what review and verification actually cost.
 
 Count the subagents a workflow already spawns. `agent-review` dispatches up to two reviewers per round at the orchestrator's tier, at the end of every run, which is exactly when a run is most expensive. That is part of the bill when deciding what else to delegate, and to where.
@@ -216,6 +218,8 @@ None of this names a model or a reasoning effort level. Those change faster than
 ## Oracle ladder
 
 "Done" must be machine-checkable, not a judgement call. The ladder's shape is global; each repository supplies the commands.
+
+Run each check in its own shell call, without unrelated Git or file housekeeping or failure masking. Use foreground execution for short checks. For a long-running managed background check, wait for its completion notification and inspect its own exit status before advancing or reporting success. If only a compound call's final status is available, rerun the check alone.
 
 Shape, cheapest first, each green before ascending:
 
@@ -248,6 +252,8 @@ Validate harness changes with a disposable session scenario that exercises the c
 One successful scenario is a smoke test, not proof of efficiency. Compare repeated runs of the same scenario and model settings across harness versions before claiming savings, and inspect real sessions for failures the scenario misses. Do not validate a harness change by re-reading it and judging it plausible. Keep the scenario small and add coverage only for an observed gap.
 
 ## Code reviews
+
+Load `ponytail` automatically only when acting as Reviewer B in `agent-review` or writing code fixes in `address-review`. Do not load it automatically for implementation, prototypes, verification fixes, review triage, or planning. An explicit user request may activate it for code work; it never narrows requirements, acceptance evidence, or publication boundaries.
 
 Agent-initiated review is adversarial and uses the `agent-review` skill, which carries both the protocol and the one-line finding format. It never posts to the forge: findings are resolved in the working tree before pushing, and rejected findings are recorded in the PR body.
 

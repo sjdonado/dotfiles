@@ -62,6 +62,8 @@ for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$
 
 group "editor, multiplexer, worktrees"
 linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
+linked "$HOME/.config/zed/settings.json"      "$DOTFILES/zed/settings.json"
+linked "$HOME/.config/zed/keymap.json"        "$DOTFILES/zed/keymap.json"
 linked "$HOME/.config/herdr/config.toml"     "$DOTFILES/herdr/config.toml"
 linked "$HOME/.config/worktrunk/config.toml" "$DOTFILES/worktrunk/config.toml"
 

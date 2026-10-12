@@ -39,13 +39,76 @@ const publicationCommand = (meta) => (meta.commands || []).flatMap(commandWords)
     (verb === 'branch' && args.length > 0 && !args.some(a => ['--show-current', '--list', '-l', '-a', '-r', '-v', '-vv'].includes(a))) ||
     (['checkout', 'switch'].includes(verb) && args.some(a => ['-b', '-B', '-c', '-C', '--create', '--force-create', '--orphan'].includes(a)));
 });
-const validated = (meta, script = false) => (meta.successfulCommands || []).some(command => commandWords(command).some(words => {
-  if (!/(?:^|\/)python(?:3(?:\.\d+)?)?$/.test(words[0] || '')) return false;
-  const i = words.indexOf('-c'), file = words.slice(1).find(word => !word.startsWith('-'));
-  if (script && i < 0 && file && !words.some(word => ['-m', '-V', '--version'].includes(word)) &&
-    path.resolve(meta.workingDir || '.', file) === path.resolve(meta.workingDir || '.', 'check.py')) return true;
-  let code = i >= 0 ? words[i + 1] || '' : command, localFile = false;
-  if (i < 0 && file?.endsWith('.py') && meta.workingDir && !words.some(word => ['-m', '-V', '--version'].includes(word))) {
+const branchNotePaths = (meta) => {
+  const key = (meta.seedBranch || 'main').replace(/%/g, '%25').replace(/\//g, '%2F');
+  return { note: `.agent/${key}.md`, tasks: `.agent/${key}.tasks.md` };
+};
+const contractShape = (note, tasksPath, base = '.') => {
+  const section = String(note || '').split(/^#{1,6}\s+Contract\s*$/im)[1]?.split(/^#{1,6}\s/m)[0];
+  const lines = (section || '').split('\n').map(line => line.trim()).filter(Boolean);
+  const token = (lines[2]?.split(/:\*{0,2}\s+/, 2)[1] || '').split(/\s/)[0];
+  const reference = token.replace(/^(`{1,2}|\*{1,2})(.+)\1$/, '$2');
+  return ['Purpose', 'End state', 'Key tasks'].every((label, i) =>
+    new RegExp(`^(?:-\\s+)?\\*{0,2}${label}\\*{0,2}:\\*{0,2}\\s+\\S`).test(lines[i] || '') &&
+    (lines[i].match(/(?:Purpose|End state|Key tasks)\*{0,2}:/g) || []).length === 1) &&
+    !!tasksPath && !!reference && path.resolve(base, reference) === path.resolve(base, tasksPath);
+};
+const checkoutReported = (output, places) => String(output || '').toLowerCase()
+  .replace(/(?:git\s+)?checkout\s+-b\s+\S+/g, '')
+  .split(/[.!?](?:\s|$)|\n/).some(sentence => /checkout|checked out/.test(sentence) &&
+    (places.some(place => place && sentence.includes(place.toLowerCase())) ||
+      /\b(?:this|current)\s+(?:repository\s+)?(?:checkout|worktree)\b/.test(sentence)));
+// Validation is deliberately narrower than publication detection: only simple commands
+// joined by && prove that Python ran successfully. Reject shells, substitutions,
+// redirects, pipes and control flow rather than infer their exit status. A terminal
+// heredoc is supported for a single direct Python invocation, not compound scripts.
+const validationCommands = (command) => {
+  let source = command.trim(), code;
+  const heredoc = source.match(/^([^\n]*?)\s*<<(-?)\s*(['"]?)(\w+)\3\s*\n([\s\S]*?)\n\4$/);
+  if (heredoc) {
+    source = heredoc[1];
+    code = heredoc[2] ? heredoc[5].replace(/^\t+/gm, '') : heredoc[5];
+    if (!heredoc[3] && /[$`\\]/.test(code)) return [];
+  }
+  const matches = [...source.matchAll(/"(?:\\.|[^"\\])*"|'[^']*'|&&|[^\s'"&]+/g)];
+  // Adjacent fragments form one shell argument; this narrow parser does not concatenate them.
+  if (matches.some((match, i) => i > 0 && match.index === matches[i - 1].index + matches[i - 1][0].length &&
+      match[0] !== '&&' && matches[i - 1][0] !== '&&')) return [];
+  const tokens = matches.map(match => match[0]);
+  if (tokens.join('').replace(/\s/g, '') !== source.replace(/\s/g, '')) return [];
+  const commands = [[]];
+  for (const token of tokens) {
+    if (token === '&&') { if (!commands.at(-1).length || code !== undefined) return []; commands.push([]); continue; }
+    const quoted = /^['"]/.test(token);
+    if ((!quoted && /[;|&<>()[\]{}$`#\\\n\r]/.test(token)) || (token[0] === '"' && /[$`]/.test(token))) return [];
+    const value = quoted ? token.slice(1, -1) : token;
+    commands.at(-1).push(token[0] === '"' ? value.replace(/\\(["\\])/g, '$1') : value);
+  }
+  if (/[\n\r]/.test(source.replace(/"(?:\\.|[^"\\])*"|'[^']*'/g, '')) ||
+      commands.some(words => !words.length || /^(?:if|then|else|elif|fi|for|while|until|do|done|case|esac|function|!|time|exec|eval|exit|return|break|continue|set|trap|source|cd|pushd|popd|\.)$/.test(words[0]) || /(?:^|\/)(?:bash|sh|zsh)$/.test(words[0]))) return [];
+  return commands.map(words => ({ words, code }));
+};
+const pythonArguments = (words) => {
+  if (!/(?:^|\/)python(?:3(?:\.\d+)?)?$/.test(words[0] || '')) return undefined;
+  const args = words.slice(1), index = args.findIndex(word => !word.startsWith('-') || ['-c', '-', '--'].includes(word));
+  // Accept only no-argument interpreter flags; -W/-X consume operands and need a fuller parser.
+  if (!args.slice(0, index < 0 ? args.length : index).every(word => /^-[bBdEIsSuqv]+$/.test(word))) return undefined;
+  const mode = args[index];
+  return { code: mode === '-c' ? args[index + 1] || '' : undefined,
+    file: mode === '--' ? args[index + 1] : mode && !['-c', '-'].includes(mode) ? mode : undefined };
+};
+const assertionEvidence = (code) => {
+  const result = spawnSync('python3', ['-B', path.join(import.meta.dir, 'python-validation.py')],
+    { input: code, encoding: 'utf8', timeout: 5000 });
+  if (result.status !== 0) return false;
+  try { return JSON.parse(result.stdout).passed === true; } catch { return false; }
+};
+const validated = (meta, script = false) => (meta.successfulCommands || []).some(command => validationCommands(command.trim().replace(/^PYTHONDONTWRITEBYTECODE=1\s+/, '')).some(({ words, code: heredocCode }) => {
+  const invocation = pythonArguments(words);
+  if (!invocation) return false;
+  const { file } = invocation;
+  let code = invocation.code ?? heredocCode ?? '', localFile = false;
+  if (invocation.code === undefined && file?.endsWith('.py') && meta.workingDir) {
     try {
       const base = fs.realpathSync(meta.workingDir), target = fs.realpathSync(path.resolve(base, file));
       const relative = path.relative(base, target), secret = /(?:^|[\/._-])(?:env|environment|secrets?)(?:[\/._-]|$)/i;
@@ -53,7 +116,8 @@ const validated = (meta, script = false) => (meta.successfulCommands || []).some
       code = fs.readFileSync(target, 'utf8'); localFile = true;
     } catch { return false; }
   }
-  return (localFile || i >= 0 || words.includes('-') || words.some(word => word.startsWith('<<'))) &&
-    /(?:^|[;\n])\s*assert\s+/.test(code) && /\blabel\s*\(/.test(code);
+  if (script && localFile && path.resolve(meta.workingDir, file) === path.resolve(meta.workingDir, 'check.py')) return true;
+  return (localFile || invocation.code !== undefined || (heredocCode !== undefined && (!file || words.includes('-')))) &&
+    assertionEvidence(code);
 }));
-export { git, json, operations, behavior, publicationCommand, validated };
+export { git, json, operations, behavior, publicationCommand, validated, branchNotePaths, contractShape, checkoutReported, validationCommands, pythonArguments };

@@ -11,7 +11,7 @@ Resolve the effective input: a tracker issue ID or URL, an explore-session concl
 
 This skill fills the gap between explore (words only, no code) and `yolo` (one expensive terminal run). It is a loop with the human inside it: build the smallest slice, make it green, let the human try it, and let what they learn change the requirements. Iteration here is cheap on purpose; everything expensive (adversarial review, PR, remote checks) is deferred to the `yolo` handoff.
 
-At the Build step, load and follow the `ponytail` skill: prototype code is still the laziest code that works, and prototype scope is even lazier, build only what the next round of human feedback needs. Do not carry it into resolving input, writing the ledger, or folding feedback: those are planning, and planning stays exploratory.
+At the Build step, implement only what the next round of human feedback needs. Preserve the requirements ledger and all local verification gates.
 
 ## Setup, once
 
@@ -23,7 +23,7 @@ At the Build step, load and follow the `ponytail` skill: prototype code is still
 
 Each iteration:
 
-1. **Build** the smallest slice that gives the human something new to react to.
+1. **Build**: reconcile and save the contract per `AGENTS.md` before editing code, including any changed End state. Then build the smallest slice that gives the human something new to react to.
 2. **Validate** with the local ladder rungs only: type check, lint, and the tests for the touched surface. Green before showing. No adversarial review, no push, no PR. The one exception: if the slice touches data, auth, concurrency, migration, or a public contract, run a single Reviewer B pass from `agent-review` (diff only, one subagent, one round) before presenting; those surfaces are where a prototype's shortcuts become incidents.
 3. **Checkpoint.** Save and read back the ignored branch note before presenting: requirements including deferred behavior, essential rationale, checks, and awaiting-feedback next action. Keep the prototype uncommitted. Report a failed save instead of claiming the handoff is ready.
 4. **Present**: what was built, how to try it (load and follow the `run` skill when seeing it live helps), what this iteration taught, and what it changed in the requirements ledger. Then stop and wait. This is the one workflow where stopping for the human every round is the design, not a failure of autonomy.

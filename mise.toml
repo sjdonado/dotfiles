@@ -72,7 +72,7 @@ tree-sitter = "latest"
 
 # OpenCode v2 ships as @opencode/cli. Its postinstall selects the native binary;
 # mise must allow that script or the installed launcher cannot run.
-"npm:@opencode/cli" = { version = "2.0.26", allow_builds = ["@opencode/cli"] }
+"npm:@opencode/cli" = { version = "2.0.27", allow_builds = ["@opencode/cli"] }
 
 # npm-backed CLIs that work without a postinstall step.
 "npm:@openai/codex" = "latest"
@@ -102,6 +102,7 @@ tree-sitter = "latest"
 "brew:ca-certificates" = { os = "macos" }
 "brew:mise" = { os = "macos" }
 "brew:openssl@3" = { os = "macos" }
+"brew:openssl@4" = { os = "macos" }
 "brew:awscli" = { os = "macos" }
 "brew:blueutil" = { os = "macos" }
 "brew:bombardier" = { os = "macos" }
@@ -127,6 +128,7 @@ tree-sitter = "latest"
 "brew:fish" = { os = "macos" }
 "brew:flyctl" = { os = "macos" }
 "brew:gawk" = { os = "macos" }
+"brew:ghostscript" = { os = "macos" }
 "brew:giflib" = { os = "macos" }
 "brew:gh" = { os = "macos" }
 "brew:git-bug" = { os = "macos" }
@@ -147,6 +149,7 @@ tree-sitter = "latest"
 "brew:pango" = { os = "macos" }
 "brew:librsvg" = { os = "macos" }
 "brew:llvm" = { os = "macos" }
+"brew:llama.cpp" = { os = "macos" }
 "brew:lua" = { os = "macos" }
 "brew:luarocks" = { os = "macos" }
 "brew:mackup" = { os = "macos" }
@@ -164,6 +167,7 @@ tree-sitter = "latest"
 "brew:poppler" = { os = "macos" }
 "brew:pv" = { os = "macos" }
 "brew:python@3.12" = { os = "macos" }
+"brew:qpdf" = { os = "macos" }
 "brew:rbenv" = { os = "macos" }
 "brew:rustup" = { os = "macos" }
 "brew:scc" = { os = "macos" }
@@ -198,6 +202,7 @@ tree-sitter = "latest"
 "brew-cask:firefox" = { os = "macos" }
 "brew-cask:gcloud-cli" = { os = "macos" }
 "brew-cask:ghostty" = { os = "macos" }
+"brew-cask:handy" = { os = "macos" }
 "brew-cask:helium-browser" = { os = "macos" }
 "brew-cask:ngrok" = { os = "macos" }
 "brew-cask:nordvpn" = { os = "macos" }
@@ -206,6 +211,7 @@ tree-sitter = "latest"
 "brew-cask:tablepro" = { os = "macos" }
 "brew-cask:tailscale-app" = { os = "macos" }
 "brew-cask:telegram-desktop" = { os = "macos" }
+"brew-cask:abue-ammar/tinycast/tinycast" = { os = "macos" }
 "brew-cask:yaak" = { os = "macos" }
 "brew-cask:annotate" = { os = "macos" }
 "brew-cask:icon-composer" = { os = "macos" }
@@ -213,6 +219,7 @@ tree-sitter = "latest"
 "brew-cask:driceroland/tap/search" = { os = "macos" }
 
 [bootstrap.brew.taps]
+"abue-ammar/tinycast" = "https://github.com/abue-ammar/homebrew-tinycast.git"
 "grafana/grafana" = "https://github.com/grafana/homebrew-grafana.git"
 "ory/tap" = "https://github.com/ory/homebrew-tap.git"
 "driceroland/tap" = "https://github.com/driceroland/homebrew-tap.git"

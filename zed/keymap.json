@@ -1,0 +1,19 @@
+[
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd-;": null,
+      "cmd-[": null,
+      "cmd-]": null
+    }
+  },
+  {
+    "bindings": {
+      "cmd-;": "terminal_panel::ToggleFocus",
+      "cmd-shift-g": "git_panel::Toggle",
+      "cmd-ctrl-o": "projects::OpenRecent",
+      "cmd-[": "multi_workspace::ToggleWorkspaceSidebar",
+      "cmd-]": "workspace::ToggleRightDock"
+    }
+  }
+]

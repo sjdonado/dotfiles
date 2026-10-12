@@ -3,7 +3,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
-import { git, json, operations, behavior, validated } from './state';
+import { git, json, operations, behavior, validated, branchNotePaths, contractShape } from './state';
 export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
@@ -12,11 +12,12 @@ export default (output, context) => {
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };
   const pr = json(dir, 'pr.json', {});
   const body = `${pr.title || ''}\n${pr.body || ''}`;
-  const notePath = '.agent/proto%2Fhandoff.md', note = read(notePath);
-  const seedNote = Object.keys(meta.seedFiles || {}).find(f => f.endsWith('proto%2Fhandoff.md'));
+  const { note: notePath, tasks: tasksPath } = branchNotePaths(meta), note = read(notePath);
+  const seedNote = Object.keys(meta.seedFiles || {}).find(f => f === notePath);
   const checks = {
     behavior: behavior(dir, 'Draft'),
     noteRefreshed: !!note && !!seedNote && crypto.createHash('sha256').update(note).digest('hex') !== meta.seedFiles[seedNote],
+    contract: contractShape(note, tasksPath, dir) && !!read(tasksPath) && !!git(dir, 'check-ignore', notePath),
     local: !!meta.seedHead && head === meta.seedHead &&
       git(dir, 'ls-remote', 'origin', 'refs/heads/*').split('\n').every(line => !line.split(/\s/)[0] || line.split(/\s/)[0] === meta.seedHead),
     untouched: !operations(dir).some(e => e.served && e.args.slice(0, 2).join(' ') === 'pr edit') && body.includes('Untitled'),

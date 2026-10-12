@@ -22,9 +22,11 @@ Keep credentials out of the file: use OpenCode OAuth storage or environment refe
 
 Herdr installs its own dual-version server hook and v2 client integration. The client integration is retained in `cli.json` as `./herdr-opencode`, so the pane tracks its own conversation rather than the shared server's activity. Both installers refresh it through `herdr integration install opencode`; generated integration code stays machine-local.
 
-## Process safety
+## Permissions and process safety
 
-Agent-issued `opencode ...` shell commands are denied. Use OpenCode's native task/subagent mechanism instead of recursively spawning CLI processes. This prevents review workflows from leaving large trees of orphaned `opencode run` workers.
+The server requests permission for shell commands, but the CLI uses `session.permissions: "autoaccept"`, which answers pending permission requests with Allow once. This applies to non-shell requests too, so `ask` is not a human approval gate in this profile. Explicit deny rules still block requests. Shared instructions prohibit reading environment-secret files, but that instruction is not a tool-enforced permission boundary. Use this profile only with trusted projects and tools.
+
+The earlier OpenCode-specific shell denials are removed. Recursive `opencode ...` launches are therefore permitted; the configuration no longer prevents orphaned worker trees. Use OpenCode's native task/subagent mechanism instead of recursively spawning CLI processes, and use managed background shells for long-running commands.
 
 Shared review-selection policy lives in `AGENTS.md`; upstream skill files remain unmodified.
 

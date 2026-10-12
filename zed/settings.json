@@ -1,0 +1,53 @@
+{
+  "git_panel": {
+    "group_by": "staging",
+    "tree_view": true
+  },
+  "disable_ai": true,
+  "vim_mode": true,
+  "ui_font_size": 14.0,
+  "buffer_font_size": 13.0,
+  "soft_wrap": "editor_width",
+  "close_on_file_delete": false,
+  "cli_default_open_behavior": "existing_window",
+  "use_system_window_tabs": true,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark"
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "search": {
+    "include_ignored": false
+  },
+  "project_panel": {
+    "diagnostic_badges": true,
+    "git_status_indicator": true,
+    "default_width": 360.0
+  },
+  "outline_panel": {
+    "default_width": 360.0
+  },
+  "tabs": {
+    "git_status": true
+  },
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        },
+        "javascript": {
+          "updateImportsOnFileMove": {
+            "enabled": "always"
+          }
+        }
+      }
+    }
+  }
+}

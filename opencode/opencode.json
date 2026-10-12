@@ -5,13 +5,25 @@
 	"lsp": false,
 	"formatter": false,
 	"snapshots": false,
+	"providers": {
+		"openai": {
+			"models": {
+				"gpt-6.1-sol": {
+					"limit": { "context": 1000000, "input": 872000, "output": 128000 }
+				},
+				"gpt-6.1-sol-fast": {
+					"limit": { "context": 1000000, "input": 872000, "output": 128000 }
+				},
+				"gpt-6.1-sol-ultrafast": {
+					"limit": { "context": 1000000, "input": 872000, "output": 128000 }
+				}
+			}
+		}
+	},
 	"permissions": [
 		{ "action": "external_directory", "resource": "*", "effect": "allow" },
 		{ "action": "execute", "resource": "*", "effect": "allow" },
-		{ "action": "shell", "resource": "opencode *", "effect": "deny" },
-		{ "action": "shell", "resource": "*/opencode *", "effect": "deny" },
-		{ "action": "shell", "resource": "opencode2 *", "effect": "deny" },
-		{ "action": "shell", "resource": "*/opencode2 *", "effect": "deny" }
+		{ "action": "shell", "resource": "*", "effect": "ask" }
 	],
 	"mcp": {
 		"servers": {
