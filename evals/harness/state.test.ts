@@ -2,7 +2,7 @@ import { afterEach, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { branchNotePaths, publicationCommand, validated, checkoutReported } from './checks/state';
+import { branchNotePaths, publicationCommand, validated, checkoutReported, contractShape } from './checks/state';
 
 const dirs: string[] = [];
 const fixture = () => {
@@ -12,6 +12,22 @@ const fixture = () => {
 };
 afterEach(() => { for (const dir of dirs.splice(0)) fs.rmSync(dir, { recursive: true, force: true }); });
 const code = "from label import label; assert label(' a ') == 'a'";
+test('continuity contract uses three separate ordered lines and names the task list', () => {
+  const tasks = '.agent/main.tasks.md';
+  const note = `# Contract\n**Purpose**: Preserve labels.\n**End state**: Assertions pass.\n**Key tasks**: ${tasks}\n\n# State\nAwaiting feedback.`;
+  expect(contractShape(note, tasks)).toBe(true);
+  expect(contractShape(note.replace(/\n\*\*/g, ' **'), tasks)).toBe(false);
+  expect(contractShape(note.replace('**End state**:', '**Purpose**:'), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, 'none open'), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, tasks + '.backup'), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, 'wrong-prefix/' + tasks), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, '`' + tasks + '`'), tasks)).toBe(true);
+  expect(contractShape(note.replace(tasks, '**' + tasks + '**'), tasks)).toBe(true);
+  expect(contractShape(note.replace(tasks, '`' + tasks + '.`'), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, '`' + tasks.replace('main', 'ma*in') + '`'), tasks)).toBe(false);
+  expect(contractShape(note.replace(tasks, tasks + '.'), tasks)).toBe(false);
+  expect(contractShape(note.replace('Assertions pass.', 'Assertions pass. Key tasks: elsewhere'), tasks)).toBe(false);
+});
 const direct = `python3 -B -c "${code}"`;
 const meta = (command: string, workingDir?: string) => ({ successfulCommands: [command], workingDir });
 

@@ -43,6 +43,16 @@ const branchNotePaths = (meta) => {
   const key = (meta.seedBranch || 'main').replace(/%/g, '%25').replace(/\//g, '%2F');
   return { note: `.agent/${key}.md`, tasks: `.agent/${key}.tasks.md` };
 };
+const contractShape = (note, tasksPath, base = '.') => {
+  const section = String(note || '').split(/^#{1,6}\s+Contract\s*$/im)[1]?.split(/^#{1,6}\s/m)[0];
+  const lines = (section || '').split('\n').map(line => line.trim()).filter(Boolean);
+  const token = (lines[2]?.split(/:\*{0,2}\s+/, 2)[1] || '').split(/\s/)[0];
+  const reference = token.replace(/^(`{1,2}|\*{1,2})(.+)\1$/, '$2');
+  return ['Purpose', 'End state', 'Key tasks'].every((label, i) =>
+    new RegExp(`^(?:-\\s+)?\\*{0,2}${label}\\*{0,2}:\\*{0,2}\\s+\\S`).test(lines[i] || '') &&
+    (lines[i].match(/(?:Purpose|End state|Key tasks)\*{0,2}:/g) || []).length === 1) &&
+    !!tasksPath && !!reference && path.resolve(base, reference) === path.resolve(base, tasksPath);
+};
 const checkoutReported = (output, places) => String(output || '').toLowerCase()
   .replace(/(?:git\s+)?checkout\s+-b\s+\S+/g, '')
   .split(/[.!?](?:\s|$)|\n/).some(sentence => /checkout|checked out/.test(sentence) &&
@@ -110,4 +120,4 @@ const validated = (meta, script = false) => (meta.successfulCommands || []).some
   return (localFile || invocation.code !== undefined || (heredocCode !== undefined && (!file || words.includes('-')))) &&
     assertionEvidence(code);
 }));
-export { git, json, operations, behavior, publicationCommand, validated, branchNotePaths, checkoutReported, validationCommands, pythonArguments };
+export { git, json, operations, behavior, publicationCommand, validated, branchNotePaths, contractShape, checkoutReported, validationCommands, pythonArguments };

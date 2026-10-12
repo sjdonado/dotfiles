@@ -70,7 +70,7 @@ No note is written for the default branch once the work has a branch of its own.
 
 ### The task list
 
-Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end.
+Every line of work has exactly one task list, and the note is never it. Under an OpenSpec change, that list is the change's own `tasks.md`. Without one, **write `.agent/<branch-key>.tasks.md` before the second step of the work, not after the last**: same directory, same ignore rule, same branch-key encoding as the note, and the same shape an OpenSpec change uses, numbered items grouped under headings, ticked as each lands rather than in a batch at the end. Tick a check item only after observing its successful completion, never when the check is planned or started.
 
 Writing it is not optional and not a reward for finishing. A list written at the end is a report, and a report cannot be read by the session that needed it. If the work has more than one step, the file exists before the second step starts, and every later checkpoint updates it alongside the note.
 
@@ -134,13 +134,13 @@ Unless the human explicitly requests a draft, open a normal PR with `WIP:` at th
 
 These rules apply whenever an agent drafts or sends a message to someone other than the user or to an external system on the user's behalf, including issues, pull requests, tickets, email, chat messages to others, support messages, forms, comments, and questions. They govern the message itself. **Publication authority** says what authorizes the write, and nothing in this section grants permission to send, post, reply, close, or otherwise change external state.
 
-- Read the complete thread and relevant surrounding context before writing.
+- Read the complete thread and relevant surrounding context before writing. Before drafting, compare the report's named findings with its documented evidence. If findings are undocumented, state which findings the evidence resolves and request the missing details, even when closing the documented finding; do not imply the whole report is resolved.
 - Send a message body through a file or stdin (`--body-file`), never an interpolated shell string, so quoting cannot alter it. Read back what was sent; if it is malformed, correct that same message where the platform allows, and say so rather than posting a second one.
 - Ground factual claims in evidence gathered during the current session, repository state, tool output, or an authoritative source. Before reporting coverage from an unfamiliar check, inspect its implementation: printed or stubbed success messages do not establish that typecheck, lint, tests, or a scan ran. Report coverage as unverified when its execution is not established. Before claiming evidence is absent, inspect the relevant source-of-truth files and account for search filters that excluded them; an incomplete search means unverified, not absent. State material inferences and uncertainty as such.
 - Write for the recipient. Acknowledge useful input when natural, then give the finding, supporting evidence, action taken, and relevant verification. Keep only what helps the recipient understand or act.
 - When rejecting a suggestion, be respectful and specific. Explain why it does not fit, give the correct alternative, and state what evidence would change the conclusion.
 - When asking a question as the user's agent, include the relevant context, what was already checked, and the exact decision or information needed.
-- Mention an adjacent inconsistency only when resolving it prevents confusion or gives the recipient something actionable. When a report names more findings than it documents, state which findings the evidence resolves and request the missing details rather than imply the whole report is resolved.
+- Mention an adjacent inconsistency only when resolving it prevents confusion or gives the recipient something actionable.
 - Never invent the user's beliefs, relationships, authority, experience, or intent. Do not expose internal reasoning, loaded skills, or harness mechanics to the recipient.
 - Match the platform's conventions and the user's established voice without forcing the message into a fixed template.
 

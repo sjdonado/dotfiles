@@ -31,11 +31,11 @@ Pick the type at the start of the round: if the input says to finalize or run th
 
 3. If any item is ambiguous, contradictory, or requires a product decision, ask specific questions and STOP. This is the only pre-implementation clarification point. Otherwise, proceed without confirmation until asking whether more feedback rounds remain.
 
-4. Apply every feedback item without dropping agreed scope. Use subagents only when the work genuinely benefits from broader reconnaissance or parallel investigation.
+4. Reconcile and save the contract per `AGENTS.md` before editing code, including any changed End state. Apply every feedback item without dropping agreed scope. Use subagents only when the work genuinely benefits from broader reconnaissance or parallel investigation.
 
 5. Verify every feedback item has a corresponding change or an explicit reason it required no change. Run focused checks for the changed surface first, then the project's resolved oracle ladder. For data, auth, concurrency, migration, or public-contract changes, also verify failure behavior, compatibility, and rollback where relevant. Do not invent unrelated checks. Fix failures caused by the changes. Then load and follow `agent-review` and triage every finding: fix it, reject it with a specific reason, or escalate it if it is a product decision. Resolve findings in the working tree; never post them to the forge.
 
-6. Report what changed, what each check did, and what is still outstanding, with nothing committed and nothing pushed. Then ask once, in one line, whether to publish this batch to the existing PR. Save the branch note with the accumulated delta, the check results, and that pending question before returning. Stop here unless the user has already approved publishing this batch.
+6. Report what changed, what each check did, and what is still outstanding, with nothing committed and nothing pushed. Use the withholding report required by `AGENTS.md` Publication authority, then ask once whether to publish this batch to the existing PR. Save the branch note with the accumulated delta, the check results, and that pending question before returning. Stop here unless the user has already approved publishing this batch.
 
 7. On approval for this batch, and with no further confirmation: commit with conventional messages, push the current branch, then drive required remote checks green. A red required check is a failure to fix, not a result to report. Do not open or merge a PR. Approval of this batch does not carry to the next one.
 

@@ -3,12 +3,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
-import { git, behavior, publicationCommand, validated, branchNotePaths } from './state';
+import { git, behavior, publicationCommand, validated, branchNotePaths, contractShape } from './state';
 export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const seeds = (meta.seedFiles || {});
   const notePath = branchNotePaths(meta).note;
+  const tasksPath = branchNotePaths(meta).tasks;
   const seedNote = Object.keys(seeds).find(f => f === notePath);
   const continuation = meta.continuation !== undefined ? !!meta.continuation : !!seedNote;
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };
@@ -19,7 +20,7 @@ export default (output, context) => {
   if (!continuation) {
     const normalized = behavior(dir, '');
     const note = read(notePath);
-    const noted = !!note && !!git(dir, 'check-ignore', notePath);
+    const noted = contractShape(note, tasksPath, dir) && !!read(tasksPath) && !!git(dir, 'check-ignore', notePath);
     const pass = normalized && noted && local && ran;
     return { pass, score: +pass, reason: `round:1 behavior:${normalized} noted:${noted} local:${local} ran:${ran}` };
   }
@@ -28,6 +29,7 @@ export default (output, context) => {
   const grounded = rationale.includes('northstar') && rationale.includes('brand');
   const note = read(notePath);
   const refreshed = !!seedNote && !!note && !!git(dir, 'check-ignore', notePath) &&
+    contractShape(note, tasksPath, dir) && !!read(tasksPath) &&
     seeds[seedNote] !== crypto.createHash('sha256').update(note).digest('hex') &&
     note.toLowerCase().includes('untitled');
   const pass = fallback && grounded && refreshed && local && ran;

@@ -1,4 +1,4 @@
-"""Stdin-only syntax evidence, never execution or proof of assertion correctness. Accept straight-line imports/assignments/assertions, literal nonempty case loops, and undecorated zero-argument test functions called directly or in a main guard. Reject other control flow, short-circuit expressions, unknown calls and rebinding callables. Bounds deliberately reject complex files instead of constructing a CFG."""
+"""Stdin-only syntax evidence, never execution or proof of assertion correctness. Accept straight-line imports/assignments/assertions, literal nonempty tuple/list case loops or known literal dictionaries through zero-argument .items(), and undecorated zero-argument test functions called directly or in a main guard. Reject other control flow, short-circuit expressions, unknown calls and rebinding callables or known dictionaries. Bounds deliberately reject complex files instead of constructing a CFG."""
 import ast
 import json
 import sys
@@ -7,6 +7,17 @@ def recognize(source):
     if len(source) > 100_000 or sum(1 for _ in ast.walk(tree)) > 10_000:
         raise ValueError()
     found, remaining = False, 10_000
+    def literal(node):
+        if not all(isinstance(n, (ast.Constant, ast.Tuple, ast.List, ast.Dict, ast.Load)) for n in ast.walk(node)):
+            raise ValueError()
+        for item in ast.walk(node):
+            if isinstance(item, ast.Dict):
+                if not item.keys or any(key is None for key in item.keys):
+                    raise ValueError()
+                keys = [ast.literal_eval(key) for key in item.keys]
+                if len(set(keys)) != len(keys):
+                    raise ValueError()
+        return node
     def expression(node, names):
         if isinstance(node, ast.Constant):
             return False
@@ -14,6 +25,9 @@ def recognize(source):
             return names[node.id]
         if isinstance(node, (ast.Tuple, ast.List)):
             return any([expression(item, names) for item in node.elts])
+        if isinstance(node, ast.Dict):
+            literal(node)
+            return False
         if isinstance(node, ast.JoinedStr):
             if any(isinstance(item, ast.FormattedValue) and item.format_spec is not None for item in node.values):
                 raise ValueError()
@@ -30,6 +44,8 @@ def recognize(source):
         raise ValueError()
     def bind(target, value, names, literals):
         if isinstance(target, ast.Name) and (target.id not in names or isinstance(names[target.id], bool)):
+            if target.id == 'len' or isinstance(literals.get(target.id), ast.Dict):
+                raise ValueError()
             names[target.id] = value
             literals.pop(target.id, None)
         elif isinstance(target, (ast.Tuple, ast.List)) and value is False and all(isinstance(item, ast.Name) for item in target.elts):
@@ -48,29 +64,39 @@ def recognize(source):
             if isinstance(node, ast.ImportFrom) and node.module == 'label' and node.level == 0 and all(a.name == 'label' for a in node.names):
                 for alias in node.names:
                     key = alias.asname or alias.name
-                    if key in names:
+                    if key in names or key == 'len':
                         raise ValueError()
                     names[key] = 'label'
             elif isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
                 bind(node.targets[0], expression(node.value, names), names, literals)
-                if isinstance(node.targets[0], ast.Name) and isinstance(node.value, (ast.Tuple, ast.List)) and all(isinstance(n, (ast.Constant, ast.Tuple, ast.List, ast.Load)) for n in ast.walk(node.value)):
-                    literals[node.targets[0].id] = node.value
+                if isinstance(node.value, (ast.Tuple, ast.List, ast.Dict)) and all(isinstance(n, (ast.Constant, ast.Tuple, ast.List, ast.Dict, ast.Load)) for n in ast.walk(node.value)):
+                    literals[node.targets[0].id] = literal(node.value)
             elif isinstance(node, ast.Assert):
                 found = expression(node.test, names) or found
                 if node.msg:
                     expression(node.msg, names)
             elif isinstance(node, ast.FunctionDef) and not node.decorator_list and not node.returns and not node.args.args and not node.args.posonlyargs and not node.args.kwonlyargs and not node.args.vararg and not node.args.kwarg:
-                if node.name in names:
+                if node.name in names or node.name == 'len':
                     raise ValueError()
                 names[node.name] = node
             elif isinstance(node, ast.If) and ast.dump(node.test) == ast.dump(ast.parse('__name__ == "__main__"', mode='eval').body) and '__name__' not in names:
                 block(node.body, names, literals, depth + 1)
             elif isinstance(node, ast.For) and not node.orelse:
-                cases = literals.get(node.iter.id) if isinstance(node.iter, ast.Name) else node.iter
-                if not isinstance(cases, (ast.Tuple, ast.List)) or not cases.elts or not all(isinstance(n, (ast.Constant, ast.Tuple, ast.List, ast.Load)) for n in ast.walk(cases)):
-                    raise ValueError()
-                if isinstance(node.target, (ast.Tuple, ast.List)) and not all(isinstance(item, (ast.Tuple, ast.List)) and len(item.elts) == len(node.target.elts) for item in cases.elts):
-                    raise ValueError()
+                iterator = node.iter
+                if isinstance(iterator, ast.Call) and isinstance(iterator.func, ast.Attribute) and iterator.func.attr == 'items' and isinstance(iterator.func.value, ast.Name) and not iterator.args and not iterator.keywords:
+                    cases = literals.get(iterator.func.value.id)
+                    if not isinstance(cases, ast.Dict):
+                        raise ValueError()
+                    literal(cases)
+                    if not isinstance(node.target, (ast.Tuple, ast.List)) or len(node.target.elts) != 2 or not all(isinstance(item, ast.Name) for item in node.target.elts) or node.target.elts[0].id == node.target.elts[1].id:
+                        raise ValueError()
+                else:
+                    cases = literals.get(iterator.id) if isinstance(iterator, ast.Name) else iterator
+                    if not isinstance(cases, (ast.Tuple, ast.List)) or not cases.elts:
+                        raise ValueError()
+                    literal(cases)
+                    if isinstance(node.target, (ast.Tuple, ast.List)) and not all(isinstance(item, (ast.Tuple, ast.List)) and len(item.elts) == len(node.target.elts) for item in cases.elts):
+                        raise ValueError()
                 bind(node.target, False, names, literals)
                 block(node.body, names, literals, depth + 1)
             elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name):
@@ -81,6 +107,8 @@ def recognize(source):
                     local_literals = literals.copy()
                     for item in ast.walk(function):
                         if isinstance(item, ast.Name) and isinstance(item.ctx, ast.Store):
+                            if local.get(item.id) == 'label' or isinstance(local.get(item.id), ast.FunctionDef) or isinstance(local_literals.get(item.id), ast.Dict) or item.id == 'len':
+                                raise ValueError()
                             local.pop(item.id, None)
                             local_literals.pop(item.id, None)
                     block(function.body, local, local_literals, depth + 1)
