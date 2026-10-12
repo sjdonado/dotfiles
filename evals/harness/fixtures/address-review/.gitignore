@@ -1,0 +1,4 @@
+__pycache__/
+.fixture/*
+!.fixture/pr.json
+!.fixture/review-threads.json

@@ -27,6 +27,8 @@ Lenses: an unmet requirement; scope creep past what was asked; an edge case hand
 
 ## Reviewer B: is it wrong
 
+Apply the shared Reviewer B activation rule before reviewing the diff. Identify unnecessary complexity only when a concrete simpler alternative preserves all required behavior, error handling, security, accessibility, and verification. Do not replace the bug-finding pass with a simplicity pass.
+
 Give it **only** the diff. No requirements, no context, no ticket.
 
 > Assume this diff is wrong. Find the bug.
@@ -58,7 +60,7 @@ Reviewers never edit files. Ever.
 
 For each finding, exactly one of:
 
-- **Fix it.** Smallest change that resolves it, per `ponytail`.
+- **Fix it.** Resolve the finding without dropping agreed behavior or verification.
 - **Reject it.** With a specific reason, recorded in the PR body under `Rejected review findings`. A rejection you cannot justify in one line is a fix you are avoiding.
 - **Escalate it.** If it is a product decision, follow the escalation contract in `AGENTS.md`.
 

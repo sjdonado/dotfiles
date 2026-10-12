@@ -42,9 +42,18 @@ try {
   const pr = existsSync(prPath) ? JSON.parse(readFileSync(prPath, "utf8")) : null;
   const history = existsSync(histPath) ? JSON.parse(readFileSync(histPath, "utf8")) : [];
   const pair = args.slice(0, 2).join(" ");
+  const reviewProbe = existsSync(join(root, "review-threads.json"));
+  const reviewQuery = 'query { repository(owner:"probe",name:"labels") { pullRequest(number:7) { reviewThreads(first:100) { nodes { id isResolved comments(first:100) { nodes { id databaseId body path line author { login } } } } } } } }';
+  if (reviewProbe && !["pr view", "pr list", "pr checks", "api graphql"].includes(pair)) fail("Review fixture permits reads only");
   if (args.includes("--help") || args.includes("-h")) {
     // A usage probe must never mutate the forge.
     console.log("fixture gh: usage of " + args.slice(0, 2).join(" "));
+    served = true;
+  } else if (pair === "api graphql") {
+    const query = args.find(value => value.startsWith("query="))?.slice(6) || "";
+    const normalize = (value: string) => value.replace(/"(?:\\.|[^"\\])*"|\s+/g, token => token.startsWith('"') ? token : "");
+    if (!reviewProbe || args.length !== 4 || !["-f", "--raw-field"].includes(args[2]) || normalize(query) !== normalize(reviewQuery)) fail("Unsupported GraphQL query; review fixture permits only its documented read query");
+    console.log(JSON.stringify(readJson("review-threads.json")));
     served = true;
   } else if (pair === "pr view" || pair === "pr list") {
     if (args[1] === "view" && pr === null) fail("No pull request found");

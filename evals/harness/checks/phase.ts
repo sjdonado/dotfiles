@@ -4,12 +4,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
-import { git, behavior, operations, publicationCommand, validated } from './state';
+import { git, behavior, operations, publicationCommand, validated, branchNotePaths } from './state';
 export default (output, context) => {
   const meta = (context && context.providerResponse && context.providerResponse.metadata) || {};
   const dir = meta.workingDir || process.env.PF_CHECK_DIR || '.';
   const text = String(output || ''), said = text.toLowerCase();
   const seeds = meta.seedFiles || {};
+  const notePath = branchNotePaths(meta).note;
   const has = (f) => Object.keys(seeds).some(k => k === f || k.endsWith('/' + f));
   const read = (p) => { try { return fs.readFileSync(path.join(dir, p), 'utf8'); } catch (e) { return ''; } };
   const hash = (s) => crypto.createHash('sha256').update(s).digest('hex');
@@ -26,12 +27,13 @@ export default (output, context) => {
       noCodeEdits: hash(read('label.py')) === seeds['label.py'],
       savedCasing: design.includes('northstar') && design.includes('brand'),
     };
-  } else if (!has('.agent/proto%2Fhandoff.md')) {
-    const note = read('.agent/proto%2Fhandoff.md');
+  } else if (!has(notePath)) {
+    const note = read(notePath);
     checks = { ...base,
       blankKept: behavior(dir, '   '),
-      noted: !!note && !!git(dir, 'check-ignore', '.agent/proto%2Fhandoff.md'),
+      noted: !!note && !!git(dir, 'check-ignore', notePath),
       keptHead: untouchedHead,
+      validated: validated(meta),
     };
   } else {
     const status = git(dir, 'status', '--porcelain');

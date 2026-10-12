@@ -1,6 +1,6 @@
 ---
 name: ponytail
-description: Prefer the smallest correct implementation when writing, fixing, refactoring or reviewing code, including prototype code and implementation-level dependency choices. Also applies to requests for lazy mode, YAGNI or simpler code. Do not constrain requirements discovery, exploration, system design or planning artifacts, even when those requests mention simplicity or Ponytail.
+description: Apply a behavior-preserving simplicity lens as Reviewer B in agent-review or when repairing code in address-review. Also use for explicit Ponytail, lazy mode, YAGNI, or simpler-code requests. Do not activate automatically during ordinary implementation, prototypes, verification, review triage, or planning.
 license: MIT
 ---
 
@@ -12,7 +12,7 @@ code is the code never written.
 
 ## Activation
 
-Apply the ladder while implementing or reviewing code. Suspend it automatically when work returns to requirements discovery, exploration, system design or planning artifacts; reapply it when implementation resumes. A request naming Ponytail does not override this phase boundary. Keep the selected intensity across those transitions, defaulting to **full**. `/ponytail lite|full|ultra` changes the intensity; "stop ponytail" or "normal mode" disables the skill until the user re-enables it.
+Automatic activation is owned by the shared AGENTS.md rule for Reviewer B and address-review code repair. Otherwise use this skill only for an explicit user request. Apply the ladder to code, not requirements discovery or planning. Default to **full**; `/ponytail lite|full|ultra` selects intensity, and "stop ponytail" or "normal mode" disables explicit activation.
 
 ## The ladder
 

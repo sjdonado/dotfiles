@@ -31,7 +31,7 @@ Pick the type at the start of the round: if the input says to finalize or run th
 
 3. If any item is ambiguous, contradictory, or requires a product decision, ask specific questions and STOP. This is the only pre-implementation clarification point. Otherwise, proceed without confirmation until asking whether more feedback rounds remain.
 
-4. When writing code, load and follow `ponytail` and apply every feedback item. Keep the implementation minimal without dropping agreed scope. Investigation and clarification remain outside its ladder. Use subagents only when the work genuinely benefits from broader reconnaissance or parallel investigation.
+4. Apply every feedback item without dropping agreed scope. Use subagents only when the work genuinely benefits from broader reconnaissance or parallel investigation.
 
 5. Verify every feedback item has a corresponding change or an explicit reason it required no change. Run focused checks for the changed surface first, then the project's resolved oracle ladder. For data, auth, concurrency, migration, or public-contract changes, also verify failure behavior, compatibility, and rollback where relevant. Do not invent unrelated checks. Fix failures caused by the changes. Then load and follow `agent-review` and triage every finding: fix it, reject it with a specific reason, or escalate it if it is a product decision. Resolve findings in the working tree; never post them to the forge.
 
