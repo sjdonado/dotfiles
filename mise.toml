@@ -324,6 +324,7 @@ exit $status
 "~/.config/opencode/opencode.json" = { source = "opencode/opencode.json", mode = "symlink" }
 "~/.config/opencode/cli.json" = { source = "opencode/cli.json", mode = "symlink" }
 "~/.config/opencode/AGENTS.md" = { source = "opencode/AGENTS.md", mode = "symlink" }
+"~/.config/opencode/plugins/no-foreground-wait.ts" = { source = "opencode/plugins/no-foreground-wait.ts", mode = "symlink" }
 "~/.local/state/opencode/kv.json" = { source = "opencode/kv.json", mode = "symlink" }
 "~/.pi/agent/settings.json" = { source = "pi/settings.json", mode = "symlink" }
 "~/.pi/agent/mcp.json" = { source = "pi/mcp.json", mode = "symlink" }
