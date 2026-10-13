@@ -13,12 +13,12 @@
     },
     {
       "match": [
-        "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
-        "^https?://([^/]+\\.)?slack\\.com(/|$)",
         "^https?://([^/]+\\.)?linear\\.app(/|$)",
-        "^https?://(docs|drive|mail|calendar|meet|chat|sheets|slides|forms|sites|keep|contacts|admin|groups)\\.google\\.com(/|$)"
+        "^https?://([^/]+\\.)?slack\\.com(/|$)",
+        "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
+        "^https?://(meet|calendar|drive|docs|mail)\\.google\\.com(/|$)"
       ],
-      "browser": "net.imput.helium"
+      "browser": "com.officecommun.search"
     },
     {
       "match": "^https?://(www\\.)?reddit\\.com/",
