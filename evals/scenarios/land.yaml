@@ -1,0 +1,115 @@
+description: 'Land refuses to close the note while the PR is still open, then archives the note and deletes the task list once the PR has merged. It never merges and, with no OpenSpec change, publishes nothing.'
+skills: ['land']
+
+setup:
+  - 'git checkout -qb fix/settings-names'
+  - |-
+    printf '%s\n' '// Shared display-name formatter.' 'export function label(text: string): string {' '  return text.trim().replace(/\s+/g, " ");' '}' > components/label.ts
+  - |-
+    git commit -qam 'fix(settings): collapse whitespace in names'
+  - 'git push -qu origin fix/settings-names'
+  - 'git rev-parse HEAD > .fixture/branch-head'
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
+
+    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text;
+    }
+  'pages/settings.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderSettings(name: string): string {
+      return `<h1>Settings for ${label(name)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderHome(name: string): string {
+      return `<h1>Welcome${label(name) ? `, ${label(name)}` : ""}</h1>`;
+    }
+  'check.ts': |
+    import assert from "node:assert";
+    import { renderHome } from "./pages/home.ts";
+    import { renderSettings } from "./pages/settings.ts";
+
+    assert.equal(renderSettings("Ada"), "<h1>Settings for Ada</h1>");
+    assert.equal(renderHome("Ada"), "<h1>Welcome, Ada</h1>");
+    console.log("check passed");
+  '.fixture/pr.json': |
+    {
+      "number": 1,
+      "state": "OPEN",
+      "url": "https://example.invalid/pull/1",
+      "headRefName": "fix/settings-names",
+      "baseRefName": "main",
+      "isDraft": false,
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+      "mergedAt": null,
+      "statusCheckRollup": [],
+      "reviewThreads": [],
+      "replies": [],
+      "title": "fix(settings): collapse whitespace in names",
+      "body": "Names on the settings page collapse runs of whitespace.\n"
+    }
+  '.agent/fix%2Fsettings-names.md': |
+    # fix/settings-names
+
+    ## Contract
+
+    - **Purpose**: names on the settings page render without stray whitespace.
+    - **End state**: `bun check.ts` passes and `renderSettings('  Ada   Lovelace ')` returns `<h1>Settings for Ada Lovelace</h1>`; PR https://example.invalid/pull/1 open.
+    - **Key tasks**: .agent/fix%2Fsettings-names.tasks.md
+
+    ## State
+
+    - Branch fix/settings-names pushed; PR #1 open, awaiting merge.
+
+    ## Carry forward
+
+    - Casing is kept as typed.
+  '.agent/fix%2Fsettings-names.tasks.md': |
+    # Tasks
+
+    ## 1. Settings names
+
+    - [x] 1.1 Collapse whitespace in label()
+    - [x] 1.2 bun check.ts green
+    - [x] 1.3 PR opened
+
+turns:
+  - prompt: 'The PR merged, land it.'
+    expect:
+      skills: ['land']
+      notRan: ['git (commit|push)', '\bgh pr merge\b']
+      committed: false
+      reply: ['open|not (yet )?merged']
+      files:
+        '.agent/fix%2Fsettings-names.md': 'Purpose'
+        '.agent/fix%2Fsettings-names.tasks.md': '1\.1'
+        '.agent/archive/fix%2Fsettings-names.md': false
+      pr:
+        state: ['^OPEN$']
+  - setup:
+      - |-
+        jq '.state = "MERGED" | .mergedAt = "2026-10-12T10:00:00Z"' .fixture/pr.json > .fixture/pr.tmp && mv .fixture/pr.tmp .fixture/pr.json
+      - 'git push -q origin fix/settings-names:main'
+    prompt: 'It is merged now. Land it.'
+    expect:
+      notRan: ['git (commit|push)', '\bgh pr merge\b']
+      committed: false
+      files:
+        '.agent/fix%2Fsettings-names.md': false
+        '.agent/fix%2Fsettings-names.tasks.md': false
+        '.agent/archive/fix%2Fsettings-names.md': 'merged|complete'

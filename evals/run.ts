@@ -1,4 +1,4 @@
-// Runs scenarios/*.toml end to end against real Pi sessions. Bun, no packages. Only --run is paid.
+// Runs scenarios/*.yaml end to end against real Pi sessions. Bun, no packages. Only --run is paid.
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -33,7 +33,7 @@ function must(dir: string, cmd: string[]) {
 }
 
 function load(name: string): Scenario {
-  const s = Bun.TOML.parse(readFileSync(join(ROOT, "scenarios", name), "utf8")) as any;
+  const s = Bun.YAML.parse(readFileSync(join(ROOT, "scenarios", name), "utf8")) as any;
   if (typeof s.description !== "string" || !Array.isArray(s.skills) || !s.files || !Array.isArray(s.turns) || !s.turns.length)
     throw new Error(`${name}: needs description, skills, files, turns`);
   const missing = s.skills.filter((k: string) => !existsSync(join(REPO, "agents/skills", k, "SKILL.md")));
@@ -195,7 +195,7 @@ async function main(args = process.argv.slice(2)) {
   const filter = option("--filter"), skill = option("--skill"), only = option("--model");
   // A paid run with no selector runs only the core scenarios; --list and --dry-run are free and cover everything.
   const coreOnly = mode === "--run" && !args.includes("--all") && !skill && !filter;
-  const scenarios = readdirSync(join(ROOT, "scenarios")).filter(f => f.endsWith(".toml") && (!filter || re(filter).test(f)))
+  const scenarios = readdirSync(join(ROOT, "scenarios")).filter(f => f.endsWith(".yaml") && (!filter || re(filter).test(f)))
     .map(n => [n, load(n)] as const).filter(([, s]) => (!skill || s.skills.includes(skill)) && (!coreOnly || s.core));
   const models: Model[] = JSON.parse(readFileSync(join(ROOT, "models.json"), "utf8")).filter((m: Model) => !only || m.label === only);
   if (!scenarios.length || !models.length) throw new Error("No scenarios or models selected");
@@ -209,7 +209,7 @@ async function main(args = process.argv.slice(2)) {
     pi: paid ? must(REPO, ["pi-agent", "--version"]) : null };
   if (paid) console.log(`Evidence: ${batch}`);
   for (const [name, scenario] of scenarios) for (const model of models) {
-    const attempt = join(batch, `${name.replace(/\.toml$/, "")}-${model.label}`), workdir = mkdtempSync(join(tmpdir(), "eval-repo-"));
+    const attempt = join(batch, `${name.replace(/\.yaml$/, "")}-${model.label}`), workdir = mkdtempSync(join(tmpdir(), "eval-repo-"));
     mkdirSync(attempt, { recursive: true });
     const row: any = { scenario: name, ...model, inputs, status: "started", turns: [] };
     try {

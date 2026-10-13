@@ -1,10 +1,10 @@
 # Harness evals
 
-End-to-end sessions that show whether a change to the harness (agents/AGENTS.md, a skill) or a change of model alters what an agent actually does. A scenario is one real multi-turn conversation with a coding agent in a disposable repository, written entirely as TOML.
+End-to-end sessions that show whether a change to the harness (agents/AGENTS.md, a skill) or a change of model alters what an agent actually does. A scenario is one real multi-turn conversation with a coding agent in a disposable repository, written entirely as YAML.
 
 ## Layout
 
-- `scenarios/<name>.toml`: one scenario. TOML keeps file contents, prompts and shell checks readable: multi-line `'''` blocks hold code as written, and single-quoted regexes need no doubled backslashes.
+- `scenarios/<name>.yaml`: one scenario. YAML keeps file contents, prompts and shell checks readable: a literal block (`|`) holds code as written at its own indentation, the way a GitHub Actions `run:` step does, and single-quoted regexes need no doubled backslashes. A one-line check that contains a single quote is a `|-` block, so it reads exactly as the shell runs it.
   - `skills` names the skills the scenario exercises, so `--skill` can select it. `core: true` puts it in the default paid run.
   - `files` seeds the repository. Its `AGENTS.md` is appended to the live `agents/AGENTS.md`, and every skill under `agents/skills/` is installed. Files under `.fixture/` (forge state such as `pr.json`) and `.agent/` (branch notes) are ignored by git, never committed.
   - `setup` is optional shell run after the seed is pushed, for state the files cannot express, such as a pushed task branch.
