@@ -12,6 +12,15 @@
       "browser": "net.imput.helium"
     },
     {
+      "match": [
+        "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
+        "^https?://([^/]+\\.)?slack\\.com(/|$)",
+        "^https?://([^/]+\\.)?linear\\.app(/|$)",
+        "^https?://(docs|drive|mail|calendar|meet|chat|sheets|slides|forms|sites|keep|contacts|admin|groups)\\.google\\.com(/|$)"
+      ],
+      "browser": "net.imput.helium"
+    },
+    {
       "match": "^https?://(www\\.)?reddit\\.com/",
       "browser": "com.apple.Safari",
       "rewrite": { "pattern": "^https?://(www\\.)?reddit\\.com/", "with": "https://old.reddit.com/" }
