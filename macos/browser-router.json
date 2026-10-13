@@ -12,8 +12,11 @@
       "browser": "net.imput.helium"
     },
     {
+      "match": "^https?://([^/]+\\.)?linear\\.app(/|$)",
+      "browser": "dev.local.pake.linear"
+    },
+    {
       "match": [
-        "^https?://([^/]+\\.)?linear\\.app(/|$)",
         "^https?://([^/]+\\.)?slack\\.com(/|$)",
         "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
         "^https?://(meet|calendar|drive|docs|mail)\\.google\\.com(/|$)"
