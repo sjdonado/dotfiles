@@ -75,6 +75,7 @@ linked "$HOME/.claude/CLAUDE.md"        "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.codex/AGENTS.md"         "$DOTFILES/agents/AGENTS.md"
 linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
 linked "$HOME/.config/opencode/cli.json" "$DOTFILES/opencode/cli.json"
+linked "$HOME/.config/opencode/plugins/no-foreground-wait.ts" "$DOTFILES/opencode/plugins/no-foreground-wait.ts"
 if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ] && [ -f "$HOME/.config/opencode/plugins/herdr-agent-state.js" ] && jq -e '.plugins | index("./herdr-opencode") != null' "$HOME/.config/opencode/cli.json" >/dev/null; then
   ok "Herdr's generated v2 client and server integration are installed"
 else

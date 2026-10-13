@@ -231,6 +231,9 @@ link_agent_configs() {
     herdr integration install opencode || log "  Herdr integration failed; re-run: herdr integration install opencode"
   fi
   link_managed "$PWD/opencode/AGENTS.md" "$HOME/.config/opencode/AGENTS.md"
+  # V2 loads direct .ts files from plugins/; herdr writes its own files beside this one, so link the file, not the directory.
+  mkdir -p "$HOME/.config/opencode/plugins"
+  link_managed "$PWD/opencode/plugins/no-foreground-wait.ts" "$HOME/.config/opencode/plugins/no-foreground-wait.ts"
   [ "$(readlink "$HOME/.claude/commands" 2>/dev/null || true)" = "$PWD/agents/commands" ] && unlink "$HOME/.claude/commands" || true
   [ "$(readlink "$HOME/.config/opencode/commands" 2>/dev/null || true)" = "$PWD/opencode/commands" ] && unlink "$HOME/.config/opencode/commands" || true
   [ "$(readlink "$HOME/.config/opencode/skills" 2>/dev/null || true)" = "$PWD/opencode/skills" ] && unlink "$HOME/.config/opencode/skills" || true
