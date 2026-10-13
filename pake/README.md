@@ -2,7 +2,10 @@
 
 Work web apps (Linear first; Slack, Notion, Gmail, Calendar and Meet next) run as single-site desktop apps built with [Pake](https://github.com/tw93/Pake), which wraps a site in a Tauri app on the system WebKit view. BrowserRouter sends each app's links to it, so a link clicked anywhere opens in the window that is already showing that app, not in a new browser tab.
 
-Upstream Pake focuses an app that receives a link but drops the link. `open-links-in-window.diff` fixes that: on macOS, a link another app opens with a Pake app (`open -b <bundle id> <url>`, which is what BrowserRouter does) loads in the existing main window, which is then shown and focused. Until upstream has an equivalent, every app is built from a local Pake clone with this patch applied.
+Every app is built from a local Pake clone with two patches applied, until upstream has an equivalent:
+
+- `open-links-in-window.diff`: upstream Pake focuses an app that receives a link but drops the link. With the patch, on macOS, a link another app opens with a Pake app (`open -b <bundle id> <url>`, which is what BrowserRouter does) loads in the existing main window, which is then shown and focused.
+- `follow-system-appearance.diff`: upstream Pake sets the window theme from the page's own theme markers. On macOS the window theme is also the page's `prefers-color-scheme`, so a page that forces dark (Linear's signed-out homepage is `<html data-theme="dark">`) locks every later page that follows the system into dark. With the patch, on macOS, the window keeps the system appearance. Other platforms are unchanged, and an app built with `--dark-mode` is still dark.
 
 ## Requirements
 
@@ -12,18 +15,18 @@ Upstream Pake focuses an app that receives a link but drops the link. `open-link
 
 ## Build Pake with the patch, once
 
-The patch was made against Pake commit `3a344f5` (V3.17.4). A later Pake usually still accepts it; when `git apply --check` fails, re-apply the change by hand in `src-tauri/src/lib.rs`, in the `.run(...)` closure next to the `RunEvent::Reopen` handler.
+The patches were made against Pake commit `3a344f5` (V3.17.4). A later Pake usually still accepts them. When `git apply --check` fails, re-apply the change by hand: the link handler goes in `src-tauri/src/lib.rs`, in the `.run(...)` closure next to the `RunEvent::Reopen` handler, and the appearance change is `update_theme_mode` in `src-tauri/src/app/invoke.rs`.
 
 ```sh
 git clone https://github.com/tw93/Pake.git ~/Developer/Pake
 cd ~/Developer/Pake
-git apply --check ~/.config/dotfiles/pake/open-links-in-window.diff
-git apply ~/.config/dotfiles/pake/open-links-in-window.diff
+git apply --check ~/.config/dotfiles/pake/*.diff
+git apply ~/.config/dotfiles/pake/*.diff
 pnpm install --frozen-lockfile
 pnpm run cli:build
 ```
 
-`pnpm run cli:build` writes `dist/cli.js`, the CLI that builds apps from this clone's `src-tauri`, patch included.
+`pnpm run cli:build` writes `dist/cli.js`, the CLI that builds apps from this clone's `src-tauri`, patches included.
 
 ## Create an app
 
@@ -71,5 +74,5 @@ BrowserRouter reads the config on every link, so the rule applies to the next cl
 
 ## Known issues
 
-- **Dark appearance while macOS is light.** Pake injects `src-tauri/src/inject/theme_refresh.js`, which sets the native window theme from the page's own markers (`class="dark"`, `data-theme="dark"`, `color-scheme: dark`). On macOS the window theme also drives the page's `prefers-color-scheme`. Linear's signed-out homepage is `<html data-theme="dark">`, so the first launch turns the window dark, and Linear's "system" theme then reads dark for the rest of the process. Quitting and reopening the app while signed in should start it light. A source fix is not applied yet.
 - Each app keeps its own WebKit process running while open, with no sleeping tabs as in Search.
+- A link that arrives while the app is still loading its first page can be replaced by that page's own redirect. Seen once with Linear: `/homepage` opened, then a workspace link sent 8 seconds later showed the last-visited project instead. The same link sent to the running app opened the right page. Cause not confirmed.
