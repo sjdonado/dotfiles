@@ -1,0 +1,13 @@
+# Zed project shortcut
+
+Herdr prefix+e opens or focuses Zed at the active pane's Git project root. For a directory outside Git, it opens that directory. It does not close Zed windows or create a local editor overlay. Prefix+L's git-bug overlay and shifted editor-scrollback binding remain unchanged. Existing Neovim overlays retain their legacy manifest entrypoint so their state is not destroyed.
+
+On an SSH server, the action infers the current username and SSH_CONNECTION server address/port. It opens a small popup that requests copying `zed 'ssh://user@host:port/project'` to the foreground client's clipboard. Paste that command in your local shell to open the project in local Zed. The popup also displays the command as a manual-copy fallback; press Enter to dismiss it. No Zed GUI or SSH connection is launched on the server.
+
+The popup remains alive until dismissal because an immediate exit can race Herdr 0.9.3's clipboard processing. Herdr forwards OSC52 to the foreground client's native clipboard or outer terminal. There is no completion acknowledgement: terminal restrictions, disconnection or a foreground-client switch can prevent or redirect delivery. Do not treat the popup's request message as proof that the clipboard changed.
+
+SSH metadata is inherited when the Herdr server starts. A persistent daemon may have no SSH_CONNECTION, and its server-side address can be unsuitable behind NAT, a bastion or a client SSH alias. The current username can also differ from the SSH login after sudo. Override inference with HERDR_ZED_SSH_TARGET or a one-line `ssh-target` file in the directory printed by `herdr plugin config-dir edit-tab`, for example `alice@workbox:2222`. This is non-secret routing configuration, not an SSH key or password; credential-bearing targets are rejected. A headless server with no connection metadata or override fails visibly rather than guessing a hostname or trying to launch a GUI. Herdr does not expose client locality: a GUI-capable remote daemon without SSH metadata looks local, so those deployments must set the override before using this action.
+
+The copied command URL-encodes each project-path segment, then uses POSIX single-quote escaping suitable for the local Bash, Zsh or Fish workflow. Spaces, quotes, Unicode and URL-reserved characters remain folder data. Project paths containing control characters are rejected before shell substitution. Zed still uses your local SSH configuration and normal authentication flow; this plugin does not read or edit SSH credentials or automatically connect.
+
+Zed remote CLI syntax: https://zed.dev/docs/remote-development

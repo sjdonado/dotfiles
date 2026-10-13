@@ -11,9 +11,9 @@
 
 id = "edit-tab"
 name = "Edit Tab"
-version = "1.2.0"
-description = "Toggle the nvim and git-bug termui overlay panes: open one, or close it again."
-min_herdr_version = "0.7.0"
+version = "1.3.0"
+description = "Open projects in Zed, copy remote Zed commands, and retain legacy editor/git-bug overlays."
+min_herdr_version = "0.9.3"
 platforms = ["linux", "macos"]
 
 # nvim is declared as a plugin pane rather than started with `pane run` in a
@@ -38,8 +38,21 @@ placement = "overlay"
 command = ["sh", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/git-bug-tui.sh\""]
 
 [[actions]]
+id = "open-zed"
+title = "Open project in Zed"
+description = "Open local Zed or request copying a remote SSH project command to the viewing client."
+contexts = ["pane", "workspace"]
+command = ["bash", "scripts/open-zed.sh"]
+
+[[panes]]
+id = "copy-zed"
+title = "Remote Zed command"
+placement = "popup"
+command = ["bash", "-c", "exec bash \"$HERDR_PLUGIN_ROOT/scripts/copy-zed.sh\""]
+
+[[actions]]
 id = "toggle"
-title = "Toggle the nvim pane"
+title = "Toggle the legacy nvim pane"
 description = "Open the nvim overlay over the active pane, or close it when it is already open."
 contexts = ["pane", "workspace"]
 command = ["bash", "scripts/toggle.sh"]
