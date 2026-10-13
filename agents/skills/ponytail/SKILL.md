@@ -77,7 +77,7 @@ Hardware is never the ideal on paper: a real clock drifts, a real sensor
 reads off, a PCA9685 runs a few percent fast. Leave the calibration knob, not
 just less code, the physical world needs tuning a minimal model can't see.
 
-Lazy code without its check is unfinished. Reuse the project's test infrastructure and required oracle ladder. Non-trivial logic needs a runnable regression that fails if the behavior breaks; a small standalone assertion suffices only where no test infrastructure exists. Add neither a framework nor a large fixture for a small regression, but do not remove coverage required by the contract or risk.
+Lazy code without its check is unfinished. Reuse the project's test infrastructure and required oracle ladder. Which tests to write, and when, follows **Writing tests** in `AGENTS.md`. Add neither a framework nor a large fixture for a small regression, but do not remove coverage required by the contract or risk.
 
 ## Boundaries
 

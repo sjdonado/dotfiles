@@ -17,9 +17,9 @@ End-to-end sessions that show whether a change to the harness (agents/AGENTS.md,
 
 | Scenario | Skills | Proves |
 | --- | --- | --- |
-| `happy-path` (core) | proto, yolo | Prototype on the default branch, fold in feedback, then yolo to one PR whose manual verification names the side-effect page. |
-| `proto-gate` | proto | A request for a PR with part of its scope open stays local and asks the open question. |
-| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR. |
+| `happy-path` (core) | proto, yolo | Prototype on the default branch without writing tests, fold in feedback, then yolo to one PR that adds an assertion and whose manual verification names the side-effect page. |
+| `proto-gate` | proto | A request for a PR with part of its scope open stays local, writes no test file, and asks the open question. |
+| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR that adds an assertion. |
 | `feedback` | feedback | Feedback on an open PR stays local until the batch is approved, then goes to the same branch and PR. |
 | `address-review` | address-review | Legit thread fixed, wrong thread rejected, resolved thread ignored; replies only inside threads and only after approval. |
 | `land` | land | No closure while the PR is open; after merge the note is archived and the task list deleted, with nothing published. |

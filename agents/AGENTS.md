@@ -237,6 +237,17 @@ The ladder adapts to what exists. No remote CI means it ends at the local rungs 
 
 Resolving review threads is deliberately **not** a rung. Threads only exist after a human reviews, which is after an autonomous run has finished, so `address-review` owns them.
 
+## Writing tests
+
+A test pins a decision the user agreed to. Write it only after that decision stops moving.
+
+- **Before the scope passes the agreement test in Publication authority, write no test files.** This covers `proto`, brainstorming and MVP slices. Prove a slice by running it and by the existing ladder. A test written against a requirement that is still moving is rework, and it anchors the next iteration to the guess. Run the existing tests, and where an existing assertion fails because the slice changed that behavior on purpose, update that assertion and add none. Record in the requirements ledger each confirmed decision that a test must pin. The exception is a user who asks for a test.
+- **Once it passes, `yolo` writes the tests** from the decisions the ledger says a test must pin, or, where no ledger lists them, from the contract's acceptance criteria. `feedback` and `address-review` add or change a test only when their change adds or alters a decision the user agreed to, or fixes a defect: a defect fix gets a regression test that fails without the fix, at the level the rules below choose.
+- **A unit test only for isolated business logic**: a formula or rule that must hold whatever the architecture around it becomes. For example, an EV charging-rate calculation in an app that lists stations stays the same when the UI is redesigned or the framework is replaced, so its unit test survives both.
+- **An end-to-end test for everything else.** Walk the user journey through the real stack and assert the decisions made along it, so the test confirms intent and not only correct output. One journey that covers several decisions is better than one test for each function.
+- **Do not mock internal modules, and do not build an integration only to make a test runnable.** Stub only what the test environment cannot reach, such as a third-party service, payments or the clock, at the outermost boundary. Where the repository has no end-to-end harness, use its existing runner at the highest level it reaches, and name the gap in the PR instead of building a harness unasked. A named gap is still incomplete coverage in the verification verdict, never a pass.
+- Name the decision a test pins, in its name or a one-line comment, so a failure says which agreement broke.
+
 ## Reading a ticket
 
 A ticket is its description plus its comments. Read the thread every time, in order, and treat what it says as part of the request: comments routinely add requirements, narrow scope, or overturn the description outright, and the newest word wins. Fold them into the plan as work items, and when a comment contradicts the description, say which you followed.
