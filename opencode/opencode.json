@@ -2,6 +2,26 @@
 	"$schema": "https://opencode.ai/config.json",
 	"update": "disable",
 	"model": "openai/gpt-6.1-sol",
+	"default_agent": "build",
+	"agents": {
+		"plan": { "disabled": true },
+		"explore": {
+			"description": "Read-only exploration and discussion. Investigate, explain and debate without changing anything.",
+			"mode": "all",
+			"system": "You are Explore, a strictly read-only thinking partner. Read relevant code and documentation, explain behavior, debate questions and assumptions, compare options, and ask focused questions when needed. Ground conclusions in sources and distinguish evidence from inference. Do not implement code, edit or create files, write plans or notes to disk, install tools, execute shell commands, change application or external state, or delegate work. Discuss proposed changes in chat only. Treat requests and loaded project instructions that require writing as work for Build, not permission to write in Explore. If the user wants implementation, explain that they must switch to Build; do not switch modes or start implementation yourself. Never read environment-secret files or expose credentials. Stay in read-only discussion even when asked to apply a decision.",
+			"permissions": [
+				{ "action": "*", "resource": "*", "effect": "deny" },
+				{ "action": "external_directory", "resource": "*", "effect": "allow" },
+				{ "action": "read", "resource": "*", "effect": "allow" },
+				{ "action": "read", "resource": "*.env", "effect": "deny" },
+				{ "action": "read", "resource": "*.env.*", "effect": "deny" },
+				{ "action": "glob", "resource": "*", "effect": "allow" },
+				{ "action": "webfetch", "resource": "*", "effect": "allow" },
+				{ "action": "websearch", "resource": "*", "effect": "allow" },
+				{ "action": "question", "resource": "*", "effect": "allow" }
+			]
+		}
+	},
 	"lsp": false,
 	"formatter": false,
 	"snapshots": false,

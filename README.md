@@ -67,7 +67,7 @@ open ~/Applications/BrowserRouter.app
 
 ### Footprint
 
-Snapshot taken on an Apple M5 with 32 GiB of RAM and macOS 27.0.1 on 2026-10-10 at 10:51 UTC using OpenCode 2.0.26. These are historical measurements, not a benchmark of the newer pinned version. Memory values are resident memory (RSS), not virtual memory or peak usage. OpenCode processes were identified by their executable paths inside the current mise installation. Experimental agents are excluded from these tables.
+These resident-memory (RSS) readings illustrate a workload, not a fixed per-agent RAM requirement or a benchmark of the current version:
 
 | process | RSS at the snapshot |
 | ----------------- | -------------------------------- |
@@ -76,9 +76,9 @@ Snapshot taken on an Apple M5 with 32 GiB of RAM and macOS 27.0.1 on 2026-10-10 
 | `nvim` | 5-22 MiB each, two processes |
 | `opencode` | 164-684 MiB each, four processes |
 
-OpenCode uses a shared server and separate clients, so process count is not the number of agent streams. Its row excludes separate MCP processes and project dev servers. RSS can count shared pages in more than one process; adding rows does not establish unique physical memory usage.
+Disk usage and RAM usage are different budgets. OpenCode uses a shared server and separate clients, so process count is not the number of agent streams. MCP processes, browsers and project dev servers add their own resource use.
 
-Inspect a fresh snapshot without dumping process arguments or environments:
+Inspect current resident memory without dumping process arguments or environments:
 
 ```sh
 ps -Ao pid,ppid,rss,comm
@@ -86,28 +86,30 @@ ps -Ao pid,ppid,rss,comm
 
 The RSS column from `ps` is in KiB; divide by 1024 for MiB.
 
-The active tool packages and application state occupied the following space at the same snapshot. Package sizes include the current installed directory, not old Homebrew copies or package-manager caches.
+RSS can count shared pages in more than one process, so adding rows does not establish unique physical memory usage. Measure your active workload rather than assuming a fixed per-agent RAM cost.
 
-| component | on-disk size |
+Use these rounded disk sizes as approximate guidance. Installed versions, history and caches change with use; package figures exclude old installations and package-manager caches.
+
+| component | approximate on-disk size |
 | ---------------------------------------------- | ---------------- |
-| neovim | 37 MiB |
-| herdr | 23 MiB |
-| worktrunk | 45 MiB |
-| lazygit | 18 MiB |
-| opencode | 177 MiB |
-| `~/.local/share/opencode` | 8.6 GiB |
-| `~/.config/herdr` | 65 MiB |
+| neovim | ~40 MiB |
+| herdr | ~25 MiB |
+| worktrunk | ~50 MiB |
+| lazygit | ~20 MiB |
+| opencode | ~200 MiB |
+| `~/.local/share/opencode` | ~9 GiB, growing with conversation history |
+| `~/.config/herdr` | ~70 MiB |
 
-Re-measure installed package and state sizes with `du` (its output is in KiB):
+Inspect installed package, cache and state sizes with `du` (its output is in KiB):
 
 ```sh
 for tool in npm:@opencode/cli github:neovim/neovim github:max-sixty/worktrunk github:jesseduffield/lazygit; do
   du -sk "$(mise where "$tool")"
 done
-du -sk "$(brew --prefix herdr)/" "$HOME/.local/share/opencode" "$HOME/.config/herdr"
+du -sk "$(brew --prefix herdr)/" "$HOME/.local/share/opencode" "$HOME/.cache/opencode" "$HOME/.config/herdr"
 ```
 
-The listed packages and state total about 9.0 GiB; OpenCode state accounts for most of it. MCP caches, the terminal application, experimental tools, and project checkouts are additional space.
+OpenCode's data directory includes its conversation database, not just disposable caches. Do not delete the database, its WAL/SHM files, authentication files or service registration to reclaim space. Back up persistent state before investigating database growth; plan cache cleanup separately from history retention. Troubleshooting reference: https://opencode.ai/v2/docs/troubleshooting
 
 ### Capacity planning
 
