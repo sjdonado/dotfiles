@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md for scope. The observed handoff failure is grounded in bench/handoff-v1-findings.md:12-18. Instruction conflicts are grounded in agents/AGENTS.md:63,79, agents/skills/feedback/SKILL.md:40-42, and agents/skills/land/SKILL.md:8. These are inputs to this plan, not claims to investigate again. The prior numerical effectiveness ratings were judgments, not acceptance metrics.
+See proposal.md for scope. The observed handoff failure is grounded in findings.md:16-18. Instruction conflicts are grounded in agents/AGENTS.md:63,79, agents/skills/feedback/SKILL.md:40-42, and agents/skills/land/SKILL.md:8. These are inputs to this plan, not claims to investigate again. The prior numerical effectiveness ratings were judgments, not acceptance metrics.
 
 ## Goals / Non-Goals
 

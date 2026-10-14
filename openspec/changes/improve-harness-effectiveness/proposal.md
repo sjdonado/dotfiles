@@ -1,6 +1,6 @@
 ## Why
 
-The existing Luna probe produced correct code but omitted its durable handoff, then invented a missing requirement and reported success in a fresh session (bench/handoff-v1-findings.md:12). Conflicting PR-update instructions and a no-OpenSpec landing gap also leave models to reconcile workflow policy, undermining the goal of a minimal, reusable harness.
+The existing Luna probe produced correct code but omitted its durable handoff, then invented a missing requirement and reported success in a fresh session (findings.md:16-18). Conflicting PR-update instructions and a no-OpenSpec landing gap also leave models to reconcile workflow policy, undermining the goal of a minimal, reusable harness.
 
 ## What Changes
 

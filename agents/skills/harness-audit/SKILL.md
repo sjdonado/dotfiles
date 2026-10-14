@@ -13,12 +13,12 @@ Report how the workflows actually behaved in this project, with evidence, and re
    - Commits in the window: Conventional Commits compliance, WIP checkpoints left on merged branches, implementation commits on the default branch.
    - `openspec/changes/` when present: changes whose PR merged but were never archived; `openspec/specs/` empty while changes accumulate.
    - Session transcripts when readable. Claude Code: directories under `~/.claude/projects/` named by the absolute cwd with every non-alphanumeric character replaced by `-`; list the directory and match both the encoded project path and worktree directories carrying the repository basename (`-claude-worktrees-<repo>-`, `-herdr-worktrees-<repo>-`) rather than constructing names. A session is the top-level `<id>.jsonl`; its `<id>/subagents/` and `<id>/tool-results/` subtrees are a blind spot to name under Unknowns, not extra sessions. Codex: `~/.codex/sessions/<yyyy>/<mm>/<dd>/rollout-*.jsonl` whose first line's `jq -r 'select(.type=="session_meta").payload.cwd'` is the repository root or one of its worktrees. Take the most recent ten sessions in the window at most. Signals: a routing announcement then a different workflow; the same skill file read more than once in a session; interrupts (`[Request interrupted by user` in Claude Code, `turn_aborted` in Codex); permission denials; a stop to ask something a repository search answers; a completion claim the diff or checks contradict. Quote the line, never paraphrase sentiment.
-   - `bench/` when the project has it: the latest batch result and what it leaves untested.
+   - the project's eval suite when it has one (for example `evals/`): the latest run's results and what it leaves untested.
 
 3. Weigh. A finding is a pattern with at least two occurrences or one with a concrete cost (lost requirement, wrong PR body, wasted sessions). One odd session is an anecdote and goes under unknowns.
 
 4. Report:
    - **Coverage**: the per-source lines from step 2. Commits alone are not workflow residue: without at least one branch note, agent-driven PR body, or readable transcript, the result is "not auditable here" and there is no verdict.
    - **Verdict**: one paragraph, what works here and what does not.
-   - **Findings**: numbered, each with the claim, the evidence as `path:line`, a session id, or a PR URL, and the smallest change that would fix it (an instruction edit, a `harness-boostrap` run, a `land` run, a bench scenario). Never a plan.
+   - **Findings**: numbered, each with the claim, the evidence as `path:line`, a session id, or a PR URL, and the smallest change that would fix it (an instruction edit, a `harness-boostrap` run, a `land` run, an eval scenario). Never a plan.
    - **Unknowns**: sources that were unreadable, empty, or too thin, and what would settle them.

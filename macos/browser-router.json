@@ -12,6 +12,33 @@
       "browser": "net.imput.helium"
     },
     {
+      "match": "^https?://([^/]+\\.)?linear\\.app(/|$)",
+      "browser": "com.linear"
+    },
+    {
+      "match": "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
+      "browser": "notion.id"
+    },
+    {
+      "match": "^https?://mail\\.google\\.com(/|$)",
+      "browser": "com.apple.Safari.WebApp.9F5E2D9E-4492-4EC2-95CA-67E8A2ABCA2A"
+    },
+    {
+      "match": "^https?://calendar\\.google\\.com(/|$)",
+      "browser": "com.apple.Safari.WebApp.0CC61C2D-7BC8-432C-BECA-D5FAB42B6EEB"
+    },
+    {
+      "match": "^https?://meet\\.google\\.com(/|$)",
+      "browser": "com.apple.Safari.WebApp.EF557CF5-DBA8-430C-87EA-908527385813"
+    },
+    {
+      "match": [
+        "^https?://([^/]+\\.)?slack\\.com(/|$)",
+        "^https?://(drive|docs)\\.google\\.com(/|$)"
+      ],
+      "browser": "com.officecommun.search"
+    },
+    {
       "match": "^https?://(www\\.)?reddit\\.com/",
       "browser": "com.apple.Safari",
       "rewrite": { "pattern": "^https?://(www\\.)?reddit\\.com/", "with": "https://old.reddit.com/" }

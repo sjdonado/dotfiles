@@ -1,0 +1,65 @@
+description: 'A question that needs tracing across four files is answered read-only with path:line evidence: no edits, no note, no branch.'
+skills: ['ask']
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
+
+    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+  'config.ts': |
+    // Site-wide settings.
+    export const SITE_TITLE = "Tiny";
+    export const FALLBACK_NAME = "Guest";
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text.trim();
+    }
+  'components/user.ts': |
+    import { label } from "./label.ts";
+    import { FALLBACK_NAME } from "../config.ts";
+
+    export type User = { id: string; name?: string };
+
+    export function displayName(user: User): string {
+      return label(user.name ?? "") || FALLBACK_NAME;
+    }
+  'pages/settings.ts': |
+    import { displayName, type User } from "../components/user.ts";
+
+    export function renderSettings(user: User): string {
+      return `<h1>Settings for ${displayName(user)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { displayName, type User } from "../components/user.ts";
+
+    export function renderHome(user: User): string {
+      return `<h1>Welcome, ${displayName(user)}</h1>`;
+    }
+  'check.ts': |
+    import assert from "node:assert";
+    import { renderHome } from "./pages/home.ts";
+    import { renderSettings } from "./pages/settings.ts";
+
+    assert.equal(renderSettings({ id: "1", name: "Ada" }), "<h1>Settings for Ada</h1>");
+    assert.equal(renderHome({ id: "1", name: "Ada" }), "<h1>Welcome, Ada</h1>");
+    console.log("check passed");
+
+turns:
+  - prompt: 'A user whose profile name is three spaces sees "Settings for Guest" on the settings page, not their name and not an error. Why does that happen, and where does "Guest" come from?'
+    expect:
+      skills: ['ask']
+      notSkills: ['proto', 'yolo']
+      notRan: ['git (commit|push|checkout|switch|stash|reset)', '\bgh\b']
+      branch: '^main$'
+      committed: false
+      clean: true
+      reply: ['components/label\.ts:\d+', 'config\.ts:\d+', 'trim']
+      files:
+        '.agent/main.md': false

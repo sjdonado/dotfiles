@@ -1,0 +1,104 @@
+description: 'Happy path: prototype a shared-component change, fold in feedback, then ship it with yolo and flag the side effect on the other page.'
+skills: ['proto', 'yolo']
+core: true
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
+
+    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text;
+    }
+  'pages/settings.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderSettings(name: string): string {
+      return `<h1>Settings for ${label(name)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderHome(name: string): string {
+      return `<h1>Welcome${label(name) ? `, ${label(name)}` : ""}</h1>`;
+    }
+  'check.ts': |
+    import assert from "node:assert";
+    import { renderHome } from "./pages/home.ts";
+    import { renderSettings } from "./pages/settings.ts";
+
+    assert.equal(renderSettings("Ada"), "<h1>Settings for Ada</h1>");
+    assert.equal(renderHome("Ada"), "<h1>Welcome, Ada</h1>");
+    console.log("check passed");
+
+turns:
+  - prompt: 'Names on the settings page look messy when people paste them with extra spaces, tabs or newlines. Clean them up but keep their casing. I am not sure yet what blank names should show, so let me try something first.'
+    expect:
+      skills: ['proto']
+      notSkills: ['yolo']
+      ran: ['\bbun\b']
+      notRan:
+        - 'git (commit|push)'
+        - 'git (checkout -b|switch -c|branch [^-\s])'
+        - '\bgh pr (create|merge|edit|comment|review)\b'
+      branch: '^main$'
+      committed: false
+      check:
+        - 'files="$({ git ls-files --others --exclude-standard; git diff --name-only "$SEED"; })"; ! printf "%s\n" "$files" | grep -qE "\.(test|spec)\.|(^|/)(__tests__|tests?)/" && test -z "$(printf "%s\n" "$files" | grep -vE "^(components|pages)/|^$")"'
+        - 'bun check.ts'
+        - |-
+          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada \t  Lovelace\n'), '<h1>Settings for Ada Lovelace</h1>')"
+      pr: false
+      files:
+        '.agent/main.md': 'Purpose[\s\S]*End state[\s\S]*Key tasks'
+
+  - prompt: 'I tried it and it looks right. Blank or whitespace-only names should show Untitled.'
+    expect:
+      notSkills: ['yolo']
+      ran: ['\bbun\b']
+      notRan:
+        - 'git (commit|push)'
+        - 'git (checkout -b|switch -c|branch [^-\s])'
+        - '\bgh pr (create|merge|edit|comment|review)\b'
+      branch: '^main$'
+      committed: false
+      check:
+        - 'files="$({ git ls-files --others --exclude-standard; git diff --name-only "$SEED"; })"; ! printf "%s\n" "$files" | grep -qE "\.(test|spec)\.|(^|/)(__tests__|tests?)/" && test -z "$(printf "%s\n" "$files" | grep -vE "^(components|pages)/|^$")"'
+        - 'bun check.ts'
+        - |-
+          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('   '), '<h1>Settings for Untitled</h1>')"
+        - |-
+          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings(' Ada  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+      pr: false
+      reply: ['\?']
+
+  - prompt: 'That is the whole scope and I accept it: settings names collapse whitespace and keep casing, blank names show Untitled, proven by bun check.ts. Yolo it and open the PR.'
+    expect:
+      skills: ['yolo']
+      ran: ['bun check\.ts']
+      branch: '^(?!main$).+'
+      committed: true
+      clean: true
+      pushed: true
+      check:
+        - 'git diff "$SEED" HEAD | grep -qE "^\+.*\b(assert|expect)\b"'
+        - 'bun check.ts'
+        - |-
+          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('   '), '<h1>Settings for Untitled</h1>')"
+        - 'test "$(git rev-parse main)" = "$SEED"'
+        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
+        - '! git log --all --format= --name-only | grep -q "^\.agent/"'
+      reply: ['https://example\.invalid/pull/1']
+      files:
+        '.agent/main.md': false
+      pr:
+        title: ['^(?!wip:).+']
+        body: ['manual verification[\s\S]*settings', 'manual verification[\s\S]*home']

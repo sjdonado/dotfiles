@@ -1,10 +1,10 @@
 # Harness evals
 
-End-to-end sessions that show whether a change to the harness (agents/AGENTS.md, a skill) or a change of model alters what an agent actually does. A scenario is one real multi-turn conversation with a coding agent in a disposable repository, written entirely as TOML.
+End-to-end sessions that show whether a change to the harness (agents/AGENTS.md, a skill) or a change of model alters what an agent actually does. A scenario is one real multi-turn conversation with a coding agent in a disposable repository, written entirely as YAML.
 
 ## Layout
 
-- `scenarios/<name>.toml`: one scenario. TOML keeps file contents, prompts and shell checks readable: multi-line `'''` blocks hold code as written, and single-quoted regexes need no doubled backslashes.
+- `scenarios/<name>.yaml`: one scenario. YAML keeps file contents, prompts and shell checks readable: a literal block (`|`) holds code as written at its own indentation, the way a GitHub Actions `run:` step does, and single-quoted regexes need no doubled backslashes. A one-line check that contains a single quote is a `|-` block, so it reads exactly as the shell runs it.
   - `skills` names the skills the scenario exercises, so `--skill` can select it. `core: true` puts it in the default paid run.
   - `files` seeds the repository. Its `AGENTS.md` is appended to the live `agents/AGENTS.md`, and every skill under `agents/skills/` is installed. Files under `.fixture/` (forge state such as `pr.json`) and `.agent/` (branch notes) are ignored by git, never committed.
   - `setup` is optional shell run after the seed is pushed, for state the files cannot express, such as a pushed task branch.
@@ -17,9 +17,9 @@ End-to-end sessions that show whether a change to the harness (agents/AGENTS.md,
 
 | Scenario | Skills | Proves |
 | --- | --- | --- |
-| `happy-path` (core) | proto, yolo | Prototype on the default branch, fold in feedback, then yolo to one PR whose manual verification names the side-effect page. |
-| `proto-gate` | proto | A request for a PR with part of its scope open stays local and asks the open question. |
-| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR. |
+| `happy-path` (core) | proto, yolo | Prototype on the default branch without writing tests, fold in feedback, then yolo to one PR that adds an assertion and whose manual verification names the side-effect page. |
+| `proto-gate` | proto | A request for a PR with part of its scope open stays local, writes no test file, and asks the open question. |
+| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR that adds an assertion. |
 | `feedback` | feedback | Feedback on an open PR stays local until the batch is approved, then goes to the same branch and PR. |
 | `address-review` | address-review | Legit thread fixed, wrong thread rejected, resolved thread ignored; replies only inside threads and only after approval. |
 | `land` | land | No closure while the PR is open; after merge the note is archived and the task list deleted, with nothing published. |
