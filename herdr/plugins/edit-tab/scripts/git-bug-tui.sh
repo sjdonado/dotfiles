@@ -7,7 +7,7 @@
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   msg="git-bug: $(pwd) is not a git repository."
 elif ! command -v git-bug >/dev/null 2>&1; then
-  msg="git-bug is not installed (macOS only: mise.toml declares brew:git-bug)."
+  msg="git-bug is not installed (macOS only: nix/home/darwin.nix declares git-bug)."
 elif ! err=$(git bug user show 2>&1 >/dev/null); then
   # The same command also fails while another process holds git-bug's lock, so only
   # the no-identity error gets the identity hint; anything else is shown as is.

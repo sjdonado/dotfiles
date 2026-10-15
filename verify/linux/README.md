@@ -1,35 +1,27 @@
 # Verifying linux.sh in a container
 
-`linux.sh` provisions a remote box. That makes it the one script here with no cheap feedback loop: running it on a real machine is slow, half of it is already done on any box worth testing on, and a failure leaves residue that hides the next failure.
-
-So it gets a throwaway box instead.
-
 ```sh
-verify/linux/run.sh
+verify/linux/run.sh                          # this Mac's architecture (aarch64)
+verify/linux/run.sh --platform linux/amd64   # x86_64, emulated: slower
+verify/linux/run.sh --shell                  # provision, then hand you a shell in the box
 ```
 
-That builds a bare Ubuntu 24.04, copies this working tree in (uncommitted changes included), runs `linux.sh --install` from scratch, asserts the result, runs it a second time, asserts again, and checks that the second pass did not duplicate anything in the shell startup files. It takes about a minute on a warm image and prints `all checks passed` or the first thing that broke.
+`run.sh` builds a bare Ubuntu 24.04 with one sudo user, copies this working tree in (uncommitted changes included), and runs `linux.sh` exactly as a box would: the pinned Determinate installer installs Nix, and `nix run .#switch` applies the home-manager configuration. Then it asserts, runs `linux.sh` a second time and asserts again. It prints `all checks passed` or what broke.
 
-| | |
-| --- | --- |
-| `verify/linux/run.sh --platform linux/amd64` | Same run on the other architecture. Slower, emulated on Apple silicon. |
-| `verify/linux/run.sh --shell` | Provision, then hand you a shell inside the finished box. |
+The container has no systemd, like most Coder workspaces, so this is also the check for that path: the installer sets Nix up with `--init none` and `linux.sh` starts the daemon itself.
 
 ## What it asserts
 
-`verify.sh` is the whole contract, in four groups, because those are the four ways this breaks:
+`verify.sh` holds the assertions:
 
-- **Every tool runs.** Not "is on PATH": `--version` has to answer. A wrapper whose postinstall never ran is on PATH and still broken, which is the exact failure that keeps Claude Code out of `mise.toml`.
-- **Every tracked config is linked** to the file in this repository, resolved through `readlink -f`, so a copy that happens to have the same contents does not pass.
-- **Non-interactive shells resolve the tools.** A login `bash -lc`, and a bare shell that sources only `~/.profile`. This is what an agent hook or a herdr pane gets, and it is where the first version of this failed: Ubuntu's `~/.bashrc` returns immediately for non-interactive shells, so everything appended to it was invisible. Environment moved to `~/.profile` and `~/.zshenv` because of this check.
-- **The tracked git identity wins**, rather than an injected `GIT_AUTHOR_*`.
+- **Every declared tool runs**: `--version` answers, and each language server that has no version flag answers an LSP initialize request. OpenCode is v2.
+- **Every tracked config is linked** to the file in this repository, resolved with `readlink -f`, so a copy with the same contents fails.
+- **The setup steps ran**: the codex config merge, herdr's claude and OpenCode integrations, the bat theme cache.
+- **Non-interactive shells resolve the tools**: a login `bash -lc`, a bare shell that sources only `~/.profile`, and `zsh -c`. This is what an agent hook, a herdr pane running a command and `ssh host command` get. `claude` must resolve to the Nix profile, not to a binary an old installer left in `~/.local/bin`.
+- **The tracked git identity wins** over an injected `GIT_AUTHOR_EMAIL`, which is what Coder sets.
 
-## GitHub rate limits
-
-The unauthenticated GitHub API allows 60 requests an hour per IP, and every tool installed from a GitHub release spends a couple. `run.sh` passes `gh auth token` into the container when there is one; without it, a shared or busy IP produces 403s that have nothing to do with the change being tested. The symptom is `failed: ... 403 Forbidden` from mise, or an installer reporting that it cannot fetch version information.
+`run.sh` adds the run-level assertions: the herdr plugin step reported itself skipped (no server runs in the container), and the second run kept the same home-manager generation, left no new backup files, duplicated no shell block and did not reinstall Nix.
 
 ## What it does not cover
 
-macOS, which cannot be containerised at all. `verify/macos/run.sh` covers what a sandboxed `HOME` can, and `verify/README.md` explains the asymmetry.
-
-Nor does it prove the box is usable in anger: nothing authenticates, no agent runs a session, herdr never starts a server. It proves provisioning is complete, linked, idempotent, and on PATH.
+macOS: see `verify/README.md`. Nor does it prove the box is usable in anger: nothing authenticates, no agent runs a session, herdr never starts a server. It proves provisioning is complete, linked, idempotent and on PATH.

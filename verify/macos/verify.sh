@@ -1,89 +1,85 @@
 #!/usr/bin/env bash
-# Assertions for a HOME that macos.sh --links-only has just provisioned.
-#
-# Same four groups as the Linux container check, minus the ones a sandbox cannot
-# answer: nothing is installed here, so "does every tool run" is not asked. What
-# is asked is everything about linking, which is where this script's bugs live:
-# a link pointing at a path that moved, a directory linked where individual files
-# were meant, a file quietly replaced by a real copy.
+# Assertions on the evaluated darwin configuration: what a switch would apply. Run from the flake root with nix and jq on PATH (verify/macos/run.sh does both). HOST and USER_NAME name the configuration.
 set -uo pipefail
 
-DOTFILES="${DOTFILES:?set DOTFILES to the repository root}"
+HOST="${HOST:?}" USER_NAME="${USER_NAME:?}"
 PASS=0 FAIL=0
 ok()    { printf '  ok   %s\n' "$1"; PASS=$((PASS+1)); }
 bad()   { printf '  FAIL %s\n' "$1"; FAIL=$((FAIL+1)); }
 group() { printf '\n== %s\n' "$1"; }
 
-linked() {
-  local link=$1 target=$2
-  if [ -L "$link" ] && [ "$(readlink -f "$link")" = "$(readlink -f "$target")" ]; then
-    ok "${link#"$HOME"/} -> ${target#"$DOTFILES"/}"
-  else
-    bad "${link#"$HOME"/} is not a link to ${target#"$DOTFILES"/} (readlink: $(readlink "$link" 2>/dev/null || echo none))"
-  fi
-}
+# One evaluation, everything the assertions read. A live link's target is visible in the command that creates it.
+facts=$(nix eval --json ".#darwinConfigurations.\"$HOST\".config" --apply "c: let
+    hm = c.home-manager.users.$USER_NAME;
+    files = hm.home.file;
+    target = f: let m = builtins.match \"ln -s '?([^' ]*)'? .*\" (f.source.buildCommand or \"\"); in if m == null then null else builtins.head m;
+  in {
+    links = builtins.listToAttrs (map (f: { name = f.target; value = target f; }) (builtins.attrValues files));
+    activation = builtins.attrNames hm.home.activation;
+    agents = builtins.mapAttrs (n: a: a.config.ProgramArguments) hm.launchd.agents;
+    system = builtins.concatStringsSep \"\n\" (map (s: s.text or \"\") (builtins.attrValues c.system.activationScripts));
+    shells = map toString c.environment.shells;
+    brew = { inherit (c.homebrew) brews casks masApps taps; inherit (c.homebrew.onActivation) cleanup upgrade autoUpdate; };
+    nixHomebrew = { inherit (c.nix-homebrew) enable autoMigrate mutableTaps; taps = builtins.attrNames c.nix-homebrew.taps; };
+    packages = map (p: p.name) hm.home.packages;
+  }") || { echo "evaluation failed"; exit 1; }
+f() { jq -r "$1" <<<"$facts"; }
 
-exists() { if [ -e "$1" ]; then ok "${1#"$HOME"/} exists"; else bad "${1#"$HOME"/} missing"; fi; }
+group "live links into the repository"
+repo="/Users/$USER_NAME/.config/dotfiles"
+while IFS=$'\t' read -r name target; do
+  [ "$target" = null ] && continue
+  rel="${target#"$repo"/}"
+  if [ "$rel" = "$target" ]; then bad "$name links outside the repository: $target"
+  elif [ -e "$rel" ]; then ok "~/$name -> $rel"
+  else bad "~/$name -> $rel, which does not exist in the tree"; fi
+done < <(f '.links | to_entries[] | [.key, (.value // "null")] | @tsv')
+for want in .gitconfig .ssh/config .docker/config.json .config/nvim .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
+  if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
+done
 
-group "tool declarations"
-linked "$HOME/.config/mise/config.toml" "$DOTFILES/mise.toml"
-# Silently ignored if it is not linked here: mise looks for the lock beside the
-# config it resolved, not in the repository the config points at.
-linked "$HOME/.config/mise/mise.lock" "$DOTFILES/mise.lock"
+group "setup steps"
+for step in herdrClaude herdrOpencode herdrPlugins codexConfig batCache agentBrowser nvimPlugins fishHistory pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
+  if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
+done
 
-group "shell and terminal"
-linked "$HOME/.config/fish/config.fish" "$DOTFILES/fish/config.fish"
-linked "$HOME/.config/ghostty/config"   "$DOTFILES/ghostty/config"
-linked "$HOME/.gitconfig"               "$DOTFILES/git/.gitconfig"
-linked "$HOME/.docker/config.json"      "$DOTFILES/docker/config.json"
-exists "$HOME/.fish_history"
-linked "$HOME/.local/share/fish/fish_history" "$HOME/.fish_history"
+group "launch agents"
+for agent in KeyRemapping:macos/caps-to-control.sh TMExcludeDev:macos/tm-exclude-dev.sh; do
+  name="${agent%%:*}" script="${agent#*:}"
+  if [ "$(f ".agents.$name[0]")" = "$repo/$script" ] && [ -x "$script" ]; then ok "$name runs $script"; else bad "$name does not run $script"; fi
+done
 
-group "agent harnesses"
-linked "$HOME/.claude/settings.json"          "$DOTFILES/claude/settings.json"
-linked "$HOME/.claude/skills"                 "$DOTFILES/agents/skills"
-linked "$HOME/.claude/CLAUDE.md"              "$DOTFILES/agents/AGENTS.md"
-linked "$HOME/.agents/skills"                 "$DOTFILES/agents/skills"
-linked "$HOME/.codex/AGENTS.md"               "$DOTFILES/agents/AGENTS.md"
-linked "$HOME/.config/opencode/opencode.json" "$DOTFILES/opencode/opencode.json"
-linked "$HOME/.config/opencode/cli.json"      "$DOTFILES/opencode/cli.json"
-linked "$HOME/.config/opencode/AGENTS.md"     "$DOTFILES/opencode/AGENTS.md"
-linked "$HOME/.config/opencode/plugins/no-foreground-wait.ts" "$DOTFILES/opencode/plugins/no-foreground-wait.ts"
-linked "$HOME/.local/state/opencode/kv.json"  "$DOTFILES/opencode/kv.json"
-linked "$HOME/.pi/agent/settings.json"      "$DOTFILES/pi/settings.json"
-linked "$HOME/.pi/agent/mcp.json"           "$DOTFILES/pi/mcp.json"
-linked "$HOME/.pi/agent/AGENTS.md"          "$DOTFILES/agents/AGENTS.md"
-linked "$HOME/.agent-browser/config.json" "$DOTFILES/agent-browser/config.json"
-exists "$HOME/.codex/config.toml"
+group "system settings"
+system="$(f .system)"
+for want in AppleShowAllExtensions AppleShowAllFiles 'UserShell'; do
+  if grep -q "$want" <<<"$system"; then ok "activation sets $want"; else bad "activation never mentions $want"; fi
+done
+if f '.shells[]' | grep -q '/bin/fish$'; then ok "fish is listed for /etc/shells"; else bad "fish is not in environment.shells"; fi
 
-group "bat themes"
-# Linked by the shared lib/links.sh rather than by either script, so both checks
-# assert them: a refactor that drops the call is otherwise invisible.
-for f in "$DOTFILES/bat/themes/"*.tmTheme; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
-
-group "editor, multiplexer, worktrees"
-linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"
-linked "$HOME/.config/zed/settings.json"      "$DOTFILES/zed/settings.json"
-linked "$HOME/.config/zed/keymap.json"        "$DOTFILES/zed/keymap.json"
-linked "$HOME/.config/herdr/config.toml"     "$DOTFILES/herdr/config.toml"
-linked "$HOME/.config/worktrunk/config.toml" "$DOTFILES/worktrunk/config.toml"
-
-group "local bin"
-for f in "$DOTFILES/bin/"*; do linked "$HOME/.local/bin/$(basename "$f")" "$f"; done
-# A link this repo no longer ships must be pruned, not left dangling on PATH.
-if [ -L "$HOME/.local/bin/a-command-this-repo-removed" ]; then
-  bad "a stale link survived the prune"
-else
-  ok "no stale links in ~/.local/bin"
+group "Homebrew, driven by the switch"
+[ "$(f .nixHomebrew.enable)" = true ] && [ "$(f .nixHomebrew.autoMigrate)" = true ] && ok "nix-homebrew owns and adopts /opt/homebrew" || bad "nix-homebrew is not adopting /opt/homebrew"
+[ "$(f .nixHomebrew.mutableTaps)" = false ] && ok "taps are read-only flake inputs" || bad "taps are mutable"
+[ "$(f '[.brew.taps[].name] | sort | join(",")')" = "$(f '.nixHomebrew.taps | sort | join(",")')" ] && ok "homebrew.taps equals the pinned taps" || bad "homebrew.taps differs from the pinned taps"
+[ "$(f .brew.autoUpdate)" = false ] && ok "no tap fetch during the switch" || bad "autoUpdate is on"
+[ "$(f .brew.upgrade)" = true ] && ok "installed items move to the pinned versions" || bad "upgrade is off"
+echo "  info cleanup = $(f .brew.cleanup)"
+cov=openspec/changes/provision-with-nix/coverage.tsv
+if [ -f "$cov" ]; then
+  before=$FAIL
+  while IFS=$'\t' read -r _ item declared _; do
+    case "$declared" in
+      "cask "*) c="${declared#cask }"; f '.brew.casks[] | (.name? // .)' | grep -qx "$c" || f '.brew.casks[] | (.name? // .)' | grep -q "/$c$" || bad "cask $c is in coverage.tsv but not declared" ;;
+      "masApps "*) [ "$(f ".brew.masApps[\"$item\"] // empty")" = "${declared#masApps }" ] || bad "App Store app $item is in coverage.tsv but not declared" ;;
+      "Homebrew formula "*) f '.brew.brews[] | (.name? // .)' | grep -qx "${declared#Homebrew formula }" || bad "formula ${declared#Homebrew formula } is in coverage.tsv but not declared" ;;
+    esac
+  done < <(tail -n +2 "$cov")
+  [ "$FAIL" = "$before" ] && ok "every cask, formula and App Store app in coverage.tsv is declared ($(f '.brew.casks | length') casks, $(f '.brew.brews | length') formulas, $(f '.brew.masApps | length') App Store apps)"
 fi
 
-group "nothing escaped the sandbox"
-# --links-only must not have reached for the machine. These are the paths the
-# skipped blocks would have written.
-for escaped in "$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist" \
-               "$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist" \
-               "$HOME/.config/browser-router/config.json"; do
-  if [ -e "$escaped" ]; then bad "--links-only wrote ${escaped#"$HOME"/}"; else ok "skipped ${escaped#"$HOME"/}"; fi
+group "packages"
+echo "  info $(f '.packages | length') packages in the home profile"
+for p in neovim opencode codex claude-code herdr pi-coding-agent; do
+  if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
 done
 
 printf '\n%s passed, %s failed\n' "$PASS" "$FAIL"

@@ -1,32 +1,15 @@
 #!/usr/bin/env bash
-# Full macos.sh rehearsal in a disposable macOS guest (tart + Virtualization.framework).
-#
-# verify/macos/run.sh is the fast loop: links only, ~5 s, throwaway HOME.
-# This is the slow rehearsal: a real guest that runs everything the sandbox
-# skips (Homebrew, mise installs, login shell, launchd, defaults) and is then
-# discarded. Minutes, not seconds; run it before wiping a machine, not on
-# every edit.
-#
-# Why tart and not custom tooling: tart is the maintained open-source
-# Virtualization.framework frontend (OCI images, CoW clones, --dir sharing).
-# A bespoke Swift wrapper reimplements it for nothing.
-#
-# Transport is SSH, not `tart exec`: exec's agent channel fails silently
-# (exit 125, no output) on this image while sshd answers fine, and SSH also
-# works on vanilla images with no agent at all. Auth is the base-image
-# admin/admin convention via SSH_ASKPASS (askpass.sh): deterministic with
-# stdin closed, where expect hung at the password prompt without sending.
-# Throwaway guests only: host keys are never recorded.
+# The full macOS check: a disposable macOS guest (tart on Virtualization.framework) that runs macos.sh from this working tree, which installs Nix and switches the darwin configuration, then switches a second time, asserts the result after each, and is discarded. Nothing on this Mac changes beyond tart's image cache in ~/.tart.
 #
 #   verify/macos-vm/run.sh
 #
-# One-time cost, cached in ~/.tart afterwards: `brew install openai/tools/tart`
-# (the cirruslabs tap is currently broken upstream) and a ~25 GB image pull.
-# Apple allows 2 running macOS guests per host.
+# verify/macos/run.sh is the fast loop (evaluate or build, no activation). This is the slow rehearsal that has to pass before the first switch on a real Mac: Homebrew adoption, every cask, launchd, defaults and the login shell, for real. It downloads every cask, so expect tens of minutes and several GB.
 #
-# Scope: single provision pass plus spot checks. A second-run idempotency
-# pass and full assertion parity are future work, noted so nobody mistakes
-# this for the finished check.
+# tart comes from nixpkgs (`nix run nixpkgs#tart`), so Nix has to be on this Mac first; installing Nix alone changes no package, link or setting here. The first run pulls the ~25 GB base image. Apple allows two running macOS guests per host.
+#
+# Transport is SSH, not `tart exec`: exec's agent channel fails silently (exit 125, no output) on this image while sshd answers. Auth is the base image's admin/admin convention via SSH_ASKPASS (askpass.sh). Throwaway guests only: host keys are never recorded.
+#
+# The guest uses darwinConfigurations.verify-vm: the same modules as this Mac's configuration, for the base image's admin user, without App Store apps (the guest has no App Store account).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -37,25 +20,22 @@ GUEST_PASSWORD="${GUEST_PASSWORD:-admin}"
 VM="dotfiles-verify-macos-$$"
 
 [ "$(uname)" = "Darwin" ] || { echo "macOS host only" >&2; exit 2; }
-command -v tart >/dev/null 2>&1 || { echo "install tart first: brew install openai/tools/tart" >&2; exit 2; }
+command -v nix >/dev/null 2>&1 || { echo "Nix is needed on this Mac for tart: ./macos.sh --nix-only installs it and changes nothing else" >&2; exit 2; }
 [ -x "$HERE/askpass.sh" ] || { echo "askpass.sh missing or not executable" >&2; exit 2; }
+tart() { nix run --inputs-from "$ROOT" nixpkgs#tart -- "$@"; }
 
 cleanup() {
   tart stop "$VM" >/dev/null 2>&1 || true
   tart delete "$VM" >/dev/null 2>&1 || true
-  rm -f /tmp/tart-run-"$VM".log
+  [ -n "${LOGS:-}" ] && rm -rf "$LOGS"
   [ -n "${STAGE:-}" ] && rm -rf "$STAGE"
 }
 trap cleanup EXIT INT TERM
 
-# The remote command travels pre-quoted: ssh joins its argv into one remote
-# shell line, so an unquoted multi-word command would split and `bash -lc`
-# would see only its first word. Quotes are added host-side, embedded quotes
-# escaped the shell way. Password via askpass.sh with stdin closed.
+# The remote command travels pre-quoted: ssh joins its argv into one remote shell line. Password via askpass.sh with stdin closed.
 guest() {
   local qc="'${1//\'/\'\\\'\'}'"
-  SSH_ASKPASS="$HERE/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 \
-  GUEST_PASSWORD="$GUEST_PASSWORD" \
+  SSH_ASKPASS="$HERE/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 GUEST_PASSWORD="$GUEST_PASSWORD" \
     ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
       "$GUEST_USER@$GUEST_IP" "bash -lc $qc" < /dev/null
 }
@@ -64,37 +44,55 @@ echo "==> cloning $BASE (pulls ~25 GB on first use, cached after)"
 tart clone "$BASE" "$VM"
 
 echo "==> staging a filtered copy (the guest must not see live secrets)"
-# The share is the guest's only view of the tree, so it cannot be the live
-# checkout: gitignored secrets (.env, .ssh/private.conf) would sit readable
-# next to third-party installers for the whole run. Same exclusion list as
-# verify/linux/run.sh and verify/macos/run.sh; keep all three in sync.
-STAGE="$(mktemp -d /tmp/dotfiles-verify-src.XXXXXX)"
-rsync -a --exclude .git --exclude .agent --exclude .fseventsd --exclude .Trashes --exclude .env --exclude '.env.*' --exclude .ssh/private.conf --exclude .DS_Store "$ROOT/" "$STAGE/"
+# The share is the guest's only view of the tree, so it cannot be the live checkout: gitignored secrets (.env, .ssh/private.conf) would sit readable next to third-party installers. verify/tree.sh lists what the git flake sees.
+STAGE="$(mktemp -d)"
+LOGS="$(mktemp -d)"
+"$ROOT/verify/tree.sh" | rsync -a --files-from=- "$ROOT/" "$STAGE/"
 
 echo "==> booting headless with the staged tree mounted"
-tart run --no-graphics "$VM" --dir=repo:"$STAGE" >/tmp/tart-run-"$VM".log 2>&1 &
-echo "==> waiting for boot and sshd"
+tart run --no-graphics "$VM" --dir=repo:"$STAGE" > "$LOGS/tart.log" 2>&1 &
 GUEST_IP="$(tart ip "$VM" --wait 300)"
-[ -n "$GUEST_IP" ] || { echo "guest never got an IP; see /tmp/tart-run-$VM.log" >&2; exit 1; }
+[ -n "$GUEST_IP" ] || { echo "guest never got an IP; see $LOGS/tart.log" >&2; exit 1; }
 for _ in $(seq 1 60); do
   guest true >/dev/null 2>&1 && break
   sleep 10
 done
 guest true || { echo "guest never answered over SSH" >&2; exit 1; }
+echo "  guest: $(guest 'sw_vers -productName; sw_vers -productVersion' | paste -sd' ' -)"
 
-echo "==> copying the working tree off the shared mount (the installer touches it)"
-# Measured: an unnamed --dir share exposes the tree at the share root, a
-# named one under its name. Probe for the marker instead of assuming either.
-# rsync, not cp -a or tar: macOS cp fails copying xattrs through virtiofs
-# (ELOOP on symlinks) and bsdtar aborts the archive partway at the share's
-# .Trashes entry, leaving a silently partial tree. rsync handles both.
-guest 'SRC=""; for d in "/Volumes/My Shared Files/repo" "/Volumes/My Shared Files"; do [ -f "$d/macos.sh" ] && SRC="$d" && break; done; [ -n "$SRC" ] || { echo "no shared tree mounted" >&2; exit 1; }; rm -rf ~/verify-repo; mkdir -p ~/verify-repo; rsync -a --exclude .git --exclude .Trashes --exclude .DS_Store "$SRC/" ~/verify-repo/; test -f ~/verify-repo/macos.sh || { echo "copy incomplete" >&2; exit 1; }'
+echo "==> copying the tree to ~/.config/dotfiles (the configuration links there)"
+# rsync, not cp -a or tar: macOS cp fails on xattrs through virtiofs and bsdtar stops at the share's .Trashes entry. An unnamed share appears at the root, a named one under its name, so probe for both.
+guest 'SRC=""; for d in "/Volumes/My Shared Files/repo" "/Volumes/My Shared Files"; do [ -f "$d/flake.nix" ] && SRC="$d" && break; done; [ -n "$SRC" ] || { echo "no shared tree mounted" >&2; exit 1; }; mkdir -p ~/.config; rm -rf ~/.config/dotfiles; rsync -a --exclude .Trashes --exclude .DS_Store "$SRC/" ~/.config/dotfiles/; test -f ~/.config/dotfiles/flake.nix'
 
-echo "==> full run: macos.sh --install"
-guest 'cd ~/verify-repo && ./macos.sh --install'
+# macos.sh switches through sudo; the base image's admin needs the password once per session, so it is primed through askpass.
+switch() {
+  guest "echo '$GUEST_PASSWORD' | sudo -S -v 2>/dev/null; cd ~/.config/dotfiles && DARWIN_CONFIG=verify-vm ./macos.sh" > "$LOGS/$1.log" 2>&1 \
+    || { echo "$1 failed:"; tail -40 "$LOGS/$1.log"; exit 1; }
+  grep -E '^==>|dotfiles:' "$LOGS/$1.log" | sed 's/^/  /' || true
+}
 
-echo "==> spot checks (full assertion parity is the next iteration)"
-guest 'command -v mise && command -v rg && test -L ~/.gitconfig && test -L ~/.config/fish/config.fish && echo GUEST-OK'
+echo "==> first run: macos.sh"
+switch run1
+echo "==> verifying"
+guest 'bash ~/.config/dotfiles/verify/macos-vm/verify.sh'
+# No herdr server runs in the guest, so the plugin step has to report itself skipped rather than pass silently.
+if grep -q 'dotfiles: skipped herdr-plugins' "$LOGS/run1.log"; then echo "  ok   the herdr plugin step reported itself skipped"; else echo "  FAIL the herdr plugin step did not report its skip"; exit 1; fi
+
+before="$(guest 'readlink -f /nix/var/nix/profiles/system; find ~ -maxdepth 4 -name "*.pre-nix" 2>/dev/null | sort')"
+[ -n "$(head -1 <<<"$before")" ] || { echo "  FAIL no nix-darwin system after the first run"; exit 1; }
+echo "==> second run: macos.sh again (idempotency)"
+switch run2
+echo "==> verifying again"
+guest 'bash ~/.config/dotfiles/verify/macos-vm/verify.sh'
+after="$(guest 'readlink -f /nix/var/nix/profiles/system; find ~ -maxdepth 4 -name "*.pre-nix" 2>/dev/null | sort')"
+if [ "$before" = "$after" ]; then
+  echo "  ok   the second run kept the same system and left no new backups"
+else
+  echo "  FAIL the second run changed the system or left backups:"
+  diff <(printf '%s\n' "$before") <(printf '%s\n' "$after") | sed 's/^/  /'
+  exit 1
+fi
+if grep -q 'Installing Nix' "$LOGS/run2.log"; then echo "  FAIL the second run installed Nix again"; exit 1; fi
 
 echo
-echo "==> rehearsal passed (guest discarded by the EXIT trap)"
+echo "==> rehearsal passed (guest discarded on exit)"

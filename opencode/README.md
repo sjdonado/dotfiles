@@ -1,6 +1,6 @@
 # OpenCode
 
-Public OpenCode v2 configuration shared across macOS and Linux. Mise installs `@opencode/cli` and explicitly allows its postinstall script to select the native binary. Update the mise version and lock together rather than using OpenCode's self-updater.
+Public OpenCode v2 configuration shared across macOS and Linux. Nix installs it from the native binary `@opencode/cli` publishes for each platform (`nix/pkgs/opencode.nix`, because nixpkgs still carries v1). Upgrade by changing the version and hashes there rather than using OpenCode's self-updater.
 
 ## Tracked
 
@@ -50,7 +50,7 @@ opencode mcp auth <server>
 
 The default is the hosted `openai/gpt-6.1-sol` model, so OpenCode does not reserve laptop RAM for local inference. Connect OpenAI through `/connect` if it is not already available. Quit existing v1 clients and start OpenCode again after installing v2. V2 changes runtime and terminal configuration formats; the setup replaces only the repository-owned `tui.json` link with `cli.json` and preserves other local files.
 
-For an existing machine, remove package-managed v1 before adopting v2 (`brew uninstall opencode` for the legacy Homebrew formula, or `mise uninstall --all github:anomalyco/opencode` for the old mise backend). Keep the old config in Git history while checking credentials, models, permissions, and plugins. Do not run v1 against the native v2 configuration. The full migration guide is https://opencode.ai/v2/docs/migrate-v1/.
+For an existing machine, remove package-managed v1 before adopting v2 (the legacy Homebrew formula or an old mise install). Keep the old config in Git history while checking credentials, models, permissions, and plugins. Do not run v1 against the native v2 configuration. The full migration guide is https://opencode.ai/v2/docs/migrate-v1/.
 
 Configuration documentation:
 

@@ -1,28 +1,26 @@
-# Verifying the installers
+# Verifying a provisioning change
 
-Both provisioning scripts are checked by running them, from scratch, somewhere disposable. Reading a shell script does not tell you whether it works, and running it on a real machine is slow, already half-applied, and leaves residue that hides the next failure.
+A change to `flake.nix` or `nix/` is checked by applying it somewhere disposable, never by reading it and never first on a real machine. A real machine is already half provisioned, so it hides what a fresh one would hit, and a failed run there leaves residue.
 
-| | |
-| --- | --- |
-| `verify/linux/run.sh` | `linux.sh` in a throwaway Ubuntu container, twice. ~1 min. |
-| `verify/macos/run.sh` | `macos.sh --links-only` against a throwaway `HOME`, twice. ~5 s. |
+| check | what it proves | needs | time |
+| --- | --- | --- | --- |
+| `verify/packages/run.sh` | every declared package evaluates, is prebuilt on cache.nixos.org, and no two packages provide the same file, for aarch64-darwin, aarch64-linux and x86_64-linux | Docker | ~2 min |
+| `verify/linux/run.sh` | `linux.sh` on a bare Ubuntu container installs Nix and switches, twice, and the result passes `verify/linux/verify.sh` | Docker | ~2 min per run |
+| `verify/macos/run.sh` | the macOS configuration evaluates (and builds, when this Mac has Nix) and declares every link, step, agent, setting and Homebrew item | Docker, or Nix | ~1 min |
+| `verify/macos-vm/run.sh` | `macos.sh` on a disposable macOS VM installs Nix and switches for real, twice, and the result passes `verify/macos-vm/verify.sh` | Nix on this Mac, for tart | tens of minutes |
 
-Each has its own README with what it asserts and what it cannot.
+Run the checks for the platform a change touches, both when it touches both. The VM rehearsal has to pass before a switch runs on a real Mac.
 
-For OpenCode migration regressions, run `python3 verify/path/check.py` to check bootstrap and persistent-shell PATH precedence against conflicting v1 binaries, and `bash verify/links/check.sh` to check owned-link cleanup, preservation of local files, and guarded Herdr installation in a disposable HOME. The Linux container runner also seeds old owned PATH blocks and a conflicting local binary before provisioning, then asserts their migration on both passes.
+## Why macOS has two checks
 
-## Why the two are not symmetrical
+Linux containerises, so the Linux check is the real thing: bare Ubuntu, `linux.sh`, the same Nix installer and the same switch a box gets.
 
-Linux containerises, so the Linux check is the real thing: bare Ubuntu, no tooling, `linux.sh --install` installs everything, and the assertions run against a box that did not exist a minute earlier.
+macOS does not containerise. A real macOS guest means a VM ([tart](https://tart.run) on Virtualization.framework) from a ~25 GB image, which is right for the rehearsal before a host switch and too slow for every edit. So the fast loop asserts the configuration itself: it evaluates the darwin configuration and checks what a switch would apply, and with Nix on the Mac it also builds the system closure without activating it, which is where a package that does not build or a profile collision shows up.
 
-macOS does not containerise. There is no macOS Docker image, and Docker on a Mac is a Linux VM, so anything claiming otherwise is emulating an x86 Hackintosh under KVM, which does not run on Apple silicon at all. A real macOS VM means [tart](https://tart.run) or UTM on Virtualization.framework: an Apple-silicon VM from a ~20 GB image, licensed for two VMs per host. That is a genuine option for a full from-scratch rehearsal before wiping a machine, and far too slow to be the loop that catches a broken symlink.
+## What every check shares
 
-So `macos.sh` grew a `--links-only` flag instead: the half of the script that only writes inside `$HOME`. Point `HOME` at a temporary directory, run it, and assert every link. Everything that touches the machine itself (the login shell, `/etc/shells`, macOS defaults, launchd agents, default-app bindings, the browser router) is skipped, and the check asserts that it really was skipped.
-
-That leaves Homebrew, mise's installs, and every system-level step verified only by running the script for real on a Mac. The gap is deliberate and named rather than papered over.
-
-## What both checks share
-
-- **Run twice.** Idempotency is the property most easily broken and least visible: a second pass must add nothing, duplicate no shell-rc block, and replace no link it already owns.
+- **Run twice.** A second switch must change nothing: the same generation, no new backup files, no duplicated shell block, no reinstalled Nix.
 - **Assert the link target, not the contents.** `readlink -f` both sides, so a copy that happens to match does not pass.
-- **Fail loudly on a skipped step.** A step that silently did nothing looks identical to a step that worked, which is the failure mode a provisioning script is most prone to.
+- **A tool runs, not merely exists.** Each declared tool has to answer its version command; a language server without one has to answer an LSP initialize request.
+- **A skipped step says so.** No herdr server runs in a container or a fresh VM, so each check asserts that the herdr plugin step reported itself skipped.
+- **Secrets stay on the host.** Each check copies the working tree without `.git`, `.env*` and `.ssh/private.conf`, so the flake sees uncommitted files and never a secret.
