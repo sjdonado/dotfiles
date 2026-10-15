@@ -36,12 +36,12 @@ Both checks SHALL assert that every declared command-line tool answers its versi
 - **THEN** the check fails for that tool
 
 ### Requirement: Host changes gated by the owner and the VM check
-Installing Nix on a real Mac SHALL happen only with the owner's approval, and SHALL change no package, link or setting. The first macOS switch on that Mac SHALL happen only after the VM check passes for the same commit and the owner approves the switch.
+Installing Nix and the first macOS switch on a real Mac SHALL happen in one step, `macos.sh`, and only after the VM check passes for the same commit and the owner approves that step. The VM check SHALL need nothing installed on the host.
 
 #### Scenario: VM check red
 - **WHEN** the VM check fails
-- **THEN** no switch runs on the host, and the failure is reported with what each attempt ruled out
+- **THEN** `macos.sh` does not run on the host, and the failure is reported with what each attempt ruled out
 
-#### Scenario: Nix installed, not switched
-- **WHEN** Nix has been installed on the host but no switch has run
-- **THEN** Homebrew, mise, the existing links and macOS settings work exactly as before
+#### Scenario: VM check before Nix
+- **WHEN** the VM check runs on a Mac without Nix
+- **THEN** it completes without installing Nix or any package on that Mac

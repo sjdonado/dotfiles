@@ -14,7 +14,7 @@
 ## 2. Shared home module
 
 - [x] 2.1 Declare every command-line package from coverage.tsv in `home/common.nix` (nixpkgs names from decision 4, `allowUnfree`), and verify the evaluation script reports each as available and prebuilt for aarch64-darwin, aarch64-linux and x86_64-linux, listing the ones a platform lacks
-  - Done as `verify/packages/run.sh`: all three platforms evaluate, every package is prebuilt except the ones built locally by design (nix/pkgs, claude-code, the `only` wrappers, home-manager's generated files), and no two packages provide the same file. The macOS formula set went to `home/darwin.nix`, not `home/common.nix`, so Linux boxes keep the shared tool set (design decision 4).
+  - Done as the package check, now in `verify/macos.sh`: all three platforms evaluate, every package is prebuilt except the ones built locally by design (nix/pkgs, claude-code, the `only` wrappers, home-manager's generated files), and no two packages provide the same file. The macOS formula set went to `home/darwin.nix`, not `home/common.nix`, so Linux boxes keep the shared tool set (design decision 4).
 - [x] 2.2 Declare every link `lib/links.sh` and the `[dotfiles]` table create as live links (decision 7), including per-file links for fish functions, ~/.local/bin, ghostty themes and bat themes, and verify with the Linux check that each resolves into the working tree
 - [x] 2.3 Add the activation steps from decision 8 that apply to both platforms (herdr integrations and plugins, codex-config apply, bat cache, pss from a pinned input, agent-browser install, nvim plugin restore, fish history), each reporting its own failure, and verify with the Linux check that a run without a herdr server reports the herdr step as skipped and completes the rest
 - [ ] 2.4 Move the Mason tools to Nix packages (decision 9): check each nixpkgs name with the evaluation script, add them to `home/common.nix`, remove mason.nvim and mason-tool-installer from `nvim/init.lua`, and verify in the Linux check that `nvim --headless` starts without errors and each server binary answers `--version`
@@ -23,8 +23,8 @@
 ## 3. Linux
 
 - [x] 3.1 Write `home/linux.nix` (decision 11: rc files with PATH, git-identity unset, `ulimit -c 0`, `exec fish` hand-off, login shell untouched) and verify in the Linux check that `env -i HOME=$HOME bash -lc 'nvim --version'` and an interactive bash both resolve tools and that a second switch duplicates no block
-- [x] 3.2 Rewrite `verify/linux/run.sh` and `verify/linux/verify.sh` for decision 12 (Ubuntu image, the Determinate installer installing upstream Nix, `home-manager switch` twice, assertions from the provisioning-verification spec), delete `verify/nix/`, and verify it passes on aarch64 and with `--platform linux/amd64`
-  - aarch64 109 passed and amd64 110 passed, each on both runs, with upstream Nix 2.35.3 (the installer needs `--prefer-upstream-nix`; without it v3.23.2 installs Determinate Nix). Without systemd the installer is root-only, so linux.sh starts the daemon. `verify/tree.sh` stages what the git flake sees.
+- [x] 3.2 Rewrite the Linux check (now `verify/linux.sh`) for decision 12 (Ubuntu image, the Determinate installer installing upstream Nix, `home-manager switch` twice, assertions from the provisioning-verification spec), delete `verify/nix/`, and verify it passes on aarch64 and with `--platform linux/amd64`
+  - aarch64 109 passed and amd64 110 passed, each on both runs, with upstream Nix 2.35.3 (the installer needs `--prefer-upstream-nix`; without it v3.23.2 installs Determinate Nix). Without systemd the installer is root-only, so linux.sh starts the daemon. Each check copies only the files in git's index, as the git flake sees them.
 - [x] 3.3 Reduce `linux.sh` to installing Nix and running the first switch, and verify the Linux check runs it unmodified as its entry point
 - [x] 3.4 Update `verify/README.md` and the Linux parts of `README.md` and `CLAUDE.md` (Verification, "Verifying a setup change"), and verify every command they quote runs as written
   - Linux parts: linux.sh, the verify scripts and `nix run .#switch`/`.#upgrade -- --dry-run` ran as quoted. The macOS commands (macos.sh, verify/macos-vm) run in groups 5 and 6.
@@ -36,21 +36,21 @@
 - [x] 4.2 Write `darwin/system.nix`: Nix settings, `programs.fish` and `programs.zsh`, `environment.shells`, the guarded login-shell step, `system.defaults` from `macos/defaults.sh`, `CustomUserPreferences` from `macos/app-shortcuts.sh`, and verify the generated activation script contains each setting
   - App shortcuts run `macos/app-shortcuts.sh` as a step instead of `CustomUserPreferences` (design decision 8).
 - [x] 4.3 Write `home/darwin.nix`: launch agents as `launchd.agents`, duti, keyboard layouts (copied), BrowserRouter copy and `lsregister`, `.ssh/config`, Docker config, `.hushlogin`, and verify the built home generation contains each file and agent
-  - Verified on the evaluated configuration by `verify/macos/verify.sh`; the build itself is task 5.2.
-- [x] 4.4 Rewrite `verify/macos/run.sh` as the fast loop from decision 12 (build without activating) and verify it passes in the container or on the host once Nix is present
+  - Verified on the evaluated configuration by `verify/macos.sh`; the build itself happens in the VM rehearsal (5.1).
+- [x] 4.4 Rewrite the macOS fast loop (now `verify/macos.sh`) as the fast loop from decision 12 (build without activating) and verify it passes in the container or on the host once Nix is present
   - Container path: 68 passed, 0 failed.
 - [x] 4.5 Add `apps.upgrade` (`nix flake update`, nvim plugin update into the tracked lockfile, then the platform switch) and verify `nix run .#upgrade -- --dry-run` prints the steps without changing anything
   - Also `apps.switch`, which the installers and `upgrade` use. Dry runs checked in a Linux container; flake.lock and nvim-pack-lock.json unchanged.
 
-## 5. Nix on this Mac (owner approval required)
+## 5. VM rehearsal (no change to this Mac)
 
-- [ ] 5.1 Ask the owner to approve installing Nix on this Mac; on approval run `./macos.sh --nix-only` (the pinned Determinate installer with `--prefer-upstream-nix`) and verify `nix --version`, that `brew`, `mise` and the existing links still work, and that `/nix/nix-installer` exists
-- [ ] 5.2 Run `verify/macos/run.sh` on the host and verify the darwin configuration builds
-- [ ] 5.3 Update `verify/macos-vm/run.sh` for decision 12 (tart via `nix run nixpkgs#tart`, Nix installed in the guest, `darwin-rebuild switch` twice, the spec assertions) and verify a full run passes, recording the guest macOS version
+- [x] 5.0 Simplify `verify/` to one self-contained script per check (`verify/linux.sh`, `verify/macos.sh`, `verify/macos-vm.sh`, plus `verify/README.md`), drop `macos.sh --nix-only` so `macos.sh` is one script whose steps skip themselves, and get tart for the VM check from its pinned release instead of from Nix on this Mac; verify the Linux check on both architectures and the macOS fast loop pass
+  - verify/linux.sh: aarch64 109/0 and amd64 110/0 on both runs. verify/macos.sh: 68/0, and the macOS (128) and both Linux (53) profiles available, prebuilt and collision-free. The VM check's tart download and guest steps run in 5.1.
+- [ ] 5.1 Run `verify/macos-vm.sh` (DARWIN_CONFIG=verify-vm, `macos.sh` twice, the spec assertions) and verify a full run passes, recording the guest macOS version
 
 ## 6. First switch on this Mac (owner approval required)
 
-- [ ] 6.1 Ask the owner to approve the first switch; on approval run `./macos.sh` (it hands a non-stock /etc/shells to nix-darwin as /etc/shells.before-nix-darwin) with `cleanup = "none"` and verify every assertion of the provisioning-verification spec on the host
+- [ ] 6.1 Ask the owner to approve running `./macos.sh` on this Mac after 5.1 passed for the same commit; on approval run it (it installs upstream Nix, hands a non-stock /etc/shells to nix-darwin as /etc/shells.before-nix-darwin, and switches with `cleanup = "none"`) and verify every assertion of the provisioning-verification spec on the host, including `verify/macos.sh` building the system
 - [ ] 6.2 Compare declared lists with `brew list`, `mas list` and /Applications, resolve every difference in the declaration, set `cleanup = "uninstall"`, switch again, and verify the installed set equals the declared set and a third switch changes nothing
 
 ## 7. Remove the old layer

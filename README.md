@@ -8,11 +8,11 @@
 
 The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, App Store apps, links into this repository, macOS settings and the setup steps that are not packages. Every install, change and upgrade goes through that declaration. Nothing is installed with `brew`, `mise`, `npm -g`, `go install` or a curl installer by hand.
 
-- macOS: `./macos.sh`. It installs the Xcode command line tools and Nix, then runs the first `darwin-rebuild switch` for this Mac's hostname (`darwinConfigurations` in `flake.nix`).
+- macOS: `./macos.sh`. It installs Nix and the Xcode command line tools if they are missing, then switches to the configuration for this Mac's hostname (`darwinConfigurations` in `flake.nix`). Every step skips itself when already done, so the same command sets up a new Mac and re-applies the declaration later.
 - Linux, on any distribution: `./linux.sh`, or `curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/linux.sh | bash` on a box without the clone. It installs Nix, clones this repository and runs the first `home-manager switch`. NixOS is not needed.
 - Apply a change to the declaration: `nix run ~/.config/dotfiles#switch`. Nix reads this repository as a git flake, so a new file must be staged (`git add`) before a switch sees it.
 - Upgrade everything: `nix run ~/.config/dotfiles#upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), updates the Neovim plugins in `nvim/nvim-pack-lock.json`, then switches. Review and commit both lockfile diffs. Both commands take `--dry-run`.
-- Verify a change before it reaches a machine. `verify/packages/run.sh` checks that every declared package exists and is prebuilt for each platform. `verify/linux/run.sh` provisions a throwaway Ubuntu container. `verify/macos/run.sh` evaluates or builds the macOS configuration without applying it. `verify/macos-vm/run.sh` switches a disposable macOS VM for real. See `verify/README.md`.
+- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container, `verify/macos.sh` evaluates or builds the macOS configuration without applying it, and `verify/macos-vm.sh` runs `macos.sh` in a disposable macOS VM. See `verify/README.md`.
 
 ### Where things are declared
 

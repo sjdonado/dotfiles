@@ -1,22 +1,17 @@
 #!/bin/sh
 # macOS setup: install Nix, then apply this repository's declaration with nix-darwin. Everything the Mac gets (packages, Homebrew casks and App Store apps, links, defaults, launch agents, the login shell, setup steps) is in flake.nix and nix/; this script only bootstraps. Idempotent.
+# Each step checks whether it is already done and skips if so, so the same command sets up a new Mac and re-applies the declaration on this one:
 #
-#   ~/.config/dotfiles/macos.sh             # install Nix if missing, then switch
-#   ~/.config/dotfiles/macos.sh --nix-only  # install Nix and stop: no package, link or setting changes
+#   ~/.config/dotfiles/macos.sh
 #
-# Upgrades are `nix run ~/.config/dotfiles#upgrade`, not this script. The configuration is chosen by hostname (darwinConfigurations in flake.nix); DARWIN_CONFIG overrides it.
+# Upgrades are `nix run ~/.config/dotfiles#upgrade`. The configuration is chosen by hostname (darwinConfigurations in flake.nix); the VM check selects its own with DARWIN_CONFIG.
 #
 # Manual steps that remain are listed in README.md ("Manual steps").
 set -eu
+[ "$#" -eq 0 ] || { echo "macos.sh takes no arguments: every step checks whether it is needed" >&2; exit 2; }
 
 # Fixed: the configuration links into this path (nix/home/common.nix).
 DOTFILES="$HOME/.config/dotfiles"
-NIX_ONLY=0
-case "${1:-}" in
-  --nix-only) NIX_ONLY=1 ;;
-  "") ;;
-  *) echo "usage: $0 [--nix-only]" >&2; exit 2 ;;
-esac
 # The Determinate Systems installer, pinned. --prefer-upstream-nix makes it install upstream Nix; without it, this version installs Determinate Nix, whose own daemon manages nix.conf, which nix-darwin does here. It survives macOS updates and uninstalls with /nix/nix-installer uninstall.
 NIX_INSTALLER="https://install.determinate.systems/nix/tag/v3.23.2"
 NIX_PROFILE_SCRIPT=/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
@@ -36,16 +31,11 @@ if nix --version | grep -qi determinate; then
   exit 1
 fi
 
-if [ "$NIX_ONLY" = 1 ]; then
-  log "Nix is installed ($(nix --version)). Nothing else changed; run $0 without --nix-only to switch."
-  exit 0
-fi
-
 # Homebrew builds BrowserRouter from source with swiftc, which needs the command line tools.
 if ! xcode-select -p >/dev/null 2>&1; then
-  log "Installing Xcode Command Line Tools (finish the dialog, then re-run this script)..."
+  log "Installing Xcode Command Line Tools (finish the dialog; this waits for it)..."
   xcode-select --install || true
-  exit 1
+  until xcode-select -p >/dev/null 2>&1; do sleep 10; done
 fi
 
 # nix-darwin writes /etc/shells itself and refuses to activate over one it does not recognise, which an earlier setup leaves behind by appending a shell to it. Such a file is kept as /etc/shells.before-nix-darwin, the name nix-darwin asks for, and put back if the switch fails.

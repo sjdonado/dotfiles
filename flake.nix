@@ -117,7 +117,7 @@
     {
       darwinConfigurations = {
         "Juans-MacBook-Pro" = darwin "juan" [ ];
-        # The disposable guest of verify/macos-vm/run.sh, whose base image logs in as admin. It has no App Store account, so it installs no App Store apps.
+        # The disposable guest of verify/macos-vm.sh, whose base image logs in as admin. It has no App Store account, so it installs no App Store apps.
         verify-vm = darwin "admin" [ { homebrew.masApps = nixpkgs.lib.mkForce { }; } ];
       };
 
