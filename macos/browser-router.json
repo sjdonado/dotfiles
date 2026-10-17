@@ -32,13 +32,6 @@
       "browser": "com.apple.Safari.WebApp.EF557CF5-DBA8-430C-87EA-908527385813"
     },
     {
-      "match": [
-        "^https?://([^/]+\\.)?slack\\.com(/|$)",
-        "^https?://(drive|docs)\\.google\\.com(/|$)"
-      ],
-      "browser": "com.officecommun.search"
-    },
-    {
       "match": "^https?://(www\\.)?reddit\\.com/",
       "browser": "com.apple.Safari",
       "rewrite": { "pattern": "^https?://(www\\.)?reddit\\.com/", "with": "https://old.reddit.com/" }

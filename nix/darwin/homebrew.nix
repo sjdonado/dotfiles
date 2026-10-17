@@ -38,6 +38,13 @@
       # BrowserRouter, the default browser. The tap builds it from source with swiftc; nix/home/darwin.nix registers the bundle.
       "sjdonado/tap/browser-router"
       "cliclick"
+      # gcloud-cli's dependencies. Cleanup keeps the dependencies of listed formulas but not of casks, so without these every switch tries to uninstall them and Homebrew refuses.
+      "ca-certificates"
+      "mpdecimal"
+      "openssl@3"
+      "readline"
+      "sqlite"
+      "xz"
     ];
 
     casks = [
