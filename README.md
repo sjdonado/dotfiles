@@ -64,7 +64,7 @@ The sync cannot do these. Everything else is declared.
 - Install App Store apps by hand from the App Store. Their IDs stay listed, commented out, under `masApps` in `nix/darwin/homebrew.nix`; uncommenting them makes the sync install them, which needs an App Store sign-in.
 - Open `~/Applications/BrowserRouter.app` once and accept it as the default browser.
 - The Safari web apps (Gmail, Calendar, Google Meet) are created in Safari with File > Add to Dock. BrowserRouter routes to them by the IDs Safari generates, so a new web app needs its ID updated in `macos/browser-router.json`.
-- Anarlog Dev is a local build, Claude Code URL Handler is created by Claude Code, and Safari is part of macOS.
+- Claude Code URL Handler is created by Claude Code, and Safari is part of macOS.
 - Secrets and logins, in each account: `.env` values, SSH keys and tool logins (OpenCode providers and MCP servers, Claude Code, Codex, `gh`).
 - On a Linux box without systemd (a container or a typical Coder workspace), nothing restarts the Nix daemon after a restart. Run `linux.sh` again, which Coder does on workspace start.
 

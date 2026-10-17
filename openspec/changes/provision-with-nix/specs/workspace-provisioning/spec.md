@@ -76,7 +76,7 @@ Configuration files the workspace links SHALL resolve to the files in the reposi
 - **THEN** the change appears as a diff in the repository
 
 ### Requirement: macOS system settings
-On macOS the switch SHALL apply the declared defaults and app shortcuts, default apps for file types, the launch agents, fish as the login shell, the custom keyboard layouts and BrowserRouter's registration with Launch Services.
+On macOS the switch SHALL apply the declared defaults and app shortcuts, the launch agents, fish as the login shell of every declared account, the custom keyboard layouts and BrowserRouter's registration with Launch Services. Default apps for file types are chosen by hand, because duti changes nothing on macOS 26 and later.
 
 #### Scenario: Login shell
 - **WHEN** the macOS switch completes on a machine whose login shell is zsh
@@ -87,7 +87,7 @@ On macOS the switch SHALL apply the declared defaults and app shortcuts, default
 - **THEN** the Caps Lock remapping and the Time Machine exclusion agents are loaded and point at scripts in the repository
 
 ### Requirement: Setup steps run by the switch
-Setup that is not a package or a link (the codex configuration merge, the bat theme cache, the Pi scheme, macOS app shortcuts and default apps) SHALL run as part of the switch. A failing step SHALL be reported by name and SHALL NOT stop the other steps.
+Setup that is not a package or a link (the codex configuration merge, the bat theme cache, the Pi scheme, macOS app shortcuts) SHALL run as part of the switch. A failing step SHALL be reported by name and SHALL NOT stop the other steps.
 
 #### Scenario: A step fails
 - **WHEN** one setup step fails during the switch
@@ -108,7 +108,7 @@ Declared tools SHALL be on PATH for login and non-interactive shells on both pla
 - **THEN** both find nvim
 
 ### Requirement: Named exceptions
-Items the declaration cannot own SHALL be listed in the repository with the reason and the manual step, if any: the Safari web apps, Anarlog Dev, Claude Code URL Handler, Safari, and secrets such as .env files and SSH keys.
+Items the declaration cannot own SHALL be listed in the repository with the reason and the manual step, if any: the Safari web apps, Claude Code URL Handler, Safari, default apps for file types, App Store apps, and secrets and tool logins such as .env files and SSH keys.
 
 #### Scenario: Reading the exceptions
 - **WHEN** the owner sets up a new Mac

@@ -58,11 +58,12 @@
       "ghostty"
       "google-chrome"
       "granola"
-      "handy"
       "helium-browser"
       "icon-composer"
       "imageoptim"
       "linear"
+      # Local meeting transcription and dictation.
+      "muesli"
       "ngrok"
       "nordvpn"
       "orbstack"

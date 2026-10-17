@@ -17,7 +17,7 @@
   - Done as the package check, now in `verify/macos.sh`: all three platforms evaluate, every package is prebuilt except the ones built locally by design (nix/pkgs, claude-code, the `only` wrappers, home-manager's generated files), and no two packages provide the same file. The macOS formula set went to `home/darwin.nix`, not `home/common.nix`, so Linux boxes keep the shared tool set (design decision 4).
 - [x] 2.2 Declare every link `lib/links.sh` and the `[dotfiles]` table create as live links (decision 7), including per-file links for fish functions, ~/.local/bin, ghostty themes and bat themes, and verify with the Linux check that each resolves into the working tree
 - [x] 2.3 Add the activation steps from decision 8 that apply to both platforms (herdr integrations and plugins, codex-config apply, bat cache, pss from a pinned input, agent-browser install, nvim plugin restore, fish history), each reporting its own failure, and verify with the Linux check that a run without a herdr server reports the herdr step as skipped and completes the rest
-- [ ] 2.4 ~~Move the Mason tools to Nix packages~~ Superseded: neovim is a plain editor for git (owner's decision, 2026-10-17); the language servers, formatters, lazygit, tree-sitter, the `nvim` link and the plugin step are commented out in `nix/home/common.nix`, and the checks skip them. Original task: Move the Mason tools to Nix packages (decision 9): check each nixpkgs name with the evaluation script, add them to `home/common.nix`, remove mason.nvim and mason-tool-installer from `nvim/init.lua`, and verify in the Linux check that `nvim --headless` starts without errors and each server binary answers `--version`
+- [x] 2.4 ~~Move the Mason tools to Nix packages~~ Superseded: neovim is a plain editor for git (owner's decision, 2026-10-17); the language servers, formatters, lazygit, tree-sitter, the `nvim` link and the plugin step are commented out in `nix/home/common.nix`, and the checks skip them. Original task: Move the Mason tools to Nix packages (decision 9): check each nixpkgs name with the evaluation script, add them to `home/common.nix`, remove mason.nvim and mason-tool-installer from `nvim/init.lua`, and verify in the Linux check that `nvim --headless` starts without errors and each server binary answers `--version`
   - The packages are declared and answer in the Linux check (a version command, or an LSP initialize request for the five servers with no version flag). Removing Mason from `nvim/init.lua` waits for group 7: this Mac's nvim finds its servers through Mason until the first switch puts the Nix ones on PATH.
 
 ## 3. Linux
@@ -27,7 +27,7 @@
   - aarch64 109 passed and amd64 110 passed, each on both runs, with upstream Nix 2.35.3 (the installer needs `--prefer-upstream-nix`; without it v3.23.2 installs Determinate Nix). Without systemd the installer is root-only, so linux.sh starts the daemon. Each check copies only the files in git's index, as the git flake sees them.
 - [x] 3.3 Reduce `linux.sh` to installing Nix and running the first switch, and verify the Linux check runs it unmodified as its entry point
 - [x] 3.4 Update `verify/README.md` and the Linux parts of `README.md` and `CLAUDE.md` (Verification, "Verifying a setup change"), and verify every command they quote runs as written
-  - Linux parts: linux.sh, the verify scripts and `nix run .#switch`/`.#upgrade -- --dry-run` ran as quoted. The macOS commands (macos.sh, verify/macos-vm) run in groups 5 and 6.
+  - Linux parts: linux.sh, the verify scripts and `nix run .#sync`/`.#upgrade -- --dry-run` ran as quoted. The macOS commands (macos.sh, verify/macos-vm) run in groups 5 and 6.
 
 ## 4. macOS configuration
 
@@ -40,7 +40,7 @@
 - [x] 4.4 Rewrite the macOS fast loop (now `verify/macos.sh`) as the fast loop from decision 12 (build without activating) and verify it passes in the container or on the host once Nix is present
   - Container path: 68 passed, 0 failed.
 - [x] 4.5 Add `apps.upgrade` (`nix flake update`, nvim plugin update into the tracked lockfile, then the platform switch) and verify `nix run .#upgrade -- --dry-run` prints the steps without changing anything
-  - Also `apps.switch`, which the installers and `upgrade` use. Dry runs checked in a Linux container; flake.lock and nvim-pack-lock.json unchanged.
+  - Also `apps.sync`, which the installers and `upgrade` use. Dry runs checked in a Linux container; flake.lock and nvim-pack-lock.json unchanged.
 
 ## 5. VM rehearsal (dropped 2026-10-17)
 
