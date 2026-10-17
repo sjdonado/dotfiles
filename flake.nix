@@ -76,11 +76,14 @@
           ];
         };
 
-      # macOS: keyed by hostname, with the user named explicitly.
+      # macOS: keyed by hostname, with the users named explicitly. One Mac has one nix-darwin system, so every account on it is listed here; the first is the primary user, who owns Homebrew and the system settings. Each user gets the same home configuration, linked into their own ~/.config/dotfiles clone.
       darwin =
-        user: extraModules:
+        users: extraModules:
         nix-darwin.lib.darwinSystem {
-          specialArgs = { inherit inputs user; };
+          specialArgs = {
+            inherit inputs users;
+            user = builtins.head users;
+          };
           modules = [
             {
               nixpkgs.hostPlatform = "aarch64-darwin";
@@ -98,10 +101,12 @@
               # A tool that replaces its link with a real file (an atomic save) is backed up again on the next switch instead of stopping it because the backup exists.
               home-manager.overwriteBackup = true;
               home-manager.extraSpecialArgs = { inherit inputs; };
-              home-manager.users.${user}.imports = [
-                ./nix/home/common.nix
-                ./nix/home/darwin.nix
-              ];
+              home-manager.users = lib.genAttrs users (_: {
+                imports = [
+                  ./nix/home/common.nix
+                  ./nix/home/darwin.nix
+                ];
+              });
             }
           ]
           ++ extraModules;
@@ -116,7 +121,7 @@
     in
     {
       darwinConfigurations = {
-        "Juans-MacBook-Pro" = darwin "juan" [ ];
+        "Juans-MacBook-Pro" = darwin [ "juan" "sjdonado" ] [ ];
       };
 
       homeConfigurations = {

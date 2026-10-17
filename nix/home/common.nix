@@ -29,6 +29,8 @@ let
     '';
   binPath = pkgs: "export PATH=${lib.makeBinPath pkgs}:$PATH";
   codex = pkgs.callPackage ../pkgs/codex.nix { }; # prebuilt; nixpkgs compiles it
+  # The release binary on macOS, where T3 Code flags a version older than the latest; nixpkgs elsewhere.
+  claude-code = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.callPackage ../pkgs/claude-code.nix { } else pkgs.claude-code;
 in
 {
   # Shared with nix/home/darwin.nix.
@@ -100,7 +102,7 @@ in
     ".pi/agent/mcp.json" = live "pi/mcp.json";
     ".pi/agent/AGENTS.md" = live "agents/AGENTS.md";
     # GUI apps (T3 Code, Zed) keep the PATH they launched with and look for the agents in ~/.local/bin, where the curl installers put them. These links make that path the Nix build too. Forced: home-manager backs up files but refuses to replace a foreign symlink, which is what a curl installer leaves there.
-    ".local/bin/claude" = { source = "${pkgs.claude-code}/bin/claude"; force = true; };
+    ".local/bin/claude" = { source = "${claude-code}/bin/claude"; force = true; };
     ".local/bin/codex" = { source = "${codex}/bin/codex"; force = true; };
   }
   // liveEach "bin" ".local/bin";

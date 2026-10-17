@@ -33,6 +33,8 @@ assert_config() {
       brew = { inherit (c.homebrew) brews casks masApps taps; inherit (c.homebrew.onActivation) cleanup upgrade autoUpdate; };
       nixHomebrew = { inherit (c.nix-homebrew) enable autoMigrate mutableTaps; taps = builtins.attrNames c.nix-homebrew.taps; };
       packages = map (p: p.name) hm.home.packages;
+      users = builtins.attrNames c.home-manager.users;
+      userDefaults = builtins.toJSON hm.targets.darwin.defaults;
     }") || { echo "evaluation failed"; exit 1; }
   f() { jq -r "$1" <<<"$facts"; }
 
@@ -62,8 +64,12 @@ assert_config() {
 
   group "system settings"
   system="$(f .system)"
-  for want in AppleShowAllExtensions AppleShowAllFiles 'UserShell'; do
-    if grep -q "$want" <<<"$system"; then ok "activation sets $want"; else bad "activation never mentions $want"; fi
+  if grep -q UserShell <<<"$system"; then ok "activation sets the login shell"; else bad "activation never sets UserShell"; fi
+  for want in AppleShowAllExtensions AppleShowAllFiles; do
+    if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
+  done
+  for u in juan sjdonado; do
+    if f '.users[]' | grep -qx "$u"; then ok "home-manager configures $u"; else bad "$u has no home-manager configuration"; fi
   done
   if f '.shells[]' | grep -q '/bin/fish$'; then ok "fish is listed for /etc/shells"; else bad "fish is not in environment.shells"; fi
 
@@ -162,7 +168,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 tree() { git -C "$ROOT" ls-files --cached | while IFS= read -r f; do if [ -e "$ROOT/$f" ] || [ -L "$ROOT/$f" ]; then printf '%s\n' "$f"; fi; done; }
 
 if command -v nix >/dev/null 2>&1; then
-  STAGE="$(mktemp -d)"
+  # The real path: macOS puts $TMPDIR under /var, a symlink to /private/var, and nix 2.34 refuses a flake path through a symlink.
+  STAGE="$(cd "$(mktemp -d)" && pwd -P)"
   trap 'rm -rf "$STAGE"' EXIT
   tree | rsync -a --files-from=- "$ROOT/" "$STAGE/"
   echo "==> building darwinConfigurations.$HOST (no activation)"

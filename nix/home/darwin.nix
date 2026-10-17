@@ -169,6 +169,12 @@ in
   xdg.configFile."browser-router/config.json" = live "macos/browser-router.json";
 
   # launchd does not expand $HOME, so the scripts are named by their full path; Login Items shows each by its script name.
+  # Per user, so every account on the Mac gets them (system.defaults would set them for the primary user only).
+  targets.darwin.defaults = {
+    NSGlobalDomain.AppleShowAllExtensions = true;
+    "com.apple.finder".AppleShowAllFiles = true;
+  };
+
   launchd.agents = {
     KeyRemapping = {
       enable = true;

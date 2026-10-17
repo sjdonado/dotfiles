@@ -111,7 +111,7 @@ mise tool	@opencode/cli	nix/pkgs/opencode.nix	nix/home/common.nix	v2; nixpkgs ha
 mise tool	@openai/codex	nix/pkgs/codex.nix	nix/home/common.nix	prebuilt; nixpkgs compiles it
 mise tool	@fission-ai/openspec	nixpkgs openspec	nix/home/common.nix	-
 mise tool	agent-browser	dropped	-	owner dropped it, 2026-10-17 (with its Chrome step, config link and the agent-browser and chrome-devtools MCP servers)
-installer	claude (native installer)	nixpkgs claude-code	nix/home/common.nix	unfree
+installer	claude (native installer)	nix/pkgs/claude-code.nix on macOS, nixpkgs claude-code on Linux	nix/home/common.nix	unfree; the macOS build is Anthropic's release binary, pinned, so T3 Code does not flag it outdated
 installer	go install air	nixpkgs air	nix/home/darwin.nix	was go install @latest
 installer	go install bootdev	nixpkgs bootdev-cli	nix/home/darwin.nix	was go install @latest
 installer	go install goose	nixpkgs goose	nix/home/darwin.nix	was go install @latest

@@ -66,3 +66,10 @@
 
 - [ ] 8.1 From a clean checkout of the branch, run the Linux check on both architectures, `verify/macos.sh`, and `verify/macos-host.sh` on this Mac, and verify all pass with no skipped assertion
 - [ ] 8.2 On this Mac, run `nix run .#upgrade` once and verify it updates `flake.lock` and the nvim lockfile, switches, and leaves the workspace passing the host assertions
+
+## 9. Second user (sjdonado)
+
+- [x] 9.1 Declare every account on the Mac in one nix-darwin system: `darwin [ "juan" "sjdonado" ]` in `flake.nix`, juan primary (Homebrew, system settings), home-manager for both with links into each user's own clone, fish as login shell for both, and the Finder defaults moved to per-user `targets.darwin.defaults`; verify with `verify/macos.sh` that both users are configured
+  - `verify/macos.sh` 61/0. sjdonado's managed paths: two real files (backed up as `*.pre-nix`) and the curl `~/.local/bin/claude` link (forced); nothing blocks the switch. The Homebrew cleanup of 2026-10-17 had removed sjdonado's login shell (`/opt/homebrew/bin/fish`); the owner pointed it at `/run/current-system/sw/bin/fish` with `sudo chsh`.
+- [ ] 9.2 In sjdonado's session: switch their clone to this branch, remove mise (`~/.config/mise`, `~/.local/state/mise`, `~/.cache/mise`), Mason and the `~/.config/nvim` link, and clear the universal `fish_user_paths`
+- [ ] 9.3 Switch from juan's session, then verify `verify/macos-host.sh` passes in sjdonado's session
