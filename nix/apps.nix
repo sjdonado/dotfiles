@@ -1,4 +1,4 @@
-# The two commands that change a machine: `nix run .#switch` applies the declaration, `nix run .#upgrade` moves the pins and then switches. Both take --dry-run, which prints each step instead of running it.
+# The two commands that change a machine: `nix run .#sync` applies the declaration (a switch), `nix run .#upgrade` moves the pins and then syncs. Both take --dry-run, which prints each step instead of running it.
 { inputs }:
 pkgs:
 let
@@ -20,7 +20,7 @@ let
       if [ "$dry" = 1 ]; then printf '+ %s\n' "$*"; else "$@"; fi
     }
   '';
-  switchCommand =
+  syncCommand =
     if isDarwin then
       ''step sudo ${inputs.nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild switch --flake "$DOTFILES#$(scutil --get LocalHostName)"''
     else
@@ -37,10 +37,10 @@ let
       }/bin/home-manager switch --flake "$DOTFILES#linux-$arch" --impure -b pre-nix
       '';
 
-  switch = pkgs.writeShellApplication {
-    name = "switch";
+  sync = pkgs.writeShellApplication {
+    name = "sync";
     runtimeInputs = [ pkgs.coreutils ];
-    text = common + switchCommand;
+    text = common + syncCommand;
   };
 
   upgrade = pkgs.writeShellApplication {
@@ -51,21 +51,21 @@ let
       step nix flake update --flake "$DOTFILES"
       # Neovim plugins are pinned by nvim/nvim-pack-lock.json, which this rewrites in the repository. nvim exits 0 when a -c command errors, so failures report through cquit. Skipped with the full neovim setup (nvim/ is not linked).
       # step nvim --headless -c 'lua local ok, err = pcall(vim.pack.update, nil, { force = true }); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
-    '' + switchCommand + ''
+    '' + syncCommand + ''
 
       [ "$dry" = 1 ] || echo "Upgraded. Review and commit the lockfile diffs: git -C \"$DOTFILES\" diff flake.lock"
     '';
   };
 in
 {
-  switch = {
+  sync = {
     type = "app";
-    program = lib.getExe switch;
+    program = lib.getExe sync;
     meta.description = "Apply the declaration to this machine";
   };
   upgrade = {
     type = "app";
     program = lib.getExe upgrade;
-    meta.description = "Update every pinned input, then switch";
+    meta.description = "Update every pinned input, then sync";
   };
 }

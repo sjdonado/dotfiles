@@ -1,25 +1,26 @@
-# Make Homebrew CLI binaries visible to Raycast
+# Make command-line apps visible to Raycast
 
-Raycast's **Settings -> Applications** list is built from LaunchServices, which only indexes `.app` bundles. A Homebrew formula that installs a plain binary into `/opt/homebrew/bin` therefore never appears there, so it cannot be given a hotkey or an alias, even when the running program shows its own name in the menu bar.
+Raycast's **Settings -> Applications** list is built from LaunchServices, which only indexes `.app` bundles. A Nix package that installs a plain binary therefore never appears there, so it cannot be given a hotkey or an alias, even when the running program shows its own name in the menu bar.
 
 The fix is a minimal `.app` bundle that wraps the binary. The example below uses `scrcpy`, which ships as a CLI that opens a GUI window.
 
 ## The rule that makes the hotkey toggle
 
-The bundle's `CFBundleExecutable` must **be** the binary, reached by a symlink inside `Contents/MacOS`. Do not use a shell script that `exec`s the binary from `/opt/homebrew/bin`.
+The bundle's `CFBundleExecutable` must **be** the binary, reached by a symlink inside `Contents/MacOS`. Do not use a shell script that `exec`s the binary from the Nix profile.
 
-A launcher script works for starting the app but breaks toggling. Raycast's application hotkey activates the running instance whose bundle identifier matches, and hides it on a second press. When the launcher `exec`s an executable that lives outside the bundle, the process ends up bound to the Homebrew path rather than to the bundle, so Raycast finds nothing running and launches another copy on every press.
+A launcher script works for starting the app but breaks toggling. Raycast's application hotkey activates the running instance whose bundle identifier matches, and hides it on a second press. When the launcher `exec`s an executable that lives outside the bundle, the process ends up bound to that path rather than to the bundle, so Raycast finds nothing running and launches another copy on every press.
 
 With a symlinked executable, LaunchServices keeps `bundleID=local.wrapper.NAME` on the process and the hotkey toggles like any other app. Verify with `lsappinfo list | grep -A3 local.wrapper`.
 
-Homebrew binaries link their dylibs by absolute path (`/opt/homebrew/opt/...`), so running one through a symlink in a foreign directory resolves fine. Check with `otool -L BINARY` if a tool misbehaves.
+Nix binaries link their dylibs by absolute store path, so running one through a symlink in a foreign directory resolves fine. Check with `otool -L BINARY` if a tool misbehaves.
 
 ## 1. Build the wrapper
 
 ```bash
 APP_NAME=scrcpy                          # bundle and Raycast display name
-BIN=/opt/homebrew/bin/scrcpy             # target binary
-ICON_PNG=/opt/homebrew/opt/scrcpy/share/icons/hicolor/256x256/apps/scrcpy.png
+# The building user's profile, not a store path: it survives upgrades, and every account can read it.
+BIN=/etc/profiles/per-user/$USER/bin/scrcpy
+ICON_PNG="$(dirname "$(readlink -f "$BIN")")/../share/icons/hicolor/256x256/apps/scrcpy.png"
 
 APP="/Applications/$APP_NAME.app"
 rm -rf "$APP"
@@ -40,7 +41,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>NSHighResolutionCapable</key><true/>
   <key>LSEnvironment</key>
   <dict>
-    <key>PATH</key><string>/opt/homebrew/bin:$HOME/Library/Android/sdk/platform-tools:/usr/bin:/bin</string>
+    <key>PATH</key><string>/etc/profiles/per-user/$USER/bin:$HOME/Library/Android/sdk/platform-tools:/usr/bin:/bin</string>
     <key>ADB</key><string>$HOME/Library/Android/sdk/platform-tools/adb</string>
   </dict>
 </dict>
@@ -48,13 +49,13 @@ cat > "$APP/Contents/Info.plist" <<EOF
 EOF
 ```
 
-`LSEnvironment` replaces what a launcher script used to do. Apps started from Raycast, Finder, or Spotlight inherit a bare environment, not the shell's, so anything the binary shells out to (`adb` here, `ffmpeg`, `node`, any other Homebrew tool) fails to resolve. List only the directories the tool needs, and prefer an explicit variable the tool documents (`ADB` for scrcpy) over relying on `PATH` alone.
+`LSEnvironment` replaces what a launcher script used to do. Apps started from Raycast, Finder, or Spotlight inherit a bare environment, not the shell's, so anything the binary shells out to (`adb` here, `ffmpeg`, `node`, any other declared tool) fails to resolve. List only the directories the tool needs, and prefer an explicit variable the tool documents (`ADB` for scrcpy) over relying on `PATH` alone.
 
 LaunchServices caches `LSEnvironment` at registration, so re-run step 3 after editing it.
 
 ## 2. Add an icon
 
-Skipping this leaves a blank page icon in Raycast and the Dock. Most formulae ship a PNG under `share/icons`:
+Skipping this leaves a blank page icon in Raycast and the Dock. Most packages ship a PNG under `share/icons`:
 
 ```bash
 ICONSET=$(mktemp -d)/icon.iconset
@@ -66,7 +67,7 @@ done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/$APP_NAME.icns"
 ```
 
-Find the source PNG with `find "$(brew --prefix FORMULA)" -iname '*.png'`. When a formula ships none, any square PNG works.
+Find the source PNG with `find "$(dirname "$(readlink -f "$BIN")")/.." -iname '*.png'`. When a package ships none, any square PNG works.
 
 ## 3. Register with LaunchServices
 
@@ -95,7 +96,7 @@ Then in Raycast: **Settings -> Applications**, search the name, **Record Hotkey*
 ## Notes
 
 - An instance started from a terminal has no bundle identifier, so the hotkey ignores it and starts a bundled one alongside. Launch through the app if you want the hotkey to reach it.
-- `brew upgrade` keeps working, because the symlink points at `/opt/homebrew/bin` rather than a versioned Cellar path. `brew uninstall` leaves a dangling symlink and a dead bundle, so remove it by hand.
+- Upgrades keep working, because the symlink points at the profile (`/etc/profiles/per-user/<user>/bin`) rather than a versioned store path. Dropping the package from the declaration leaves a dangling symlink and a dead bundle, so remove it by hand.
 - The bundle is unsigned. If Gatekeeper blocks the first launch, right-click the app and choose **Open** once.
 - Default arguments have nowhere to live in this layout, since there is no script. When a tool needs them, use its own config file or environment variables via `LSEnvironment`. Falling back to a launcher script costs the hotkey toggle.
 - For a CLI with no GUI window, use a Raycast Script Command instead. Reach for a bundle only when the binary opens a window of its own.
@@ -105,4 +106,4 @@ Then in Raycast: **Settings -> Applications**, search the name, **Record Hotkey*
 
 | App | Binary | Notes |
 | --- | --- | --- |
-| `scrcpy` | `/opt/homebrew/bin/scrcpy` | `ADB` and `PATH` set via `LSEnvironment` for `platform-tools` |
+| `scrcpy` (built by sjdonado) | `/etc/profiles/per-user/sjdonado/bin/scrcpy` | `ADB` and `PATH` set via `LSEnvironment` for sjdonado's `platform-tools` |

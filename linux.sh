@@ -51,7 +51,7 @@ elif [ ! -e "$DOTFILES/flake.nix" ]; then
 fi
 
 log "Applying the declaration (home-manager switch)..."
-nix run "$DOTFILES#switch"
+nix run "$DOTFILES#sync"
 
 cat <<'NOTE'
 

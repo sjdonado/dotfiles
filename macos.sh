@@ -56,7 +56,7 @@ if [ -d "$TAPS" ] && [ ! -L "$TAPS" ]; then
   moved_taps=1
 fi
 
-# darwin-rebuild comes from the pinned nix-darwin input, as in `nix run .#switch`.
+# darwin-rebuild comes from the pinned nix-darwin input, as in `nix run .#sync`.
 config="$(scutil --get LocalHostName)"
 log "Applying the declaration (darwin-rebuild switch, $config)..."
 if ! sudo -H /nix/var/nix/profiles/default/bin/nix --extra-experimental-features 'nix-command flakes' run --inputs-from "$DOTFILES" nix-darwin#darwin-rebuild -- switch --flake "$DOTFILES#$config"; then

@@ -16,10 +16,6 @@
       "browser": "com.linear"
     },
     {
-      "match": "^https?://([^/]+\\.)?notion\\.(so|site|com)(/|$)",
-      "browser": "notion.id"
-    },
-    {
       "match": "^https?://mail\\.google\\.com(/|$)",
       "browser": "com.apple.Safari.WebApp.9F5E2D9E-4492-4EC2-95CA-67E8A2ABCA2A"
     },

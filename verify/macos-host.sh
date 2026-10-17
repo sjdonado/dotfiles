@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The macOS host check: asserts this Mac after a switch (`macos.sh` or `nix run .#switch`). Read-only: it changes nothing, so it runs as often as needed.
+# The macOS host check: asserts this Mac after a switch (`macos.sh` or `nix run .#sync`). Read-only: it changes nothing, so it runs as often as needed.
 #
 #   verify/macos-host.sh
 #
@@ -29,7 +29,7 @@ if v=$(nix --version 2>&1) && ! grep -qi determinate <<<"$v"; then ok "upstream 
 group "declared tools (Nix)"
 # This runs in a login bash, whose path_helper puts /usr/bin ahead of the Nix profiles; Apple's stubs there (java) would answer instead of the declared tool. The shells group below checks how each shell resolves tools.
 PATH="/etc/profiles/per-user/$(id -un)/bin:/run/current-system/sw/bin:$PATH"
-# docker/config.json selects OrbStack's context, and supabase refuses to start when OrbStack is not running; whether it runs is not what this check asks.
+# supabase refuses to start when its Docker context does not answer (OrbStack not running); whether Docker runs is not what this check asks.
 export DOCKER_CONTEXT=default
 # Every declared package that names its program, read from the configuration rather than listed here. Tools spell the version flag differently, so each counts as running when one of the usual spellings answers.
 # macOS has no `timeout`; the declared coreutils carry it as gtimeout. Without it a server that waits on stdin would hang the check.
