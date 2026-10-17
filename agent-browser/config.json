@@ -1,4 +1,0 @@
-{
-	"$schema": "https://agent-browser.dev/schema.json",
-	"profile": "~/.agent-browser/profile"
-}

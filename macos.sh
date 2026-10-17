@@ -1,279 +1,69 @@
 #!/bin/sh
-set -euo pipefail
+# macOS setup: install Nix, then apply this repository's declaration with nix-darwin. Everything the Mac gets (packages, Homebrew casks and App Store apps, links, defaults, launch agents, the login shell, setup steps) is in flake.nix and nix/; this script only bootstraps. Idempotent.
+# Each step checks whether it is already done and skips if so, so the same command sets up a new Mac and re-applies the declaration on this one:
+#
+#   ~/.config/dotfiles/macos.sh
+#
+# Upgrades are `nix run ~/.config/dotfiles#upgrade`. The configuration is chosen by hostname (darwinConfigurations in flake.nix). After a switch, verify/macos-host.sh checks the result.
+#
+# Manual steps that remain are listed in README.md ("Manual steps").
+set -eu
+[ "$#" -eq 0 ] || { echo "macos.sh takes no arguments: every step checks whether it is needed" >&2; exit 2; }
 
-# The tool list is mise.toml, the macOS-only half of it is
-# [bootstrap.packages] in the same file, and
-# every link this repository owns is lib/links.sh, shared with linux.sh. What
-# stays in this file is what is genuinely macOS: Homebrew, the login shell,
-# LaunchServices, launchd, and the defaults.
-# shellcheck source=lib/links.sh
-. "$PWD/lib/links.sh"
+# Fixed: the configuration links into this path (nix/home/common.nix).
+DOTFILES="$HOME/.config/dotfiles"
+# The Determinate Systems installer, pinned. --prefer-upstream-nix makes it install upstream Nix; without it, this version installs Determinate Nix, whose own daemon manages nix.conf, which nix-darwin does here. It survives macOS updates and uninstalls with /nix/nix-installer uninstall.
+NIX_INSTALLER="https://install.determinate.systems/nix/tag/v3.23.2"
+NIX_PROFILE_SCRIPT=/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 
-usage() { echo "Usage: $0 [--install] [--links-only]"; }
+log() { printf '\n==> %s\n' "$*"; }
 
-# --links-only does the half of this script that only writes inside $HOME:
-# directories, symlinks, generated config. It skips everything that changes the
-# machine itself (the login shell, /etc/shells, macOS defaults, launchd agents,
-# default-app bindings, the browser router) and installs
-# nothing. That is what makes this script testable: verify/macos/run.sh points
-# HOME at a throwaway directory and runs it, which would otherwise mean chsh'ing
-# a real user and loading real launch agents.
-INSTALL=0
-LINKS_ONLY=0
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --install) INSTALL=1 ;;
-    --links-only) LINKS_ONLY=1 ;;
-    -h|--help) usage; exit 0 ;;
-    *) usage >&2; exit 2 ;;
-  esac
-  shift
-done
+[ -e "$DOTFILES/flake.nix" ] || { echo "clone https://github.com/sjdonado/dotfiles to $DOTFILES first" >&2; exit 1; }
 
-if [ "$INSTALL" = 1 ]; then
-  # Xcode CLT (needed for Homebrew)
-  if ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables >/dev/null 2>&1 \
-     && ! xcode-select -p >/dev/null 2>&1; then
-    log "Installing Xcode Command Line Tools..."
-    xcode-select --install || true
-    log "If a GUI prompt appeared, finish it, then re-run this script if needed."
-  fi
-
-  if ! have brew; then
-    log "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  fi
-else
-  log "Skipping dependency installation (use --install to enable)."
+if [ ! -e "$NIX_PROFILE_SCRIPT" ]; then
+  log "Installing Nix..."
+  curl -fsSL "$NIX_INSTALLER" | sh -s -- install --no-confirm --prefer-upstream-nix
 fi
-
-# Make brew available in THIS shell (Apple Silicon uses /opt/homebrew)
-if [ -x /opt/homebrew/bin/brew ]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [ -x /usr/local/bin/brew ]; then
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
-
-# Sanity check when dependency installation was requested.
-if [ "$INSTALL" = 1 ] && ! have brew; then
-  echo "brew not found on PATH after install. Aborting." >&2
+# shellcheck source=/dev/null
+. "$NIX_PROFILE_SCRIPT"
+if nix --version | grep -qi determinate; then
+  echo "This Mac has Determinate Nix, which manages nix.conf itself; nix/darwin/system.nix expects upstream Nix. Uninstall it (/nix/nix-installer uninstall) and re-run this script." >&2
   exit 1
 fi
 
-# base dirs the macOS-only steps below write into; the shared linking functions
-# create their own.
-log "Creating base directories..."
-mkdir -p "$HOME/.config" "$HOME/.ssh" "$HOME/.docker" \
-  "$HOME/Library/Keyboard Layouts" "$HOME/.config/ghostty/themes"
-# mise's shims directory carries every tool in mise.toml.
-PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
-export PATH
-
-link_local_bin
-
-# mise owns every install: `[tools]` in mise.toml is the cross-platform half,
-# `[bootstrap.packages]` the macOS formulae and casks Homebrew pours, and
-# `[tasks.bootstrap]` the go installs. Homebrew only has to supply mise itself.
-# The config is linked first because bootstrap reads the global mise config.
-link_mise_config
-if [ "$INSTALL" = 1 ]; then
-  have mise || brew install mise || log "  brew install mise failed"
-  if have mise; then
-    log "Installing packages from mise.toml [bootstrap.packages]..."
-    mise bootstrap --only packages,task --yes || log "  some packages or go installs failed; re-run: mise bootstrap --only packages,task"
-    log "Installing tools from mise.toml..."
-    mise install --yes || log "  some mise tools failed; re-run: mise install"
-    log "Installing the PSS Pi scheme from GitHub..."
-    mise run pss-sync || log "  PSS sync failed; re-run: mise run pss-sync"
-    log "Installing agent-browser's Chrome..."
-    mise exec -- agent-browser install || log "  agent-browser install failed; re-run: agent-browser install"
-  fi
+# Homebrew builds BrowserRouter from source with swiftc, which needs the command line tools.
+if ! xcode-select -p >/dev/null 2>&1; then
+  log "Installing Xcode Command Line Tools (finish the dialog; this waits for it)..."
+  xcode-select --install || true
+  until xcode-select -p >/dev/null 2>&1; do sleep 10; done
 fi
 
-log "Setting up Ghostty config..."
-ln -snf "$PWD/ghostty/config" "$HOME/.config/ghostty/config"
-ln -snf "$PWD/ghostty/themes/"* "$HOME/.config/ghostty/themes/" 2>/dev/null || true
-
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping BrowserRouter (--links-only)."
-else
-  # BrowserRouter is the default browser, and lives in its own repository:
-  # https://github.com/sjdonado/browser-router
-  #
-  # The config is linked from here rather than seeded, so the routing rules are
-  # tracked with the rest of the dotfiles. Link before installing: the installer
-  # only writes a starting config when there is none, and the link counts as one.
-  log "Setting up BrowserRouter (the default browser)..."
-  mkdir -p "$HOME/.config/browser-router"
-  ln -snf "$PWD/macos/browser-router.json" "$HOME/.config/browser-router/config.json"
-
-  # The app arrives with [bootstrap.packages], which declares the sjdonado/tap formula
-  # beside the other tapped ones. There is no bottle for it, so brew compiles it
-  # with swiftc rather than pouring one, and --build-from-source would say nothing
-  # the formula does not already do.
-  #
-  # What stays here is registration, which is not install: the formula stops at the
-  # signed bundle inside the Homebrew prefix, and telling macOS about a bundle is
-  # deliberately not its job. The last step, making it the default browser, is a
-  # system prompt no script can answer.
-  # Guarded rather than substituted inline: under `set -e` a failing substitution
-  # in the assignment aborts the run, and no brew means this step is simply absent,
-  # not fatal.
-  brew_prefix="$(brew --prefix 2>/dev/null || true)"
-  app="${brew_prefix:+$brew_prefix/opt/browser-router/BrowserRouter.app}"
-  if [ -d "$app" ]; then
-    mkdir -p "$HOME/Applications"
-    rm -rf "$HOME/Applications/BrowserRouter.app"
-    cp -R "$app" "$HOME/Applications/"
-    # LaunchServices is what lets a bundle outside /Applications open links at all.
-    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
-      -f "$HOME/Applications/BrowserRouter.app" \
-      || log "  lsregister failed; links may not reach BrowserRouter yet"
-    log "  registered ~/Applications/BrowserRouter.app; open it once to answer the default-browser prompt"
-  else
-    log "  BrowserRouter.app is not under the Homebrew prefix; skipping registration"
-  fi
+# nix-darwin writes /etc/shells itself and refuses to activate over one it does not recognise, which an earlier setup leaves behind by appending a shell to it. Such a file is kept as /etc/shells.before-nix-darwin, the name nix-darwin asks for, and put back if the switch fails.
+moved_shells=0
+if grep -qv -e '^#' -e '^$' -e '^/bin/' /etc/shells && [ ! -L /etc/shells ]; then
+  log "Handing /etc/shells to nix-darwin (kept as /etc/shells.before-nix-darwin)..."
+  sudo mv /etc/shells /etc/shells.before-nix-darwin
+  moved_shells=1
 fi
 
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping the login shell (--links-only)."
-else
-  log "Setting fish shell..."
-  if [ "$INSTALL" = 1 ] && ! have fish; then
-    brew install fish
-  fi
-
-  FISH_PATH="$(command -v fish || true)"
-  if [ -n "$FISH_PATH" ]; then
-    # ensure fish is listed in /etc/shells
-    if ! grep -qx "$FISH_PATH" /etc/shells; then
-      echo "Adding $FISH_PATH to /etc/shells (requires sudo)..."
-      echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
-    fi
-
-    # change default shell if not already fish (check dscl, not $SHELL subshell var)
-    CURRENT_LOGIN_SHELL=$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')
-    if [ "$CURRENT_LOGIN_SHELL" != "$FISH_PATH" ]; then
-      echo "Changing login shell to fish (requires your password)..."
-      chsh -s "$FISH_PATH"
-    fi
-  fi
+# nix-homebrew links its pinned taps as /opt/homebrew/Library/Taps and refuses to activate over a real directory there, which any Homebrew that ran `brew tap` leaves behind. That directory is kept as Taps.pre-nix and put back if the switch fails. Formulas installed from a tap the declaration drops stay installed; brew can no longer upgrade them.
+TAPS=/opt/homebrew/Library/Taps
+moved_taps=0
+if [ -d "$TAPS" ] && [ ! -L "$TAPS" ]; then
+  [ ! -e "$TAPS.pre-nix" ] || { echo "$TAPS.pre-nix already exists; move one of them aside and re-run" >&2; exit 1; }
+  log "Handing $TAPS to nix-homebrew (kept as $TAPS.pre-nix)..."
+  sudo mv "$TAPS" "$TAPS.pre-nix"
+  moved_taps=1
 fi
 
-link_fish_config
-
-# Relocate fish history to ~/.fish_history via symlink
-mkdir -p "$HOME/.local/share/fish"
-# migrate legacy non-dotfile location if present
-if [ -f "$HOME/fish_history" ] && [ ! -e "$HOME/.fish_history" ]; then
-  mv "$HOME/fish_history" "$HOME/.fish_history"
-fi
-if [ -f "$HOME/.local/share/fish/fish_history" ] && [ ! -L "$HOME/.local/share/fish/fish_history" ]; then
-  mv "$HOME/.local/share/fish/fish_history" "$HOME/.fish_history"
-fi
-if [ ! -e "$HOME/.fish_history" ]; then
-  touch "$HOME/.fish_history"
-  chmod 600 "$HOME/.fish_history"
-fi
-ln -snf "$HOME/.fish_history" "$HOME/.local/share/fish/fish_history"
-
-# Claude Code is the one agent binary with its own installer: its npm package
-# fetches the real binary from a postinstall script that mise does not run, and
-# it manages its own updates and shell integration. Everything else that used to
-# be curl-piped here comes from mise.toml now, rustup aside, which Homebrew has.
-# mise's `rust` plugin is not the alternative it looks like. It installs and is
-# rustup, but its shim shadows rustup's proxy, and that proxy is what implements
-# rust-toolchain.toml. Measured: in a directory pinning 1.90.0, the mise shim
-# reports 1.98.1 while ~/.cargo/bin/rustc syncs 1.90.0. Shims come first on PATH
-# here, so mise owning rust means a pinned repository builds with the wrong
-# compiler and says nothing. rustup keeps rust; see mise.toml.
-if [ "$INSTALL" = 1 ] && ! have claude; then
-  log "Installing Claude Code..."
-  curl -fsSL https://claude.ai/install.sh | bash \
-    || log "  install failed; re-run this script or install it by hand"
+# darwin-rebuild comes from the pinned nix-darwin input, as in `nix run .#sync`.
+config="$(scutil --get LocalHostName)"
+log "Applying the declaration (darwin-rebuild switch, $config)..."
+if ! sudo -H /nix/var/nix/profiles/default/bin/nix --extra-experimental-features 'nix-command flakes' run --inputs-from "$DOTFILES" nix-darwin#darwin-rebuild -- switch --flake "$DOTFILES#$config"; then
+  if [ "$moved_shells" = 1 ] && [ ! -e /etc/shells ]; then sudo mv /etc/shells.before-nix-darwin /etc/shells; fi
+  if [ "$moved_taps" = 1 ] && [ ! -e "$TAPS" ]; then sudo mv "$TAPS.pre-nix" "$TAPS"; fi
+  echo "The switch failed; nothing after the failing step was applied. See the output above." >&2
+  exit 1
 fi
 
-log "Linking Docker config..."
-ln -snf "$PWD/docker/config.json" "$HOME/.docker/config.json"
-
-log "Copying custom keyboard layouts..."
-cp -Rp "$PWD/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/" 2>/dev/null || true
-
-log "Linking dotfiles..."
-if [ -f "$PWD/.ssh/config" ]; then
-  ln -snf "$PWD/.ssh/config" "$HOME/.ssh/config"
-  chmod 600 "$PWD/.ssh/config"
-  [ -f "$PWD/.ssh/private.conf" ] && chmod 600 "$PWD/.ssh/private.conf"
-fi
-
-link_git_config
-link_bat_themes
-link_nvim_config
-link_zed_config
-link_worktrunk_config
-prune_stale_links "$HOME/Library/Application Support/lazygit/config.yml"
-link_herdr_config
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping herdr plugin linking (--links-only)."
-else
-  link_herdr_plugins
-fi
-link_agent_configs
-
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping macOS defaults, shortcuts and default apps (--links-only)."
-else
-  log "Setting default apps for code files and plain text..."
-  if have duti && [ -f "$PWD/macos/default-apps.duti" ]; then
-    duti "$PWD/macos/default-apps.duti" || true
-  else
-    echo "duti missing or macos/default-apps.duti absent; skipping."
-  fi
-
-  log "Applying macOS defaults..."
-  if [ -x "$PWD/macos/defaults.sh" ]; then
-    "$PWD/macos/defaults.sh" || true
-  fi
-
-  log "Applying macOS app shortcuts..."
-  if [ -x "$PWD/macos/app-shortcuts.sh" ]; then
-    "$PWD/macos/app-shortcuts.sh" || true
-  fi
-fi
-
-if [ "$LINKS_ONLY" = 1 ]; then
-  log "Skipping launchd agents (--links-only)."
-else
-  log "Mapping Caps Lock to Control for all keyboards..."
-  mkdir -p "$HOME/Library/LaunchAgents"
-  AGENT_SRC="$PWD/macos/com.local.KeyRemapping.plist"
-  AGENT_DST="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
-  # Generated rather than symlinked, as with the Time Machine agent below: the
-  # plist names caps-to-control.sh directly so Login Items shows that rather than a
-  # bare "hidutil", and launchd does not expand $HOME.
-  rm -f "$AGENT_DST"
-  sed "s|__CAPS_TO_CONTROL_SCRIPT__|$PWD/macos/caps-to-control.sh|" "$AGENT_SRC" > "$AGENT_DST"
-  launchctl unload "$AGENT_DST" 2>/dev/null || true
-  launchctl load "$AGENT_DST" 2>/dev/null || true
-  # apply now for this session
-  "$PWD/macos/caps-to-control.sh" || true
-
-  log "Installing Time Machine dev-junk exclusion agent..."
-  TM_AGENT_SRC="$PWD/macos/com.local.TMExcludeDev.plist"
-  TM_AGENT_DST="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
-  # Generated rather than symlinked: the plist names the script directly so Login
-  # Items shows tm-exclude-dev.sh instead of a bare "sh", and launchd does not
-  # expand $HOME, so the path has to be baked in here.
-  rm -f "$TM_AGENT_DST"
-  sed "s|__TM_EXCLUDE_SCRIPT__|$PWD/macos/tm-exclude-dev.sh|" "$TM_AGENT_SRC" > "$TM_AGENT_DST"
-  launchctl unload "$TM_AGENT_DST" 2>/dev/null || true
-  launchctl load "$TM_AGENT_DST" 2>/dev/null || true
-  # run once now to backfill existing dirs
-  "$PWD/macos/tm-exclude-dev.sh" || true
-fi
-
-touch "$PWD/.env"
-
-touch "$HOME/.hushlogin"
-
-log "Done. Open a new terminal session so PATH and shells are consistent."
+log "Done. Open a new terminal so PATH and the login shell apply. Remaining manual steps: README.md, \"Manual steps\"."

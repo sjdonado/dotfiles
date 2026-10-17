@@ -1,0 +1,180 @@
+kind	item	declared as	in	note
+formula	act	nixpkgs act	nix/home/darwin.nix	-
+formula	ca-certificates	nixpkgs cacert	nix/home/darwin.nix	-
+formula	openssl@3	nixpkgs openssl	nix/home/darwin.nix	-
+formula	openssl@4	nixpkgs openssl_4_0	nix/home/darwin.nix	off PATH like the Homebrew keg: ~/.local/opt/openssl-4
+formula	awscli	nixpkgs awscli2	nix/home/darwin.nix	-
+formula	blueutil	nixpkgs blueutil	nix/home/darwin.nix	-
+formula	bombardier	nixpkgs bombardier	nix/home/darwin.nix	-
+formula	sjdonado/tap/browser-router	Homebrew formula sjdonado/tap/browser-router	nix/darwin/homebrew.nix	not in nixpkgs
+formula	caddy	nixpkgs caddy	nix/home/darwin.nix	-
+formula	libpng	nixpkgs libpng	nix/home/darwin.nix	-
+formula	pixman	nixpkgs pixman	nix/home/darwin.nix	-
+formula	cairo	nixpkgs cairo	nix/home/darwin.nix	-
+formula	cliclick	Homebrew formula cliclick	nix/darwin/homebrew.nix	not in nixpkgs
+formula	cloudflare-wrangler	nixpkgs wrangler	nix/home/darwin.nix	-
+formula	cloudflared	nixpkgs cloudflared	nix/home/darwin.nix	-
+formula	cmake	nixpkgs cmake	nix/home/darwin.nix	-
+formula	cocoapods	nixpkgs cocoapods	nix/home/darwin.nix	-
+formula	coreutils	nixpkgs coreutils-prefixed	nix/home/darwin.nix	g-prefixed commands, as Homebrew
+formula	pkgconf	nixpkgs pkgconf	nix/home/darwin.nix	-
+formula	crystal	nixpkgs crystal	nix/home/darwin.nix	-
+formula	curlie	nixpkgs curlie	nix/home/darwin.nix	-
+formula	docker	cask orbstack	nix/darwin/homebrew.nix	OrbStack supplies the docker client; the formula was installed link: false
+formula	docker-buildx	cask orbstack	nix/darwin/homebrew.nix	OrbStack links its own buildx and compose into ~/.docker/cli-plugins
+formula	docker-compose	cask orbstack	nix/darwin/homebrew.nix	OrbStack links its own buildx and compose into ~/.docker/cli-plugins
+formula	duckdb	nixpkgs duckdb	nix/home/darwin.nix	-
+formula	duti	nixpkgs duti	nix/home/darwin.nix	-
+formula	fish	nixpkgs fish	nix/home/common.nix	-
+formula	flyctl	nixpkgs flyctl	nix/home/darwin.nix	-
+formula	gawk	nixpkgs gawk	nix/home/darwin.nix	as gawk only
+formula	ghostscript	nixpkgs ghostscript	nix/home/darwin.nix	-
+formula	giflib	nixpkgs giflib	nix/home/darwin.nix	-
+formula	gh	nixpkgs gh	nix/home/darwin.nix	-
+formula	git-bug	nixpkgs git-bug	nix/home/darwin.nix	-
+formula	git-delta	nixpkgs delta	nix/home/darwin.nix	-
+formula	git-lfs	nixpkgs git-lfs	nix/home/darwin.nix	-
+formula	gnu-sed	nixpkgs gnused	nix/home/darwin.nix	as gsed only
+formula	gnutls	nixpkgs gnutls	nix/home/darwin.nix	-
+formula	golangci-lint	nixpkgs golangci-lint	nix/home/darwin.nix	-
+formula	go	nixpkgs go	nix/home/darwin.nix	-
+formula	grpcurl	nixpkgs grpcurl	nix/home/darwin.nix	-
+formula	harfbuzz	nixpkgs harfbuzz	nix/home/darwin.nix	-
+formula	herdr	nixpkgs herdr	nix/home/common.nix	-
+formula	htop	nixpkgs htop	nix/home/darwin.nix	-
+formula	jpeg	nixpkgs libjpeg	nix/home/darwin.nix	-
+formula	jsoncpp	nixpkgs jsoncpp	nix/home/darwin.nix	-
+formula	libcoap	nixpkgs libcoap	nix/home/darwin.nix	-
+formula	libpq	nixpkgs libpq	nix/home/darwin.nix	-
+formula	pango	nixpkgs pango	nix/home/darwin.nix	-
+formula	librsvg	nixpkgs librsvg	nix/home/darwin.nix	-
+formula	llvm	nixpkgs llvm	nix/home/darwin.nix	keg: ~/.local/opt/llvm
+formula	llama.cpp	nixpkgs llama-cpp	nix/home/darwin.nix	-
+formula	lua	nixpkgs lua	nix/home/darwin.nix	-
+formula	luarocks	nixpkgs luarocks	nix/home/darwin.nix	-
+formula	mackup	nixpkgs mackup	nix/home/darwin.nix	-
+formula	mailpit	nixpkgs mailpit	nix/home/darwin.nix	-
+formula	mkcert	nixpkgs mkcert	nix/home/darwin.nix	-
+formula	mole	dropped	-	owner dropped it, 2026-10-17
+formula	mosh	nixpkgs mosh	nix/home/common.nix	-
+formula	nmap	nixpkgs nmap	nix/home/darwin.nix	-
+formula	nss	nixpkgs nss	nix/home/darwin.nix	-
+formula	openjdk	nixpkgs jdk	nix/home/darwin.nix	-
+formula	openjdk@11	nixpkgs jdk11	nix/home/darwin.nix	keg: ~/.local/opt/jdk11
+formula	openjdk@17	nixpkgs jdk17	nix/home/darwin.nix	keg: ~/.local/opt/jdk17
+formula	p7zip	nixpkgs p7zip	nix/home/darwin.nix	-
+formula	pipx	nixpkgs pipx	nix/home/darwin.nix	-
+formula	poppler	nixpkgs poppler-utils	nix/home/darwin.nix	-
+formula	pv	nixpkgs pv	nix/home/darwin.nix	-
+formula	python@3.12	nixpkgs python312	nix/home/darwin.nix	-
+formula	qpdf	nixpkgs qpdf	nix/home/darwin.nix	-
+formula	rbenv	nixpkgs rbenv	nix/home/darwin.nix	-
+formula	rustup	nixpkgs rustup	nix/home/darwin.nix	-
+formula	scc	nixpkgs scc	nix/home/darwin.nix	-
+formula	scrcpy	nixpkgs scrcpy	nix/home/darwin.nix	-
+formula	sqlmap	nixpkgs sqlmap	nix/home/darwin.nix	-
+formula	staticcheck	nixpkgs go-tools	nix/home/darwin.nix	-
+formula	stripe-cli	nixpkgs stripe-cli	nix/home/darwin.nix	-
+formula	swaks	nixpkgs swaks	nix/home/darwin.nix	-
+formula	telnet	nixpkgs inetutils	nix/home/darwin.nix	telnet only
+formula	tor	nixpkgs tor	nix/home/darwin.nix	-
+formula	tree	nixpkgs tree	nix/home/darwin.nix	-
+formula	watchman	nixpkgs watchman	nix/home/darwin.nix	-
+formula	xq	nixpkgs xq-xml	nix/home/darwin.nix	-
+formula	zig	nixpkgs zig	nix/home/darwin.nix	-
+formula	zig@0.15	nixpkgs zig_0_15	nix/home/darwin.nix	keg: ~/.local/opt/zig-0_15
+formula	chawan	nixpkgs chawan	nix/home/darwin.nix	-
+formula	difftastic	nixpkgs difftastic	nix/home/darwin.nix	-
+formula	facebook/fb/idb-companion	nixpkgs idb-companion	nix/home/darwin.nix	-
+formula	imagemagick	nixpkgs imagemagick	nix/home/darwin.nix	-
+formula	pandoc	nixpkgs pandoc	nix/home/darwin.nix	-
+formula	whisper.cpp	nixpkgs whisper-cpp	nix/home/darwin.nix	-
+formula	xcodegen	nixpkgs xcodegen	nix/home/darwin.nix	-
+formula	pi-coding-agent	nixpkgs pi-coding-agent	nix/home/darwin.nix	-
+formula	grafana/grafana/gcx	nixpkgs gcx	nix/home/darwin.nix	-
+formula	ory/tap/cli	nixpkgs ory	nix/home/darwin.nix	-
+formula	supabase/tap/supabase	nixpkgs supabase-cli	nix/home/darwin.nix	-
+mise tool	node	nixpkgs nodejs	nix/home/common.nix	-
+mise tool	bun	nixpkgs bun	nix/home/common.nix	-
+mise tool	pnpm	nixpkgs pnpm	nix/home/common.nix	-
+mise tool	uv	nixpkgs uv	nix/home/common.nix	-
+mise tool	ripgrep	nixpkgs ripgrep	nix/home/common.nix	-
+mise tool	fd	nixpkgs fd	nix/home/common.nix	-
+mise tool	bat	nixpkgs bat	nix/home/common.nix	-
+mise tool	fzf	nixpkgs fzf	nix/home/common.nix	-
+mise tool	jq	nixpkgs jq	nix/home/common.nix	-
+mise tool	lazygit	nixpkgs lazygit	nix/home/common.nix	-
+mise tool	neovim	nixpkgs neovim	nix/home/common.nix	-
+mise tool	worktrunk	nixpkgs worktrunk	nix/home/common.nix	-
+mise tool	tree-sitter	nixpkgs tree-sitter	nix/home/common.nix	-
+mise tool	@opencode/cli	nix/pkgs/opencode.nix	nix/home/common.nix	v2; nixpkgs has v1
+mise tool	@openai/codex	nix/pkgs/codex.nix	nix/home/common.nix	prebuilt; nixpkgs compiles it
+mise tool	@fission-ai/openspec	nixpkgs openspec	nix/home/common.nix	-
+mise tool	agent-browser	dropped	-	owner dropped it, 2026-10-17 (with its Chrome step, config link and the agent-browser and chrome-devtools MCP servers)
+installer	claude (native installer)	nix/pkgs/claude-code.nix on macOS, nixpkgs claude-code on Linux	nix/home/common.nix	unfree; the macOS build is Anthropic's release binary, pinned, so T3 Code does not flag it outdated
+installer	go install air	nixpkgs air	nix/home/darwin.nix	was go install @latest
+installer	go install bootdev	nixpkgs bootdev-cli	nix/home/darwin.nix	was go install @latest
+installer	go install goose	nixpkgs goose	nix/home/darwin.nix	was go install @latest
+cask	1password	cask 1password	nix/darwin/homebrew.nix	-
+cask	1password-cli	cask 1password-cli	nix/darwin/homebrew.nix	-
+cask	android-commandlinetools	cask android-commandlinetools	nix/darwin/homebrew.nix	-
+cask	betterdisplay	cask betterdisplay	nix/darwin/homebrew.nix	-
+cask	firefox	dropped	-	owner dropped it, 2026-10-17
+cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
+cask	ghostty	cask ghostty	nix/darwin/homebrew.nix	-
+cask	handy	cask handy	nix/darwin/homebrew.nix	-
+cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
+cask	ngrok	cask ngrok	nix/darwin/homebrew.nix	-
+cask	nordvpn	cask nordvpn	nix/darwin/homebrew.nix	-
+cask	notion	dropped	-	owner dropped it, 2026-10-17
+cask	orbstack	cask orbstack	nix/darwin/homebrew.nix	-
+cask	tablepro	cask tablepro	nix/darwin/homebrew.nix	-
+cask	tailscale-app	cask tailscale-app	nix/darwin/homebrew.nix	-
+cask	telegram-desktop	cask telegram-desktop	nix/darwin/homebrew.nix	-
+cask	abue-ammar/tinycast/tinycast	cask abue-ammar/tinycast/tinycast	nix/darwin/homebrew.nix	-
+cask	yaak	cask yaak	nix/darwin/homebrew.nix	-
+cask	annotate	cask annotate	nix/darwin/homebrew.nix	-
+cask	icon-composer	cask icon-composer	nix/darwin/homebrew.nix	-
+cask	rockxy	cask rockxy	nix/darwin/homebrew.nix	-
+cask	driceroland/tap/search	dropped	-	owner dropped it, 2026-10-17
+cask	codex	nix/pkgs/codex.nix	nix/home/common.nix	the cask was the CLI; dropped for the Nix package
+formula	oven-sh/bun/bun	nixpkgs bun	nix/home/common.nix	undeclared tap install; bun was also a mise tool
+installer	herdr (curl, Linux)	nixpkgs herdr	nix/home/common.nix	-
+installer	pss-sync (mise task)	flake input pss	nix/home/common.nix	activation step pss
+apt (Linux)	git fish mosh	nixpkgs git fish mosh	nix/home/common.nix	-
+apt (Linux)	python3	nixpkgs python3 with pip	nix/home/linux.nix	-
+apt (Linux)	curl ca-certificates	not declared	-	the distribution's base; linux.sh needs curl to fetch the Nix installer
+app (hand-installed)	cap	cask cap	nix/darwin/homebrew.nix	-
+app (hand-installed)	google-chrome	cask google-chrome	nix/darwin/homebrew.nix	-
+app (hand-installed)	granola	cask granola	nix/darwin/homebrew.nix	-
+app (hand-installed)	imageoptim	cask imageoptim	nix/darwin/homebrew.nix	-
+app (hand-installed)	libreoffice	dropped	-	owner dropped it, 2026-10-17
+app (hand-installed)	linear-linear	cask linear	nix/darwin/homebrew.nix	renamed from linear-linear
+app (hand-installed)	orion	dropped	-	owner dropped it, 2026-10-17
+app (hand-installed)	raycast	cask raycast	nix/darwin/homebrew.nix	-
+app (hand-installed)	slack	cask slack	nix/darwin/homebrew.nix	-
+app (hand-installed)	whatsapp	cask whatsapp	nix/darwin/homebrew.nix	-
+app (hand-installed)	zed	cask zed	nix/darwin/homebrew.nix	-
+app (hand-installed)	t3-code	cask t3-code	nix/darwin/homebrew.nix	-
+app (App Store)	1Password for Safari	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 1569813296
+app (App Store)	DaisyDisk	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 411643860
+app (App Store)	Developer	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 640199958
+app (App Store)	GarageBand	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 682658836
+app (App Store)	GoodLinks	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 1474335294
+app (App Store)	iMovie	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 408981434
+app (App Store)	Keynote	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361285480
+app (App Store)	Numbers	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361304891
+app (App Store)	Pages	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361309726
+app (App Store)	Raycast Companion	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 6738274497
+app (App Store)	TestFlight	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 899247664
+app (App Store)	uBlock Origin Lite	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 6745342698
+app (App Store)	Xcode	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 497799835
+exception	Keynote.app (com.apple.iWork.Keynote)	manual	-	legacy iWork bundle with no App Store listing; the current Keynote is declared above
+exception	Gmail, Calendar, Google Meet (Safari web apps)	manual	-	created by Safari; BrowserRouter routes to their generated IDs
+exception	Anarlog Dev	manual	-	a local build
+exception	Claude Code URL Handler	manual	-	created by Claude Code
+exception	Safari	manual	-	part of macOS
+exception	Search.app.old	manual	-	leftover copy of the search cask
+nvim	Mason tools (21)	nixpkgs, see the language servers list	nix/home/common.nix	astro-language-server basedpyright clang-tools crystalline vscode-langservers-extracted gopls golangci-lint-langserver lua-language-server svelte-language-server tailwindcss-language-server vtsls yaml-language-server black gofumpt gotools isort prettierd ruff stylua
+apt (Linux)	wget	nixpkgs wget	nix/home/linux.nix	-
+apt (Linux)	python3-pip	nixpkgs python3 with pip	nix/home/linux.nix	-

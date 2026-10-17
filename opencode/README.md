@@ -1,6 +1,6 @@
 # OpenCode
 
-Public OpenCode v2 configuration shared across macOS and Linux. Mise installs `@opencode/cli` and explicitly allows its postinstall script to select the native binary. Update the mise version and lock together rather than using OpenCode's self-updater.
+Public OpenCode v2 configuration shared across macOS and Linux. Nix installs it from the native binary `@opencode/cli` publishes for each platform (`nix/pkgs/opencode.nix`, because nixpkgs still carries v1). Upgrade by changing the version and hashes there rather than using OpenCode's self-updater.
 
 ## Tracked
 
@@ -13,7 +13,7 @@ Public OpenCode v2 configuration shared across macOS and Linux. Mise installs `@
 
 The setup scripts link the config entries individually into `~/.config/opencode/` and `kv.json` into `~/.local/state/opencode/`. They do not replace either directory, so OpenCode and Herdr can keep generated dependencies, model history, sessions, and integration plugins beside them.
 
-MCP server definitions added to `opencode.json` are shared. All four servers connect automatically at startup. Use `/mcps` to manage connections, or set `disabled` to `true` in a project config under `mcp.servers` to keep a server disconnected. Project overrides replace the entire named server object, so repeat its command and other options. All four definitions explicitly use native code mode. Code mode changes how the agent calls tools; it does not eliminate the server process when connected.
+MCP server definitions added to `opencode.json` are shared. Both servers (ios-simulator, git-bug) connect automatically at startup. Use `/mcps` to manage connections, or set `disabled` to `true` in a project config under `mcp.servers` to keep a server disconnected. Project overrides replace the entire named server object, so repeat its command and other options. All four definitions explicitly use native code mode. Code mode changes how the agent calls tools; it does not eliminate the server process when connected.
 
 LSP, automatic formatters, and filesystem snapshots are disabled. Run the project's typecheck and formatting commands when needed. Session undo does not restore files with snapshots disabled; use Git for file recovery.
 
@@ -50,7 +50,7 @@ opencode mcp auth <server>
 
 The default is the hosted `openai/gpt-6.1-sol` model, so OpenCode does not reserve laptop RAM for local inference. Connect OpenAI through `/connect` if it is not already available. Quit existing v1 clients and start OpenCode again after installing v2. V2 changes runtime and terminal configuration formats; the setup replaces only the repository-owned `tui.json` link with `cli.json` and preserves other local files.
 
-For an existing machine, remove package-managed v1 before adopting v2 (`brew uninstall opencode` for the legacy Homebrew formula, or `mise uninstall --all github:anomalyco/opencode` for the old mise backend). Keep the old config in Git history while checking credentials, models, permissions, and plugins. Do not run v1 against the native v2 configuration. The full migration guide is https://opencode.ai/v2/docs/migrate-v1/.
+For an existing machine, remove package-managed v1 before adopting v2 (the legacy Homebrew formula or an old mise install). Keep the old config in Git history while checking credentials, models, permissions, and plugins. Do not run v1 against the native v2 configuration. The full migration guide is https://opencode.ai/v2/docs/migrate-v1/.
 
 Configuration documentation:
 

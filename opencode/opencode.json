@@ -47,18 +47,6 @@
 	],
 	"mcp": {
 		"servers": {
-			"agent-browser": {
-				"type": "local",
-				"command": ["agent-browser", "mcp"],
-				"disabled": false,
-				"codemode": true
-			},
-			"chrome-devtools": {
-				"type": "local",
-				"command": ["npx", "-y", "chrome-devtools-mcp@latest", "--autoConnect", "--userDataDir", "{env:HOME}/.agent-browser/profile", "--no-usage-statistics", "--no-performance-crux"],
-				"disabled": false,
-				"codemode": true
-			},
 			"ios-simulator": {
 				"type": "local",
 				"command": ["npx", "-y", "ios-simulator-mcp"],

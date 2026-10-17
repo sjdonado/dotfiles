@@ -1,15 +1,5 @@
 {
   "mcpServers": {
-    "agent-browser": {
-      "command": "agent-browser",
-      "args": ["mcp"],
-      "exposure": "codemode"
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest", "--autoConnect", "--userDataDir", "~/.agent-browser/profile", "--no-usage-statistics", "--no-performance-crux"],
-      "exposure": "codemode"
-    },
     "ios-simulator": {
       "command": "npx",
       "args": ["-y", "ios-simulator-mcp"],
