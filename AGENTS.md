@@ -55,6 +55,10 @@ This is a different question from verifying a harness change, and the two are no
 
 Run the check for the platform the change touches, both when it touches both, and report the counts. A green run is evidence; a change to the declaration with no run behind it is unverified, however obviously correct it reads.
 
+## Accounts and machines
+
+The setup is agnostic to the accounts and machines it runs on. It supports any number of accounts on one Mac and is used with two. The real hostname and account names appear only in the `darwinConfigurations` entry in flake.nix. Docs, checks, OpenSpec artifacts, commit messages and PR text refer to "the primary account" and "the second account" (or `<user>`, `<hostname>`), never to the real names. A check that needs an account or host reads it from the configuration, or defaults to the current user and this Mac's hostname. The GitHub owner in repository URLs and tap names is not an account name and stays.
+
 ## Working state
 
 Expect locally managed files to be dirty after tool updates. Preserve changes outside the task and stage explicit files. Inspect root and nested instruction scope and symlink destinations before edits. Record unavailable checks as unverified, never as passing. A completed model turn or passing tests written against a guessed requirement are not evidence that the intended task is complete.
