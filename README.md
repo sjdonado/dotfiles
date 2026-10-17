@@ -43,7 +43,7 @@ The repository is the source of truth. Configs reach it through live links, and 
 
 ### More than one account on a Mac
 
-A Mac has one nix-darwin system, so every account on it is listed in `flake.nix` (`darwin [ "juan" "sjdonado" ]`). The first is the primary user, who owns Homebrew and the system settings. One sync, run from any of these accounts, applies the configuration to all of them.
+A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary user, who owns Homebrew and the system settings. One sync, run from any of these accounts, applies the configuration to all of them.
 
 - Every account has its own clone at `~/.config/dotfiles`, and its links point into that clone. A config change reaches another account when that account runs `git pull`, with no sync.
 - A sync applies the declaration from the clone it runs in, so `git pull` first.

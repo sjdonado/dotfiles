@@ -106,4 +106,4 @@ Then in Raycast: **Settings -> Applications**, search the name, **Record Hotkey*
 
 | App | Binary | Notes |
 | --- | --- | --- |
-| `scrcpy` (built by sjdonado) | `/etc/profiles/per-user/sjdonado/bin/scrcpy` | `ADB` and `PATH` set via `LSEnvironment` for sjdonado's `platform-tools` |
+| `scrcpy` | `/etc/profiles/per-user/<user>/bin/scrcpy` (the account that built it) | `ADB` and `PATH` set via `LSEnvironment` for that account's `platform-tools` |

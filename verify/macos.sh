@@ -5,11 +5,11 @@
 #
 # With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. After a switch, verify/macos-host.sh asserts this Mac itself.
 #
-# HOST_CONFIG and USER_CONFIG select another configuration (default: Juans-MacBook-Pro, juan). The same script runs inside the container to assert (VERIFY_STAGE=assert).
+# HOST_CONFIG and USER_CONFIG select another configuration (default: this Mac's hostname, the user running the check). The same script runs inside the container to assert (VERIFY_STAGE=assert).
 set -euo pipefail
 
-HOST="${HOST_CONFIG:-Juans-MacBook-Pro}"
-USER_NAME="${USER_CONFIG:-juan}"
+HOST="${HOST_CONFIG:-$(scutil --get LocalHostName 2>/dev/null || hostname -s)}"
+USER_NAME="${USER_CONFIG:-$(id -un)}"
 
 # The assertions, run from a flake root with nix, jq and curl on PATH.
 assert_config() {
@@ -34,6 +34,8 @@ assert_config() {
       nixHomebrew = { inherit (c.nix-homebrew) enable autoMigrate mutableTaps; taps = builtins.attrNames c.nix-homebrew.taps; };
       packages = map (p: p.name) hm.home.packages;
       users = builtins.attrNames c.home-manager.users;
+      accounts = builtins.filter (u: builtins.substring 0 7 u != \"_nixbld\") (builtins.attrNames c.users.users);
+      primary = c.system.primaryUser;
       userDefaults = builtins.toJSON hm.targets.darwin.defaults;
     }") || { echo "evaluation failed"; exit 1; }
   f() { jq -r "$1" <<<"$facts"; }
@@ -68,9 +70,9 @@ assert_config() {
   for want in AppleShowAllExtensions AppleShowAllFiles; do
     if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
   done
-  for u in juan sjdonado; do
-    if f '.users[]' | grep -qx "$u"; then ok "home-manager configures $u"; else bad "$u has no home-manager configuration"; fi
-  done
+  # Every account the configuration declares gets the same home configuration, the primary one included.
+  if [ "$(f '.accounts | sort | join(",")')" = "$(f '.users | sort | join(",")')" ]; then ok "home-manager configures every declared account ($(f '.accounts | length'))"; else bad "declared accounts ($(f '.accounts | join(" ")')) differ from home-manager users ($(f '.users | join(" ")'))"; fi
+  if f '.users[]' | grep -qx "$(f .primary)"; then ok "the primary account has a home configuration"; else bad "the primary account has no home configuration"; fi
   if f '.shells[]' | grep -q '/bin/fish$'; then ok "fish is listed for /etc/shells"; else bad "fish is not in environment.shells"; fi
 
   group "Homebrew, driven by the switch"
