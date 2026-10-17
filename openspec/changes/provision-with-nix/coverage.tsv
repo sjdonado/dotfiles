@@ -40,7 +40,7 @@ formula	golangci-lint	nixpkgs golangci-lint	nix/home/darwin.nix	-
 formula	go	nixpkgs go	nix/home/darwin.nix	-
 formula	grpcurl	nixpkgs grpcurl	nix/home/darwin.nix	-
 formula	harfbuzz	nixpkgs harfbuzz	nix/home/darwin.nix	-
-formula	herdr	nixpkgs herdr	nix/home/common.nix	-
+formula	herdr	nixpkgs herdr	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17)
 formula	htop	nixpkgs htop	nix/home/darwin.nix	-
 formula	jpeg	nixpkgs libjpeg	nix/home/darwin.nix	-
 formula	jsoncpp	nixpkgs jsoncpp	nix/home/darwin.nix	-
@@ -103,10 +103,10 @@ mise tool	fd	nixpkgs fd	nix/home/common.nix	-
 mise tool	bat	nixpkgs bat	nix/home/common.nix	-
 mise tool	fzf	nixpkgs fzf	nix/home/common.nix	-
 mise tool	jq	nixpkgs jq	nix/home/common.nix	-
-mise tool	lazygit	nixpkgs lazygit	nix/home/common.nix	-
+mise tool	lazygit	nixpkgs lazygit	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17)
 mise tool	neovim	nixpkgs neovim	nix/home/common.nix	-
 mise tool	worktrunk	nixpkgs worktrunk	nix/home/common.nix	-
-mise tool	tree-sitter	nixpkgs tree-sitter	nix/home/common.nix	-
+mise tool	tree-sitter	nixpkgs tree-sitter	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17)
 mise tool	@opencode/cli	nix/pkgs/opencode.nix	nix/home/common.nix	v2; nixpkgs has v1
 mise tool	@openai/codex	nix/pkgs/codex.nix	nix/home/common.nix	prebuilt; nixpkgs compiles it
 mise tool	@fission-ai/openspec	nixpkgs openspec	nix/home/common.nix	-
@@ -122,7 +122,7 @@ cask	betterdisplay	cask betterdisplay	nix/darwin/homebrew.nix	-
 cask	firefox	dropped	-	owner dropped it, 2026-10-17
 cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
 cask	ghostty	cask ghostty	nix/darwin/homebrew.nix	-
-cask	handy	cask handy	nix/darwin/homebrew.nix	-
+cask	handy	dropped	-	replaced by the muesli cask, 2026-10-17
 cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
 cask	ngrok	cask ngrok	nix/darwin/homebrew.nix	-
 cask	nordvpn	cask nordvpn	nix/darwin/homebrew.nix	-
@@ -171,10 +171,10 @@ app (App Store)	uBlock Origin Lite	manual	-	installed by hand since 2026-10-17 (
 app (App Store)	Xcode	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 497799835
 exception	Keynote.app (com.apple.iWork.Keynote)	manual	-	legacy iWork bundle with no App Store listing; the current Keynote is declared above
 exception	Gmail, Calendar, Google Meet (Safari web apps)	manual	-	created by Safari; BrowserRouter routes to their generated IDs
-exception	Anarlog Dev	manual	-	a local build
+exception	Anarlog Dev	dropped	-	replaced by the muesli cask, 2026-10-17
 exception	Claude Code URL Handler	manual	-	created by Claude Code
 exception	Safari	manual	-	part of macOS
 exception	Search.app.old	manual	-	leftover copy of the search cask
-nvim	Mason tools (21)	nixpkgs, see the language servers list	nix/home/common.nix	astro-language-server basedpyright clang-tools crystalline vscode-langservers-extracted gopls golangci-lint-langserver lua-language-server svelte-language-server tailwindcss-language-server vtsls yaml-language-server black gofumpt gotools isort prettierd ruff stylua
+nvim	Mason tools (21)	nixpkgs, see the language servers list	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17); astro-language-server basedpyright clang-tools crystalline vscode-langservers-extracted gopls golangci-lint-langserver lua-language-server svelte-language-server tailwindcss-language-server vtsls yaml-language-server black gofumpt gotools isort prettierd ruff stylua
 apt (Linux)	wget	nixpkgs wget	nix/home/linux.nix	-
 apt (Linux)	python3-pip	nixpkgs python3 with pip	nix/home/linux.nix	-

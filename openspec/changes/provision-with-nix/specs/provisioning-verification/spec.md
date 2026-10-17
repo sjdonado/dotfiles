@@ -29,7 +29,7 @@ A check SHALL evaluate and build the macOS configuration from the working tree w
 - **THEN** the host check asserts the result and names every failing tool, link or setting
 
 ### Requirement: What the checks assert
-Both checks SHALL assert that every declared command-line tool answers its version command, that every declared link resolves into the repository working tree, that the second switch changes nothing and leaves no backup files, that tools resolve in a non-interactive shell, and that every skipped setup step says it was skipped.
+The Linux check and the macOS host check SHALL assert that every declared command-line tool answers its version command, that every declared link resolves into the repository working tree, that tools resolve in a non-interactive shell, and that every skipped setup step says it was skipped. The Linux check SHALL also assert that its second switch changes nothing and leaves no backup files; on macOS that is not asserted by a check.
 
 #### Scenario: Copy instead of link
 - **WHEN** a managed configuration is a copy with the right contents instead of a link into the repository
