@@ -764,7 +764,7 @@ do
     require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
     vim.cmd 'MasonToolsInstall'
   end, { desc = 'Install every Mason tool this config declares' })
-  -- Install and update the same list, for headless runs (`mise run upgrade`). MasonToolsUpdateSync loops vim.wait with no deadline, so this starts the async update and waits for its completion event with a 10 minute limit.
+  -- Install and update the same list, for headless runs. MasonToolsUpdateSync loops vim.wait with no deadline, so this starts the async update and waits for its completion event with a 10 minute limit.
   vim.api.nvim_create_user_command('MasonToolsUpgrade', function()
     if #ensure_installed == 0 then
       vim.notify('MasonToolsUpgrade: no Mason tools declared, nothing to do', vim.log.levels.WARN)

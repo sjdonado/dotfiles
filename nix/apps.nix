@@ -22,7 +22,7 @@ let
   '';
   switchCommand =
     if isDarwin then
-      ''step sudo ${inputs.nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild switch --flake "$DOTFILES#''${DARWIN_CONFIG:-$(scutil --get LocalHostName)}"''
+      ''step sudo ${inputs.nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild switch --flake "$DOTFILES#$(scutil --get LocalHostName)"''
     else
       # -b keeps one backup of a file home-manager takes over, such as the distribution's ~/.profile on the first switch.
       # home-manager reads the user from $USER (flake.nix), which a non-login shell or `docker exec` may not set.
@@ -49,11 +49,11 @@ let
     text = common + ''
       # Every input in flake.lock: nixpkgs, home-manager, nix-darwin, nix-homebrew, each Homebrew tap and the pinned sources.
       step nix flake update --flake "$DOTFILES"
-      # Neovim plugins are pinned by nvim/nvim-pack-lock.json, which this rewrites in the repository. nvim exits 0 when a -c command errors, so failures report through cquit.
-      step nvim --headless -c 'lua local ok, err = pcall(vim.pack.update, nil, { force = true }); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
+      # Neovim plugins are pinned by nvim/nvim-pack-lock.json, which this rewrites in the repository. nvim exits 0 when a -c command errors, so failures report through cquit. Skipped with the full neovim setup (nvim/ is not linked).
+      # step nvim --headless -c 'lua local ok, err = pcall(vim.pack.update, nil, { force = true }); if not ok then io.stderr:write(tostring(err), "\n"); vim.cmd.cquit(1) end' -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
     '' + switchCommand + ''
 
-      [ "$dry" = 1 ] || echo "Upgraded. Review and commit the lockfile diffs: git -C \"$DOTFILES\" diff flake.lock nvim/nvim-pack-lock.json"
+      [ "$dry" = 1 ] || echo "Upgraded. Review and commit the lockfile diffs: git -C \"$DOTFILES\" diff flake.lock"
     '';
   };
 in
@@ -66,6 +66,6 @@ in
   upgrade = {
     type = "app";
     program = lib.getExe upgrade;
-    meta.description = "Update every pinned input and the Neovim plugin lockfile, then switch";
+    meta.description = "Update every pinned input, then switch";
   };
 }

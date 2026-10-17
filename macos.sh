@@ -4,7 +4,7 @@
 #
 #   ~/.config/dotfiles/macos.sh
 #
-# Upgrades are `nix run ~/.config/dotfiles#upgrade`. The configuration is chosen by hostname (darwinConfigurations in flake.nix); the VM check selects its own with DARWIN_CONFIG.
+# Upgrades are `nix run ~/.config/dotfiles#upgrade`. The configuration is chosen by hostname (darwinConfigurations in flake.nix). After a switch, verify/macos-host.sh checks the result.
 #
 # Manual steps that remain are listed in README.md ("Manual steps").
 set -eu
@@ -46,11 +46,22 @@ if grep -qv -e '^#' -e '^$' -e '^/bin/' /etc/shells && [ ! -L /etc/shells ]; the
   moved_shells=1
 fi
 
+# nix-homebrew links its pinned taps as /opt/homebrew/Library/Taps and refuses to activate over a real directory there, which any Homebrew that ran `brew tap` leaves behind. That directory is kept as Taps.pre-nix and put back if the switch fails. Formulas installed from a tap the declaration drops stay installed; brew can no longer upgrade them.
+TAPS=/opt/homebrew/Library/Taps
+moved_taps=0
+if [ -d "$TAPS" ] && [ ! -L "$TAPS" ]; then
+  [ ! -e "$TAPS.pre-nix" ] || { echo "$TAPS.pre-nix already exists; move one of them aside and re-run" >&2; exit 1; }
+  log "Handing $TAPS to nix-homebrew (kept as $TAPS.pre-nix)..."
+  sudo mv "$TAPS" "$TAPS.pre-nix"
+  moved_taps=1
+fi
+
 # darwin-rebuild comes from the pinned nix-darwin input, as in `nix run .#switch`.
-config="${DARWIN_CONFIG:-$(scutil --get LocalHostName)}"
+config="$(scutil --get LocalHostName)"
 log "Applying the declaration (darwin-rebuild switch, $config)..."
 if ! sudo -H /nix/var/nix/profiles/default/bin/nix --extra-experimental-features 'nix-command flakes' run --inputs-from "$DOTFILES" nix-darwin#darwin-rebuild -- switch --flake "$DOTFILES#$config"; then
   if [ "$moved_shells" = 1 ] && [ ! -e /etc/shells ]; then sudo mv /etc/shells.before-nix-darwin /etc/shells; fi
+  if [ "$moved_taps" = 1 ] && [ ! -e "$TAPS" ]; then sudo mv "$TAPS.pre-nix" "$TAPS"; fi
   echo "The switch failed; nothing after the failing step was applied. See the output above." >&2
   exit 1
 fi

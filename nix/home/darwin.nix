@@ -61,6 +61,7 @@ in
     caddy
     cacert
     cairo
+    cairo.dev # cairo-trace, which Homebrew's cairo had, ships in the dev output
     chawan
     cloudflared
     cmake
@@ -242,7 +243,11 @@ in
       /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$dst"
     '';
 
+    # Homebrew installs Zed moments before this runs, and Launch Services registers new apps lazily; a handler set for a bundle it does not know yet falls back to another app (Notion, for Markdown). Registering Zed first makes the handlers stick.
     defaultApps = step "default-apps" ''
+      if [ -d /Applications/Zed.app ]; then
+        /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Zed.app
+      fi
       ${pkgs.duti}/bin/duti ${repo}/macos/default-apps.duti
     '';
 

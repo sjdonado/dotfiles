@@ -3,7 +3,7 @@
 #
 #   verify/macos.sh
 #
-# With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. The full check is verify/macos-vm.sh.
+# With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. After a switch, verify/macos-host.sh asserts this Mac itself.
 #
 # HOST_CONFIG and USER_CONFIG select another configuration (default: Juans-MacBook-Pro, juan). The same script runs inside the container to assert (VERIFY_STAGE=assert).
 set -euo pipefail
@@ -45,12 +45,12 @@ assert_config() {
     elif [ -e "$rel" ]; then ok "~/$name -> $rel"
     else bad "~/$name -> $rel, which does not exist in the tree"; fi
   done < <(f '.links | to_entries[] | [.key, (.value // "null")] | @tsv')
-  for want in .gitconfig .ssh/config .docker/config.json .config/nvim .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
+  for want in .gitconfig .ssh/config .docker/config.json .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
     if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
   done
 
   group "setup steps"
-  for step in herdrClaude herdrOpencode herdrPlugins codexConfig batCache agentBrowser nvimPlugins fishHistory pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
+  for step in codexConfig batCache fishHistory pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
     if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
   done
 
@@ -89,7 +89,7 @@ assert_config() {
 
   group "packages"
   echo "  info $(f '.packages | length') packages in the home profile"
-  for p in neovim opencode codex claude-code herdr pi-coding-agent; do
+  for p in neovim opencode codex claude-code pi-coding-agent; do
     if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
   done
 

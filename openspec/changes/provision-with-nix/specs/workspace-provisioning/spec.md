@@ -22,7 +22,7 @@ One command per platform SHALL apply the declaration to the current machine: on 
 
 #### Scenario: macOS switch
 - **WHEN** the owner runs the macOS switch on a Mac with Nix installed
-- **THEN** the declared packages, casks, App Store apps, links, system settings and setup steps are present afterwards
+- **THEN** the declared packages, casks, links, system settings and setup steps are present afterwards
 
 #### Scenario: Linux switch
 - **WHEN** the owner runs the Linux switch as an unprivileged user on Ubuntu with Nix installed
@@ -72,7 +72,7 @@ Configuration files the workspace links SHALL resolve to the files in the reposi
 - **THEN** the tool reads the edit on its next start without a switch
 
 #### Scenario: Tool writes back
-- **WHEN** Neovim updates its plugin lockfile
+- **WHEN** OpenCode writes its `kv.json`
 - **THEN** the change appears as a diff in the repository
 
 ### Requirement: macOS system settings
@@ -87,11 +87,11 @@ On macOS the switch SHALL apply the declared defaults and app shortcuts, default
 - **THEN** the Caps Lock remapping and the Time Machine exclusion agents are loaded and point at scripts in the repository
 
 ### Requirement: Setup steps run by the switch
-Setup that is not a package or a link (herdr plugins and integrations, the codex configuration merge, the bat theme cache, the Pi scheme, agent-browser's browser, Neovim plugins and tools) SHALL run as part of the switch. A failing step SHALL be reported by name and SHALL NOT stop the other steps.
+Setup that is not a package or a link (the codex configuration merge, the bat theme cache, the Pi scheme, macOS app shortcuts and default apps) SHALL run as part of the switch. A failing step SHALL be reported by name and SHALL NOT stop the other steps.
 
-#### Scenario: herdr not running
-- **WHEN** the switch runs while no herdr server is running
-- **THEN** the herdr plugin step reports that it was skipped and why, and every other step still runs
+#### Scenario: A step fails
+- **WHEN** one setup step fails during the switch
+- **THEN** the switch reports that step by name, and every other step still runs
 
 ### Requirement: Idempotent switch
 A second switch with no change to the declaration SHALL change nothing: no new generation of user state, no backup files, no duplicated shell blocks and no reinstalled packages.
@@ -101,7 +101,7 @@ A second switch with no change to the declaration SHALL change nothing: no new g
 - **THEN** the second run reports no changes and leaves no backup files
 
 ### Requirement: Tools found by non-interactive shells
-Declared tools SHALL be on PATH for login and non-interactive shells on both platforms, including an agent hook, a herdr pane running a command and `ssh host command`.
+Declared tools SHALL be on PATH for login and non-interactive shells on both platforms, including an agent hook, a terminal pane running a command and `ssh host command`.
 
 #### Scenario: Non-interactive shell on Linux
 - **WHEN** `env -i HOME=$HOME bash -lc 'nvim --version'` and `ssh host 'nvim --version'` run after the Linux switch

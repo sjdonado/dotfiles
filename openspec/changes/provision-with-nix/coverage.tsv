@@ -55,7 +55,7 @@ formula	luarocks	nixpkgs luarocks	nix/home/darwin.nix	-
 formula	mackup	nixpkgs mackup	nix/home/darwin.nix	-
 formula	mailpit	nixpkgs mailpit	nix/home/darwin.nix	-
 formula	mkcert	nixpkgs mkcert	nix/home/darwin.nix	-
-formula	mole	Homebrew formula mole	nix/darwin/homebrew.nix	nixpkgs mole is a different program
+formula	mole	dropped	-	owner dropped it, 2026-10-17
 formula	mosh	nixpkgs mosh	nix/home/common.nix	-
 formula	nmap	nixpkgs nmap	nix/home/darwin.nix	-
 formula	nss	nixpkgs nss	nix/home/darwin.nix	-
@@ -110,7 +110,7 @@ mise tool	tree-sitter	nixpkgs tree-sitter	nix/home/common.nix	-
 mise tool	@opencode/cli	nix/pkgs/opencode.nix	nix/home/common.nix	v2; nixpkgs has v1
 mise tool	@openai/codex	nix/pkgs/codex.nix	nix/home/common.nix	prebuilt; nixpkgs compiles it
 mise tool	@fission-ai/openspec	nixpkgs openspec	nix/home/common.nix	-
-mise tool	agent-browser	nixpkgs agent-browser	nix/home/common.nix	-
+mise tool	agent-browser	dropped	-	owner dropped it, 2026-10-17 (with its Chrome step, config link and the agent-browser and chrome-devtools MCP servers)
 installer	claude (native installer)	nixpkgs claude-code	nix/home/common.nix	unfree
 installer	go install air	nixpkgs air	nix/home/darwin.nix	was go install @latest
 installer	go install bootdev	nixpkgs bootdev-cli	nix/home/darwin.nix	was go install @latest
@@ -119,14 +119,14 @@ cask	1password	cask 1password	nix/darwin/homebrew.nix	-
 cask	1password-cli	cask 1password-cli	nix/darwin/homebrew.nix	-
 cask	android-commandlinetools	cask android-commandlinetools	nix/darwin/homebrew.nix	-
 cask	betterdisplay	cask betterdisplay	nix/darwin/homebrew.nix	-
-cask	firefox	cask firefox	nix/darwin/homebrew.nix	-
+cask	firefox	dropped	-	owner dropped it, 2026-10-17
 cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
 cask	ghostty	cask ghostty	nix/darwin/homebrew.nix	-
 cask	handy	cask handy	nix/darwin/homebrew.nix	-
 cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
 cask	ngrok	cask ngrok	nix/darwin/homebrew.nix	-
 cask	nordvpn	cask nordvpn	nix/darwin/homebrew.nix	-
-cask	notion	cask notion	nix/darwin/homebrew.nix	-
+cask	notion	dropped	-	owner dropped it, 2026-10-17
 cask	orbstack	cask orbstack	nix/darwin/homebrew.nix	-
 cask	tablepro	cask tablepro	nix/darwin/homebrew.nix	-
 cask	tailscale-app	cask tailscale-app	nix/darwin/homebrew.nix	-
@@ -136,7 +136,7 @@ cask	yaak	cask yaak	nix/darwin/homebrew.nix	-
 cask	annotate	cask annotate	nix/darwin/homebrew.nix	-
 cask	icon-composer	cask icon-composer	nix/darwin/homebrew.nix	-
 cask	rockxy	cask rockxy	nix/darwin/homebrew.nix	-
-cask	driceroland/tap/search	cask driceroland/tap/search	nix/darwin/homebrew.nix	-
+cask	driceroland/tap/search	dropped	-	owner dropped it, 2026-10-17
 cask	codex	nix/pkgs/codex.nix	nix/home/common.nix	the cask was the CLI; dropped for the Nix package
 formula	oven-sh/bun/bun	nixpkgs bun	nix/home/common.nix	undeclared tap install; bun was also a mise tool
 installer	herdr (curl, Linux)	nixpkgs herdr	nix/home/common.nix	-
@@ -148,27 +148,27 @@ app (hand-installed)	cap	cask cap	nix/darwin/homebrew.nix	-
 app (hand-installed)	google-chrome	cask google-chrome	nix/darwin/homebrew.nix	-
 app (hand-installed)	granola	cask granola	nix/darwin/homebrew.nix	-
 app (hand-installed)	imageoptim	cask imageoptim	nix/darwin/homebrew.nix	-
-app (hand-installed)	libreoffice	cask libreoffice	nix/darwin/homebrew.nix	-
-app (hand-installed)	linear-linear	cask linear-linear	nix/darwin/homebrew.nix	-
-app (hand-installed)	orion	cask orion	nix/darwin/homebrew.nix	-
+app (hand-installed)	libreoffice	dropped	-	owner dropped it, 2026-10-17
+app (hand-installed)	linear-linear	cask linear	nix/darwin/homebrew.nix	renamed from linear-linear
+app (hand-installed)	orion	dropped	-	owner dropped it, 2026-10-17
 app (hand-installed)	raycast	cask raycast	nix/darwin/homebrew.nix	-
 app (hand-installed)	slack	cask slack	nix/darwin/homebrew.nix	-
 app (hand-installed)	whatsapp	cask whatsapp	nix/darwin/homebrew.nix	-
 app (hand-installed)	zed	cask zed	nix/darwin/homebrew.nix	-
 app (hand-installed)	t3-code	cask t3-code	nix/darwin/homebrew.nix	-
-app (App Store)	1Password for Safari	masApps 1569813296	nix/darwin/homebrew.nix	-
-app (App Store)	DaisyDisk	masApps 411643860	nix/darwin/homebrew.nix	-
-app (App Store)	Developer	masApps 640199958	nix/darwin/homebrew.nix	-
-app (App Store)	GarageBand	masApps 682658836	nix/darwin/homebrew.nix	-
-app (App Store)	GoodLinks	masApps 1474335294	nix/darwin/homebrew.nix	-
-app (App Store)	iMovie	masApps 408981434	nix/darwin/homebrew.nix	-
-app (App Store)	Keynote	masApps 361285480	nix/darwin/homebrew.nix	-
-app (App Store)	Numbers	masApps 361304891	nix/darwin/homebrew.nix	-
-app (App Store)	Pages	masApps 361309726	nix/darwin/homebrew.nix	-
-app (App Store)	Raycast Companion	masApps 6738274497	nix/darwin/homebrew.nix	-
-app (App Store)	TestFlight	masApps 899247664	nix/darwin/homebrew.nix	-
-app (App Store)	uBlock Origin Lite	masApps 6745342698	nix/darwin/homebrew.nix	-
-app (App Store)	Xcode	masApps 497799835	nix/darwin/homebrew.nix	-
+app (App Store)	1Password for Safari	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 1569813296
+app (App Store)	DaisyDisk	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 411643860
+app (App Store)	Developer	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 640199958
+app (App Store)	GarageBand	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 682658836
+app (App Store)	GoodLinks	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 1474335294
+app (App Store)	iMovie	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 408981434
+app (App Store)	Keynote	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361285480
+app (App Store)	Numbers	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361304891
+app (App Store)	Pages	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 361309726
+app (App Store)	Raycast Companion	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 6738274497
+app (App Store)	TestFlight	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 899247664
+app (App Store)	uBlock Origin Lite	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 6745342698
+app (App Store)	Xcode	manual	-	installed by hand since 2026-10-17 (masApps is empty); App Store ID 497799835
 exception	Keynote.app (com.apple.iWork.Keynote)	manual	-	legacy iWork bundle with no App Store listing; the current Keynote is declared above
 exception	Gmail, Calendar, Google Meet (Safari web apps)	manual	-	created by Safari; BrowserRouter routes to their generated IDs
 exception	Anarlog Dev	manual	-	a local build

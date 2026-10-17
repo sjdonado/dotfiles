@@ -3,6 +3,8 @@
 # Each app's dictionary and the list of apps are replaced, not merged, so this file is the whole set: a shortcut added in System Settings for a listed app is dropped on the next run, and one for an unlisted app keeps working but disappears from the App Shortcuts pane.
 # Encoding: @=Cmd $=Shift ~=Opt ^=Ctrl. A title must match its menu item exactly. Apps pick up changes when relaunched.
 set -eu
+# home-manager runs activation steps with a PATH of its own, without /usr/bin, where defaults and killall live.
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:$PATH
 
 # Sandboxed apps and the Accessibility domain fail with a permissions error unless the running terminal has Full Disk Access.
 shortcuts() {

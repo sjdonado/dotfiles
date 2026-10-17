@@ -28,6 +28,7 @@ let
       fi
     '';
   binPath = pkgs: "export PATH=${lib.makeBinPath pkgs}:$PATH";
+  codex = pkgs.callPackage ../pkgs/codex.nix { }; # prebuilt; nixpkgs compiles it
 in
 {
   # Shared with nix/home/darwin.nix.
@@ -46,9 +47,10 @@ in
     bat
     fzf
     jq
-    lazygit
+    # neovim is plain: git's editor, without nvim/ (whose init.lua installs language servers through Mason). The main editor is Zed with T3 Code. Uncomment these and the nvim link and nvimPlugins step below to restore the full setup.
     neovim
-    tree-sitter
+    # lazygit
+    # tree-sitter
     worktrunk
     nodejs # the current LTS
     bun
@@ -57,37 +59,37 @@ in
 
     # Agent harnesses and their tools.
     claude-code
-    (callPackage ../pkgs/codex.nix { }) # prebuilt; nixpkgs compiles it
+    codex
     (callPackage ../pkgs/opencode.nix { }) # v2; nixpkgs still has v1
     openspec
-    agent-browser
-    herdr
+    # Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
+    # herdr
 
-    # Language servers and formatters nvim/init.lua starts. They come from here instead of Mason, which downloads binaries outside this declaration.
-    astro-language-server
-    basedpyright
-    clang-tools # clangd
-    crystalline
-    vscode-langservers-extracted # cssls, eslint, jsonls
-    gopls
-    golangci-lint-langserver
-    lua-language-server
-    svelte-language-server
-    tailwindcss-language-server
-    vtsls
-    yaml-language-server
-    black
-    gofumpt
-    gotools # goimports
-    isort
-    prettierd
-    ruff
-    stylua
+    # Skipped with the full neovim setup.
+    # # Language servers and formatters nvim/init.lua starts. They come from here instead of Mason, which downloads binaries outside this declaration.
+    # astro-language-server
+    # basedpyright
+    # clang-tools # clangd
+    # crystalline
+    # vscode-langservers-extracted # cssls, eslint, jsonls
+    # gopls
+    # golangci-lint-langserver
+    # lua-language-server
+    # svelte-language-server
+    # tailwindcss-language-server
+    # vtsls
+    # yaml-language-server
+    # black
+    # gofumpt
+    # gotools # goimports
+    # isort
+    # prettierd
+    # ruff
+    # stylua
   ];
 
   home.file = {
     ".gitconfig" = live "git/.gitconfig";
-    ".agent-browser/config.json" = live "agent-browser/config.json";
     ".claude/settings.json" = live "claude/settings.json";
     ".claude/skills" = live "agents/skills";
     ".claude/CLAUDE.md" = live "agents/AGENTS.md";
@@ -97,16 +99,19 @@ in
     ".pi/agent/settings.json" = live "pi/settings.json";
     ".pi/agent/mcp.json" = live "pi/mcp.json";
     ".pi/agent/AGENTS.md" = live "agents/AGENTS.md";
+    # GUI apps (T3 Code, Zed) keep the PATH they launched with and look for the agents in ~/.local/bin, where the curl installers put them. These links make that path the Nix build too. Forced: home-manager backs up files but refuses to replace a foreign symlink, which is what a curl installer leaves there.
+    ".local/bin/claude" = { source = "${pkgs.claude-code}/bin/claude"; force = true; };
+    ".local/bin/codex" = { source = "${codex}/bin/codex"; force = true; };
   }
   // liveEach "bin" ".local/bin";
 
   xdg.configFile = {
     "fish/config.fish" = live "fish/config.fish";
     "ghostty/config" = live "ghostty/config";
-    # The directory, not its files: init.lua resolves nvim-pack-lock.json relative to the config directory it loaded from.
-    "nvim" = live "nvim";
-    # Only config.toml: herdr keeps sockets, logs and session.json in the same directory.
-    "herdr/config.toml" = live "herdr/config.toml";
+    # The directory, not its files: init.lua resolves nvim-pack-lock.json relative to the config directory it loaded from. Skipped with the full neovim setup.
+    # "nvim" = live "nvim";
+    # Only config.toml: herdr keeps sockets, logs and session.json in the same directory. Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
+    # "herdr/config.toml" = live "herdr/config.toml";
     "worktrunk/config.toml" = live "worktrunk/config.toml";
     "zed/settings.json" = live "zed/settings.json";
     "zed/keymap.json" = live "zed/keymap.json";
@@ -121,61 +126,62 @@ in
   // liveEach "bat/themes" "bat/themes";
 
   home.activation = {
-    # claude/settings.json declares a SessionStart hook running herdr's agent-state script, which herdr installs. The installer also rewrites settings.json, so it runs before the link exists (the link then replaces the file it wrote), and only while the hook is missing; afterwards it would write through the link into the tracked file.
-    herdrClaude = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
-      if [ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
-        verboseEcho "dotfiles: herdr claude integration already installed"
-      elif ! { run mkdir -p "$HOME/.claude" && run ${pkgs.herdr}/bin/herdr integration install claude >/dev/null; }; then
-        warnEcho "dotfiles: herdr-claude failed; the SessionStart hook will no-op. Switch again to retry."
-      fi
-    '';
+    # Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
+    # # claude/settings.json declares a SessionStart hook running herdr's agent-state script, which herdr installs. The installer also rewrites settings.json, so it runs before the link exists (the link then replaces the file it wrote), and only while the hook is missing; afterwards it would write through the link into the tracked file.
+    # herdrClaude = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+    #   if [ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
+    #     verboseEcho "dotfiles: herdr claude integration already installed"
+    #   elif ! { run mkdir -p "$HOME/.claude" && run ${pkgs.herdr}/bin/herdr integration install claude >/dev/null; }; then
+    #     warnEcho "dotfiles: herdr-claude failed; the SessionStart hook will no-op. Switch again to retry."
+    #   fi
+    # '';
 
-    herdrOpencode = step "herdr-opencode" ''
-      if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ]; then exit 0; fi
-      ${pkgs.herdr}/bin/herdr integration install opencode
-    '';
+    # herdrOpencode = step "herdr-opencode" ''
+    #   if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ]; then exit 0; fi
+    #   ${pkgs.herdr}/bin/herdr integration install opencode
+    # '';
 
-    # Local workflow plugins are linked from this repository; the two remote ones are pinned by ref. Both need a running herdr server. A stamp of the plugin set and the refs skips the whole step while neither changed, so a switch does not reinstall them.
-    herdrPlugins = step "herdr-plugins" ''
-      ${binPath [
-        pkgs.herdr
-        pkgs.gnused
-        pkgs.coreutils
-      ]}
-      # herdr's own version is part of the stamp: an upgrade can reset its plugin state.
-      want="${pkgs.herdr} $(ls ${repo}/herdr/plugins) agent-usage@v0.5.11 annotate@1bc258353f0a7af0781493e1c1ffca09b71666bc"
-      stamp="$HOME/.config/herdr/.dotfiles-plugins"
-      if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then exit 0; fi
-      # `herdr status server` exits 0 either way; its output says whether one runs.
-      case "$(herdr status server 2>&1)" in
-        *"not running"*)
-          echo "dotfiles: skipped herdr-plugins: no herdr server is running. Start herdr, then switch again."
-          exit 0
-          ;;
-      esac
-      status=0
-      for dir in ${repo}/herdr/plugins/*; do
-        [ -f "$dir/herdr-plugin.toml" ] || continue
-        herdr plugin unlink "$(basename "$dir")" >/dev/null 2>&1 || true
-        herdr plugin link "$dir" >/dev/null || { echo "herdr plugin link $dir failed" >&2; status=1; }
-      done
-      # On-demand agent usage: keymap only, no sidebar rows and no toasts (keybindings live in herdr/config.toml).
-      if herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null \
-        && herdr plugin action invoke usagebar.setup >/dev/null; then
-        if cfg="$(herdr plugin config-dir usagebar)/config.toml" && [ -f "$cfg" ]; then
-          sed -i -E 's/^enabled[[:space:]]*=[[:space:]]*true/enabled = false/' "$cfg"
-        else
-          echo "agent-usage config not found; toasts may appear" >&2; status=1
-        fi
-      else
-        echo "agent-usage install failed" >&2; status=1
-      fi
-      # Terminal and document annotation. It ships no setup action, so its keybindings are in herdr/config.toml.
-      herdr plugin install plannotator/herdr-annotate --ref 1bc258353f0a7af0781493e1c1ffca09b71666bc --yes >/dev/null \
-        || { echo "annotate install failed" >&2; status=1; }
-      if [ "$status" = 0 ]; then echo "$want" > "$stamp"; fi
-      exit $status
-    '';
+    # # Local workflow plugins are linked from this repository; the two remote ones are pinned by ref. Both need a running herdr server. A stamp of the plugin set and the refs skips the whole step while neither changed, so a switch does not reinstall them.
+    # herdrPlugins = step "herdr-plugins" ''
+    #   ${binPath [
+    #     pkgs.herdr
+    #     pkgs.gnused
+    #     pkgs.coreutils
+    #   ]}
+    #   # herdr's own version is part of the stamp: an upgrade can reset its plugin state.
+    #   want="${pkgs.herdr} $(ls ${repo}/herdr/plugins) agent-usage@v0.5.11 annotate@1bc258353f0a7af0781493e1c1ffca09b71666bc"
+    #   stamp="$HOME/.config/herdr/.dotfiles-plugins"
+    #   if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then exit 0; fi
+    #   # `herdr status server` exits 0 either way; its output says whether one runs.
+    #   case "$(herdr status server 2>&1)" in
+    #     *"not running"*)
+    #       echo "dotfiles: skipped herdr-plugins: no herdr server is running. Start herdr, then switch again."
+    #       exit 0
+    #       ;;
+    #   esac
+    #   status=0
+    #   for dir in ${repo}/herdr/plugins/*; do
+    #     [ -f "$dir/herdr-plugin.toml" ] || continue
+    #     herdr plugin unlink "$(basename "$dir")" >/dev/null 2>&1 || true
+    #     herdr plugin link "$dir" >/dev/null || { echo "herdr plugin link $dir failed" >&2; status=1; }
+    #   done
+    #   # On-demand agent usage: keymap only, no sidebar rows and no toasts (keybindings live in herdr/config.toml).
+    #   if herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null \
+    #     && herdr plugin action invoke usagebar.setup >/dev/null; then
+    #     if cfg="$(herdr plugin config-dir usagebar)/config.toml" && [ -f "$cfg" ]; then
+    #       sed -i -E 's/^enabled[[:space:]]*=[[:space:]]*true/enabled = false/' "$cfg"
+    #     else
+    #       echo "agent-usage config not found; toasts may appear" >&2; status=1
+    #     fi
+    #   else
+    #     echo "agent-usage install failed" >&2; status=1
+    #   fi
+    #   # Terminal and document annotation. It ships no setup action, so its keybindings are in herdr/config.toml.
+    #   herdr plugin install plannotator/herdr-annotate --ref 1bc258353f0a7af0781493e1c1ffca09b71666bc --yes >/dev/null \
+    #     || { echo "annotate install failed" >&2; status=1; }
+    #   if [ "$status" = 0 ]; then echo "$want" > "$stamp"; fi
+    #   exit $status
+    # '';
 
     # Codex owns ~/.codex/config.toml and rewrites it as you work, so only the shareable keys are tracked and merged in.
     codexConfig = step "codex-config" ''
@@ -188,30 +194,16 @@ in
       ${pkgs.bat}/bin/bat cache --build >/dev/null
     '';
 
-    # The Chrome agent-browser drives is a separate download, matched to the agent-browser version this lock pins. A stamp skips it while that version is unchanged.
-    agentBrowser = step "agent-browser" (
-      if pkgs.stdenv.hostPlatform.isLinux && pkgs.stdenv.hostPlatform.isAarch64 then
-        ''echo "dotfiles: skipped agent-browser: Chrome for Testing has no linux/arm64 build"''
-      else
-        ''
-          stamp="$HOME/.agent-browser/.installed-by"
-          if [ "$(cat "$stamp" 2>/dev/null)" = "${pkgs.agent-browser}" ]; then exit 0; fi
-          # Without --with-deps: that installs Chrome's system libraries through the distribution's package manager, and a switch changes nothing outside Nix. README.md lists it as a manual step on Linux.
-          ${pkgs.agent-browser}/bin/agent-browser install
-          mkdir -p "$HOME/.agent-browser"
-          echo "${pkgs.agent-browser}" > "$stamp"
-        ''
-    );
-
-    # Neovim installs the plugins nvim/nvim-pack-lock.json pins on its first start; this makes that start happen during the switch instead of in front of you.
-    nvimPlugins = step "nvim-plugins" ''
-      ${binPath [
-        pkgs.git
-        pkgs.neovim
-        pkgs.tree-sitter
-      ]}
-      nvim --headless -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
-    '';
+    # Skipped with the full neovim setup.
+    # # Neovim installs the plugins nvim/nvim-pack-lock.json pins on its first start; this makes that start happen during the switch instead of in front of you.
+    # nvimPlugins = step "nvim-plugins" ''
+    #   ${binPath [
+    #     pkgs.git
+    #     pkgs.neovim
+    #     pkgs.tree-sitter
+    #   ]}
+    #   nvim --headless -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
+    # '';
 
     # fish history lives at ~/.fish_history, linked from where fish looks for it.
     fishHistory = step "fish-history" ''

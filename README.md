@@ -6,13 +6,13 @@
 
 ### Bootstrap
 
-The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, App Store apps, links into this repository, macOS settings and the setup steps that are not packages. Every install, change and upgrade goes through that declaration. Nothing is installed with `brew`, `mise`, `npm -g`, `go install` or a curl installer by hand.
+The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, links into this repository, macOS settings and the setup steps that are not packages. Every install, change and upgrade goes through that declaration. Nothing is installed with `brew`, `mise`, `npm -g`, `go install` or a curl installer by hand.
 
 - macOS: `./macos.sh`. It installs Nix and the Xcode command line tools if they are missing, then switches to the configuration for this Mac's hostname (`darwinConfigurations` in `flake.nix`). Every step skips itself when already done, so the same command sets up a new Mac and re-applies the declaration later.
 - Linux, on any distribution: `./linux.sh`, or `curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/linux.sh | bash` on a box without the clone. It installs Nix, clones this repository and runs the first `home-manager switch`. NixOS is not needed.
 - Apply a change to the declaration: `nix run ~/.config/dotfiles#switch`. Nix reads this repository as a git flake, so a new file must be staged (`git add`) before a switch sees it.
-- Upgrade everything: `nix run ~/.config/dotfiles#upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), updates the Neovim plugins in `nvim/nvim-pack-lock.json`, then switches. Review and commit both lockfile diffs. Both commands take `--dry-run`.
-- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container, `verify/macos.sh` evaluates or builds the macOS configuration without applying it, and `verify/macos-vm.sh` runs `macos.sh` in a disposable macOS VM. See `verify/README.md`.
+- Upgrade everything: `nix run ~/.config/dotfiles#upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), then switches. Review and commit the `flake.lock` diff. Both commands take `--dry-run`.
+- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container, `verify/macos.sh` evaluates or builds the macOS configuration without applying it, and `verify/macos-host.sh` asserts this Mac after a switch. See `verify/README.md`.
 
 ### Where things are declared
 
@@ -22,7 +22,7 @@ The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, A
 | shell files on Linux (`~/.profile`, `~/.bashrc`, `~/.zshenv`, `~/.zshrc`) | `nix/home/linux.nix` |
 | macOS command-line tools, launch agents, macOS setup steps | `nix/home/darwin.nix` |
 | macOS defaults, login shell, Nix settings | `nix/darwin/system.nix` |
-| casks, the Homebrew formulas Nix lacks, App Store apps, taps | `nix/darwin/homebrew.nix` |
+| casks, the Homebrew formulas Nix lacks, taps (App Store apps are listed there, commented out) | `nix/darwin/homebrew.nix` |
 | tools packaged here from their upstream binaries | `nix/pkgs/` |
 | `switch` and `upgrade` | `nix/apps.nix` |
 
@@ -38,26 +38,25 @@ Homebrew kept some versions off PATH (keg-only) because they share command names
 
 The switch cannot do these. Everything else is declared.
 
-- Sign in to the App Store before the first macOS switch, so the App Store apps install. Removing an App Store app from `nix/darwin/homebrew.nix` does not uninstall it: delete the app by hand.
+- Install App Store apps by hand from the App Store. Their IDs stay listed, commented out, under `masApps` in `nix/darwin/homebrew.nix`; uncommenting them makes the switch install them, which needs an App Store sign-in.
 - Open `~/Applications/BrowserRouter.app` once and accept it as the default browser.
 - The Safari web apps (Gmail, Calendar, Google Meet) are created in Safari with File > Add to Dock. BrowserRouter routes to them by the IDs Safari generates, so a new web app needs its ID updated in `macos/browser-router.json`.
 - Anarlog Dev is a local build, Claude Code URL Handler is created by Claude Code, and Safari is part of macOS.
 - Secrets: `.env` values, SSH keys and tool logins (OpenCode providers and MCP servers, Claude Code, Codex, `gh`).
 - On a Linux box without systemd (a container or a typical Coder workspace), nothing restarts the Nix daemon after a restart. Run `linux.sh` again, which Coder does on workspace start.
-- On Linux, the Chrome agent-browser downloads needs system libraries the switch does not install, because a switch changes nothing outside Nix. Install them once with `agent-browser install --with-deps`, which uses the distribution's package manager through sudo. There is no Chrome for Linux arm64 at all.
 
 ### Agent harness
 
 OpenCode is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the switch links the managed configuration into each harness.
 
-Authenticate OpenCode's provider with `/connect` or the CLI. The four configured MCP servers start automatically; authenticate any server that requires it:
+Authenticate OpenCode's provider with `/connect` or the CLI. The two configured MCP servers (ios-simulator, git-bug) start automatically; authenticate any server that requires it:
 
 ```sh
 opencode auth login
 opencode mcp auth <server>
 ```
 
-OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and all four MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
+OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and both MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
 
 Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
 
@@ -65,11 +64,12 @@ When experimenting with Codex, select the built-in `ansi` syntax theme with `/th
 
 ### Text editor
 
+The editor is Zed, used with T3 Code; Zed opens Markdown, code and plain text (`macos/default-apps.duti`). Neovim is installed plain, without `nvim/`, as `$EDITOR` for git. The full Neovim setup below is commented out in `nix/home/common.nix` (the language servers, formatters, lazygit, tree-sitter, the `~/.config/nvim` link and the plugin step), so it describes what uncommenting restores. herdr, whose `prefix` keys appear below, is commented out the same way (package, config link and its setup steps).
+
 Neovim, configured from `nvim/`, with the whole directory linked into `~/.config/nvim` so its plugin lockfile (`nvim-pack-lock.json`) is written back into this repository.
 
 - `prefix+e` toggles nvim as an overlay over the active pane: it opens on the first press and closes on the next, and closing restores the focus and zoom it covered. Or run `nvim` directly. herdr's own `edit_scrollback` sits on `prefix+shift+e` to keep that key free, and right-clicks inside the overlay reach the editor rather than herdr's pane menu.
 - `prefix+l` toggles git-bug's termui the same way (macOS only: git-bug is in `nix/home/darwin.nix`). It refuses, with a message, outside a git repository or when no git-bug identity is active, so its first-run prompt never creates a stray identity; closing it frees git-bug's repository lock. herdr's `focus_pane_right` moves to `prefix+ctrl+l` (`prefix+shift+l` stays `swap_pane_right`).
-- OpenCode drives a browser through agent-browser, https://github.com/vercel-labs/agent-browser. It is declared in `nix/home/common.nix`, and the switch downloads the Chrome it drives with `agent-browser install`. `agent-browser/config.json` gives that Chrome a fixed profile directory, `~/.agent-browser/profile`, so the `chrome-devtools` MCP server can attach to the running browser for heap snapshots and performance traces instead of launching its own. That profile persists cookies and logins across agent sessions, unlike a per-launch temporary one. `opencode/opencode.json` registers both servers. For experiments with Claude Code or Codex, MCP registrations live in their own untracked config. If needed, remove the old `browser` server there (`claude mcp remove -s user browser`, `codex mcp remove browser`) and register both once, with `claude mcp add -s user` and `codex mcp add` followed by the same arguments: `agent-browser -- agent-browser mcp`, and `chrome-devtools -- npx -y chrome-devtools-mcp@latest --autoConnect --userDataDir ~/.agent-browser/profile --no-usage-statistics --no-performance-crux`.
 - Plugins are managed by Neovim's own `vim.pack`, not a plugin manager: `:PackUpdate` updates and `:PackList` lists what is installed, replacing lazy.nvim's `:Lazy`. The language servers and formatters come from Nix (`nix/home/common.nix`) and resolve from PATH; there is no Mason.
 - Git lives in the editor. `gitsigns` gives hunks and inline blame (`<leader>h*`) and `git-conflict` handles merge markers, while `lazygit` (`<leader>gg`) is the git surface itself: staging, commits, diffs, log, branches and rebase, in a floating window over the editor. It is declared in `nix/home/common.nix` with the other cross-platform tools. There is no separate lazygit panel.
 - Markdown is read as plain highlighted text: treesitter colours it, and there is deliberately no rendered preview. Neither `:Glow` nor render-markdown.nvim is installed.

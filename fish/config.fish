@@ -36,7 +36,6 @@ end
 set -gx BAT_THEME auto
 set -gx BAT_THEME_DARK GitHub-Dark
 set -gx BAT_THEME_LIGHT GitHub-Light
-set -x PATH $HOME/.cargo/bin $PATH
 
 # Add custom man pages
 if set -q MANPATH
@@ -45,17 +44,8 @@ else
     set -x MANPATH "$HOME/.config/dotfiles/man:"
 end
 
-fish_add_path "$HOME/.local/bin"
-fish_add_path "$HOME/.opencode/bin"
-fish_add_path /opt/homebrew/bin
-fish_add_path /opt/homebrew/sbin
-
-fish_add_path "$HOME/.bun/bin"
-fish_add_path "$PNPM_HOME"
-fish_add_path "$HOME/go/bin"
-fish_add_path "$HOME/Library/Android/sdk/platform-tools"
-# Move existing shims too, so legacy curl and Homebrew binaries cannot win.
-fish_add_path --path --move --prepend "$HOME/.local/share/mise/shims"
+# Nix puts its profiles first on PATH (/etc/fish, written by nix-darwin and home-manager). These come after them, so a leftover Homebrew formula or a curl-installed binary never shadows a declared tool. --path keeps them out of the universal fish_user_paths, which would put them back in front on every start.
+fish_add_path --path --append "$HOME/.local/bin" "$HOME/.opencode/bin" /opt/homebrew/bin /opt/homebrew/sbin "$HOME/.bun/bin" "$PNPM_HOME" "$HOME/go/bin" "$HOME/.cargo/bin" "$HOME/Library/Android/sdk/platform-tools"
 
 # Aliases
 alias python=/usr/bin/python3
@@ -106,3 +96,6 @@ test -f "$HOME/.cargo/env.fish"; and source "$HOME/.cargo/env.fish"
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
+
+# Last, so nothing above (rbenv, cargo, OrbStack, the sourced env files) can put a Homebrew or curl-installed copy ahead of a declared tool: the Nix profiles move back to the front, in nix-darwin's order.
+fish_add_path --path --move --prepend "$HOME/.nix-profile/bin" "/etc/profiles/per-user/$USER/bin" /run/current-system/sw/bin /nix/var/nix/profiles/default/bin

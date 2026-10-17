@@ -30,16 +30,14 @@
       autoUpdate = false;
       # Moves installed items to the versions the pinned taps name.
       upgrade = true;
-      # "uninstall" removes formulas and casks this file does not list; "zap" would also delete their app data. The first switch on an existing Mac runs with "none" until the declared lists match what is installed (openspec/changes/provision-with-nix, task 6.2).
-      cleanup = "none";
+      # Removes formulas and casks this file does not list, keeping their app data; "zap" would also delete that.
+      cleanup = "uninstall";
     };
 
     brews = [
       # BrowserRouter, the default browser. The tap builds it from source with swiftc; nix/home/darwin.nix registers the bundle.
       "sjdonado/tap/browser-router"
       "cliclick"
-      # tw93's Mac cleaner. nixpkgs `mole` is a different program (an SSH tunnel tool).
-      "mole"
     ];
 
     casks = [
@@ -49,7 +47,6 @@
       "annotate"
       "betterdisplay"
       "cap"
-      "firefox"
       "gcloud-cli"
       "ghostty"
       "google-chrome"
@@ -58,13 +55,10 @@
       "helium-browser"
       "icon-composer"
       "imageoptim"
-      "libreoffice"
-      "linear-linear"
+      "linear"
       "ngrok"
       "nordvpn"
-      "notion"
       "orbstack"
-      "orion"
       "raycast"
       "rockxy"
       "slack"
@@ -76,24 +70,24 @@
       "yaak"
       "zed"
       "abue-ammar/tinycast/tinycast"
-      "driceroland/tap/search"
     ];
 
-    # Installed by App Store ID; needs an App Store sign-in. Homebrew never uninstalls these, so removing one from this list is a manual step too.
-    masApps = {
-      "1Password for Safari" = 1569813296;
-      "DaisyDisk" = 411643860;
-      "Developer" = 640199958;
-      "GarageBand" = 682658836;
-      "GoodLinks" = 1474335294;
-      "iMovie" = 408981434;
-      "Keynote" = 361285480;
-      "Numbers" = 361304891;
-      "Pages" = 361309726;
-      "Raycast Companion" = 6738274497;
-      "TestFlight" = 899247664;
-      "uBlock Origin Lite" = 6745342698;
-      "Xcode" = 497799835;
-    };
+    # App Store apps are installed by hand (owner's decision, 2026-10-17): mas needs an App Store sign-in and installs Xcode-sized apps during every first switch. Uncomment to declare them again; Homebrew never uninstalls these, so removing one from this list is a manual step too.
+    masApps = { };
+    # masApps = {
+    #   "1Password for Safari" = 1569813296;
+    #   "DaisyDisk" = 411643860;
+    #   "Developer" = 640199958;
+    #   "GarageBand" = 682658836;
+    #   "GoodLinks" = 1474335294;
+    #   "iMovie" = 408981434;
+    #   "Keynote" = 361285480;
+    #   "Numbers" = 361304891;
+    #   "Pages" = 361309726;
+    #   "Raycast Companion" = 6738274497;
+    #   "TestFlight" = 899247664;
+    #   "uBlock Origin Lite" = 6745342698;
+    #   "Xcode" = 497799835;
+    # };
   };
 }

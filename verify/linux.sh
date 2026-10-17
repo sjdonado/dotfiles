@@ -43,43 +43,35 @@ assert_box() {
   if v=$(nix --version 2>&1) && ! grep -qi determinate <<<"$v"; then ok "upstream Nix: $v"; else bad "not upstream Nix: $v"; fi
 
   group "declared tools"
-  for c in git fish mosh python3 pip wget rg fd bat fzf jq lazygit nvim tree-sitter wt node bun pnpm uv claude codex opencode openspec agent-browser herdr; do runs "$c"; done
+  for c in git fish mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv claude codex opencode openspec; do runs "$c"; done
   if opencode --version 2>/dev/null | grep -q 'v2\.'; then ok "OpenCode is v2"; else bad "OpenCode is not v2 ($(opencode --version 2>&1 | head -1))"; fi
 
-  group "language servers and formatters (from Nix, not Mason)"
-  for c in astro-ls basedpyright clangd crystalline lua-language-server vtsls yaml-language-server black gofumpt isort prettierd ruff stylua; do runs "$c"; done
-  runs gopls version
-  # These servers have no version flag; each has to answer an LSP initialize request with its capabilities. They run in parallel, since each needs a few seconds to answer.
-  initialize='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":null,"rootUri":null,"capabilities":{}}}'
-  # Captured before matching: under pipefail, the server's exit status after stdin closes would override grep's.
-  answers() {
-    local out
-    out=$({ printf 'Content-Length: %d\r\n\r\n%s' "${#initialize}" "$initialize"; sleep 5; } | timeout 15 "$1" --stdio 2>/dev/null)
-    grep -q '"capabilities"' <<<"$out"
-  }
-  lsp_dir=$(mktemp -d)
-  for c in vscode-css-language-server vscode-eslint-language-server vscode-json-language-server svelteserver tailwindcss-language-server; do
-    { if answers "$c"; then echo "ok"; else echo "fail"; fi > "$lsp_dir/$c"; } &
-  done
-  wait
-  for f in "$lsp_dir"/*; do
-    c=$(basename "$f")
-    if [ "$(cat "$f")" = ok ]; then ok "$c answers an LSP initialize request"; else bad "$c does not answer an LSP initialize request"; fi
-  done
-  rm -rf "$lsp_dir"
-  for c in golangci-lint-langserver goimports; do
-    if command -v "$c" >/dev/null 2>&1; then ok "$c on PATH (has no version flag)"; else bad "$c not on PATH"; fi
-  done
+  # Skipped with the full neovim setup (nix/home/common.nix).
+  # group "language servers and formatters (from Nix, not Mason)"
+  # for c in astro-ls basedpyright clangd crystalline lua-language-server vtsls yaml-language-server black gofumpt isort prettierd ruff stylua; do runs "$c"; done
+  # runs gopls version
+  # # These servers have no version flag; each has to answer an LSP initialize request with its capabilities. They run in parallel, since each needs a few seconds to answer.
+  # initialize='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":null,"rootUri":null,"capabilities":{}}}'
+  # # Captured before matching: under pipefail, the server's exit status after stdin closes would override grep's.
+  # answers() {
+  #   local out
+  #   out=$({ printf 'Content-Length: %d\r\n\r\n%s' "${#initialize}" "$initialize"; sleep 5; } | timeout 15 "$1" --stdio 2>/dev/null)
+  #   grep -q '"capabilities"' <<<"$out"
+  # }
+  # lsp_dir=$(mktemp -d)
+  # for c in vscode-css-language-server vscode-eslint-language-server vscode-json-language-server svelteserver tailwindcss-language-server; do
+  #   { if answers "$c"; then echo "ok"; else echo "fail"; fi > "$lsp_dir/$c"; } &
+  # done
+  # wait
+  # for f in "$lsp_dir"/*; do
+  #   c=$(basename "$f")
+  #   if [ "$(cat "$f")" = ok ]; then ok "$c answers an LSP initialize request"; else bad "$c does not answer an LSP initialize request"; fi
+  # done
+  # rm -rf "$lsp_dir"
+  # for c in golangci-lint-langserver goimports; do
+  #   if command -v "$c" >/dev/null 2>&1; then ok "$c on PATH (has no version flag)"; else bad "$c not on PATH"; fi
+  # done
   if nvim --headless -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa' >/dev/null 2>&1; then ok "nvim starts headless without errors"; else bad "nvim reports errors on a headless start"; fi
-
-  group "agent-browser's Chrome"
-  if [ "$(uname -m)" = aarch64 ]; then
-    printf '  skip Chrome for Testing has no linux/arm64 build\n'
-  elif ls -d "$HOME"/.agent-browser/browsers/chrome-* >/dev/null 2>&1; then
-    ok "Chrome downloaded to ~/.agent-browser/browsers"
-  else
-    bad "agent-browser install left no Chrome in ~/.agent-browser/browsers"
-  fi
 
   group "linked config"
   linked "$HOME/.gitconfig"                       "$DOTFILES/git/.gitconfig"
@@ -89,8 +81,7 @@ assert_box() {
   for f in "$DOTFILES/ghostty/themes/"*; do linked "$HOME/.config/ghostty/themes/$(basename "$f")" "$f"; done
   for f in "$DOTFILES/bat/themes/"*; do linked "$HOME/.config/bat/themes/$(basename "$f")" "$f"; done
   for f in "$DOTFILES/bin/"*; do linked "$HOME/.local/bin/$(basename "$f")" "$f"; done
-  linked "$HOME/.config/nvim"                     "$DOTFILES/nvim"
-  linked "$HOME/.config/herdr/config.toml"        "$DOTFILES/herdr/config.toml"
+  # linked "$HOME/.config/nvim"                     "$DOTFILES/nvim"  # skipped with the full neovim setup
   linked "$HOME/.config/worktrunk/config.toml"    "$DOTFILES/worktrunk/config.toml"
   linked "$HOME/.config/zed/settings.json"        "$DOTFILES/zed/settings.json"
   linked "$HOME/.config/zed/keymap.json"          "$DOTFILES/zed/keymap.json"
@@ -107,17 +98,10 @@ assert_box() {
   linked "$HOME/.pi/agent/settings.json"          "$DOTFILES/pi/settings.json"
   linked "$HOME/.pi/agent/mcp.json"               "$DOTFILES/pi/mcp.json"
   linked "$HOME/.pi/agent/AGENTS.md"              "$DOTFILES/agents/AGENTS.md"
-  linked "$HOME/.agent-browser/config.json"       "$DOTFILES/agent-browser/config.json"
   linked "$HOME/.local/share/fish/fish_history"   "$HOME/.fish_history"
 
   group "generated by the setup steps"
   if [ -f "$HOME/.codex/config.toml" ]; then ok "codex-config wrote ~/.codex/config.toml"; else bad "~/.codex/config.toml missing"; fi
-  if [ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then ok "herdr's claude hook is installed"; else bad "herdr's claude hook is missing"; fi
-  if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ] && [ -f "$HOME/.config/opencode/plugins/herdr-agent-state.js" ]; then
-    ok "herdr's OpenCode integration is installed"
-  else
-    bad "herdr's OpenCode integration is incomplete"
-  fi
   if bat --list-themes 2>/dev/null | grep -q '^GitHub-Dark'; then ok "bat resolves the GitHub-Dark theme from its cache"; else bad "bat cache lacks GitHub-Dark"; fi
 
   group "non-interactive shells resolve the tools"
@@ -206,12 +190,6 @@ run '~/.config/dotfiles/linux.sh' > "$LOGS/run1.log" 2>&1 || { echo "first run f
 grep -E '^==>|dotfiles:' "$LOGS/run1.log" | sed 's/^/  /'
 echo "  first run took ${SECONDS}s"
 run 'VERIFY_STAGE=assert ~/.config/dotfiles/verify/linux.sh'
-# No herdr server runs in the container, so the plugin step has to report its skip rather than pass silently.
-if grep -q 'dotfiles: skipped herdr-plugins: no herdr server is running' "$LOGS/run1.log"; then
-  echo "  ok   the herdr plugin step reported itself skipped"
-else
-  echo "  FAIL the herdr plugin step did not report its skip"; exit 1
-fi
 
 state() { run 'readlink ~/.local/state/nix/profiles/home-manager; find ~ -name "*.pre-nix" -o -name "*.backup*" | sort'; }
 before="$(state)"
