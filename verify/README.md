@@ -4,13 +4,12 @@ A change to `flake.nix` or `nix/` is checked by applying it somewhere disposable
 
 | check | what it does | needs | time |
 | --- | --- | --- | --- |
-| `verify/linux.sh` | runs `linux.sh` on a bare Ubuntu container (no systemd, like a Coder workspace), twice, and asserts the box after each run | Docker | ~2 min per run |
+| `verify/linux.sh` | runs `setup.sh` on a bare Ubuntu container (no systemd, like a Coder workspace), twice, and checks the box with `sync.sh` after each run | Docker | ~2 min per run |
 | `verify/macos.sh` | evaluates the macOS configuration (and builds it, with Nix on this Mac) and asserts what a switch would apply, then checks every package of the macOS and Linux profiles is available, prebuilt and collision-free | Docker, or Nix | ~1 min |
-| `verify/macos-host.sh` | asserts this Mac after a switch: declared tools run, links resolve into the repository, settings hold, shells find the tools; read-only | Nix and a switched Mac | ~1 min |
 
-Each script is self-contained. `verify/linux.sh` holds both the host side and the assertions, and runs itself inside the container to assert. `verify/linux.sh --platform linux/amd64` checks the other Linux architecture; `verify/linux.sh --shell` leaves you in the provisioned box.
+Each script is self-contained. The assertions after a switch are not under verify/: they are `sync.sh`'s own checks (`sync.sh --check`, read-only), which every sync runs on a real machine and `verify/linux.sh` runs inside the container. `verify/linux.sh --platform linux/amd64` checks the other Linux architecture; `verify/linux.sh --shell` leaves you in the provisioned box.
 
-Run the checks for the platform a change touches, both when it touches both: on macOS, `verify/macos.sh` before a switch and `verify/macos-host.sh` after it.
+Run the checks for the platform a change touches, both when it touches both: on macOS, `verify/macos.sh` before a switch, and the switch itself through `sync.sh`, which checks the Mac after it.
 
 ## What every check asserts
 
@@ -27,4 +26,4 @@ Each check copies only the files the git flake sees (git's index, with their wor
 
 ## Why macOS has two checks
 
-Linux containerises, so the Linux check provisions a real box from nothing. macOS does not. `verify/macos.sh` asserts the configuration itself before a switch, and `verify/macos-host.sh` asserts this Mac after one. A disposable macOS VM rehearsal existed and was dropped (2026-10-17): it cost a 25 GB image and tens of minutes per run, and the switch is rollback-able with `darwin-rebuild switch --rollback`.
+Linux containerises, so the Linux check provisions a real box from nothing. macOS does not. `verify/macos.sh` asserts the configuration itself before a switch, and `sync.sh` asserts this Mac after one. A disposable macOS VM rehearsal existed and was dropped (2026-10-17): it cost a 25 GB image and tens of minutes per run, and the switch is rollback-able with `darwin-rebuild switch --rollback`.

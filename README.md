@@ -8,11 +8,11 @@
 
 The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, links into this repository, macOS settings and the setup steps that are not packages. Every install, change and upgrade goes through that declaration. Nothing is installed with `brew`, `mise`, `npm -g`, `go install` or a curl installer by hand.
 
-- macOS: `./macos.sh`. It installs Nix and the Xcode command line tools if they are missing, then switches to the configuration for this Mac's hostname (`darwinConfigurations` in `flake.nix`). Every step skips itself when already done, so the same command sets up a new Mac and re-applies the declaration later.
-- Linux, on any distribution: `./linux.sh`, or `curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/linux.sh | bash` on a box without the clone. It installs Nix, clones this repository and runs the first `home-manager switch`. NixOS is not needed.
-- Apply a change to the declaration: `nix run ~/.config/dotfiles#sync`. Nix reads this repository as a git flake, so a new file must be staged (`git add`) before a sync sees it.
-- Upgrade everything: `nix run ~/.config/dotfiles#upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), then syncs. Review and commit the `flake.lock` diff. Both commands take `--dry-run`.
-- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container, `verify/macos.sh` evaluates or builds the macOS configuration without applying it, and `verify/macos-host.sh` asserts this Mac after a sync (`sudo -iu <user> ~/.config/dotfiles/verify/macos-host.sh` checks another account). See `verify/README.md`.
+- Set up a machine: `./setup.sh`, on macOS or on any Linux distribution (NixOS is not needed). It installs Nix, and on macOS the Xcode command line tools, if they are missing, then runs the first switch: nix-darwin with the configuration for this Mac's hostname (`darwinConfigurations` in `flake.nix`), or home-manager on Linux. The platform comes from `uname`; `--macos` or `--linux` forces it. Every step skips itself when already done, so it also repairs a Mac whose Nix was reinstalled. On a Linux box without the clone: `curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/setup.sh | bash`, which clones this repository first.
+- Apply a change to the declaration: `~/.config/dotfiles/sync.sh`. It switches (`nix run .#sync`), then checks the result: declared tools run, links resolve into this repository, settings hold, and non-interactive shells find the tools. Nix reads this repository as a git flake, so a new file must be staged (`git add`) before a sync sees it.
+- Upgrade everything: `~/.config/dotfiles/sync.sh --upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), switches and checks. Review and commit the `flake.lock` diff.
+- Check without changing anything: `~/.config/dotfiles/sync.sh --check`. To see what a switch would run without running it: `nix run ~/.config/dotfiles#sync -- --dry-run` (`#upgrade` takes it too).
+- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container with `setup.sh` and checks it with `sync.sh`, and `verify/macos.sh` evaluates or builds the macOS configuration without applying it. See `verify/README.md`.
 
 ### Where things are declared
 
@@ -31,25 +31,25 @@ The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, l
 The repository is the source of truth. Configs reach it through live links, and everything else through `nix/` and a sync.
 
 - Edit a config without a sync. Every tracked config (`~/.zshrc` on macOS, Zed, `~/.gitconfig`, Claude Code's `settings.json`, OpenCode) is a link into this clone, so editing the file here or through its link is the same edit, and the tool reads it on its next start. Tools that write their own settings (Zed, OpenCode's `kv.json`, Pi) write into the repository, so their changes show up in `git status`. Commit them like code.
-- Change what is installed or linked through `nix/`, then run `nix run ~/.config/dotfiles#sync`. That covers a tool, an app, a new config link, a macOS setting or a setup step.
+- Change what is installed or linked through `nix/`, then run `~/.config/dotfiles/sync.sh`. That covers a tool, an app, a new config link, a macOS setting or a setup step.
   - A command-line tool: find its nixpkgs name with `nix search nixpkgs <name>`, then add it to `home.packages` in `nix/home/darwin.nix` (macOS only) or `nix/home/common.nix` (both platforms).
   - Only when nixpkgs lacks it: add it to `brews` in `nix/darwin/homebrew.nix`. A formula from a third-party tap also needs the tap, as a flake input in `flake.nix` and an entry in `nix-homebrew.taps`.
   - A GUI app: add its cask to `casks` in `nix/darwin/homebrew.nix`. GUI apps stay casks even when nixpkgs packages them, because casks install real bundles into /Applications, which Launch Services, Spotlight and Raycast index.
   - Removing works the same way: the sync uninstalls Homebrew formulas and casks the file does not list (`cleanup = "uninstall"`), but never deletes their app data.
 - Do not run `brew install` or `brew tap` by hand, from any account. Homebrew has one writer: the sync, which runs `brew` as the primary user, who owns `/opt/homebrew`. A formula installed by hand is uninstalled by the next sync, the taps are a read-only link to the pinned inputs, and `brew update` is disabled.
-- Upgrade with `nix run ~/.config/dotfiles#upgrade` and commit the `flake.lock` diff.
+- Upgrade with `~/.config/dotfiles/sync.sh --upgrade` and commit the `flake.lock` diff.
 - Files Nix builds, such as `~/.local/bin/claude` and `~/.local/bin/codex`, change only through `nix/` and a sync.
-- An app that saves by replacing a file (an atomic save) turns its link into a regular file, which then stops tracking the repository. `verify/macos-host.sh` reports it as "is not a link", and the next sync restores the link and keeps the replaced file as `<path>.pre-nix`.
+- An app that saves by replacing a file (an atomic save) turns its link into a regular file, which then stops tracking the repository. `sync.sh --check` reports it as "is not a link", and the next sync restores the link and keeps the replaced file as `<path>.pre-nix`.
 
 ### More than one account on a Mac
 
-A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary account: it owns Nix's setup, Homebrew and the system settings, and `macos.sh` and the sync run only from it, so removing any other account leaves the Mac working. One sync applies the configuration to every listed account.
+A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary account: it owns Nix's setup, Homebrew and the system settings, and `setup.sh` and the switch run only from it (from another account, `sync.sh` only checks), so removing any other account leaves the Mac working. One sync applies the configuration to every listed account.
 
 - Every account has its own clone at `~/.config/dotfiles`, and its links point into that clone. A config change reaches another account when that account runs `git pull`, with no sync.
 - A sync applies the declaration from the primary account's clone, so `git pull` there first.
 - Packages live once in the shared `/nix/store`, readable by every account, which is why secrets stay outside Nix. `sudo nix-collect-garbage -d` frees what no account's generation still uses.
-- To add an account: add it to the list in `flake.nix`, clone this repository into its `~/.config/dotfiles` on the same branch, sync from the primary account, then check it with `sudo -iu <user> ~/.config/dotfiles/verify/macos-host.sh`. The sync sets its login shell to zsh.
-- To change the primary account: move it to the front of the list, then run `macos.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
+- To add an account: add it to the list in `flake.nix`, clone this repository into its `~/.config/dotfiles` on the same branch, then run `sync.sh` from the primary account, which switches and checks every listed account. The sync sets its login shell to zsh.
+- To change the primary account: move it to the front of the list, then run `setup.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
 - To remove an account: drop it from the list and sync from the primary account before deleting the macOS account.
 
 zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to cd into a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. On Linux the login shell stays POSIX for Coder, interactive terminals exec zsh, and home-manager's `~/.zshrc` sources the same `zsh/.zshrc`.
@@ -70,7 +70,7 @@ The sync cannot do these. Everything else is declared.
 - The Safari web apps (Gmail, Calendar, Google Meet) are created in Safari with File > Add to Dock. BrowserRouter routes to them by the IDs Safari generates, so a new web app needs its ID updated in `macos/browser-router.json`.
 - Claude Code URL Handler is created by Claude Code, and Safari is part of macOS.
 - Secrets and logins, in each account: `.env` values, SSH keys and tool logins (OpenCode providers and MCP servers, Claude Code, Codex, `gh`).
-- On a Linux box without systemd (a container or a typical Coder workspace), nothing restarts the Nix daemon after a restart. Run `linux.sh` again, which Coder does on workspace start.
+- On a Linux box without systemd (a container or a typical Coder workspace), nothing restarts the Nix daemon after a restart. Run `setup.sh` again, which Coder does on workspace start.
 
 ### Agent harness
 

@@ -1,4 +1,4 @@
-# The two commands that change a machine: `nix run .#sync` applies the declaration (a switch), `nix run .#upgrade` moves the pins and then syncs. Both take --dry-run, which prints each step instead of running it.
+# The two commands that change a machine: `nix run .#sync` applies the declaration (a switch), `nix run .#upgrade` moves the pins and then syncs. Both take --dry-run, which prints each step instead of running it. sync.sh runs them and then checks the result.
 { inputs }:
 pkgs:
 let
@@ -20,7 +20,7 @@ let
       if [ "$dry" = 1 ]; then printf '+ %s\n' "$*"; else "$@"; fi
     }
   '';
-  # Only the primary account (the first in this Mac's list in flake.nix) switches, as in macos.sh, and only once it owns everything under /opt/homebrew: macos.sh hands Homebrew over after the primary account changes. Checked before anything changes, including flake.lock. /usr/bin tools, not the coreutils on this script's PATH: GNU stat reads -f differently.
+  # Only the primary account (the first in this Mac's list in flake.nix) switches, as in setup.sh, and only once it owns everything under /opt/homebrew: setup.sh hands Homebrew over after the primary account changes. Checked before anything changes, including flake.lock. /usr/bin tools, not the coreutils on this script's PATH: GNU stat reads -f differently.
   preflight = lib.optionalString isDarwin ''
     config="$(/usr/sbin/scutil --get LocalHostName)"
     primary="$(/usr/bin/sed -n "s/.*\"$config\" = darwin \[ *\"\([^\"]*\)\".*/\1/p" "$DOTFILES/flake.nix")"
@@ -33,7 +33,7 @@ let
       exit 1
     fi
     if [ -d /opt/homebrew ] && [ -n "$(/usr/bin/find /opt/homebrew ! -user "$primary" ! -user root -print -quit 2>/dev/null)" ]; then
-      echo "Part of /opt/homebrew belongs to another account; run ~/.config/dotfiles/macos.sh once to hand it to $primary." >&2
+      echo "Part of /opt/homebrew belongs to another account; run ~/.config/dotfiles/setup.sh once to hand it to $primary." >&2
       exit 1
     fi
   '';

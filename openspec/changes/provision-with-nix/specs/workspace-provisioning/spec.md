@@ -87,14 +87,14 @@ On macOS the switch SHALL apply the declared defaults and app shortcuts, the lau
 - **THEN** the Caps Lock remapping and the Time Machine exclusion agents are loaded and point at scripts in the repository
 
 ### Requirement: One primary account owns the machine state
-On macOS the declaration SHALL name one primary account, which owns Homebrew and the system settings and is the only account `macos.sh` runs from. Removing any other declared account SHALL leave Nix, Homebrew and the primary account's workspace working.
+On macOS the declaration SHALL name one primary account, which owns Homebrew and the system settings and is the only account `setup.sh` and the switch run from. Removing any other declared account SHALL leave Nix, Homebrew and the primary account's workspace working.
 
 #### Scenario: Running from another account
-- **WHEN** `macos.sh` runs from an account that is not the primary one
+- **WHEN** `setup.sh` runs from an account that is not the primary one
 - **THEN** it stops before changing anything and names the primary account
 
 #### Scenario: Homebrew owned by another account
-- **WHEN** `macos.sh` runs on a Mac whose /opt/homebrew, or an app bundle in /Applications, belongs to another account
+- **WHEN** `setup.sh` runs on a Mac whose /opt/homebrew, or an app bundle in /Applications, belongs to another account
 - **THEN** it hands that prefix or bundle to the primary account before the switch
 
 ### Requirement: Setup steps run by the switch
@@ -124,3 +124,14 @@ Items the declaration cannot own SHALL be listed in the repository with the reas
 #### Scenario: Reading the exceptions
 - **WHEN** the owner sets up a new Mac
 - **THEN** the repository lists each manual step that remains after the switch, and nothing else is manual
+
+### Requirement: One setup entry point
+Setting up a machine SHALL be one script, `setup.sh`, for macOS and Linux. It SHALL take the platform from `uname` when run without arguments, as `curl ... | bash` runs it; `--macos` or `--linux` SHALL force the platform, and a flag that does not match the machine SHALL stop it before anything changes.
+
+#### Scenario: No arguments
+- **WHEN** `setup.sh` runs without arguments on a Linux box
+- **THEN** it installs Nix and runs the Linux switch
+
+#### Scenario: Wrong platform flag
+- **WHEN** `setup.sh --linux` runs on a Mac
+- **THEN** it exits non-zero before changing anything and names the platform it found

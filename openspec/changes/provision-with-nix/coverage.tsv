@@ -143,7 +143,7 @@ installer	herdr (curl, Linux)	nixpkgs herdr	nix/home/common.nix	-
 installer	pss-sync (mise task)	flake input pss	nix/home/common.nix	activation step pss
 apt (Linux)	git fish mosh	nixpkgs git mosh	nix/home/common.nix	fish dropped 2026-10-18; zsh comes from programs.zsh
 apt (Linux)	python3	nixpkgs python3 with pip	nix/home/linux.nix	-
-apt (Linux)	curl ca-certificates	not declared	-	the distribution's base; linux.sh needs curl to fetch the Nix installer
+apt (Linux)	curl ca-certificates	not declared	-	the distribution's base; setup.sh needs curl to fetch the Nix installer
 app (hand-installed)	cap	cask cap	nix/darwin/homebrew.nix	-
 app (hand-installed)	google-chrome	cask google-chrome	nix/darwin/homebrew.nix	-
 app (hand-installed)	granola	cask granola	nix/darwin/homebrew.nix	-

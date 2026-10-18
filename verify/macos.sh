@@ -3,7 +3,7 @@
 #
 #   verify/macos.sh
 #
-# With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. After a switch, verify/macos-host.sh asserts this Mac itself.
+# With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. After a switch, `sync.sh --check` asserts this Mac itself.
 #
 # HOST_CONFIG and USER_CONFIG select another configuration (default: this Mac's hostname, the user running the check). The same script runs inside the container to assert (VERIFY_STAGE=assert).
 set -euo pipefail

@@ -78,11 +78,13 @@
 - [x] 9.3 Switch from the primary account's session, then verify `verify/macos-host.sh` passes in the second account's session
   - 2026-10-17: run from the primary account's terminal with `sudo -u <second user>`. The switch activated home-manager for both users with no step failure, and `brew bundle` no longer tries to uninstall gcloud-cli's six dependencies, now declared as brews. `verify/macos-host.sh` as the second account: 156 passed, 0 failed (default apps reported as a manual skip).
 
-## 9. Primary account and zsh (owner request, 2026-10-18)
+## 10. Primary account and zsh (owner request, 2026-10-18)
 
-- [x] 9.1 Make the first account in the Mac's list the primary account (flake.nix), which owns Nix's setup, Homebrew and the system settings; `macos.sh` and the sync run only from it, and `macos.sh` hands /opt/homebrew and other accounts' /Applications bundles to it
-- [x] 9.2 zsh as every account's login shell, with `zsh/.zshrc` carrying the interactive setup fish had; Ghostty and herdr follow zsh; fish stays installed but is no login shell
-- [x] 9.3 From the primary account, run `macos.sh`, then `verify/macos-host.sh` in every account
-- [ ] 9.4 Remove fish (Linux interactive terminals exec zsh, which sources `zsh/.zshrc`), Ghostty (no terminal in its place; ctrl+f cds into the repository) and tinycast; keep OrbStack, with its hook in `zsh/.zshrc`
-- [ ] 9.5 Sync from the primary account, then `verify/macos-host.sh` in every account
+- [x] 10.1 Make the first account in the Mac's list the primary account (flake.nix), which owns Nix's setup, Homebrew and the system settings; `macos.sh` and the sync run only from it, and `macos.sh` hands /opt/homebrew and other accounts' /Applications bundles to it
+- [x] 10.2 zsh as every account's login shell, with `zsh/.zshrc` carrying the interactive setup fish had; Ghostty and herdr follow zsh; fish stays installed but is no login shell
+- [x] 10.3 From the primary account, run `macos.sh`, then `verify/macos-host.sh` in every account
+- [x] 10.4 Remove fish (Linux interactive terminals exec zsh, which sources `zsh/.zshrc`), Ghostty (no terminal in its place; ctrl+f cds into the repository) and tinycast; keep OrbStack, with its hook in `zsh/.zshrc`
+  - 2026-10-18: shipped in 828a0e8; `verify/macos.sh` 53/0. The Linux check and the host check after the sync are 10.5.
+- [ ] 10.5 Run `sync.sh` from the primary account, which switches and checks every account
+- [ ] 10.6 Replace `macos.sh` and `linux.sh` with `setup.sh` (platform from `uname`, `--macos`/`--linux` to force it), and `verify/macos-host.sh` and the Linux check's assertions with `sync.sh`, which switches and then checks; `verify/linux.sh` provisions with `setup.sh` and checks with `sync.sh`
 

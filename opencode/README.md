@@ -36,9 +36,7 @@ Shared review-selection policy lives in `AGENTS.md`; upstream skill files remain
 ## Setup
 
 ```sh
-./macos.sh --install
-# or
-./linux.sh --install
+./setup.sh
 ```
 
 Then authenticate providers and MCP servers on each machine:
