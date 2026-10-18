@@ -25,7 +25,7 @@ formula	docker-buildx	cask orbstack	nix/darwin/homebrew.nix	OrbStack links its o
 formula	docker-compose	cask orbstack	nix/darwin/homebrew.nix	OrbStack links its own buildx and compose into ~/.docker/cli-plugins
 formula	duckdb	nixpkgs duckdb	nix/home/darwin.nix	-
 formula	duti	nixpkgs duti	nix/home/darwin.nix	-
-formula	fish	nixpkgs fish	nix/home/common.nix	-
+formula	fish	dropped	-	owner dropped it, 2026-10-18; zsh is the only shell
 formula	flyctl	nixpkgs flyctl	nix/home/darwin.nix	-
 formula	gawk	nixpkgs gawk	nix/home/darwin.nix	as gawk only
 formula	ghostscript	nixpkgs ghostscript	nix/home/darwin.nix	-
@@ -121,7 +121,7 @@ cask	android-commandlinetools	cask android-commandlinetools	nix/darwin/homebrew.
 cask	betterdisplay	cask betterdisplay	nix/darwin/homebrew.nix	-
 cask	firefox	dropped	-	owner dropped it, 2026-10-17
 cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
-cask	ghostty	cask ghostty	nix/darwin/homebrew.nix	-
+cask	ghostty	dropped	-	owner dropped it, 2026-10-18; no terminal declared
 cask	handy	dropped	-	replaced by the muesli cask, 2026-10-17
 cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
 cask	ngrok	cask ngrok	nix/darwin/homebrew.nix	-
@@ -131,7 +131,7 @@ cask	orbstack	cask orbstack	nix/darwin/homebrew.nix	-
 cask	tablepro	cask tablepro	nix/darwin/homebrew.nix	-
 cask	tailscale-app	cask tailscale-app	nix/darwin/homebrew.nix	-
 cask	telegram-desktop	cask telegram-desktop	nix/darwin/homebrew.nix	-
-cask	abue-ammar/tinycast/tinycast	cask abue-ammar/tinycast/tinycast	nix/darwin/homebrew.nix	-
+cask	abue-ammar/tinycast/tinycast	dropped	-	owner dropped it, 2026-10-18
 cask	yaak	cask yaak	nix/darwin/homebrew.nix	-
 cask	annotate	cask annotate	nix/darwin/homebrew.nix	-
 cask	icon-composer	cask icon-composer	nix/darwin/homebrew.nix	-
@@ -141,7 +141,7 @@ cask	codex	nix/pkgs/codex.nix	nix/home/common.nix	the cask was the CLI; dropped 
 formula	oven-sh/bun/bun	nixpkgs bun	nix/home/common.nix	undeclared tap install; bun was also a mise tool
 installer	herdr (curl, Linux)	nixpkgs herdr	nix/home/common.nix	-
 installer	pss-sync (mise task)	flake input pss	nix/home/common.nix	activation step pss
-apt (Linux)	git fish mosh	nixpkgs git fish mosh	nix/home/common.nix	-
+apt (Linux)	git fish mosh	nixpkgs git mosh	nix/home/common.nix	fish dropped 2026-10-18; zsh comes from programs.zsh
 apt (Linux)	python3	nixpkgs python3 with pip	nix/home/linux.nix	-
 apt (Linux)	curl ca-certificates	not declared	-	the distribution's base; linux.sh needs curl to fetch the Nix installer
 app (hand-installed)	cap	cask cap	nix/darwin/homebrew.nix	-

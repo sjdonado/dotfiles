@@ -27,8 +27,6 @@
   programs.zsh.shellInit = ''
     case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$PATH:$HOME/.local/bin" ;; esac
   '';
-  # fish stays installed for anyone who types `fish`; this gives it the same Nix PATH. It is no account's login shell.
-  programs.fish.enable = true;
 
   # nix-darwin only sets shells for users it creates, and owning these accounts is not its job, so the switch sets each one when it differs. This also repairs a login shell that points into a Nix store path that is gone. Reading dscl, not $SHELL, which describes the shell that ran the switch.
   system.activationScripts.postActivation.text = lib.concatMapStrings (u: ''

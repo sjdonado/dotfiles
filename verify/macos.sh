@@ -48,12 +48,12 @@ assert_config() {
     elif [ -e "$rel" ]; then ok "~/$name -> $rel"
     else bad "~/$name -> $rel, which does not exist in the tree"; fi
   done < <(f '.links | to_entries[] | [.key, (.value // "null")] | @tsv')
-  for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
+  for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
     if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
   done
 
   group "setup steps"
-  for step in codexConfig batCache fishHistory pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
+  for step in codexConfig batCache pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
     if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
   done
 

@@ -17,7 +17,6 @@
       "homebrew/homebrew-core" = inputs.homebrew-core;
       "homebrew/homebrew-cask" = inputs.homebrew-cask;
       "sjdonado/homebrew-tap" = inputs.homebrew-sjdonado;
-      "abue-ammar/homebrew-tinycast" = inputs.homebrew-tinycast;
       "driceroland/homebrew-tap" = inputs.homebrew-driceroland;
     };
   };
@@ -55,7 +54,6 @@
       "betterdisplay"
       "cap"
       "gcloud-cli"
-      "ghostty"
       "google-chrome"
       "granola"
       "helium-browser"
@@ -77,7 +75,6 @@
       "whatsapp"
       "yaak"
       "zed"
-      "abue-ammar/tinycast/tinycast"
     ];
 
     # App Store apps are installed by hand (owner's decision, 2026-10-17): mas needs an App Store sign-in and installs Xcode-sized apps during every first switch. Uncomment to declare them again; Homebrew never uninstalls these, so removing one from this list is a manual step too.

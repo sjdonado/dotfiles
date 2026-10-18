@@ -68,12 +68,15 @@ while read -r c; do
 done < <(declared homebrew.casks)
 if [ "$(brew tap | sort | paste -sd, -)" = "$(declared homebrew.taps | sed 's|/homebrew-|/|' | sort | paste -sd, -)" ]; then ok "the taps are exactly the pinned ones"; else bad "brew tap differs from the pinned taps: $(brew tap | paste -sd' ' -)"; fi
 
+group "git credentials"
+# Nix's git sets osxkeychain in its system gitconfig; git/.gitconfig must not add a plaintext helper (store) on top. GitHub goes through gh, set per URL there.
+helpers=$(git config --get-all credential.helper | paste -sd' ' -)
+if [ "$helpers" = osxkeychain ]; then ok "git stores credentials in the Keychain"; else bad "git credential helpers are '$helpers', not osxkeychain alone"; fi
+
 group "links into the repository"
 linked "$HOME/.gitconfig"                     "$DOTFILES/git/.gitconfig"
 linked "$HOME/.zshrc"                         "$DOTFILES/zsh/.zshrc"
-linked "$HOME/.config/fish/config.fish"       "$DOTFILES/fish/config.fish"
 # linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"  # skipped with the full neovim setup
-linked "$HOME/.config/ghostty/config"         "$DOTFILES/ghostty/config"
 linked "$HOME/.config/browser-router/config.json" "$DOTFILES/macos/browser-router.json"
 linked "$HOME/.docker/config.json"            "$DOTFILES/docker/config.json"
 linked "$HOME/.ssh/config"                    "$DOTFILES/.ssh/config"
@@ -121,7 +124,7 @@ for c in rg nvim claude codex; do
   if env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c"; else bad "zsh -c cannot find $c"; fi
   if env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
 done
-# A login, interactive zsh is what a new terminal gets (a herdr pane runs the same ~/.zshrc without the login part): ~/.zshrc must leave the Nix profiles ahead of Homebrew (nix-homebrew's brew shellenv runs before it) and set the environment fish used to.
+# A login, interactive zsh is what a new terminal gets (a herdr pane runs the same ~/.zshrc without the login part): ~/.zshrc must leave the Nix profiles ahead of Homebrew (nix-homebrew's brew shellenv runs before it) and set the interactive environment.
 zsh_env=$(env -i HOME="$HOME" USER="$(id -un)" TERM=xterm /bin/zsh -lic 'printf "%s|%s|%s|%s\n" "$(command -v rg)" "$EDITOR" "$(command -v brew)" "$PATH"' </dev/null 2>/dev/null | tail -1)
 case "${zsh_env%%|*}" in /etc/profiles/per-user/*|/run/current-system/*|"$HOME"/.nix-profile/*) ok "zsh resolves rg from a Nix profile (${zsh_env%%|*})" ;; *) bad "zsh resolves rg to '${zsh_env%%|*}', not a Nix profile" ;; esac
 [ "$(echo "$zsh_env" | cut -d'|' -f2)" = nvim ] && ok "zsh sets EDITOR=nvim" || bad "zsh does not set EDITOR=nvim"

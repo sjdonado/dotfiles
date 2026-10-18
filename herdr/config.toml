@@ -17,7 +17,7 @@ copy_on_select = false
 [ui.toast]
 delivery = "terminal"
 
-# Catppuccin, deliberately not matching ghostty's Terminal Basic pair.
+# Catppuccin, deliberately not matching the terminal's own palette.
 #
 # "terminal" is the theme that would match, since it builds herdr's UI from the
 # host's ANSI palette. It is unusable on a light palette: a correct light theme
@@ -32,11 +32,11 @@ delivery = "terminal"
 # override reaches the actual defect.
 #
 # Catppuccin is the nearest thing that renders correctly in both modes, and is
-# what the issue reporter settled on too. It costs palette tracking: a ghostty
+# what the issue reporter settled on too. It costs palette tracking: a terminal
 # theme change no longer carries over. Switch back to name = "terminal" once
 # 1731 lands.
 #
-# auto_switch below still flips between the dark and light catppuccin variants, following the color-scheme report the terminal sends (Ghostty's mode 2031); only the palette itself is Catppuccin's rather than Ghostty's.
+# auto_switch below still flips between the dark and light catppuccin variants, following the color-scheme report the terminal sends (mode 2031); only the palette itself is Catppuccin's rather than the terminal's.
 [theme]
 auto_switch = true
 dark_name = "catppuccin"
@@ -66,8 +66,7 @@ focus_pane_right = "prefix+ctrl+l"
 # the sidebar already numbers them. Bound to ctrl+alt rather than cmd because a
 # super-modified digit only transmits when the outer terminal and the client have
 # negotiated the Kitty keyboard protocol, while ctrl+alt is the family herdr
-# documents as safe. ghostty/config maps cmd+1..9 onto exactly these sequences,
-# so the chord the fingers press is cmd, and the chord on the wire is ctrl+alt.
+# documents as safe.
 switch_workspace = "ctrl+alt+1..9"
 
 # Open the focused pane's project in local Zed, or copy a client-side SSH command on a remote server.
@@ -100,7 +99,7 @@ command = "usagebar.refresh"
 description = "Agent Usage: refresh usage data"
 
 [experimental]
-# Render inline agent images via Kitty graphics; ghostty supports it.
+# Render inline agent images via Kitty graphics, where the terminal supports it.
 # Without this, panes show a black gap where the image would be.
 kitty_graphics = true
 

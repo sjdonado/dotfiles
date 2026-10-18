@@ -82,5 +82,7 @@
 
 - [x] 9.1 Make the first account in the Mac's list the primary account (flake.nix), which owns Nix's setup, Homebrew and the system settings; `macos.sh` and the sync run only from it, and `macos.sh` hands /opt/homebrew and other accounts' /Applications bundles to it
 - [x] 9.2 zsh as every account's login shell, with `zsh/.zshrc` carrying the interactive setup fish had; Ghostty and herdr follow zsh; fish stays installed but is no login shell
-- [ ] 9.3 From the primary account, run `macos.sh`, then `verify/macos-host.sh` in every account
+- [x] 9.3 From the primary account, run `macos.sh`, then `verify/macos-host.sh` in every account
+- [ ] 9.4 Remove fish (Linux interactive terminals exec zsh, which sources `zsh/.zshrc`), Ghostty (no terminal in its place; ctrl+f cds into the repository) and tinycast; keep OrbStack, with its hook in `zsh/.zshrc`
+- [ ] 9.5 Sync from the primary account, then `verify/macos-host.sh` in every account
 

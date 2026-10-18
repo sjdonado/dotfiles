@@ -30,7 +30,7 @@ The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, l
 
 The repository is the source of truth. Configs reach it through live links, and everything else through `nix/` and a sync.
 
-- Edit a config without a sync. Every tracked config (`~/.config/fish/config.fish`, Ghostty, Zed, `~/.gitconfig`, Claude Code's `settings.json`, OpenCode) is a link into this clone, so editing the file here or through its link is the same edit, and the tool reads it on its next start. Tools that write their own settings (Zed, OpenCode's `kv.json`, Pi) write into the repository, so their changes show up in `git status`. Commit them like code.
+- Edit a config without a sync. Every tracked config (`~/.zshrc` on macOS, Zed, `~/.gitconfig`, Claude Code's `settings.json`, OpenCode) is a link into this clone, so editing the file here or through its link is the same edit, and the tool reads it on its next start. Tools that write their own settings (Zed, OpenCode's `kv.json`, Pi) write into the repository, so their changes show up in `git status`. Commit them like code.
 - Change what is installed or linked through `nix/`, then run `nix run ~/.config/dotfiles#sync`. That covers a tool, an app, a new config link, a macOS setting or a setup step.
   - A command-line tool: find its nixpkgs name with `nix search nixpkgs <name>`, then add it to `home.packages` in `nix/home/darwin.nix` (macOS only) or `nix/home/common.nix` (both platforms).
   - Only when nixpkgs lacks it: add it to `brews` in `nix/darwin/homebrew.nix`. A formula from a third-party tap also needs the tap, as a flake input in `flake.nix` and an entry in `nix-homebrew.taps`.
@@ -52,7 +52,7 @@ A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`
 - To change the primary account: move it to the front of the list, then run `macos.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
 - To remove an account: drop it from the list and sync from the primary account before deleting the macOS account.
 
-zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to open a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. fish stays installed with its configuration for anyone who starts it, but no login, terminal or herdr pane depends on it.
+zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to cd into a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. On Linux the login shell stays POSIX for Coder, interactive terminals exec zsh, and home-manager's `~/.zshrc` sources the same `zsh/.zshrc`.
 
 ### Tool versions
 
@@ -87,7 +87,7 @@ OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, b
 
 Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
 
-When experimenting with Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow Ghostty's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
+When experimenting with Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow the terminal's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 
 ### Text editor
 
@@ -111,7 +111,6 @@ These resident-memory (RSS) readings illustrate a workload, not a fixed per-agen
 
 | process | RSS at the snapshot |
 | ----------------- | -------------------------------- |
-| Ghostty | 95 MiB, one process |
 | `opencode` | 164-684 MiB each, four processes |
 
 Disk usage and RAM usage are different budgets. OpenCode uses a shared server and separate clients, so process count is not the number of agent streams. MCP processes, browsers and project dev servers add their own resource use.

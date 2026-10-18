@@ -55,7 +55,7 @@ nix run "$DOTFILES#sync"
 
 cat <<'NOTE'
 
-==> Done. Open a new shell (or `exec fish`) so PATH and shell changes apply.
+==> Done. Open a new shell (or `exec zsh`) so PATH and shell changes apply.
 
 Manual steps (sensitive, not scripted):
   1. Authenticate OpenCode and its MCP servers: opencode auth login; opencode mcp auth <server>

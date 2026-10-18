@@ -2,7 +2,7 @@
 #
 # Environment goes in the files a shell reads however it was started (~/.profile for login sh and bash, ~/.zshenv for every zsh), plus the top of ~/.bashrc, which runs before its interactive guard. An agent hook, a herdr pane running a command and `ssh host command` read nothing else.
 #
-# The login shell stays POSIX: Coder runs its agent and metadata scripts through it, and fish rejects their syntax. Interactive terminals exec into fish instead.
+# The login shell stays POSIX: Coder runs its agent and metadata scripts through it, so interactive terminals exec into zsh instead, which runs zsh/.zshrc, the same interactive setup macOS uses.
 { pkgs, ... }:
 let
   environment = ''
@@ -24,11 +24,11 @@ let
     ulimit -c 0
   '';
   # Never for non-interactive agent or metadata scripts, which must stay POSIX: the TTY test keeps them out.
-  execFish = ''
-    # dotfiles: exec fish for interactive terminals only
-    if command -v fish >/dev/null 2>&1 && [ -z "$EXECED_FISH" ] && [ -t 1 ]; then
+  execZsh = ''
+    # dotfiles: exec zsh for interactive terminals only
+    if command -v zsh >/dev/null 2>&1 && [ -z "$EXECED_ZSH" ] && [ -t 1 ]; then
       case $- in
-        *i*) export EXECED_FISH=1; exec fish ;;
+        *i*) export EXECED_ZSH=1; exec zsh ;;
       esac
     fi
   '';
@@ -45,17 +45,17 @@ in
     profileExtra = environment + identity + noCores;
     # Before ~/.bashrc's interactive guard, so the interactive non-login case (which reads no profile) has the tools too.
     bashrcExtra = environment;
-    initExtra = execFish;
+    initExtra = execZsh;
   };
 
   programs.zsh = {
     enable = true;
     envExtra = environment + identity + noCores;
-    # Coder's env.sh sets the identity variables again after ~/.zshenv ran, so ~/.zshrc sources it and then unsets them.
+    # zsh/.zshrc is the interactive setup macOS uses too; it also sources Coder's env.sh and then unsets the identity Coder injects.
     initContent = ''
-      [ -f "$HOME/.config/coder/env.sh" ] && . "$HOME/.config/coder/env.sh"
-    ''
-    + identity
-    + execFish;
+      [ -f "$HOME/.config/dotfiles/zsh/.zshrc" ] && . "$HOME/.config/dotfiles/zsh/.zshrc"
+    '';
+    # zsh/.zshrc runs compinit itself.
+    enableCompletion = false;
   };
 }

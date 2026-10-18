@@ -12,7 +12,7 @@ let
 
   # A live link into the working tree, not a copy in the Nix store, so editing a config here takes effect without a switch and tools that write back (nvim's plugin lockfile, opencode kv.json, pi settings.json) change the tracked file. Whatever was at the path before the first switch is kept once as <path>.pre-nix (`-b pre-nix` on Linux, `backupFileExtension` on macOS).
   live = path: { source = config.lib.file.mkOutOfStoreSymlink "${repo}/${path}"; };
-  # One live link per file of a repository directory, for directories where tools keep their own files beside ours (fish functions, ~/.local/bin, themes).
+  # One live link per file of a repository directory, for directories where tools keep their own files beside ours (~/.local/bin, themes).
   liveEach =
     dir: target:
     lib.mapAttrs' (name: _: lib.nameValuePair "${target}/${name}" (live "${dir}/${name}")) (
@@ -42,7 +42,6 @@ in
   home.packages = with pkgs; [
     # Shell, editor and the tools the configs call.
     git
-    fish
     mosh
     ripgrep
     fd
@@ -108,8 +107,6 @@ in
   // liveEach "bin" ".local/bin";
 
   xdg.configFile = {
-    "fish/config.fish" = live "fish/config.fish";
-    "ghostty/config" = live "ghostty/config";
     # The directory, not its files: init.lua resolves nvim-pack-lock.json relative to the config directory it loaded from. Skipped with the full neovim setup.
     # "nvim" = live "nvim";
     # Only config.toml: herdr keeps sockets, logs and session.json in the same directory. Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
@@ -123,8 +120,6 @@ in
     # The file, not plugins/: herdr writes its own plugin beside this one.
     "opencode/plugins/no-foreground-wait.ts" = live "opencode/plugins/no-foreground-wait.ts";
   }
-  // liveEach "fish/functions" "fish/functions"
-  // liveEach "ghostty/themes" "ghostty/themes"
   // liveEach "bat/themes" "bat/themes";
 
   home.activation = {
@@ -207,17 +202,5 @@ in
     #   nvim --headless -c 'if v:errmsg != "" | cquit 1 | endif' -c 'qa'
     # '';
 
-    # fish history lives at ~/.fish_history, linked from where fish looks for it.
-    fishHistory = step "fish-history" ''
-      data="$HOME/.local/share/fish"
-      mkdir -p "$data"
-      if [ -f "$HOME/fish_history" ] && [ ! -e "$HOME/.fish_history" ]; then mv "$HOME/fish_history" "$HOME/.fish_history"; fi
-      if [ -f "$data/fish_history" ] && [ ! -L "$data/fish_history" ]; then mv "$data/fish_history" "$HOME/.fish_history"; fi
-      if [ ! -e "$HOME/.fish_history" ]; then
-        touch "$HOME/.fish_history"
-        chmod 600 "$HOME/.fish_history"
-      fi
-      ln -snf "$HOME/.fish_history" "$data/fish_history"
-    '';
   };
 }

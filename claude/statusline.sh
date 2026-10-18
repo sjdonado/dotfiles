@@ -26,7 +26,7 @@
 # No quota, neither the percentages nor the reset clocks: codexbar reports those,
 # and the one line here has to stay readable at a glance.
 #
-# Colours come from the 16 ANSI slots, which ghostty/themes/* holds at >=4.5:1 in
+# Colours come from the 16 ANSI slots, so they follow the terminal's palette in
 # both variants. 256-cube and truecolor escapes bypass that palette and wash out,
 # so they are avoided.
 set -eu

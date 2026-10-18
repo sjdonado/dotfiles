@@ -1,4 +1,4 @@
-# Interactive zsh, the login shell on macOS. Linked to ~/.zshrc by nix/home/darwin.nix. nix-darwin's /etc/zshenv has already put the Nix profiles first on PATH by the time this runs.
+# Interactive zsh. On macOS it is the login shell and this file is linked to ~/.zshrc by nix/home/darwin.nix; nix-darwin's /etc/zshenv has already put the Nix profiles first on PATH by the time this runs. On Linux, home-manager's ~/.zshrc sources it (nix/home/linux.nix).
 
 # Locale
 export LC_CTYPE=en_US.UTF-8
@@ -6,7 +6,12 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 export EDITOR=nvim
-export PNPM_HOME="$HOME/Library/pnpm"
+if [[ "$OSTYPE" == darwin* ]]; then
+  export PNPM_HOME="$HOME/Library/pnpm"
+else
+  export PNPM_HOME="$HOME/.local/share/pnpm"
+  export COREPACK_HOME="$HOME/.cache/corepack"
+fi
 
 # bat resolves light/dark itself: BAT_THEME=auto asks the terminal, and these two name which theme to use on each side.
 export BAT_THEME=auto
@@ -38,7 +43,7 @@ zshaddhistory() {
 }
 
 # Aliases
-alias python=/usr/bin/python3
+[[ "$OSTYPE" == darwin* ]] && alias python=/usr/bin/python3
 alias wtc="wt switch --create --no-cd"
 alias wtr="wt remove -D --force"
 alias wtl="wt list --full"
@@ -47,20 +52,13 @@ alias wtl="wt list --full"
 alias wty="wt switch --create -x claude --"
 alias wtp="wt step prune --min-age 7d --dry-run"
 
-# ctrl+f: fuzzy-find a git repository and open it in a new Ghostty tab.
+# ctrl+f: fuzzy-find a git repository and cd into it.
 fzf-git-repos() {
   local base="$HOME/Developer"
   [[ -d "$base" ]] || base="$HOME"
   local repo
   repo=$(fd -H -t d -t f --prune --max-depth 6 '^\.git$' "$base" 2>/dev/null | sed 's|/\.git/*$||' | fzf --height 40% --reverse --prompt "git repo> ")
-  if [[ -n "$repo" ]]; then
-    printf 'tell application "Ghostty"
-set w to front window
-set cfg to new surface configuration
-set initial working directory of cfg to "%s"
-set newTab to new tab in w with configuration cfg
-end tell' "$repo" | osascript
-  fi
+  [[ -n "$repo" ]] && cd "$repo"
   zle reset-prompt
 }
 zle -N fzf-git-repos
