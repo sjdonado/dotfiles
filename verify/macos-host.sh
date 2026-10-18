@@ -94,8 +94,9 @@ if [ -z "$primary" ]; then
 elif ! id -u "$primary" >/dev/null 2>&1; then
   bad "the primary account in flake.nix, $primary, does not exist on this Mac"
 else
-  stray="$(find /opt/homebrew ! -user "$primary" -print -quit 2>/dev/null)"
-  if [ -z "$stray" ]; then ok "everything under /opt/homebrew belongs to the primary account"; else bad "$stray belongs to $(/usr/bin/stat -f %Su "$stray"), not the primary account"; fi
+  # Root-owned entries are nix-homebrew's own (its brew launcher); anything else belongs to the primary account.
+  stray="$(find /opt/homebrew ! -user "$primary" ! -user root -print -quit 2>/dev/null)"
+  if [ -z "$stray" ]; then ok "nothing under /opt/homebrew belongs to another account"; else bad "$stray belongs to $(/usr/bin/stat -f %Su "$stray"), not the primary account"; fi
   primary_uid="$(id -u "$primary")"
   for app in /Applications/*.app; do
     [ -e "$app" ] || continue

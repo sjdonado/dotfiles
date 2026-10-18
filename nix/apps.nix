@@ -32,7 +32,7 @@ let
       echo "Run this from the primary account, $primary (flake.nix, darwinConfigurations.$config)." >&2
       exit 1
     fi
-    if [ -d /opt/homebrew ] && [ -n "$(/usr/bin/find /opt/homebrew ! -user "$primary" -print -quit 2>/dev/null)" ]; then
+    if [ -d /opt/homebrew ] && [ -n "$(/usr/bin/find /opt/homebrew ! -user "$primary" ! -user root -print -quit 2>/dev/null)" ]; then
       echo "Part of /opt/homebrew belongs to another account; run ~/.config/dotfiles/macos.sh once to hand it to $primary." >&2
       exit 1
     fi

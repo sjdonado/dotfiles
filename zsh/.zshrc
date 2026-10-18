@@ -20,6 +20,10 @@ export MANPATH="$HOME/.config/dotfiles/man:${MANPATH}"
 typeset -U path
 path+=("$HOME/.local/bin" "$HOME/.opencode/bin" /opt/homebrew/bin /opt/homebrew/sbin "$HOME/.bun/bin" "$PNPM_HOME" "$HOME/go/bin" "$HOME/.cargo/bin" "$HOME/Library/Android/sdk/platform-tools")
 
+# Completion. /etc/zshrc leaves it to this file (nix/darwin/system.nix): -u accepts the completion directories the primary account owns (Homebrew's), which every other account would otherwise be asked about at each start.
+autoload -Uz compinit && compinit -u
+autoload -Uz bashcompinit && bashcompinit
+
 # Prompt: epoch seconds, the directory in green, the exit status in red when it is not 0.
 PROMPT='%D{%s} %F{green}%~%f%(?..%F{red}[%?]%f)> '
 

@@ -30,6 +30,12 @@ if [ "$(id -un)" != "$primary" ]; then
   exit 1
 fi
 
+# A previous nix-darwin generation whose store was removed (Nix reinstalled) leaves its links in /etc pointing at nothing. Among them is /etc/ssl/certs/ca-certificates.crt, which Nix then uses as its CA bundle, so every download fails. nix-darwin owns those links and the switch recreates them, so the dangling ones are removed first.
+if [ -L /etc/static ] && [ ! -e /etc/static ]; then
+  log "Removing the links a removed nix-darwin generation left in /etc..."
+  sudo find /private/etc -maxdepth 3 -type l \( -lname '/etc/static/*' -o -lname '/nix/store/*' \) ! -exec test -e {} \; -print -delete
+fi
+
 # A login shell that no longer exists (one that lived in a Nix store that was removed) makes every new terminal fail, so it is reset to /bin/zsh now; the switch then keeps zsh.
 for u in $accounts; do
   shell="$(dscl . -read "/Users/$u" UserShell 2>/dev/null | awk '{print $2}')"
@@ -61,9 +67,10 @@ if ! nix store info --store daemon >/dev/null 2>&1; then
 fi
 
 # Homebrew refuses to manage files another account owns, and nix-homebrew does not change the owner of an existing /opt/homebrew. So everything under the prefix, and the app bundles in /Applications that another account installed (or one that was deleted, which shows as a bare UID), are handed to the primary account.
-if [ -d /opt/homebrew ] && [ -n "$(sudo find /opt/homebrew ! -user "$primary" -print -quit)" ]; then
+# Root-owned entries are nix-homebrew's own (its brew launcher) and stay as they are.
+if [ -d /opt/homebrew ] && [ -n "$(sudo find /opt/homebrew ! -user "$primary" ! -user root -print -quit)" ]; then
   log "Handing /opt/homebrew to $primary..."
-  sudo chown -R "$primary" /opt/homebrew
+  sudo find /opt/homebrew ! -user "$primary" ! -user root -exec chown -h "$primary" {} +
 fi
 primary_uid="$(id -u "$primary")"
 for app in /Applications/*.app; do
