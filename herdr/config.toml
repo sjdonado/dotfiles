@@ -43,7 +43,7 @@ dark_name = "catppuccin"
 light_name = "catppuccin-latte"
 
 [terminal]
-default_shell = "fish"
+default_shell = "zsh"
 
 # Worktree keys are herdr's built-in dialogs (prefix+shift+g to create; remove
 # lives in the command palette, unbound by default) rather than the worktrunk

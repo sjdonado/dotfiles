@@ -77,3 +77,10 @@
 - [x] 9.2 In the second account's session: switch their clone to this branch, remove mise (`~/.config/mise`, `~/.local/state/mise`, `~/.cache/mise`), Mason and the `~/.config/nvim` link, and clear the universal `fish_user_paths`
 - [x] 9.3 Switch from the primary account's session, then verify `verify/macos-host.sh` passes in the second account's session
   - 2026-10-17: run from the primary account's terminal with `sudo -u <second user>`. The switch activated home-manager for both users with no step failure, and `brew bundle` no longer tries to uninstall gcloud-cli's six dependencies, now declared as brews. `verify/macos-host.sh` as the second account: 156 passed, 0 failed (default apps reported as a manual skip).
+
+## 9. Primary account and zsh (owner request, 2026-10-18)
+
+- [x] 9.1 Make the first account in the Mac's list the primary account (flake.nix), which owns Nix's setup, Homebrew and the system settings; `macos.sh` and the sync run only from it, and `macos.sh` hands /opt/homebrew and other accounts' /Applications bundles to it
+- [x] 9.2 zsh as every account's login shell, with `zsh/.zshrc` carrying the interactive setup fish had; Ghostty and herdr follow zsh; fish stays installed but is no login shell
+- [ ] 9.3 From the primary account, run `macos.sh`, then `verify/macos-host.sh` in every account
+

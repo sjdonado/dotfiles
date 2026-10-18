@@ -161,6 +161,8 @@ in
     # OrbStack supplies the docker client and links its own buildx and compose into ~/.docker/cli-plugins.
     ".docker/config.json" = live "docker/config.json";
     ".ssh/config" = live ".ssh/config";
+    # zsh is the login shell (nix/darwin/system.nix); its interactive setup is tracked here.
+    ".zshrc" = live "zsh/.zshrc";
     ".hushlogin".text = "";
   }
   // lib.mapAttrs' (name: pkg: lib.nameValuePair ".local/opt/${name}" { source = pkg; }) kegs;

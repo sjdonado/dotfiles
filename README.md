@@ -43,12 +43,16 @@ The repository is the source of truth. Configs reach it through live links, and 
 
 ### More than one account on a Mac
 
-A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary user, who owns Homebrew and the system settings. One sync, run from any of these accounts, applies the configuration to all of them.
+A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary account: it owns Nix's setup, Homebrew and the system settings, and `macos.sh` and the sync run only from it, so removing any other account leaves the Mac working. One sync applies the configuration to every listed account.
 
 - Every account has its own clone at `~/.config/dotfiles`, and its links point into that clone. A config change reaches another account when that account runs `git pull`, with no sync.
-- A sync applies the declaration from the clone it runs in, so `git pull` first.
+- A sync applies the declaration from the primary account's clone, so `git pull` there first.
 - Packages live once in the shared `/nix/store`, readable by every account, which is why secrets stay outside Nix. `sudo nix-collect-garbage -d` frees what no account's generation still uses.
-- To add an account: add it to the list in `flake.nix`, clone this repository into its `~/.config/dotfiles` on the same branch, sync, then check it with `sudo -iu <user> ~/.config/dotfiles/verify/macos-host.sh`. The sync sets its login shell to fish.
+- To add an account: add it to the list in `flake.nix`, clone this repository into its `~/.config/dotfiles` on the same branch, sync from the primary account, then check it with `sudo -iu <user> ~/.config/dotfiles/verify/macos-host.sh`. The sync sets its login shell to zsh.
+- To change the primary account: move it to the front of the list, then run `macos.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
+- To remove an account: drop it from the list and sync from the primary account before deleting the macOS account.
+
+zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to open a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. fish stays installed with its configuration for anyone who starts it, but no login, terminal or herdr pane depends on it.
 
 ### Tool versions
 

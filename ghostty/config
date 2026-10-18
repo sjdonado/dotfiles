@@ -15,7 +15,7 @@ mouse-scroll-multiplier = 1
 cursor-invert-fg-bg = false
 selection-invert-fg-bg = false
 
-shell-integration = fish
+shell-integration = detect
 shell-integration-features = no-cursor
 
 # Left Option sends Alt/Meta so alt+... bindings reach the shell and TUIs;

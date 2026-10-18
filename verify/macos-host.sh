@@ -70,6 +70,7 @@ if [ "$(brew tap | sort | paste -sd, -)" = "$(declared homebrew.taps | sed 's|/h
 
 group "links into the repository"
 linked "$HOME/.gitconfig"                     "$DOTFILES/git/.gitconfig"
+linked "$HOME/.zshrc"                         "$DOTFILES/zsh/.zshrc"
 linked "$HOME/.config/fish/config.fish"       "$DOTFILES/fish/config.fish"
 # linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"  # skipped with the full neovim setup
 linked "$HOME/.config/ghostty/config"         "$DOTFILES/ghostty/config"
@@ -84,9 +85,24 @@ linked "$HOME/.pi/agent/settings.json"        "$DOTFILES/pi/settings.json"
 for f in "$DOTFILES/bin/"*; do linked "$HOME/.local/bin/$(basename "$f")" "$f"; done
 
 group "system settings"
-fish=/run/current-system/sw/bin/fish
-if [ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" = "$fish" ]; then ok "login shell is $fish"; else bad "login shell is $(dscl . -read "$HOME" UserShell)"; fi
-if grep -qx "$fish" /etc/shells; then ok "$fish is in /etc/shells"; else bad "$fish is not in /etc/shells"; fi
+if [ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" = /bin/zsh ]; then ok "login shell is /bin/zsh"; else bad "login shell is $(dscl . -read "$HOME" UserShell)"; fi
+# Homebrew and the app bundles other accounts installed belong to the primary account (the first in this Mac's list in flake.nix), so they survive the removal of any other account.
+config="$(scutil --get LocalHostName)"
+primary="$(sed -n "s/.*\"$config\" = darwin \[ *\"\([^\"]*\)\".*/\1/p" "$DOTFILES/flake.nix")"
+if [ -z "$primary" ]; then
+  bad "flake.nix names no primary account for $config"
+elif ! id -u "$primary" >/dev/null 2>&1; then
+  bad "the primary account in flake.nix, $primary, does not exist on this Mac"
+else
+  stray="$(find /opt/homebrew ! -user "$primary" -print -quit 2>/dev/null)"
+  if [ -z "$stray" ]; then ok "everything under /opt/homebrew belongs to the primary account"; else bad "$stray belongs to $(/usr/bin/stat -f %Su "$stray"), not the primary account"; fi
+  primary_uid="$(id -u "$primary")"
+  for app in /Applications/*.app; do
+    [ -e "$app" ] || continue
+    uid="$(/usr/bin/stat -f %u "$app")"
+    if [ "$uid" -ge 501 ] && [ "$uid" != "$primary_uid" ]; then bad "$app belongs to $(/usr/bin/stat -f %Su "$app"), not the primary account"; fi
+  done
+fi
 [ "$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)" = 1 ] && ok "Finder shows all extensions" || bad "AppleShowAllExtensions is not set"
 [ "$(defaults read com.apple.finder AppleShowAllFiles 2>/dev/null)" = 1 ] && ok "Finder shows hidden files" || bad "AppleShowAllFiles is not set"
 for agent in KeyRemapping TMExcludeDev; do
@@ -104,7 +120,12 @@ for c in rg nvim claude codex; do
   if env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c"; else bad "zsh -c cannot find $c"; fi
   if env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
 done
-if "$fish" -c 'type -q rg; and type -q nvim' 2>/dev/null; then ok "fish finds rg and nvim"; else bad "fish cannot find rg or nvim"; fi
+# A login, interactive zsh is what a new terminal gets (a herdr pane runs the same ~/.zshrc without the login part): ~/.zshrc must leave the Nix profiles ahead of Homebrew (nix-homebrew's brew shellenv runs before it) and set the environment fish used to.
+zsh_env=$(env -i HOME="$HOME" USER="$(id -un)" TERM=xterm /bin/zsh -lic 'printf "%s|%s|%s|%s\n" "$(command -v rg)" "$EDITOR" "$(command -v brew)" "$PATH"' </dev/null 2>/dev/null | tail -1)
+case "${zsh_env%%|*}" in /etc/profiles/per-user/*|/run/current-system/*|"$HOME"/.nix-profile/*) ok "zsh resolves rg from a Nix profile (${zsh_env%%|*})" ;; *) bad "zsh resolves rg to '${zsh_env%%|*}', not a Nix profile" ;; esac
+[ "$(echo "$zsh_env" | cut -d'|' -f2)" = nvim ] && ok "zsh sets EDITOR=nvim" || bad "zsh does not set EDITOR=nvim"
+[ -n "$(echo "$zsh_env" | cut -d'|' -f3)" ] && ok "zsh finds brew" || bad "zsh cannot find brew"
+case ":$(echo "$zsh_env" | cut -d'|' -f4):" in *":$HOME/.local/bin:"*) ok "zsh has ~/.local/bin on PATH" ;; *) bad "zsh lacks ~/.local/bin on PATH" ;; esac
 
 group "agents come from Nix"
 # GUI apps look in ~/.local/bin with the PATH they launched with, so both the PATH lookup and that directory have to reach the Nix build, not a curl-installed copy.

@@ -29,7 +29,6 @@ assert_config() {
       activation = builtins.attrNames hm.home.activation;
       agents = builtins.mapAttrs (n: a: a.config.ProgramArguments) hm.launchd.agents;
       system = builtins.concatStringsSep \"\n\" (map (s: s.text or \"\") (builtins.attrValues c.system.activationScripts));
-      shells = map toString c.environment.shells;
       brew = { inherit (c.homebrew) brews casks masApps taps; inherit (c.homebrew.onActivation) cleanup upgrade autoUpdate; };
       nixHomebrew = { inherit (c.nix-homebrew) enable autoMigrate mutableTaps; taps = builtins.attrNames c.nix-homebrew.taps; };
       packages = map (p: p.name) hm.home.packages;
@@ -49,7 +48,7 @@ assert_config() {
     elif [ -e "$rel" ]; then ok "~/$name -> $rel"
     else bad "~/$name -> $rel, which does not exist in the tree"; fi
   done < <(f '.links | to_entries[] | [.key, (.value // "null")] | @tsv')
-  for want in .gitconfig .ssh/config .docker/config.json .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
+  for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/fish/config.fish .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
     if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
   done
 
@@ -66,14 +65,13 @@ assert_config() {
 
   group "system settings"
   system="$(f .system)"
-  if grep -q UserShell <<<"$system"; then ok "activation sets the login shell"; else bad "activation never sets UserShell"; fi
+  if grep -q 'UserShell /bin/zsh' <<<"$system"; then ok "activation sets zsh as the login shell"; else bad "activation does not set /bin/zsh as UserShell"; fi
   for want in AppleShowAllExtensions AppleShowAllFiles; do
     if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
   done
   # Every account the configuration declares gets the same home configuration, the primary one included.
   if [ "$(f '.accounts | sort | join(",")')" = "$(f '.users | sort | join(",")')" ]; then ok "home-manager configures every declared account ($(f '.accounts | length'))"; else bad "declared accounts ($(f '.accounts | join(" ")')) differ from home-manager users ($(f '.users | join(" ")'))"; fi
   if f '.users[]' | grep -qx "$(f .primary)"; then ok "the primary account has a home configuration"; else bad "the primary account has no home configuration"; fi
-  if f '.shells[]' | grep -q '/bin/fish$'; then ok "fish is listed for /etc/shells"; else bad "fish is not in environment.shells"; fi
 
   group "Homebrew, driven by the switch"
   [ "$(f .nixHomebrew.enable)" = true ] && [ "$(f .nixHomebrew.autoMigrate)" = true ] && ok "nix-homebrew owns and adopts /opt/homebrew" || bad "nix-homebrew is not adopting /opt/homebrew"

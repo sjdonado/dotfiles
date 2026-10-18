@@ -16,7 +16,7 @@ Run the checks for the platform a change touches, both when it touches both: on 
 
 - **A tool runs, not merely exists.** Each declared tool answers its version command (a language server without one, when the full neovim setup is restored, answers an LSP initialize request).
 - **Links resolve into the repository.** `readlink -f` on both sides, so a copy that happens to match does not pass.
-- **Non-interactive shells find the tools**: login bash, a bash that reads only `~/.bashrc` (`ssh host command`), `zsh -c`, fish. That is what an agent hook or a herdr pane gets.
+- **Non-interactive shells find the tools**: login bash, a bash that reads only `~/.bashrc` (`ssh host command`), `zsh -c`, and on macOS a login interactive zsh with the Nix profiles ahead of Homebrew. That is what an agent hook or a herdr pane gets.
 - **A second run changes nothing**: the same generation, no new backup files, no duplicated shell block, no reinstalled Nix.
 - **A skipped step says so.** A setup step that cannot run reports its skip by name.
 - **Upstream Nix**, not Determinate Nix.

@@ -121,7 +121,7 @@
     in
     {
       darwinConfigurations = {
-        "Juans-MacBook-Pro" = darwin [ "juan" "sjdonado" ] [ ];
+        "Juans-MacBook-Pro" = darwin [ "sjdonado" "juan" ] [ ];
       };
 
       homeConfigurations = {
