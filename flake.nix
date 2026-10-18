@@ -27,10 +27,6 @@
       url = "github:sjdonado/homebrew-tap";
       flake = false;
     };
-    homebrew-tinycast = {
-      url = "github:abue-ammar/homebrew-tinycast";
-      flake = false;
-    };
     homebrew-driceroland = {
       url = "github:driceroland/homebrew-tap";
       flake = false;
@@ -121,7 +117,7 @@
     in
     {
       darwinConfigurations = {
-        "Juans-MacBook-Pro" = darwin [ "juan" "sjdonado" ] [ ];
+        "Juans-MacBook-Pro" = darwin [ "sjdonado" "juan" ] [ ];
       };
 
       homeConfigurations = {

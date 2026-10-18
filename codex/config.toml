@@ -6,7 +6,7 @@
 #
 # `codex-config apply` writes these keys into the local file, preserving
 # everything else; `codex-config capture` brings changes made in the Codex TUI
-# back into this file. macos.sh and linux.sh run apply.
+# back into this file. Every switch runs apply (codexConfig, nix/home/common.nix).
 
 approval_policy = "never"
 sandbox_mode = "danger-full-access"

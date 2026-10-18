@@ -25,11 +25,26 @@ A check SHALL evaluate and build the macOS configuration from the working tree w
 - **THEN** the configuration check runs and passes before the switch runs on the Mac
 
 #### Scenario: After a switch
-- **WHEN** a switch on the Mac completes
+- **WHEN** a switch on the Mac completes through `sync.sh`
 - **THEN** the host check asserts the result and names every failing tool, link or setting
 
+### Requirement: Every sync checks its result
+`sync.sh` SHALL detect the platform, run the switch (`nix run .#sync`, or `.#upgrade` with `--upgrade`) and then the host checks, and exit non-zero when the switch or any check fails. `sync.sh --check` SHALL run the checks without switching. On macOS, run from the primary account, it SHALL check every account listed for the Mac, each in a clean login shell of that account; run from any other account, it SHALL skip the switch and check that account only.
+
+#### Scenario: Sync from the primary account
+- **WHEN** the primary account runs `sync.sh` on a Mac that lists two accounts
+- **THEN** the switch runs once, the checks run for both accounts, and each account's result is reported
+
+#### Scenario: Sync from another account
+- **WHEN** an account that is not the primary one runs `sync.sh`
+- **THEN** no switch runs and only that account is checked
+
+#### Scenario: Switch fails
+- **WHEN** the switch fails
+- **THEN** `sync.sh` reports the failure, runs no check and exits non-zero
+
 ### Requirement: What the checks assert
-Both checks SHALL assert that every declared command-line tool answers its version command, that every declared link resolves into the repository working tree, that the second switch changes nothing and leaves no backup files, that tools resolve in a non-interactive shell, and that every skipped setup step says it was skipped.
+The Linux check and the macOS host check SHALL assert that every declared command-line tool answers its version command, that every declared link resolves into the repository working tree, that tools resolve in a non-interactive shell, and that every skipped setup step says it was skipped. The Linux check SHALL also assert that its second switch changes nothing and leaves no backup files; on macOS that is not asserted by a check.
 
 #### Scenario: Copy instead of link
 - **WHEN** a managed configuration is a copy with the right contents instead of a link into the repository
@@ -40,8 +55,8 @@ Both checks SHALL assert that every declared command-line tool answers its versi
 - **THEN** the check fails for that tool
 
 ### Requirement: Host changes gated by the owner and the configuration check
-Installing Nix and the first macOS switch on a real Mac SHALL happen in one step, `macos.sh`, and only after the configuration check passes for the same working tree and the owner approves that step.
+Installing Nix and the first macOS switch on a real Mac SHALL happen in one step, `setup.sh`, and only after the configuration check passes for the same working tree and the owner approves that step.
 
 #### Scenario: Configuration check red
 - **WHEN** the configuration check fails
-- **THEN** `macos.sh` does not run on the host, and the failure is reported with what each attempt ruled out
+- **THEN** `setup.sh` does not run on the host, and the failure is reported with what each attempt ruled out

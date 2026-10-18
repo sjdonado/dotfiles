@@ -1,4 +1,4 @@
-# The two commands that change a machine: `nix run .#sync` applies the declaration (a switch), `nix run .#upgrade` moves the pins and then syncs. Both take --dry-run, which prints each step instead of running it.
+# The two commands that change a machine: `nix run .#sync` applies the declaration (a switch), `nix run .#upgrade` moves the pins and then syncs. Both take --dry-run, which prints each step instead of running it. sync.sh runs them and then checks the result.
 { inputs }:
 pkgs:
 let
@@ -20,9 +20,28 @@ let
       if [ "$dry" = 1 ]; then printf '+ %s\n' "$*"; else "$@"; fi
     }
   '';
+  # Only the primary account (the first in this Mac's list in flake.nix) switches, as in setup.sh, and only once it owns everything under /opt/homebrew: setup.sh hands Homebrew over after the primary account changes. Checked before anything changes, including flake.lock. /usr/bin tools, not the coreutils on this script's PATH: GNU stat reads -f differently.
+  preflight = lib.optionalString isDarwin ''
+    config="$(/usr/sbin/scutil --get LocalHostName)"
+    primary="$(/usr/bin/sed -n "s/.*\"$config\" = darwin \[ *\"\([^\"]*\)\".*/\1/p" "$DOTFILES/flake.nix")"
+    if [ -z "$primary" ]; then
+      echo "flake.nix has no darwinConfigurations entry for this Mac ($config)." >&2
+      exit 1
+    fi
+    if [ "$(/usr/bin/id -un)" != "$primary" ]; then
+      echo "Run this from the primary account, $primary (flake.nix, darwinConfigurations.$config)." >&2
+      exit 1
+    fi
+    if [ -d /opt/homebrew ] && [ -n "$(/usr/bin/find /opt/homebrew ! -user "$primary" ! -user root -print -quit 2>/dev/null)" ]; then
+      echo "Part of /opt/homebrew belongs to another account; run ~/.config/dotfiles/setup.sh once to hand it to $primary." >&2
+      exit 1
+    fi
+  '';
   syncCommand =
     if isDarwin then
-      ''step sudo ${inputs.nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild switch --flake "$DOTFILES#$(scutil --get LocalHostName)"''
+      ''
+        step sudo ${inputs.nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild switch --flake "$DOTFILES#$config"
+      ''
     else
       # -b keeps one backup of a file home-manager takes over, such as the distribution's ~/.profile on the first switch.
       # home-manager reads the user from $USER (flake.nix), which a non-login shell or `docker exec` may not set.
@@ -40,13 +59,13 @@ let
   sync = pkgs.writeShellApplication {
     name = "sync";
     runtimeInputs = [ pkgs.coreutils ];
-    text = common + syncCommand;
+    text = common + preflight + syncCommand;
   };
 
   upgrade = pkgs.writeShellApplication {
     name = "upgrade";
     runtimeInputs = [ pkgs.coreutils ];
-    text = common + ''
+    text = common + preflight + ''
       # Every input in flake.lock: nixpkgs, home-manager, nix-darwin, nix-homebrew, each Homebrew tap and the pinned sources.
       step nix flake update --flake "$DOTFILES"
       # Neovim plugins are pinned by nvim/nvim-pack-lock.json, which this rewrites in the repository. nvim exits 0 when a -c command errors, so failures report through cquit. Skipped with the full neovim setup (nvim/ is not linked).

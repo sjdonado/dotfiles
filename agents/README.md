@@ -145,7 +145,7 @@ Review upstream changes before committing them, then update project skills with:
 npx skills@1 update --project --yes
 ```
 
-Neither command belongs in `macos.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping the herdr plugin ref.
+Neither command belongs in `setup.sh` or `sync.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping the herdr plugin ref.
 
 `skills list` reports a skill's agents from its own bookkeeping, so one added with `--agent universal` does not list Claude Code. That field is cosmetic here: both harnesses load the whole directory through the setup links, not per skill.
 
