@@ -62,8 +62,8 @@
       "linear"
       # Local meeting transcription and dictation.
       "muesli"
-      "ngrok"
       "nordvpn"
+      "notion"
       "orbstack"
       "raycast"
       "rockxy"

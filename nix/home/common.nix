@@ -63,8 +63,6 @@ in
     codex
     (callPackage ../pkgs/opencode.nix { }) # v2; nixpkgs still has v1
     openspec
-    # Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
-    # herdr
 
     # Skipped with the full neovim setup.
     # # Language servers and formatters nvim/init.lua starts. They come from here instead of Mason, which downloads binaries outside this declaration.
@@ -109,77 +107,18 @@ in
   xdg.configFile = {
     # The directory, not its files: init.lua resolves nvim-pack-lock.json relative to the config directory it loaded from. Skipped with the full neovim setup.
     # "nvim" = live "nvim";
-    # Only config.toml: herdr keeps sockets, logs and session.json in the same directory. Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
-    # "herdr/config.toml" = live "herdr/config.toml";
     "worktrunk/config.toml" = live "worktrunk/config.toml";
     "zed/settings.json" = live "zed/settings.json";
     "zed/keymap.json" = live "zed/keymap.json";
     "opencode/opencode.json" = live "opencode/opencode.json";
     "opencode/cli.json" = live "opencode/cli.json";
     "opencode/AGENTS.md" = live "opencode/AGENTS.md";
-    # The file, not plugins/: herdr writes its own plugin beside this one.
+    # The file, not plugins/: other tools write their own plugins beside this one.
     "opencode/plugins/no-foreground-wait.ts" = live "opencode/plugins/no-foreground-wait.ts";
   }
   // liveEach "bat/themes" "bat/themes";
 
   home.activation = {
-    # Skipped: herdr is not in use (owner's decision, 2026-10-17). Uncomment to bring it back.
-    # # claude/settings.json declares a SessionStart hook running herdr's agent-state script, which herdr installs. The installer also rewrites settings.json, so it runs before the link exists (the link then replaces the file it wrote), and only while the hook is missing; afterwards it would write through the link into the tracked file.
-    # herdrClaude = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
-    #   if [ -f "$HOME/.claude/hooks/herdr-agent-state.sh" ]; then
-    #     verboseEcho "dotfiles: herdr claude integration already installed"
-    #   elif ! { run mkdir -p "$HOME/.claude" && run ${pkgs.herdr}/bin/herdr integration install claude >/dev/null; }; then
-    #     warnEcho "dotfiles: herdr-claude failed; the SessionStart hook will no-op. Switch again to retry."
-    #   fi
-    # '';
-
-    # herdrOpencode = step "herdr-opencode" ''
-    #   if [ -f "$HOME/.config/opencode/herdr-opencode/tui.js" ]; then exit 0; fi
-    #   ${pkgs.herdr}/bin/herdr integration install opencode
-    # '';
-
-    # # Local workflow plugins are linked from this repository; the two remote ones are pinned by ref. Both need a running herdr server. A stamp of the plugin set and the refs skips the whole step while neither changed, so a switch does not reinstall them.
-    # herdrPlugins = step "herdr-plugins" ''
-    #   ${binPath [
-    #     pkgs.herdr
-    #     pkgs.gnused
-    #     pkgs.coreutils
-    #   ]}
-    #   # herdr's own version is part of the stamp: an upgrade can reset its plugin state.
-    #   want="${pkgs.herdr} $(ls ${repo}/herdr/plugins) agent-usage@v0.5.11 annotate@1bc258353f0a7af0781493e1c1ffca09b71666bc"
-    #   stamp="$HOME/.config/herdr/.dotfiles-plugins"
-    #   if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then exit 0; fi
-    #   # `herdr status server` exits 0 either way; its output says whether one runs.
-    #   case "$(herdr status server 2>&1)" in
-    #     *"not running"*)
-    #       echo "dotfiles: skipped herdr-plugins: no herdr server is running. Start herdr, then switch again."
-    #       exit 0
-    #       ;;
-    #   esac
-    #   status=0
-    #   for dir in ${repo}/herdr/plugins/*; do
-    #     [ -f "$dir/herdr-plugin.toml" ] || continue
-    #     herdr plugin unlink "$(basename "$dir")" >/dev/null 2>&1 || true
-    #     herdr plugin link "$dir" >/dev/null || { echo "herdr plugin link $dir failed" >&2; status=1; }
-    #   done
-    #   # On-demand agent usage: keymap only, no sidebar rows and no toasts (keybindings live in herdr/config.toml).
-    #   if herdr plugin install senna-lang/herdr-agent-usage --ref v0.5.11 --yes >/dev/null \
-    #     && herdr plugin action invoke usagebar.setup >/dev/null; then
-    #     if cfg="$(herdr plugin config-dir usagebar)/config.toml" && [ -f "$cfg" ]; then
-    #       sed -i -E 's/^enabled[[:space:]]*=[[:space:]]*true/enabled = false/' "$cfg"
-    #     else
-    #       echo "agent-usage config not found; toasts may appear" >&2; status=1
-    #     fi
-    #   else
-    #     echo "agent-usage install failed" >&2; status=1
-    #   fi
-    #   # Terminal and document annotation. It ships no setup action, so its keybindings are in herdr/config.toml.
-    #   herdr plugin install plannotator/herdr-annotate --ref 1bc258353f0a7af0781493e1c1ffca09b71666bc --yes >/dev/null \
-    #     || { echo "annotate install failed" >&2; status=1; }
-    #   if [ "$status" = 0 ]; then echo "$want" > "$stamp"; fi
-    #   exit $status
-    # '';
-
     # Codex owns ~/.codex/config.toml and rewrites it as you work, so only the shareable keys are tracked and merged in.
     codexConfig = step "codex-config" ''
       ${binPath [ pkgs.python3 ]}

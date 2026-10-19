@@ -17,7 +17,7 @@ do
 
   vim.schedule(function()
     vim.o.clipboard = 'unnamedplus'
-    -- Over SSH (e.g. herdr on a remote box) there is no local clipboard tool,
+    -- Over SSH (e.g. on a remote box) there is no local clipboard tool,
     -- so route yank/paste through OSC52 to reach the attaching terminal.
     if vim.env.SSH_TTY or vim.env.SSH_CONNECTION then
       local osc52 = require 'vim.ui.clipboard.osc52'
@@ -264,9 +264,8 @@ do
   -- [[ Colorscheme ]]
   vim.pack.add { gh 'lunacookies/vim-colors-xcode' }
 
-  -- Herdr reports its resolved pane background over OSC 11 and updates
-  -- &background when the host appearance changes. Outside Herdr this remains
-  -- the terminal's own resolved background.
+  -- The terminal reports its resolved background over OSC 11, which updates
+  -- &background when the host appearance changes.
   local function apply_xcode()
     pcall(vim.cmd.colorscheme, vim.o.background == 'light' and 'xcodelight' or 'xcodedark')
   end
@@ -289,7 +288,7 @@ do
   })
 
   -- &background is otherwise resolved once, at startup, so a window opened while
-  -- the pane was light stayed light after Herdr switched to dark: nothing re-asks.
+  -- the terminal was light stayed light after it switched to dark: nothing re-asks.
   -- Re-issue the OSC 11 query on focus and let the handler above do the rest.
   -- Written to stderr rather than stdout so it does not interleave with the TUI's
   -- own output stream; both reach the terminal.
@@ -1039,45 +1038,5 @@ end
 -- existed to hold a Ghostty-sent shortcut for the same functions, and the
 -- terminal never delivered it.
 require 'custom.copy-reference'
-
--- ============================================================
--- SECTION 11: HERDR ANNOTATE
--- ============================================================
--- Hands a visual selection to herdr's annotate plugin, which opens a comment
--- dialog and can send the annotations back to the agent that wrote the code.
---
--- The selection travels in a file rather than through the clipboard: the plugin
--- runs wherever herdr runs, which over SSH is the server, and a headless server
--- has no clipboard for it to read. The plugin deletes the file after reading it,
--- and ignores one older than 15 seconds.
-do
-  local function annotate_selection()
-    if vim.fn.executable 'herdr' == 0 then
-      return vim.notify('herdr is not on PATH; cannot open the annotate dialog', vim.log.levels.ERROR)
-    end
-
-    vim.cmd 'normal! "zy'
-
-    -- The plugin's reader is `$XDG_RUNTIME_DIR` when set, else the system temp
-    -- dir, then `/herdr-annotate-<uid>/selection`. That temp dir is the temp ROOT:
-    -- `tempname()` is not a substitute, because Neovim answers with a per-session
-    -- directory under it, and a file written there is one the plugin never opens.
-    local base = vim.env.XDG_RUNTIME_DIR
-    if not base or base == '' then
-      base = vim.env.TMPDIR
-    end
-    if not base or base == '' then
-      base = '/tmp'
-    end
-
-    local dir = base .. '/herdr-annotate-' .. vim.uv.getuid()
-    vim.fn.mkdir(dir, 'p', '0700')
-    vim.fn.writefile(vim.split(vim.fn.getreg 'z', '\n'), dir .. '/selection')
-
-    vim.fn.jobstart { 'herdr', 'plugin', 'action', 'invoke', 'annotate.capture' }
-  end
-
-  vim.keymap.set('x', '<leader>a', annotate_selection, { desc = 'Annotate selection in Herdr' })
-end
 
 -- vim: ts=2 sts=2 sw=2 et

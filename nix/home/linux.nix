@@ -1,6 +1,6 @@
 # Linux only: the shell files, on any distribution with Nix installed. home-manager owns ~/.profile, ~/.bash_profile, ~/.bashrc, ~/.zshenv and ~/.zshrc; the first switch keeps one backup of each original (`-b pre-nix`).
 #
-# Environment goes in the files a shell reads however it was started (~/.profile for login sh and bash, ~/.zshenv for every zsh), plus the top of ~/.bashrc, which runs before its interactive guard. An agent hook, a herdr pane running a command and `ssh host command` read nothing else.
+# Environment goes in the files a shell reads however it was started (~/.profile for login sh and bash, ~/.zshenv for every zsh), plus the top of ~/.bashrc, which runs before its interactive guard. An agent hook, a tool running a command and `ssh host command` read nothing else.
 #
 # The login shell stays POSIX: Coder runs its agent and metadata scripts through it, so interactive terminals exec into zsh instead, which runs zsh/.zshrc, the same interactive setup macOS uses.
 { pkgs, ... }:

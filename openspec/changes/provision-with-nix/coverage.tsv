@@ -40,7 +40,7 @@ formula	golangci-lint	nixpkgs golangci-lint	nix/home/darwin.nix	-
 formula	go	nixpkgs go	nix/home/darwin.nix	-
 formula	grpcurl	nixpkgs grpcurl	nix/home/darwin.nix	-
 formula	harfbuzz	nixpkgs harfbuzz	nix/home/darwin.nix	-
-formula	herdr	nixpkgs herdr	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17)
+formula	herdr	dropped	-	owner dropped it, 2026-10-18 (commented out since 2026-10-17)
 formula	htop	nixpkgs htop	nix/home/darwin.nix	-
 formula	jpeg	nixpkgs libjpeg	nix/home/darwin.nix	-
 formula	jsoncpp	nixpkgs jsoncpp	nix/home/darwin.nix	-
@@ -124,9 +124,9 @@ cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
 cask	ghostty	dropped	-	owner dropped it, 2026-10-18; no terminal declared
 cask	handy	dropped	-	replaced by the muesli cask, 2026-10-17
 cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
-cask	ngrok	cask ngrok	nix/darwin/homebrew.nix	-
+cask	ngrok	dropped	-	owner dropped it, 2026-10-18
 cask	nordvpn	cask nordvpn	nix/darwin/homebrew.nix	-
-cask	notion	dropped	-	owner dropped it, 2026-10-17
+cask	notion	cask notion	nix/darwin/homebrew.nix	owner added it back, 2026-10-18
 cask	orbstack	cask orbstack	nix/darwin/homebrew.nix	-
 cask	tablepro	cask tablepro	nix/darwin/homebrew.nix	-
 cask	tailscale-app	cask tailscale-app	nix/darwin/homebrew.nix	-
@@ -139,7 +139,7 @@ cask	rockxy	cask rockxy	nix/darwin/homebrew.nix	-
 cask	driceroland/tap/search	dropped	-	owner dropped it, 2026-10-17
 cask	codex	nix/pkgs/codex.nix	nix/home/common.nix	the cask was the CLI; dropped for the Nix package
 formula	oven-sh/bun/bun	nixpkgs bun	nix/home/common.nix	undeclared tap install; bun was also a mise tool
-installer	herdr (curl, Linux)	nixpkgs herdr	nix/home/common.nix	-
+installer	herdr (curl, Linux)	dropped	-	owner dropped it, 2026-10-18
 installer	pss-sync (mise task)	flake input pss	nix/home/common.nix	activation step pss
 apt (Linux)	git fish mosh	nixpkgs git mosh	nix/home/common.nix	fish dropped 2026-10-18; zsh comes from programs.zsh
 apt (Linux)	python3	nixpkgs python3 with pip	nix/home/linux.nix	-

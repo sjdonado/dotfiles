@@ -37,10 +37,6 @@ HISTFILE="$HOME/.zsh_history"
 HISTSIZE=20000
 SAVEHIST=20000
 setopt SHARE_HISTORY HIST_IGNORE_SPACE HIST_IGNORE_DUPS
-# herdr types `claude --resume=<id>` into a pane when it restores a session; machine-generated and never worth recalling.
-zshaddhistory() {
-  [[ ! "$1" =~ '^[[:space:]]*claude[[:space:]].*--resume' ]]
-}
 
 # Aliases
 [[ "$OSTYPE" == darwin* ]] && alias python=/usr/bin/python3
