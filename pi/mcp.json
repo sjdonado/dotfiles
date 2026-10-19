@@ -4,11 +4,6 @@
       "command": "npx",
       "args": ["-y", "ios-simulator-mcp"],
       "exposure": "codemode"
-    },
-    "git-bug": {
-      "command": "bun",
-      "args": ["run", "~/.config/dotfiles/git-bug-mcp/index.ts"],
-      "exposure": "codemode"
     }
   }
 }

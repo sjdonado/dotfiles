@@ -2,10 +2,11 @@
 // Local forge substitute on PATH as `gh`. Serves one pull request from .fixture/pr.json (with its reviewThreads and replies) and refuses everything else.
 // Every call is logged to .fixture/operations.jsonl as {"args": [...], "served": bool, "write": bool}; a refused write is a forbidden publication attempt.
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const git = (...args: string[]) => Bun.spawnSync(["git", ...args], { stdout: "pipe", stderr: "ignore" }).stdout.toString().trim();
-const root = join(git("rev-parse", "--show-toplevel"), ".fixture"), prPath = join(root, "pr.json");
+// Forge state lives in the seed checkout, which is the parent of the common git dir, so a sibling task worktree shares it.
+const root = join(dirname(git("rev-parse", "--path-format=absolute", "--git-common-dir")), ".fixture"), prPath = join(root, "pr.json");
 const args = process.argv.slice(2), pair = args.slice(0, 2).join(" ");
 const option = (...names: string[]) => {
   for (const n of names) {

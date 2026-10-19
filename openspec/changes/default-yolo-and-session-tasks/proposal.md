@@ -31,3 +31,7 @@ Behavioral acceptance applies: these are agent instructions, so `bench/measure v
 The `model-tier-delegation` capability ships without bench coverage: no scenario observes a delegation offer, a recorded preference, or the named verification workflow, and the fixtures instruct every case to skip delegation. It is specified and implemented, not measured.
 
 No effect on the tools this repository provisions, on `bin/`, or on any application configuration.
+
+## Superseded (2026-10-18)
+
+The `simplify-harness` change restructures the harness into principles, building blocks and thin workflows; its default route into `proto` and the default-branch note key `proto` used are superseded: the default route is `iteration`, which runs in the task's own worktrunk worktree, so no note is kept under the default branch. This change's PR merged; it stays unarchived until its open tasks are judged done or obsolete.

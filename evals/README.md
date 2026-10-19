@@ -11,21 +11,24 @@ End-to-end sessions that show whether a change to the harness (agents/AGENTS.md,
   - `turns` is the conversation: each turn has a `prompt`, an optional `setup` run before it (for example, the PR merging between turns), and the `expect`ed behavior once the agent finishes.
 - `models.json`: the models every scenario runs against.
 - `run.ts`: seeds the repository with a local bare `origin`, runs each turn through `pi-agent` in one persistent session, and evaluates the expectations. It is the only code that interprets scenarios.
-- `gh.ts`: the forge substitute on `PATH` as `gh`. It serves one pull request from `.fixture/pr.json`: `pr create|view|list|edit|checks`, `repo view`, and through `gh api` its `reviewThreads` (GraphQL or REST), replies inside a thread (recorded in `replies`) and branch protection. It refuses everything else, including top-level PR comments and reviews, and logs every call to `.fixture/operations.jsonl`.
+- `gh.ts`: the forge substitute on `PATH` as `gh`. It serves one pull request from the seed checkout's `.fixture/pr.json` (also when run from a sibling task worktree): `pr create|view|list|edit|checks`, `repo view`, and through `gh api` its `reviewThreads` (GraphQL or REST), replies inside a thread (recorded in `replies`) and branch protection. It refuses everything else, including top-level PR comments and reviews, and logs every call to `.fixture/operations.jsonl`.
 
 ## Scenarios
 
 | Scenario | Skills | Proves |
 | --- | --- | --- |
-| `happy-path` (core) | proto, yolo | Prototype on the default branch without writing tests, fold in feedback, then yolo to one PR that adds an assertion and whose manual verification names the side-effect page. |
-| `proto-gate` | proto | A request for a PR with part of its scope open stays local, writes no test file, and asks the open question. |
-| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR that adds an assertion. |
+| `happy-path` (core) | iteration, worktree, yolo, open-pr | With no issue the agent proposes a branch name and creates nothing until it is accepted, iterates in a sibling worktrunk worktree without writing tests, folds in feedback, then yolo to one PR that adds an assertion and whose manual verification names the side-effect page. The seed checkout stays on the default branch. |
+| `iteration-gate` | iteration, worktree | A request for a PR with part of its scope open iterates in a worktree, commits and publishes nothing, writes no test file, and asks the open question. |
+| `open-pr` | open-pr, verification | A direct "open a PR" with a red local check publishes nothing; once green it opens a `WIP:` PR through `open-pr` with no adversarial review. |
+| `yolo-bounded` | yolo, worktree, open-pr | A fully bounded request goes straight to a task branch in its own worktree and a PR that adds an assertion. |
 | `feedback` | feedback | Feedback on an open PR stays local until the batch is approved, then goes to the same branch and PR. |
 | `address-review` | address-review | Legit thread fixed, wrong thread rejected, resolved thread ignored; replies only inside threads and only after approval. |
 | `land` | land | No closure while the PR is open; after merge the note is archived and the task list deleted, with nothing published. |
 | `ask` | ask | A question is answered read-only with `path:line` evidence. |
 
-Not covered: skills that need a tracker MCP (`create-ticket`), production telemetry (`evidence`, `triage`), or subagents (`agent-review`, `verification` in a subagent). The scenarios tell the agent to skip agent-review and delegation. The previous 20-case matrix (`evals/harness/`, removed) also covered these, which have no scenario yet: an earlier PR approval not authorizing a new publication (gate-precedent), an agent-written ledger not authorizing one (gate-self-authored), herdr worktree selection (workspace-default, workspace-requested), continuation in a fresh session (recoverable, unrecoverable, handoff), `harness-boostrap` audit and setup, Reviewer B activation, and the OpenCode managed preview shell. Add one back as a scenario when a change touches its rule.
+Scenarios that start new work use `wt switch --create` (worktrunk, from the user's Nix profile on `PATH`), which creates the worktree at `../<repo>.<branch>` next to the seed checkout; their `setup` runs `git remote set-head origin main` so the worktree skill can resolve the default branch. Expectations find the worktree with `git worktree list`, and `run.ts` copies sibling worktrees into the results and removes them after each scenario.
+
+Not covered: skills that need a tracker MCP (`create-ticket`), production telemetry (`evidence`, `triage`), or subagents (`agent-review`, `verification` in a subagent). The scenarios tell the agent to skip agent-review and delegation. The previous 20-case matrix (`evals/harness/`, removed) also covered these, which have no scenario yet: an earlier PR approval not authorizing a new publication (gate-precedent), an agent-written ledger not authorizing one (gate-self-authored), worktree selection (workspace-default, workspace-requested), continuation in a fresh session (recoverable, unrecoverable, handoff), `harness-boostrap` audit and setup, Reviewer B activation, and the OpenCode managed preview shell. Add one back as a scenario when a change touches its rule. The `feedback`, `land` and `address-review` scenarios still seed their PR branch in the seed checkout rather than in a sibling worktree, so finding a PR's worktree is not covered. Worktrees copied into results keep a `.git` file that points into the deleted seed checkout, so `git` does not work in those copies; they are file evidence only.
 
 ## Expectations
 

@@ -28,3 +28,7 @@ None.
 - New: `evals/harness/` JSON configuration, fixtures, artifact checks, Bun runner and docs. Updated: Ponytail activation and its callers, plus an opt-in bench continuation case and offline tests. The shared publication contract remains unchanged.
 - Dependency: existing Bun, Pi, Git and Python for the legacy comparison and fixture checks. No new packages or lockfiles. Paid calls require explicit execution and retained per-batch budgets.
 - Excluded: unrelated Moshi configuration changes, Pi updates, MCP/code-mode rollout and Pi Durable exploration. Code mode targets daily Claude, Codex and OpenCode if revisited; Pi remains eval-only.
+
+## Superseded (2026-10-18)
+
+The `simplify-harness` change restructures the harness into principles, building blocks and thin workflows; its scenarios and expectations that name `proto`, branch in place, or rely on herdr are superseded by the eval updates in that change. This change's PR merged; it stays unarchived until its open tasks are judged done or obsolete.

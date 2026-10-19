@@ -52,12 +52,6 @@
 				"command": ["npx", "-y", "ios-simulator-mcp"],
 				"disabled": false,
 				"codemode": true
-			},
-			"git-bug": {
-				"type": "local",
-				"command": ["bun", "run", "{env:HOME}/.config/dotfiles/git-bug-mcp/index.ts"],
-				"disabled": false,
-				"codemode": true
 			}
 		}
 	}

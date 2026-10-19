@@ -1,6 +1,10 @@
 [[pre-start]]
 copy = "wt step copy-ignored"
 
+# Branch notes and task lists belong to the worktree that wrote them; a new worktree starts without another branch's (agents/skills/worktree).
+[[pre-start]]
+drop-notes = "rm -rf .agent"
+
 # Reap worktrees already merged into the default branch. Runs in the background
 # after a merge, so it costs nothing at the call site, and merges are frequent
 # enough to keep the count bounded without a scheduler.

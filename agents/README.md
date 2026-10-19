@@ -7,85 +7,61 @@ Shared skills and instructions for Claude Code, Codex, and OpenCode.
 ```mermaid
 flowchart TD
     subgraph INPUT["input"]
-        ask_in["a bounded question"] --> ask["ask"]
-        ask -.->|escalates when bigger than one answer| ask
-
-        research_in["a question or claim"] --> research["research"]
-        research --> ledger["finding ledger (F1, F2, ...)"]
-        ledger --> ticket["create-ticket (batch, one confirm)"]
-
-        triage_in["a ticket or an error"] --> triage["triage"]
-        triage --> brief["plan brief"]
-        brief -.->|evidence: kill query first, then confirm or refute| brief
-
-        idea_in["an idea worth documenting"] --> explore["openspec-explore"]
-        explore --> propose["openspec-propose"]
-        propose --> change["openspec/changes/&lt;id&gt;/"]
-        change --> grill["grill-me
-        interactive, or self-grill:
-        resolve what evidence can settle,
-        surface only survivors"]
-        grill --> updatechange["openspec-update-change
-        folds the answers into the artifacts"]
-        updatechange --> change
-
-        proto_in["work asked for, contract not settled
-        DEFAULT ROUTE"] --> proto["proto
-        build a slice, local rungs green,
-        human tries it, fold feedback in"]
-        proto --> protoledger["requirements ledger"]
-        proto -.->|premise disproved: kill, record why| proto
-
-        else_in["everything else"] --> planmode["native plan mode"]
-        planmode -.->|never both: an approved change is already the contract| planmode
-
-        change --> approval["approval"]
-        planmode --> approval
-        protoledger --> approval
+        q["a question, a claim, a ticket, an error"] --> readonly["ask / research / triage
+        read-only; may feed create-ticket"]
+        idea["an idea worth documenting"] --> explore["openspec-explore"] --> propose["openspec-propose"]
+        propose --> change["openspec/changes/&lt;id&gt;/
+        grill-me and openspec-update-change refine it"]
     end
 
-    subgraph BUILD["build"]
-        approval --> yolo["yolo
-        entered deliberately: asked for by name,
-        an approved contract, or work already bounded"]
-        yolo --> ladder["resolve oracle ladder
-        project AGENTS.md, else task runner, else toolchain"]
-        ladder --> implement["implement"]
-        implement --> rungs["local rungs green"]
-        rungs --> audit["audit diff vs requirements"]
-        audit --> review["agent-review
-        2 blind subagents, told the diff is wrong"]
-        review --> commit["commit"] --> push["push"] --> pr["open PR
-        body: Assumptions / Refuted evidence / Rejected review findings"]
-        pr --> checks(["remote required checks green
-        terminal state"])
+    subgraph STAGES["stages, each in the task's own worktrunk worktree"]
+        open["work whose requirements are open
+        DEFAULT ROUTE"] --> iteration["iteration
+        build a slice, local checks green,
+        owner tries it, fold feedback in;
+        no tests, no review, nothing pushed"]
+        iteration -->|owner wants a demo| poc["poc
+        runnable local demo, nothing pushed"]
+        poc -->|more rounds| iteration
+        iteration -.->|premise disproved: kill, record why| iteration
+        iteration -->|owner accepts the ledger| yolo
+        poc -->|owner accepts the ledger| yolo
+        change -->|approved| yolo["yolo
+        tests, verification, agent-review once,
+        then open-pr"]
+    end
+
+    subgraph PUBLISH["publish"]
+        direct["&quot;open a PR&quot;"] --> openpr
+        yolo --> openpr["open-pr
+        local checks, commit, push, WIP: PR,
+        body with a diagram when it helps,
+        checks and mergeability green"]
     end
 
     subgraph AFTER["after"]
-        checks --> verify["openspec-verify-change
-        does the code match the spec"]
-        checks --> feedback["feedback
-        a bullet list from you;
-        deferred rounds apply only,
-        a full round settles the debt"]
-        checks --> addressreview["address-review
+        openpr --> feedback["feedback
+        local batches, published through open-pr
+        once each batch is approved"]
+        openpr --> addressreview["address-review
         review threads, red CI"]
-        checks --> sync["openspec-sync-specs
-        fold deltas into specs"]
-        sync --> archive["openspec-archive-change
-        keep it as institutional memory"]
-        verify --> merge["human merges"]
-        feedback --> merge
+        feedback --> merge["human merges"]
         addressreview --> merge
-        archive --> merge
+        merge --> land["land
+        archive the change, close the note,
+        wt remove the worktree"]
     end
 ```
 
-At any point the escalation contract can stop the run: three failures under three
-different fixes, two attempts with no new information, a diff far past the implied
-size, evidence contradicting the premise, or a first touch of a migration, CI
-config, lockfile, shared contract, infrastructure, or auth surface that the
-request did not name.
+At any point `principle-stop-at-the-rabbit-hole` can stop a run, and touching a migration, CI config, lockfile, shared contract, infrastructure, or auth surface the request did not name escalates on first touch.
+
+## Three kinds of skill
+
+- **Principles** (`principle-*`): one rule each, whose description and first line say they are not workflows. A workflow names the principle at the step that needs it and the agent loads it, by path or as a skill. They carry no `disable-model-invocation` key, which this repository's frontmatter check (the Codex skill validator) rejects.
+- **Building blocks**: one reusable step each, entered from a workflow or directly: `worktree`, `verification`, `agent-review`, `open-pr`, `git-bug`, `evidence`, `handoff`.
+- **Workflows**: entry rule, ordered steps naming principles and blocks, and exit states: `iteration`, `poc`, `yolo`, `feedback`, `address-review`, `land`, `ask`, `research`, `triage`, `grill-me`, `create-ticket`, `harness-audit`, `harness-boostrap`.
+
+`AGENTS.md` keeps only routing and the rules that must hold on every turn (publication authority, secrets, where work happens, the surfaces that escalate on first touch, chat writing, links, MCP scope). A rule therefore lives in one place, and changing a block changes every workflow that uses it. `iteration` replaced `proto`.
 
 ## Layout
 
@@ -96,11 +72,11 @@ Skills provide both explicit and plain-language entry points. Each harness initi
 
 The setup scripts link the same skill directory into all three harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins.
 
-Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise. Never both, since an approved OpenSpec change is already the contract and re-planning it just adds a second gate over the same decisions. No custom plan skill shadows native plan mode. A third path, `proto`, is the default way into implementation whenever the contract is not already settled: cheap human-in-the-loop build iterations validated by the local ladder rungs only, ending in a requirements ledger that `yolo` consumes as its contract, or in killing the premise. It never pushes and never opens a PR, so nothing reaches a PR except through `yolo`.
+Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise, never both. A third path, `iteration`, is the default way into implementation whenever the contract is not settled: cheap rounds in the task's own worktree, validated by the local checks only, ending in a PoC, a ledger `yolo` consumes as its contract, or a killed premise. It never pushes; a PR comes only from `open-pr`, through `yolo` or a direct request.
 
-`yolo` is the expensive run and is entered deliberately, not by default: the human asks for it or for a PR, or the contract is already pinned down by an approved change, an approved plan, a promoted ledger, a specified ticket, a round on a branch whose PR is open, or a change small enough that its shape is not in question. Uncertainty routes to `proto`. The two are a sequence rather than a choice: the ledger is what makes the later run cheap and correct.
+`yolo` is the expensive run and is entered deliberately: the human asks for it, or the contract is pinned down by an accepted ledger, an approved change, an approved plan, or a specified ticket. Adversarial review runs there, once, over the whole diff, so rounds of feedback in `iteration` never pay for it.
 
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. Only `openspec-explore`, `openspec-propose`, `openspec-update-change`, `openspec-verify-change`, `openspec-sync-specs` and `openspec-archive-change` are installed. `openspec-apply-change` is removed because the path to a pull request goes through `yolo`, which carries the oracle ladder, adversarial review, and the escalation contract. `openspec-new-change` and `openspec-continue-change` duplicate `openspec-propose` step by step, `openspec-ff-change` duplicates it outright, `openspec-bulk-archive-change` duplicates `land`, and `openspec-onboard` is a tutorial. Their descriptions loaded in every session and their bodies cost about 16k tokens when routed to. The hash-locked `openspec-propose` and `openspec-update-change` still suggest `/openspec-apply-change`, `/openspec-continue-change` and `/openspec-new-change`; they cannot be edited in place, so `AGENTS.md` states that implementation goes through `yolo` and those skills are not installed.
+The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. Only `openspec-explore`, `openspec-propose`, `openspec-update-change`, `openspec-verify-change`, `openspec-sync-specs` and `openspec-archive-change` are installed. `openspec-apply-change` is removed because implementation goes through `yolo`, which carries the checks, adversarial review, and `open-pr`. `openspec-new-change` and `openspec-continue-change` duplicate `openspec-propose` step by step, `openspec-ff-change` duplicates it outright, `openspec-bulk-archive-change` duplicates `land`, and `openspec-onboard` is a tutorial. Their descriptions loaded in every session and their bodies cost about 16k tokens when routed to. The hash-locked `openspec-propose` and `openspec-update-change` still suggest `/openspec-apply-change`, `/openspec-continue-change` and `/openspec-new-change`; they cannot be edited in place, so `AGENTS.md` states that implementation goes through `yolo` and those skills are not installed.
 
 `handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
 
@@ -108,7 +84,7 @@ Agent-initiated review is adversarial: `agent-review` carries both the protocol 
 
 Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `agent-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
 
-The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills and the caveman plugin are gone too: the plugin forced its own "full" chat mode at session start against the lite rule in `AGENTS.md`, and its `caveman-commit` skill existed only in Claude Code. `AGENTS.md` now states both rules itself, so every harness reads the same ones. The chat and commit rules in **Writing** and **Commit messages** adapt the useful parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef) at its "lite" level: the filler and hedging drop-list, short synonyms, exact quoting, the outcome-first pattern, the clarity exceptions for warnings and irreversible steps, and the commit subject and body rules. Its 72-column body wrap is left out, because **Writing** forbids hard wraps.
+The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills and the caveman plugin are gone too: the plugin forced its own "full" chat mode at session start against the lite rule in `AGENTS.md`, and its `caveman-commit` skill existed only in Claude Code. The shared harness now states both rules itself, so every harness reads the same ones. The chat rule in `AGENTS.md`'s **Writing** and the commit rules in `principle-write-for-the-reader` adapt the useful parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef) at its "lite" level: the filler and hedging drop-list, short synonyms, exact quoting, the outcome-first pattern, the clarity exceptions for warnings and irreversible steps, and the commit subject and body rules. Its 72-column body wrap is left out, because `AGENTS.md`'s **Writing** forbids hard wraps.
 
 ## Global versus project
 
@@ -118,7 +94,7 @@ This is what lets the same harness serve a large monorepo and a small side proje
 
 ## No orchestration layer
 
-A session already starts inside a worktree with an agent running, and the model can spawn subagents itself, so parallelism and supervision are prompt-level concerns. There is deliberately no scheduler, daemon, queue tool, or fan-out script here: the loop lives in `AGENTS.md` and the skills.
+Worktrees come from the `worktree` block (or `wty` by hand), and the model can spawn subagents itself, so parallelism and supervision are prompt-level concerns. There is deliberately no scheduler, daemon, queue tool, or fan-out script here: the loop lives in `AGENTS.md` and the skills.
 
 Where per-stream state is needed, worktrunk already provides it. CI and review state ride on its PR object (`ci.ci_status`, `ci.review_state`) via `wt list --full`; escalation and attempt counts live in its per-branch vars (`git config worktrunk.state.<branch>.vars.*`), which survive an agent restart because they are stored in `.git`. Vars are used rather than the activity marker, because a marker is rewritten on every prompt and would erase an escalation.
 
@@ -145,7 +121,7 @@ Review upstream changes before committing them, then update project skills with:
 npx skills@1 update --project --yes
 ```
 
-Neither command belongs in `setup.sh` or `sync.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping the herdr plugin ref.
+Neither command belongs in `setup.sh` or `sync.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping a pinned flake input.
 
 `skills list` reports a skill's agents from its own bookkeeping, so one added with `--agent universal` does not list Claude Code. That field is cosmetic here: both harnesses load the whole directory through the setup links, not per skill.
 

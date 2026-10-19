@@ -17,7 +17,7 @@ The item may be a bug, a feature request, a small adjustment, or a raw productio
 Steps:
 
 1. Parse the input.
-   - **Tracker item:** extract title, description, labels, and what is actually being asked. For a bug: expected vs actual, repro steps, errors and stack traces, affected component. For a feature or adjustment: the desired outcome and any constraints. If video transcripts are present, use the timestamped transcript as evidence; never try to fetch the video itself. Read every comment thread, per `AGENTS.md`: comments carry triage notes and suspected causes, and just as often requirements the description never had.
+   - **Tracker item:** extract title, description, labels, and what is actually being asked. For a bug: expected vs actual, repro steps, errors and stack traces, affected component. For a feature or adjustment: the desired outcome and any constraints. If video transcripts are present, use the timestamped transcript as evidence; never try to fetch the video itself. Read every comment thread, per `principle-read-the-whole-ticket`: comments carry triage notes and suspected causes, and just as often requirements the description never had.
 
    Blobs are fetched at most once, and only after the kill query says the work proceeds. Fetch an image (tracker `extract_images`, a screenshot attachment) only when the ticket's text refers to it as evidence, one call for exactly the images needed, never "all attachments". Immediately record what it showed in the evidence ledger, because that sentence is what every later step uses; the pixels are never re-fetched, re-read, or passed to a subagent.
    - **Production error signal** (an error-tracker issue, an alert, or an incident): start from the error tracker's issue search and issue detail, or the metrics platform's alert and incident history. Treat the stack trace or the firing query as the primary artifact, and establish frequency, first seen, and last seen before reading any code.
@@ -28,7 +28,7 @@ Steps:
 
 4. Investigate the relevant code to ground the analysis. Cite evidence as `path:line`. Delegate the code recon to native read-only subagents by default, so the file contents stay out of this context and only `path:line` plus mechanism come back; read directly only when the item already names the file. Then confirm or refute the root-cause hypothesis with at most two further evidence queries.
 
-5. Only now, if something load-bearing is still unresolved, stop and ask per the escalation contract in `AGENTS.md`. Most vague symptoms resolve into a stack trace and a `path:line`, so asking before investigating wastes a round trip. Batch every question into one stop, each carrying its evidence.
+5. Only now, if something load-bearing is still unresolved, stop and ask per `principle-decide-then-declare`. Most vague symptoms resolve into a stack trace and a `path:line`, so asking before investigating wastes a round trip. Batch every question into one stop, each carrying its evidence.
 
 6. Output:
    - **Summary**: one line, what the item asks plus your read of it.

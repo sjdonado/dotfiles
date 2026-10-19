@@ -29,3 +29,7 @@ None. This repository has no existing main specs; these deltas document intended
 Instruction changes target the new root AGENTS.md, agents/skills/harness-boostrap/SKILL.md, agents/AGENTS.md, and agents/skills/{proto,yolo,feedback,address-review,land}/SKILL.md. Benchmark changes target bench/measure, bench/test_measure.py, bench/README.md, and small scenario fixtures or findings under bench/. Existing directory links already expose shared skills (macos.sh:298-301 and linux.sh:338-341). No dependency, CI, auth, installer, production-service, or global-ignore changes are intended.
 
 Continue on feat/skill-based-agent-harness. Planning does not promote the prototype or authorize implementation during this turn. On approval, yolo consumes these artifacts, implements and verifies the accumulated work on the same branch, and leaves its PR open for human review. Preserve the unrelated edits to claude/settings.json and agents/skills/tldraw-offline/SKILL.md.
+
+## Superseded (2026-10-18)
+
+The `simplify-harness` change restructures the harness into principles, building blocks and thin workflows; its continuity rules that keep a `proto` note under the default branch key and rename it at `yolo` are superseded: every task starts in its own worktree, and the note rules live in `principle-state-outlives-the-session`. This change's PR merged; it stays unarchived until its open tasks are judged done or obsolete.
