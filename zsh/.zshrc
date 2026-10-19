@@ -29,8 +29,10 @@ path+=("$HOME/.local/bin" "$HOME/.opencode/bin" /opt/homebrew/bin /opt/homebrew/
 autoload -Uz compinit && compinit -u
 autoload -Uz bashcompinit && bashcompinit
 
-# Prompt: epoch seconds, the directory in green, the exit status in red when it is not 0.
-PROMPT='%D{%s} %F{green}%~%f%(?..%F{red}[%?]%f)> '
+# Prompt: epoch seconds, the directory (green on macOS, blue on Linux), the exit status in red when it is not 0.
+[[ $OSTYPE == darwin* ]] && _prompt_color=green || _prompt_color=blue
+PROMPT="%D{%s} %F{$_prompt_color}%~%f%(?..%F{red}[%?]%f)> "
+unset _prompt_color
 
 # History
 HISTFILE="$HOME/.zsh_history"
