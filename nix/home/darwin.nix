@@ -219,6 +219,19 @@ in
       ln -snf "$dir/bin/pss" "$HOME/.local/bin/pss"
     '';
 
+    # Claude Code and Codex from their own installers, not Nix: T3 Code's update button runs `claude update` or `codex update`, which only work on these installs. The switch installs whichever is missing and leaves the version to the tool, like the casks that update themselves. ~/.local/bin is on PATH first, so neither installer edits a shell profile.
+    agentClis = step "agent-clis" ''
+      export PATH="$HOME/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+      case "$(readlink -f "$HOME/.local/bin/claude" 2>/dev/null || true)" in
+        "$HOME"/.local/share/claude/*) ;;
+        *) echo "dotfiles: installing Claude Code"; curl -fsSL https://claude.ai/install.sh | bash >/dev/null ;;
+      esac
+      case "$(readlink -f "$HOME/.local/bin/codex" 2>/dev/null || true)" in
+        "$HOME"/.codex/packages/standalone/*) ;;
+        *) echo "dotfiles: installing Codex"; curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh >/dev/null ;;
+      esac
+    '';
+
     # The two agents macos.sh rendered under com.local.* are replaced by the ones above.
     retireOldAgents = step "retire-old-agents" ''
       for label in com.local.KeyRemapping com.local.TMExcludeDev; do

@@ -53,7 +53,7 @@ assert_config() {
   done
 
   group "setup steps"
-  for step in codexConfig batCache pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
+  for step in codexConfig batCache pss agentClis retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
     if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
   done
 
@@ -95,8 +95,12 @@ assert_config() {
 
   group "packages"
   echo "  info $(f '.packages | length') packages in the home profile"
-  for p in neovim opencode codex claude-code pi-coding-agent; do
+  for p in neovim opencode pi-coding-agent; do
     if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
+  done
+  # Installed by the agentClis step instead, so T3 Code can update them.
+  for p in codex claude-code; do
+    if f '.packages[]' | grep -q "^$p-[0-9]"; then bad "$p is a Nix package on macOS"; else ok "$p is not a Nix package on macOS"; fi
   done
 
 

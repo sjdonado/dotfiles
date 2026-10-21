@@ -108,10 +108,10 @@ mise tool	neovim	nixpkgs neovim	nix/home/common.nix	-
 mise tool	worktrunk	nixpkgs worktrunk	nix/home/common.nix	-
 mise tool	tree-sitter	nixpkgs tree-sitter	nix/home/common.nix	commented out in nix/home/common.nix (owner's decision, 2026-10-17)
 mise tool	@opencode/cli	nix/pkgs/opencode.nix	nix/home/common.nix	v2; nixpkgs has v1
-mise tool	@openai/codex	nix/pkgs/codex.nix	nix/home/common.nix	prebuilt; nixpkgs compiles it
+mise tool	@openai/codex	nix/pkgs/codex.nix on Linux, the agentClis step (Codex's installer) on macOS	nix/home/linux.nix, nix/home/darwin.nix	prebuilt; nixpkgs compiles it. On macOS it updates itself, so T3 Code can update it
 mise tool	@fission-ai/openspec	nixpkgs openspec	nix/home/common.nix	-
 mise tool	agent-browser	dropped	-	owner dropped it, 2026-10-17 (with its Chrome step, config link and the agent-browser and chrome-devtools MCP servers)
-installer	claude (native installer)	nix/pkgs/claude-code.nix on macOS, nixpkgs claude-code on Linux	nix/home/common.nix	unfree; the macOS build is Anthropic's release binary, pinned, so T3 Code does not flag it outdated
+installer	claude (native installer)	the agentClis step (Anthropic's installer) on macOS, nixpkgs claude-code on Linux	nix/home/darwin.nix, nix/home/linux.nix	unfree; on macOS it updates itself, so T3 Code can update it
 installer	go install air	nixpkgs air	nix/home/darwin.nix	was go install @latest
 installer	go install bootdev	nixpkgs bootdev-cli	nix/home/darwin.nix	was go install @latest
 installer	go install goose	nixpkgs goose	nix/home/darwin.nix	was go install @latest
@@ -137,7 +137,7 @@ cask	annotate	cask annotate	nix/darwin/homebrew.nix	-
 cask	icon-composer	cask icon-composer	nix/darwin/homebrew.nix	-
 cask	rockxy	cask rockxy	nix/darwin/homebrew.nix	-
 cask	driceroland/tap/search	dropped	-	owner dropped it, 2026-10-17
-cask	codex	nix/pkgs/codex.nix	nix/home/common.nix	the cask was the CLI; dropped for the Nix package
+cask	codex	nix/pkgs/codex.nix on Linux, the agentClis step on macOS	nix/home/linux.nix, nix/home/darwin.nix	the cask was the CLI; dropped for the Nix package on Linux and Codex's own installer on macOS
 formula	oven-sh/bun/bun	nixpkgs bun	nix/home/common.nix	undeclared tap install; bun was also a mise tool
 installer	herdr (curl, Linux)	dropped	-	owner dropped it, 2026-10-18
 installer	pss-sync (mise task)	flake input pss	nix/home/common.nix	activation step pss

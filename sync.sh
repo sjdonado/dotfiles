@@ -173,11 +173,13 @@ check_macos() {
   [ -n "$(echo "$zsh_env" | cut -d'|' -f3)" ] && ok "zsh finds brew" || bad "zsh cannot find brew"
   case ":$(echo "$zsh_env" | cut -d'|' -f4):" in *":$HOME/.local/bin:"*) ok "zsh has ~/.local/bin on PATH" ;; *) bad "zsh lacks ~/.local/bin on PATH" ;; esac
 
-  group "agents come from Nix"
-  # GUI apps look in ~/.local/bin with the PATH they launched with, so both the PATH lookup and that directory have to reach the Nix build, not a curl-installed copy.
-  for c in claude codex; do
-    case "$(readlink -f "$(command -v "$c")")" in /nix/store/*) ok "$c on PATH is the Nix build" ;; *) bad "$c on PATH resolves to $(readlink -f "$(command -v "$c")")" ;; esac
-    case "$(readlink -f "$HOME/.local/bin/$c")" in /nix/store/*) ok "~/.local/bin/$c is the Nix build" ;; *) bad "~/.local/bin/$c resolves to $(readlink -f "$HOME/.local/bin/$c" 2>&1)" ;; esac
+  group "agents update themselves"
+  # T3 Code's update button runs `claude update` or `codex update`, which work only on the vendors' own installs; GUI apps look in ~/.local/bin, so the PATH lookup and that directory both have to reach them.
+  for c in claude:"$HOME/.local/share/claude/" codex:"$HOME/.codex/packages/standalone/"; do
+    name=${c%%:*} home=${c#*:}
+    case "$(readlink -f "$(command -v "$name")")" in "$home"*) ok "$name on PATH is its own install" ;; *) bad "$name on PATH resolves to $(readlink -f "$(command -v "$name")"), not under $home" ;; esac
+    case "$(readlink -f "$HOME/.local/bin/$name")" in "$home"*) ok "~/.local/bin/$name is its own install" ;; *) bad "~/.local/bin/$name resolves to $(readlink -f "$HOME/.local/bin/$name" 2>&1), not under $home" ;; esac
+    if v=$("$HOME/.local/bin/$name" --version 2>&1 </dev/null); then ok "$name runs: $(printf '%s' "$v" | head -1 | cut -c1-50)"; else bad "$name does not run: $(printf '%s' "$v" | head -1 | cut -c1-80)"; fi
   done
 }
 
