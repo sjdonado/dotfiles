@@ -57,6 +57,47 @@ At any point `principle-stop-at-the-rabbit-hole` can stop a run, and touching a 
 
 ## Three kinds of skill
 
+```mermaid
+flowchart LR
+  policy["AGENTS.md<br/>routing + boundaries"]
+
+  subgraph W[Workflows]
+    iteration --> poc --> yolo
+    iteration --> yolo
+    after["feedback · address-review · land"]
+    ro["ask · research · triage · grill-me"]
+  end
+
+  subgraph B[Building blocks]
+    wt[worktree]
+    ship["verification → agent-review → open-pr"]
+    ev[evidence]
+    misc["git-bug · handoff"]
+  end
+
+  pp["principle-*<br/>one rule each"]
+
+  policy --> W
+  policy --> B
+  iteration --> wt
+  yolo --> ship
+  after --> ship
+  ro --> ev
+  W -.->|named at the step| pp
+  B -.-> pp
+
+  classDef policyC fill:#fde68a,stroke:#b45309,color:#1f2937
+  classDef workflowC fill:#bfdbfe,stroke:#1d4ed8,color:#1f2937
+  classDef blockC fill:#bbf7d0,stroke:#15803d,color:#1f2937
+  classDef principleC fill:#e9d5ff,stroke:#7e22ce,color:#1f2937
+  class policy policyC
+  class iteration,poc,yolo,after,ro workflowC
+  class wt,ship,ev,misc blockC
+  class pp principleC
+  style W fill:#eff6ff,stroke:#1d4ed8
+  style B fill:#f0fdf4,stroke:#15803d
+```
+
 - **Principles** (`principle-*`): one rule each, whose description and first line say they are not workflows. A workflow names the principle at the step that needs it and the agent loads it, by path or as a skill. They carry no `disable-model-invocation` key, which this repository's frontmatter check (the Codex skill validator) rejects.
 - **Building blocks**: one reusable step each, entered from a workflow or directly: `worktree`, `verification`, `agent-review`, `open-pr`, `git-bug`, `evidence`, `handoff`.
 - **Workflows**: entry rule, ordered steps naming principles and blocks, and exit states: `iteration`, `poc`, `yolo`, `feedback`, `address-review`, `land`, `ask`, `research`, `triage`, `grill-me`, `create-ticket`, `harness-audit`, `harness-boostrap`.
