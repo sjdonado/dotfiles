@@ -55,7 +55,7 @@ turns:
   - prompt: 'A user whose profile name is three spaces sees "Settings for Guest" on the settings page, not their name and not an error. Why does that happen, and where does "Guest" come from?'
     expect:
       skills: ['ask']
-      notSkills: ['proto', 'yolo']
+      notSkills: ['iteration', 'yolo']
       notRan: ['git (commit|push|checkout|switch|stash|reset)', '\bgh\b']
       branch: '^main$'
       committed: false

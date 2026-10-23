@@ -62,7 +62,7 @@ For each finding, exactly one of:
 
 - **Fix it.** Resolve the finding without dropping agreed behavior or verification.
 - **Reject it.** With a specific reason, recorded in the PR body under `Rejected review findings`. A rejection you cannot justify in one line is a fix you are avoiding.
-- **Escalate it.** If it is a product decision, follow the escalation contract in `AGENTS.md`.
+- **Escalate it.** If it is a product decision, escalate it per `principle-decide-then-declare`.
 
 Fix a `nit:` only when the fix is smaller than the argument.
 

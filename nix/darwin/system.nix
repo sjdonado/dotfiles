@@ -19,12 +19,13 @@
     trusted-users = [ "root" ] ++ users;
   };
 
-  # zsh is every account's login shell: macOS ships it, so no login depends on the Nix store. nix-darwin puts the Nix profiles on its PATH for every zsh, login or not, through /etc/zshenv; ~/.local/bin (this repository's scripts, pss) goes after them, so a binary an old installer left there cannot shadow a declared one.
+  # zsh is every account's login shell: macOS ships it, so no login depends on the Nix store. nix-darwin puts the Nix profiles on its PATH for every zsh, login or not, through /etc/zshenv.
   programs.zsh.enable = true;
   # /etc/zshrc would run compinit, which prompts in every account that does not own Homebrew's completion directories (they belong to the primary account). zsh/.zshrc runs it instead, accepting directories another admin account owns.
   programs.zsh.enableGlobalCompInit = false;
   programs.zsh.enableBashCompletion = false;
-  programs.zsh.shellInit = ''
+  # ~/.local/bin (this repository's scripts, pss, Claude Code and Codex) goes after the Nix profiles, so nothing there shadows a declared tool. In the environment every zsh and bash reads, not only zsh's, since some tools run commands in a login bash.
+  environment.extraInit = ''
     case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$PATH:$HOME/.local/bin" ;; esac
   '';
 

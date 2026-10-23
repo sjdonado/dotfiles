@@ -1,8 +1,8 @@
 // Runs scenarios/*.yaml end to end against real Pi sessions. Bun, no packages. Only --run is paid.
-import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 const ROOT = import.meta.dir, REPO = resolve(ROOT, "..");
 const TURN_TIMEOUT_MS = 600_000;
@@ -79,10 +79,8 @@ function setup(workdir: string, cmds: string[] | undefined, env: Record<string, 
 }
 
 function environment(workdir: string, extra: Record<string, string> = {}) {
-  const env: Record<string, string | undefined> = { ...process.env, ...extra, PATH: `${join(workdir, ".fixture/bin")}:${process.env.PATH ?? ""}`,
+  return { ...process.env, ...extra, PATH: `${join(workdir, ".fixture/bin")}:${process.env.PATH ?? ""}`,
     GH_HOST: "example.invalid", GH_TOKEN: "eval-no-real-token", GITHUB_TOKEN: "eval-no-real-token" };
-  delete env.HERDR_ENV; // Sessions run outside herdr; never advertise a live workspace.
-  return env;
 }
 
 function parse(jsonl: string) {
@@ -232,7 +230,15 @@ async function main(args = process.argv.slice(2)) {
       row.status = "error"; row.error = String(error);
       console.log(`ERROR ${model.label} :: ${name} ${error}`);
     } finally {
-      if (paid) cpSync(workdir, join(attempt, "repo"), { recursive: true });
+      // Task worktrees are siblings of the seed checkout (../<repo>.<branch>): keep them with the evidence, then remove them.
+      const seed = existsSync(workdir) ? realpathSync(workdir) : "";
+      const siblings = seed ? sh(workdir, ["git", "worktree", "list", "--porcelain"]).out.split("\n")
+        .filter(l => l.startsWith("worktree ")).map(l => l.slice(9)).filter(p => p !== seed && existsSync(p)) : [];
+      if (paid) {
+        cpSync(workdir, join(attempt, "repo"), { recursive: true });
+        for (const p of siblings) cpSync(p, join(attempt, "worktrees", basename(p)), { recursive: true });
+      }
+      for (const p of siblings) rmSync(p, { recursive: true, force: true });
       rmSync(workdir, { recursive: true, force: true });
       save(join(attempt, "result.json"), row);
       rows.push(row);

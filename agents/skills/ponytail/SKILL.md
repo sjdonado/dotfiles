@@ -12,7 +12,7 @@ code is the code never written.
 
 ## Activation
 
-Automatic activation is owned by the shared AGENTS.md rule for Reviewer B and address-review code repair. Otherwise use this skill only for an explicit user request. Apply the ladder to code, not requirements discovery or planning. Default to **full**; `/ponytail lite|full|ultra` selects intensity, and "stop ponytail" or "normal mode" disables explicit activation.
+Automatic activation is owned by the shared policy's Reviews rule for Reviewer B and address-review code repair. Otherwise use this skill only for an explicit user request. Apply the ladder to code, not requirements discovery or planning. Default to **full**; `/ponytail lite|full|ultra` selects intensity, and "stop ponytail" or "normal mode" disables explicit activation.
 
 ## The ladder
 
@@ -77,7 +77,7 @@ Hardware is never the ideal on paper: a real clock drifts, a real sensor
 reads off, a PCA9685 runs a few percent fast. Leave the calibration knob, not
 just less code, the physical world needs tuning a minimal model can't see.
 
-Lazy code without its check is unfinished. Reuse the project's test infrastructure and required oracle ladder. Which tests to write, and when, follows **Writing tests** in `AGENTS.md`. Add neither a framework nor a large fixture for a small regression, but do not remove coverage required by the contract or risk.
+Lazy code without its check is unfinished. Reuse the project's test infrastructure and required oracle ladder. Which tests to write, and when, follows `principle-test-agreed-decisions`. Add neither a framework nor a large fixture for a small regression, but do not remove coverage required by the contract or risk.
 
 ## Boundaries
 

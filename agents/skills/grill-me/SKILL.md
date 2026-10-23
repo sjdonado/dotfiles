@@ -36,7 +36,7 @@ No human in the loop. Use this when a workflow needs its own approach pressure-t
 1. **List the assumptions** the approach depends on, ranked by consequence.
 2. **Resolve what you can**, in this order: search the repository for precedent; check history for whether this was tried before; load and follow the `evidence` skill for any claim about runtime behavior, impact, or frequency. Most open questions die here, because they were answerable and nobody looked.
 3. **Kill the plan if it deserves it.** If evidence refutes the premise, say so and stop. That is a success, not a failure.
-4. **Present only survivors**, in one batch, each carrying the decision, what you already checked and what it ruled out, the options with consequences, your default, and the cost if the default is wrong. Per the escalation contract in `AGENTS.md`, if three or fewer read-only actions would settle a question, take them instead of asking it.
+4. **Present only survivors**, in one batch, each carrying the decision, what you already checked and what it ruled out, the options with consequences, your default, and the cost if the default is wrong. Per `principle-decide-then-declare`, if three or fewer read-only actions would settle a question, take them instead of asking it.
 
 A self-grill that produces a long question list did not do step 2.
 

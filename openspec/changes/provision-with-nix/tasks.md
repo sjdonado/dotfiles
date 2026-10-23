@@ -87,4 +87,4 @@
   - 2026-10-18: shipped in 828a0e8; `verify/macos.sh` 53/0. The Linux check and the host check after the sync are 10.5.
 - [ ] 10.5 Run `sync.sh` from the primary account, which switches and checks every account
 - [ ] 10.6 Replace `macos.sh` and `linux.sh` with `setup.sh` (platform from `uname`, `--macos`/`--linux` to force it), and `verify/macos-host.sh` and the Linux check's assertions with `sync.sh`, which switches and then checks; `verify/linux.sh` provisions with `setup.sh` and checks with `sync.sh`
-
+- [ ] 10.7 Remove herdr from the setup (its directory, the commented steps and link, the Claude hook, the OpenCode plugin entry) and the ngrok cask; add the notion cask. The harness's herdr rules leave with the separate simplify-harness change

@@ -1,0 +1,77 @@
+description: 'A request that asks for a PR with part of its scope open stays an iteration in its own worktree: the slice lands in the sibling worktree, nothing is committed, pushed or opened, and the open question is asked.'
+skills: ['iteration', 'worktree']
+
+setup:
+  - 'git remote set-head origin main'
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
+
+    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text;
+    }
+  'pages/settings.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderSettings(name: string): string {
+      return `<h1>Settings for ${label(name)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderHome(name: string): string {
+      return `<h1>Welcome${label(name) ? `, ${label(name)}` : ""}</h1>`;
+    }
+  'check.ts': |
+    import assert from "node:assert";
+    import { renderHome } from "./pages/home.ts";
+    import { renderSettings } from "./pages/settings.ts";
+
+    assert.equal(renderSettings("Ada"), "<h1>Settings for Ada</h1>");
+    assert.equal(renderHome("Ada"), "<h1>Welcome, Ada</h1>");
+    console.log("check passed");
+
+turns:
+  - prompt: 'Collapse runs of whitespace in names on the settings page and keep their casing, then open a PR. Also do something about blank names, though I have not decided what they should show. Use the branch fix/settings-names.'
+    expect:
+      skills: ['iteration', 'worktree']
+      notSkills: ['yolo', 'open-pr']
+      ran: ['wt switch --create']
+      notRan:
+        - 'git (commit|push)'
+        - 'git (checkout -b|switch -c|branch [^-\s])'
+        - 'git worktree add'
+        - '\bgh pr (create|merge|edit|comment|review)\b'
+      branch: '^main$'
+      committed: false
+      clean: true
+      check:
+        - 'git diff --quiet "$SEED"'
+        - 'test "$(git rev-parse main)" = "$SEED"'
+        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
+        - 'test ! -e .agent/main.md'
+        - 'git rev-parse --verify -q refs/heads/fix/settings-names'
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" branch --show-current)" = fix/settings-names
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$W" != "$(git rev-parse --show-toplevel)" && test "$(dirname "$W")" = "$(dirname "$(git rev-parse --show-toplevel)")"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && files="$({ git ls-files --others --exclude-standard; git diff --name-only "$SEED"; })"; ! printf "%s\n" "$files" | grep -qE "\.(test|spec)\.|(^|/)(__tests__|tests?)/" && test -z "$(printf "%s\n" "$files" | grep -vE "^(components|pages)/|^$")"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada \\t  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; f="$W/.agent/fix%2Fsettings-names.md"; grep -q Purpose "$f" && grep -q 'End state' "$f" && grep -q 'Key tasks' "$f" && grep -q '\[[ x]\]' "$W/.agent/fix%2Fsettings-names.tasks.md"
+      reply: ['blank', '\?']
+      pr: false

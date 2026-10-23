@@ -40,7 +40,7 @@ Report a kill result loudly. "Zero occurrences in 30 days" outranks any amount o
 
 ## Source map, by capability
 
-Name tools as server plus bare tool name, per `AGENTS.md`. Skip a capability entirely when the project has none configured; that is a normal state, not a blocker.
+Name tools as server plus bare tool name, per the shared policy. Skip a capability entirely when the project has none configured; that is a normal state, not a blocker.
 
 - **Error tracking.** Issue search for frequency, first seen, and last seen. Event aggregation for counts grouped by release or environment, and for timeseries. Issue detail for the stack. Automated root-cause analysis is a **hypothesis to verify in code**, never a finding on its own.
 - **Product analytics.** Affected-person counts and funnel step conversion. Session replays when the claim is about what a user actually saw or did; one replay confirming the reproduction outranks inference from event counts. Respect the project's test-account filtering. Where person properties are recorded at ingest time rather than queried live, never write a query whose conclusion depends on a person's current property value.

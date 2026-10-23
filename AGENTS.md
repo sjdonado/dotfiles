@@ -4,7 +4,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 ## Where things live
 
-- agents/skills/: reusable skill entry points and their supporting resources.
+- agents/skills/: reusable skills in three kinds: `principle-*` (one rule each, never entered as a workflow), building blocks (one step each: worktree, verification, agent-review, open-pr, git-bug), and workflows that compose them (iteration, poc, yolo, feedback and the rest). agents/README.md explains the layers and the stages.
 - agents/AGENTS.md: shared workflow conventions, linked into each harness by the switch (nix/home/common.nix).
 - evals/: end-to-end harness evals. Each scenarios/*.yaml is one real multi-turn session: the seed repository files, then turns of a prompt and its expected behavior (skills read, commands run, branch and push state, shell checks, files, PR fields). Each scenario names the skills it exercises; `bun evals/run.ts --run` runs only the core scenarios, `--skill <name>` the ones for one skill, `--all` everything. run.ts is the only code that interprets them; models.json lists the models. Results under results-*/ are ignored. Everything is YAML, JSON or Bun TypeScript: no Python, no per-scenario check code, and no tests of the runner. When a scenario needs logic the expectation keys cannot express, prefer a shell `check` over a new key.
 - openspec/changes/: proposed contracts and implementation tasks. Main specs describe merged work only.
@@ -18,7 +18,7 @@ Mechanical stretches go to a subagent one tier below the orchestrator: the `veri
 
 ## Updating the harness
 
-Start from an observed failure and name the decision that should change. Trace every instruction that can control that decision before editing: shared invariants belong once in agents/AGENTS.md, workflow-specific procedure belongs in the owning agents/skills/<name>/SKILL.md, and repository commands or paths belong here. Replace conflicting guidance at its source instead of appending a later exception. Search for stale variants after the edit.
+Start from an observed failure and name the decision that should change. Trace every instruction that can control that decision before editing: rules that must hold on every turn belong once in agents/AGENTS.md, a rule a step applies belongs in its `principle-*` skill, a reusable step in its building block, workflow-specific procedure in the owning workflow's SKILL.md, and repository commands or paths here. Replace conflicting guidance at its source instead of appending a later exception. Search for stale variants after the edit.
 
 Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
 
@@ -41,7 +41,7 @@ This is a different question from verifying a harness change, and the two are no
 **Why it is checkable at all.** Provisioning is one declaration, applied by one command per platform, so a machine is reproduced rather than accumulated:
 
 - **Everything is declared, nothing is scripted.** flake.nix and nix/ list every package, cask, link, macOS setting and setup step, and flake.lock pins every input, Homebrew and its taps included. Adding a tool is a line in a package list; upgrading is `sync.sh --upgrade`, which updates the pins, switches and checks. Items the declaration cannot own are named in README.md ("Manual steps"), and openspec/changes/provision-with-nix/coverage.tsv maps every item the workspace had before Nix to its declared source.
-- **A switch is idempotent.** home-manager and nix-darwin compute the result from the declaration, so a second switch with no change keeps the same generation, writes no backup file and duplicates no shell block. Setup steps that are not packages (herdr integrations and plugins, the codex config merge, the bat cache) are activation steps that check their own state before acting.
+- **A switch is idempotent.** home-manager and nix-darwin compute the result from the declaration, so a second switch with no change keeps the same generation, writes no backup file and duplicates no shell block. Setup steps that are not packages (the codex config merge, BrowserRouter's registration) are activation steps that check their own state before acting.
 - **Removal is part of provisioning.** A link or package dropped from the declaration is removed by the next switch, and on macOS so are Homebrew formulas and casks the declaration does not list.
 - **A failed step costs one step, not the switch.** Each setup step that reaches the network or a running server reports its own failure or skip by name and lets the others run.
 
@@ -51,7 +51,7 @@ This is a different question from verifying a harness change, and the two are no
 - `verify/macos.sh` evaluates the darwin configuration and asserts every link, step, launch agent, setting and Homebrew item it would apply. With Nix on this Mac it builds the system without activating it, otherwise it runs in a container; either way it checks every package of the macOS and Linux profiles is available, prebuilt on cache.nixos.org and collision-free.
 - `sync.sh --check` asserts this machine after a switch: declared tools run, links resolve into this repository, settings hold, and non-interactive shells find the tools. It is read-only; the switch itself is the change, and `darwin-rebuild switch --rollback` undoes it. On macOS, from the primary account it checks every listed account.
 
-**What the assertions look for**: every tool answers its version command (or, for a language server without one, an LSP initialize request) rather than merely existing on PATH; every tracked config resolves through `readlink -f` to the file in this repository, so a copy with matching contents fails; non-interactive shells find the tools, which is what an agent hook or a herdr pane gets; and a step that was skipped says so, because a silent skip is indistinguishable from a step that worked.
+**What the assertions look for**: every tool answers its version command (or, for a language server without one, an LSP initialize request) rather than merely existing on PATH; every tracked config resolves through `readlink -f` to the file in this repository, so a copy with matching contents fails; non-interactive shells find the tools, which is what an agent hook or an editor's terminal gets; and a step that was skipped says so, because a silent skip is indistinguishable from a step that worked.
 
 Run the check for the platform the change touches, both when it touches both, and report the counts. A green run is evidence; a change to the declaration with no run behind it is unverified, however obviously correct it reads.
 

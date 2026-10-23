@@ -38,7 +38,7 @@ The repository is the source of truth. Configs reach it through live links, and 
   - Removing works the same way: the sync uninstalls Homebrew formulas and casks the file does not list (`cleanup = "uninstall"`), but never deletes their app data.
 - Do not run `brew install` or `brew tap` by hand, from any account. Homebrew has one writer: the sync, which runs `brew` as the primary user, who owns `/opt/homebrew`. A formula installed by hand is uninstalled by the next sync, the taps are a read-only link to the pinned inputs, and `brew update` is disabled.
 - Upgrade with `~/.config/dotfiles/sync.sh --upgrade` and commit the `flake.lock` diff.
-- Files Nix builds, such as `~/.local/bin/claude` and `~/.local/bin/codex`, change only through `nix/` and a sync.
+- Files Nix builds change only through `nix/` and a sync. `~/.local/bin/claude` and `~/.local/bin/codex` are the exception: their own installers put them there and they update themselves (T3 Code's update button runs `claude update` and `codex update`); the sync only installs whichever is missing.
 - An app that saves by replacing a file (an atomic save) turns its link into a regular file, which then stops tracking the repository. `sync.sh --check` reports it as "is not a link", and the next sync restores the link and keeps the replaced file as `<path>.pre-nix`.
 
 ### More than one account on a Mac
@@ -56,7 +56,7 @@ zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`,
 
 ### Tool versions
 
-`flake.lock` pins every input, so two machines switched from the same commit get the same versions. Most tools come from nixpkgs-unstable. Three come from their upstream release binaries, in `nix/pkgs/`: OpenCode, because nixpkgs still has v1; Codex, because nixpkgs builds it from source; and Claude Code on macOS, because nixpkgs trails its releases and T3 Code flags an older version as outdated (Linux uses nixpkgs). Two macOS tools come from Homebrew formulas, because nixpkgs lacks them: `browser-router` and `cliclick`. `gcloud-cli`'s six formula dependencies are listed too, because cleanup keeps the dependencies of listed formulas but not of casks. Homebrew itself is pinned by nix-homebrew, and every tap is a flake input, so a cask version moves only when `flake.lock` does. The exception is casks that update themselves (1Password, Chrome, Slack, Zed): they can move ahead of the pin between switches.
+`flake.lock` pins every input, so two machines switched from the same commit get the same versions. Most tools come from nixpkgs-unstable. OpenCode comes from its upstream release binary, in `nix/pkgs/`, because nixpkgs still has v1. Claude Code and Codex are not pinned: the sync runs their own installers once and they update themselves, so T3 Code can update them. Two macOS tools come from Homebrew formulas, because nixpkgs lacks them: `browser-router` and `cliclick`. `gcloud-cli`'s six formula dependencies are listed too, because cleanup keeps the dependencies of listed formulas but not of casks. Homebrew itself is pinned by nix-homebrew, and every tap is a flake input, so a cask version moves only when `flake.lock` does. The exception is casks that update themselves (1Password, Chrome, Slack, Zed): they can move ahead of the pin between switches.
 
 Homebrew kept some versions off PATH (keg-only) because they share command names with the default version. Those are linked under `~/.local/opt/` instead: `jdk11`, `jdk17`, `llvm`, `openssl-4`, `zig-0_15`. GNU tools that would shadow the macOS ones keep Homebrew's names: `gsed`, `gawk`, the `g`-prefixed coreutils, and `telnet` alone from inetutils.
 
@@ -76,14 +76,14 @@ The sync cannot do these. Everything else is declared.
 
 OpenCode is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the sync links the managed configuration into each harness.
 
-Authenticate OpenCode's provider with `/connect` or the CLI. The two configured MCP servers (ios-simulator, git-bug) start automatically; authenticate any server that requires it:
+Authenticate OpenCode's provider with `/connect` or the CLI. The configured MCP server (ios-simulator) starts automatically; authenticate any server that requires it:
 
 ```sh
 opencode auth login
 opencode mcp auth <server>
 ```
 
-OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and both MCP servers enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
+OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and the ios-simulator MCP server enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
 
 Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
 
@@ -91,7 +91,7 @@ When experimenting with Codex, select the built-in `ansi` syntax theme with `/th
 
 ### Text editor
 
-The editor is Zed, used with T3 Code. Neovim is installed plain, without `nvim/`, as `$EDITOR` for git. The full Neovim setup (the configuration in `nvim/`, its language servers and formatters, lazygit and tree-sitter) and herdr (`herdr/`) are commented out in `nix/home/common.nix`, ready to restore by uncommenting them and syncing.
+The editor is Zed, used with T3 Code. Neovim is installed plain, without `nvim/`, as `$EDITOR` for git. The full Neovim setup (the configuration in `nvim/`, its language servers and formatters, lazygit and tree-sitter) is commented out in `nix/home/common.nix`, ready to restore by uncommenting it and syncing.
 
 ### Default browser
 
@@ -104,54 +104,6 @@ Making it the *default* browser is a system prompt, and so is letting it control
 ```sh
 open ~/Applications/BrowserRouter.app
 ```
-
-### Footprint
-
-These resident-memory (RSS) readings illustrate a workload, not a fixed per-agent RAM requirement or a benchmark of the current version:
-
-| process | RSS at the snapshot |
-| ----------------- | -------------------------------- |
-| `opencode` | 164-684 MiB each, four processes |
-
-Disk usage and RAM usage are different budgets. OpenCode uses a shared server and separate clients, so process count is not the number of agent streams. MCP processes, browsers and project dev servers add their own resource use.
-
-Inspect current resident memory without dumping process arguments or environments:
-
-```sh
-ps -Ao pid,ppid,rss,comm
-```
-
-The RSS column from `ps` is in KiB; divide by 1024 for MiB.
-
-RSS can count shared pages in more than one process, so adding rows does not establish unique physical memory usage. Measure your active workload rather than assuming a fixed per-agent RAM cost.
-
-Use these rounded disk sizes as approximate guidance. Installed versions, history and caches change with use; package figures exclude old installations and package-manager caches.
-
-| component | approximate on-disk size |
-| ---------------------------------------------- | ---------------- |
-| neovim | ~40 MiB |
-| worktrunk | ~50 MiB |
-| opencode | ~200 MiB |
-| `~/.local/share/opencode` | ~9 GiB, growing with conversation history |
-
-Inspect installed package sizes with `nix path-info` and state sizes with `du` (its output is in KiB):
-
-```sh
-for tool in opencode nvim wt; do
-  nix path-info -Sh "$(readlink -f "$(command -v "$tool")" | cut -d/ -f1-4)"
-done
-du -sk "$HOME/.local/share/opencode" "$HOME/.cache/opencode"
-```
-
-OpenCode's data directory includes its conversation database, not just disposable caches. Do not delete the database, its WAL/SHM files, authentication files or service registration to reclaim space. Back up persistent state before investigating database growth; plan cache cleanup separately from history retention. Troubleshooting reference: https://opencode.ai/v2/docs/troubleshooting
-
-### Capacity planning
-
-Budget RAM for the shared OpenCode server, its clients, enabled MCP servers, the editor, and project processes. Measure the workload you run rather than deriving a stream limit from one RSS snapshot.
-
-Budget disk per repository and its dependencies. Worktrees add another checkout and dependency tree. `wt step copy-ignored` uses APFS clonefile, which can share physical storage until files change; filesystem sharing means per-directory `du` totals are not always additive.
-
-The default OpenAI model runs remotely, so local inference is not part of this setup's resource budget. Local builds, tests, dev servers, and MCP tools still need their own CPU and memory allowance.
 
 ### Happy hacking!
 
