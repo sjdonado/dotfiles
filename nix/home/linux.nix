@@ -10,8 +10,15 @@ let
     if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
     fi
-    # After the Nix profile, so nothing in ~/.local/bin (this repository's scripts, Claude Code and Codex) shadows a declared tool.
-    case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$PATH:$HOME/.local/bin" ;; esac
+    # ~/.local/bin (this repository's scripts, Claude Code and Codex) right after the Nix profiles: behind them, so nothing there shadows a declared tool, and ahead of the system directories, where a base image may ship its own claude (Coder's has one in /usr/local/bin) that would hide the self-updating install.
+    _path=$(printf '%s' "$PATH" | ${pkgs.gawk}/bin/awk -v lb="$HOME/.local/bin" -v home="$HOME" 'BEGIN { RS = ":" }
+      { sub(/\n$/, "") }
+      $0 == lb || $0 == "" { next }
+      !done && $0 !~ /^\/nix\// && index($0, home "/.nix-profile/") != 1 && index($0, home "/.local/state/nix/") != 1 { out = out sep lb; sep = ":"; done = 1 }
+      { out = out sep $0; sep = ":" }
+      END { if (!done) out = out sep lb; printf "%s", out }')
+    [ -n "$_path" ] && export PATH="$_path"
+    unset _path
   '';
   # Coder injects a git identity into every process it spawns, and env beats ~/.gitconfig. GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
   identity = ''
