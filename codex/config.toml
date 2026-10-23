@@ -14,9 +14,8 @@ model = "gpt-5.6-sol"
 personality = "pragmatic"
 model_reasoning_effort = "medium"
 approvals_reviewer = "user"
-# Nix installs Codex (nix/pkgs/codex.nix), so its own updater would guess the wrong
-# package manager; bump the version there and switch instead.
-check_for_update_on_startup = false
+# Codex's own installer installs it (the agentClis step), so its updater works.
+check_for_update_on_startup = true
 
 [tui]
 theme = "ansi"

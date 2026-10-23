@@ -5,13 +5,12 @@
 # The login shell stays POSIX: Coder runs its agent and metadata scripts through it, so interactive terminals exec into zsh instead, which runs zsh/.zshrc, the same interactive setup macOS uses.
 { pkgs, ... }:
 let
-  codex = pkgs.callPackage ../pkgs/codex.nix { }; # prebuilt; nixpkgs compiles it
   environment = ''
     # dotfiles: tools on PATH. The Nix profile comes from the daemon's profile script, which /etc/profile only runs for login shells.
     if [ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
     fi
-    # After the Nix profile, so a binary an old installer left in ~/.local/bin (claude's did) cannot shadow the declared one. This repository's own scripts there have names nothing else uses.
+    # After the Nix profile, so nothing in ~/.local/bin (this repository's scripts, Claude Code and Codex) shadows a declared tool.
     case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$PATH:$HOME/.local/bin" ;; esac
   '';
   # Coder injects a git identity into every process it spawns, and env beats ~/.gitconfig. GIT_ASKPASS and GIT_SSH_COMMAND stay: those are how Coder brokers git auth.
@@ -39,14 +38,7 @@ in
   home.packages = [
     (pkgs.python3.withPackages (ps: [ ps.pip ]))
     pkgs.wget
-    # macOS installs these with their own installers instead, so T3 Code can update them (nix/home/darwin.nix).
-    pkgs.claude-code
-    codex
   ];
-
-  # GUI apps (T3 Code, Zed) keep the PATH they launched with and look for the agents in ~/.local/bin, where the curl installers put them. These links make that path the Nix build too. Forced: home-manager backs up files but refuses to replace a foreign symlink, which is what a curl installer leaves there.
-  home.file.".local/bin/claude" = { source = "${pkgs.claude-code}/bin/claude"; force = true; };
-  home.file.".local/bin/codex" = { source = "${codex}/bin/codex"; force = true; };
 
   programs.bash = {
     enable = true;

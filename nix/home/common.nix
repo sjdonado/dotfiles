@@ -55,7 +55,7 @@ in
     pnpm
     uv
 
-    # Agent harnesses and their tools. Claude Code and Codex are per platform: nix/home/linux.nix and nix/home/darwin.nix.
+    # Agent harnesses and their tools. Claude Code and Codex are not packages: the agentClis step installs them.
     (callPackage ../pkgs/opencode.nix { }) # v2; nixpkgs still has v1
     openspec
 
@@ -111,6 +111,19 @@ in
   // liveEach "bat/themes" "bat/themes";
 
   home.activation = {
+    # Claude Code and Codex from their own installers, not Nix: T3 Code's update button runs `claude update` or `codex update`, which only work on these installs, and GUI apps look for them in ~/.local/bin, where both installers link them. The switch installs whichever is missing and leaves the version to the tool. ~/.local/bin is on PATH first, so neither installer edits a shell profile; the Nix tools after the system's fill what a bare Linux box lacks.
+    agentClis = step "agent-clis" ''
+      export PATH="$HOME/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${lib.makeBinPath (with pkgs; [ curl coreutils gnutar gzip gawk gnused gnugrep findutils jq zstd bash ])}"
+      case "$(readlink -f "$HOME/.local/bin/claude" 2>/dev/null || true)" in
+        "$HOME"/.local/share/claude/*) ;;
+        *) echo "dotfiles: installing Claude Code"; curl -fsSL https://claude.ai/install.sh | bash >/dev/null ;;
+      esac
+      case "$(readlink -f "$HOME/.local/bin/codex" 2>/dev/null || true)" in
+        "$HOME"/.codex/packages/standalone/*) ;;
+        *) echo "dotfiles: installing Codex"; curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 sh >/dev/null ;;
+      esac
+    '';
+
     # Codex owns ~/.codex/config.toml and rewrites it as you work, so only the shareable keys are tracked and merged in.
     codexConfig = step "codex-config" ''
       ${binPath [ pkgs.python3 ]}

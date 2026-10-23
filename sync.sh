@@ -173,6 +173,10 @@ check_macos() {
   [ -n "$(echo "$zsh_env" | cut -d'|' -f3)" ] && ok "zsh finds brew" || bad "zsh cannot find brew"
   case ":$(echo "$zsh_env" | cut -d'|' -f4):" in *":$HOME/.local/bin:"*) ok "zsh has ~/.local/bin on PATH" ;; *) bad "zsh lacks ~/.local/bin on PATH" ;; esac
 
+  check_agents
+}
+
+check_agents() {
   group "agents update themselves"
   # T3 Code's update button runs `claude update` or `codex update`, which work only on the vendors' own installs; GUI apps look in ~/.local/bin, so the PATH lookup and that directory both have to reach them.
   for c in claude:"$HOME/.local/share/claude/" codex:"$HOME/.codex/packages/standalone/"; do
@@ -189,7 +193,7 @@ check_linux() {
   if v=$(nix --version 2>&1) && ! grep -qi determinate <<<"$v"; then ok "upstream Nix: $v"; else bad "not upstream Nix: $v"; fi
 
   group "declared tools"
-  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv claude codex opencode openspec; do runs "$c"; done
+  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv opencode openspec; do runs "$c"; done
   if opencode --version 2>/dev/null | grep -q 'v2\.'; then ok "OpenCode is v2"; else bad "OpenCode is not v2 ($(opencode --version 2>&1 | head -1))"; fi
 
   # Skipped with the full neovim setup (nix/home/common.nix).
@@ -259,11 +263,7 @@ check_linux() {
     # zsh comes from the Nix profile (Ubuntu has none), so it is named by path: env -i leaves no PATH to find it with.
     if env -i HOME="$HOME" "$HOME/.nix-profile/bin/zsh" -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c (via ~/.zshenv)"; else bad "zsh -c cannot find $c"; fi
   done
-  if [ "$(env -i HOME="$HOME" bash -lc 'command -v claude')" = "$HOME/.nix-profile/bin/claude" ]; then
-    ok "claude resolves to the Nix profile, ahead of ~/.local/bin"
-  else
-    bad "claude resolves to $(env -i HOME="$HOME" bash -lc 'command -v claude'), not the Nix profile"
-  fi
+  check_agents
   # An interactive terminal execs zsh, whose ~/.zshrc sources zsh/.zshrc: the wtc alias is defined only there.
   if env -i HOME="$HOME" TERM=dumb "$HOME/.nix-profile/bin/zsh" -ic 'alias wtc >/dev/null && whence rg nvim >/dev/null' </dev/null >/dev/null 2>&1; then ok "interactive zsh runs zsh/.zshrc and finds rg and nvim"; else bad "interactive zsh does not run zsh/.zshrc or cannot find rg or nvim"; fi
 

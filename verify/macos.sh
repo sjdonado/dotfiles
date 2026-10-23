@@ -100,14 +100,14 @@ assert_config() {
   done
   # Installed by the agentClis step instead, so T3 Code can update them.
   for p in codex claude-code; do
-    if f '.packages[]' | grep -q "^$p-[0-9]"; then bad "$p is a Nix package on macOS"; else ok "$p is not a Nix package on macOS"; fi
+    if f '.packages[]' | grep -q "^$p-[0-9]"; then bad "$p is a Nix package"; else ok "$p is not a Nix package"; fi
   done
 
 
   if [ "${CHECK_PACKAGES:-0}" = 1 ]; then
     group "packages: available, prebuilt, no collisions"
-    # Built on the machine by design: this repository's own packages (nix/pkgs, the `only` wrappers), claude-code (unfree, so Hydra never builds it; its build is a download), python environments (a directory of links), and home-manager's generated files.
-    LOCAL='^(opencode|codex|gawk|gsed|telnet|claude-code|python3-[0-9.]+-env|home-manager|hm-session-vars\.sh|home-configuration-reference-manpage|dummy-xdg-mime-dirs[0-9])(-[0-9]|$)'
+    # Built on the machine by design: this repository's own packages (nix/pkgs, the `only` wrappers), python environments (a directory of links), and home-manager's generated files.
+    LOCAL='^(opencode|gawk|gsed|telnet|python3-[0-9.]+-env|home-manager|hm-session-vars\.sh|home-configuration-reference-manpage|dummy-xdg-mime-dirs[0-9])(-[0-9]|$)'
 
     # name, every output a profile installs, and whether it evaluates at all.
     describe='ps: map (p: let o = builtins.tryEval (map (n: (p.${n} or p).outPath) (p.meta.outputsToInstall or [ "out" ])); in { name = p.name or "?"; ok = o.success; outs = if o.success then o.value else []; }) ps'
