@@ -122,7 +122,7 @@ cask	betterdisplay	cask betterdisplay	nix/darwin/homebrew.nix	-
 cask	firefox	dropped	-	owner dropped it, 2026-10-17
 cask	gcloud-cli	cask gcloud-cli	nix/darwin/homebrew.nix	-
 cask	ghostty	dropped	-	owner dropped it, 2026-10-18; no terminal declared
-cask	handy	dropped	-	replaced by the muesli cask, 2026-10-17
+cask	handy	cask handy	nix/darwin/homebrew.nix	-
 cask	helium-browser	cask helium-browser	nix/darwin/homebrew.nix	-
 cask	ngrok	dropped	-	owner dropped it, 2026-10-18
 cask	nordvpn	cask nordvpn	nix/darwin/homebrew.nix	-

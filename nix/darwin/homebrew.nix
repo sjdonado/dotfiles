@@ -56,6 +56,8 @@
       "gcloud-cli"
       "google-chrome"
       "granola"
+      # Offline speech-to-text dictation.
+      "handy"
       "helium-browser"
       "icon-composer"
       "imageoptim"
