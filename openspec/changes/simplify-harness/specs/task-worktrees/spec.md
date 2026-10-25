@@ -2,53 +2,38 @@
 
 ## Purpose
 
-Defines where a task's branch is checked out: always a worktrunk worktree of its own, named from the tracker when possible, so parallel tasks never share a working tree. A task is one piece of work agreed as a unit: it gets one branch, one worktree and one pull request, and follow-ups on that pull request stay the same task.
+Keeps task work in the appropriate checkout and provides isolation when needed without interrupting ordinary edits for reversible workspace choices.
 
 ## ADDED Requirements
 
-### Requirement: Every task runs in its own worktrunk worktree
-When a workflow starts a new task that edits files, the agent SHALL create a new branch in a new worktree through worktrunk, based on the repository's default branch, and SHALL do all edits for that task in that worktree. The agent SHALL NOT branch in place in the user's checkout, and SHALL NOT create a worktree through any other tool. Work on an existing pull request continues in the worktree or checkout that already holds its branch.
+### Requirement: Reuse the task checkout
+The agent SHALL reuse the task or PR checkout and honor the user's placement choice. New independent work needing isolation, including new work from the default branch, SHALL use the worktree capability. Unrelated dirty work SHALL remain preserved.
 
-#### Scenario: Starting new work
-- **WHEN** the user asks for new work from a checkout on the default branch
-- **THEN** the agent creates a worktrunk worktree on a new branch, reports its path, and edits files only there
+#### Scenario: Follow-up on the current branch
+- **WHEN** the user asks to keep a settings change on the current work-in-progress branch
+- **THEN** the agent edits there without creating a new branch or conversation
 
-#### Scenario: Continuing an existing pull request
-- **WHEN** the user gives feedback on an open pull request whose branch is checked out
-- **THEN** the agent works in that checkout and creates no new worktree or branch
+#### Scenario: Independent task
+- **WHEN** the agent starts independent work from the default branch
+- **THEN** it creates an isolated task checkout without committing to the default branch
 
-#### Scenario: worktrunk unavailable
-- **WHEN** `wt` is not on PATH
-- **THEN** the agent stops before editing and says that worktrunk is missing
+### Requirement: Routine branch names do not require confirmation
+The agent SHALL use an explicit user or tracker branch name when available, otherwise choose a short appropriate name without requiring confirmation.
 
-### Requirement: The branch name comes from the tracker or from the user
-When the work is bound to a Linear issue, the branch SHALL be named with the issue's git branch name from Linear. Otherwise the agent SHALL propose a branch name and SHALL wait for the user to accept or replace it before creating the worktree.
+#### Scenario: No supplied branch name
+- **WHEN** independent work needs a branch and the user has not named one
+- **THEN** the agent chooses a routine name and proceeds
 
-#### Scenario: Linear issue
-- **WHEN** the work starts from a Linear issue that has a git branch name
-- **THEN** the worktree's branch has exactly that name and the agent does not ask for one
+### Requirement: Project hooks retain their authorization boundary
+Creating a worktree SHALL NOT silently approve untrusted hooks. The agent SHALL inspect required project hooks and ask only when running them falls outside existing authorization.
 
-#### Scenario: No issue
-- **WHEN** the work has no tracker issue
-- **THEN** the agent proposes a name, waits, and creates the worktree with the accepted name
+#### Scenario: Unapproved hooks
+- **WHEN** worktree creation would run project hooks without authorization
+- **THEN** the agent identifies the hooks and does not approve them itself
 
-### Requirement: A new worktree inherits no branch notes
-A new worktree SHALL NOT receive copies of another worktree's `.agent/` notes or task lists. The branch note and task list for the new branch SHALL be written in the new worktree.
+### Requirement: New worktrees do not inherit another task's state
+A new task checkout SHALL NOT retain copied notes or checklists belonging to another task. The agent SHALL report the path of a newly created checkout and how to open it.
 
-#### Scenario: Ignored files are copied
-- **WHEN** worktrunk copies ignored files into a new worktree
-- **THEN** no file from the source worktree's `.agent/` directory exists in the new worktree
-
-### Requirement: Worktree creation never blocks on a prompt
-The agent SHALL create worktrees with options that produce machine-readable output and need no interactive input. When worktrunk requires approval for a repository's own hooks, the agent SHALL stop and ask the user instead of approving them on its own.
-
-#### Scenario: Project hooks need approval
-- **WHEN** creating the worktree would run project hooks that have not been approved
-- **THEN** the agent reports which hooks and asks, and creates nothing until the user answers
-
-### Requirement: The final report names the worktree
-Every final report on work done in a worktree SHALL give the worktree's path, the command to open it, and the worktrunk command that removes it once its pull request merges.
-
-#### Scenario: Report after a run
-- **WHEN** a workflow returns after editing files in a worktree
-- **THEN** its report includes the path, how to open it, and the `wt remove` command for it
+#### Scenario: Copied ignored notes
+- **WHEN** worktree creation copies ignored files from another checkout
+- **THEN** the new task does not use the other task's notes as its own

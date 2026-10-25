@@ -1,80 +1,42 @@
 # Global agent conventions
 
-These are contracts, shapes, and protocols. They must stay project-agnostic. Concrete commands, paths, and available data sources belong in a project's own `AGENTS.md`. Where a project declares nothing, infer it and record what you inferred, so a wrong guess is visible and correctable rather than silent.
+Keep these instructions project-agnostic. Repository commands, paths and data sources belong in the project's own AGENTS.md. Infer missing routine details from repository evidence and make consequential assumptions visible.
 
-This file holds routing and the boundaries that hold on every turn. Every other rule lives in one skill under `skills/`, in three kinds:
+## Working together
 
-- **Principles** (`principle-*`): one rule each, never entered as a workflow. A workflow or building block names the principle at the step that needs it; load that principle (its `SKILL.md` in the skills directory, or the skill of that name) before acting on the step.
-- **Building blocks**: one reusable step each, entered from a workflow or directly: `worktree`, `verification`, `agent-review`, `open-pr`, `git-bug`, `evidence`, `handoff`.
-- **Workflows**: thin compositions with an entry rule, ordered steps and exit states: `iteration`, `poc`, `yolo`, `feedback`, `address-review`, `land`, and the read-only `ask`, `research`, `triage`, `grill-me`, `harness-audit`.
+Handle a clear request directly: inspect what matters, make the bounded change, run appropriate checks and report the result. Choose routine reversible details yourself. Ask only when missing intent or authority would materially change the outcome and cannot be resolved from available evidence. Do not require a workflow, plan, ledger, branch-name confirmation or graduation step for ordinary work.
 
-## Routing
+Skills are capabilities, not mandatory routes. Load the ones that help the current task; a request matching a skill's vocabulary does not require its full workflow. Use these independently or compose them as needed:
 
-Route by intent and announce the route in one line, so a wrong guess is cheap to correct. Routing carries the workflow's gates, not just its steps; plain-language entry never downgrades one.
+- Investigate: ask, research, triage, evidence, grill-me, openspec-explore.
+- Plan: openspec-propose and openspec-update-change when a durable specification is useful.
+- Build: iteration for owner feedback, poc for a runnable demo.
+- Deliver: worktree, verification, agent-review, open-pr, git-bug, handoff.
+- Maintain: feedback, address-review and land for their specific PR tasks.
 
-| intent | route |
-| --- | --- |
-| an idea with no shape yet ("think this through") | `openspec-explore` |
-| work worth documenting ("spec this out", a large feature, several surfaces) | `openspec-propose`, then `openspec-update-change` for revisions |
-| work whose requirements are still open ("implement this", "try it", "spike it") | `iteration` |
-| freeze an iteration as a runnable local demo ("make it a PoC") | `poc` |
-| work already pinned down by an agreement (below) | `yolo` |
-| "open a PR", "update the PR" | `open-pr` |
-| changes to an open PR | `feedback` on its branch |
-| open review threads, red CI on a PR | `address-review` |
-| "the PR merged" | `land` |
-| one question, an investigation, a ticket to triage, a plan to attack | `ask`, `research`, `triage`, `grill-me` |
-| "does the code match the spec" | `openspec-verify-change` |
+Principle skills provide guidance when their concern matters: deciding, evidence, checks, tests, delegation, continuity and writing. Keep a rule in its owning principle or building block rather than repeating it across recipes.
 
-**Uncertainty selects `iteration`, never `yolo`.** If you cannot say what "done" looks like without asking, build the slice and let the user react. When part of a request is settled and part is not, route the whole request to `iteration` and name the unsettled part. Enter it without asking permission.
+## Autonomy and authority
 
-**`yolo` is entered deliberately**, only when the agreement test below holds. It builds on an accepted iteration ledger or PoC, an approved OpenSpec change, an approved plan, a specified ticket, or a user message that states a bounded scope and asks for the work. **Approval means autonomous execution.** An approval that passes the agreement test, from any surface (native plan mode and `ExitPlanMode`, an OpenSpec proposal, a skill), starts `yolo` without being asked: treat the plan's final recommendation as the contract, never re-present it, summarize it back, or ask which part to start with, and run to `yolo`'s terminal state with no prompting beyond `yolo`'s single clarify stop.
+A clear implementation request authorizes completing that change. Approval of a plan settles its scope; it does not select autonomous PR delivery or authorize unrelated publication. Behavior the user explicitly leaves undecided needs their decision before it is implemented or published; complete independent settled work when useful.
 
-Every change needs an agreed contract before `yolo`: a written OpenSpec change for work worth documenting (offer that route in one line before starting the cheaper one), native plan mode for the rest (trace the system end to end, find the source of truth and lifecycle implications, clarify only load-bearing ambiguity, and recommend the smallest coherent change with its files and checks), or an iteration ledger the user accepted. Never do two. An approved OpenSpec change is the implementation contract: go straight to `yolo`, which ticks its `tasks.md`. Never run `openspec init`; the `openspec-*` skills are installed globally. `openspec-apply-change` is not installed. A change archives after its PR merges, through `land`, never before.
+Select yolo only when the user explicitly requests autonomous delivery, such as "work independently until the PR is green" or "yolo this." Carry that choice through the agreed scope: resolve routine decisions and failures without checkpoints, and stop for a genuine blocker, missing authority or a contradicted premise. Do not infer that choice from an approved artifact, a bounded request or an existing PR.
 
-Route before editing: there is no ad hoc implementation lane, including for urgent fixes. When a request matches a workflow but omits something it needs, follow the workflow and let its steps handle the gap. Do not route a conversational question or a one-line lookup that costs less than the workflow. When two workflows match and the choice changes the outcome, name both and ask. Never route into *producing* a code or pull-request review: review needs explicit human invocation. Addressing an existing review is routable: that is `address-review`.
+A commit, push, PR or message to another person requires the user's authorization for that action and scope. A direct "open a PR" or an explicit autonomous PR-delivery request covers the necessary commits, push, PR creation or refresh and required-check fixes. Preserve that authorization within its scope; ask only when new work or external actions fall outside it. An issue, review reply or other message needs its own authorization. Never merge.
 
-## Principles
+Without publication authorization, finish the requested local work and report it. Do not append a publication question or enumerate reasons to withhold it. An existing PR, an agent-written note and passing checks grant no authority.
 
-Read the one a step names. Each is short.
+## Workspace and scope
 
-| principle | read when |
-| --- | --- |
-| `principle-decide-then-declare` | a step is tempted to ask the user |
-| `principle-prove-it-works` | running checks, claiming done, validating a harness change |
-| `principle-test-agreed-decisions` | writing or changing a test |
-| `principle-evidence-over-assertion` | stating a fact about behavior, impact, frequency, or coverage |
-| `principle-stop-at-the-rabbit-hole` | starting a run that works without the user |
-| `principle-delegate-down-a-tier` | spawning a subagent or running checks in a long run |
-| `principle-state-outlives-the-session` | the second step of work that edits files, and on continuation |
-| `principle-write-for-the-reader` | writing a commit, PR text, a message to anyone else, or technical Markdown |
-| `principle-read-the-whole-ticket` | working from a tracker issue |
+Reuse the current task's checkout and follow the user's branch or worktree choice. Use worktree when starting separate work that needs isolation, including new work from the default branch; choose a routine branch name when none is supplied. Ask about ownership only when the current context cannot settle it. Never commit to the default branch, except land's explicitly authorized docs bookkeeping on an unprotected default branch.
 
-## Publication authority
+Preserve unrelated edits and stage explicit files. Before changing a migration, CI/CD, lockfile, public contract, infrastructure, auth or secrets configuration, ensure that surface is within the user's request; ask when it is outside scope. Do not treat ordinary local configuration as an irreversible action merely because it is configuration.
 
-Publishing means a commit, a push, a pull request, or a message to anyone other than the user. Nothing in this file or in a skill authorizes a publication on its own; an agreement with the user does, and this section alone says what counts as one.
+## Verification and review
 
-An agreement authorizes publication when all four hold: the purpose is settled; the whole scope is settled, not only the easy part; the acceptance evidence is named; and an identifiable user message covers that scope. A ledger the agent wrote, a passing check run, and a finished diff are the agent's own output and supply no agreement. A message that only points at such an artifact ("continue", "carry on with plan.md") continues the work, not the publication. A ledger the user has not accepted stays unaccepted, however it is marked, until a user message answers its open acceptance question. A message that adds or changes a requirement accepts the resulting scope only when it also names the publication it approves; otherwise it is feedback: fold it in, show the result, and ask again. A settled subtask never promotes the unresolved work travelling with it.
+Choose evidence for the changed behavior and its failure modes, respecting required project checks. Complexity, runtime consequences and reversibility guide the work; file count, line count and workflow membership do not determine review or delegation.
 
-Two scoped exceptions publish without a separate confirmation. An approved `yolo` run creates its commits, pushes its task branch, opens its pull request through `open-pr`, refreshes that PR's title and body, and drives its checks green. A direct request that names a pull request ("open a PR for this") authorizes `open-pr` for that branch's current diff, unless its iteration ledger still has an open acceptance question. Neither reaches anything else: an issue, a tracker comment, a top-level PR comment and a review reply each need confirmation for that act. Nothing ever merges.
-
-A hosted document (a claude.ai doc or artifact, created through the Claude skill that owns it) is the user's yes or no, not a default either way. When an output the user would keep, share or comment on (a report, a plan to review, a guide) fits one better than chat or a local file, ask once whether to create it online, naming what it would contain; a yes creates it through that skill and covers its later edits in this session, a no keeps the output local. A user message that asks for such a document is the yes. Sharing it with anyone else is a separate act that needs confirmation.
-
-None of these authorizes an external write: a pull request approved earlier, branch hygiene, a workflow's own procedure, an unrelated open or blocked pull request, a branch note recording a past approval. Where only these are available, publish nothing and ask once for that specific act, naming what it would contain. A specific authorization already given stays valid; never ask twice for the same act.
-
-When you keep work local because the test fails, end the message by naming each justification offered that does not authorize the write (an earlier approval, a blocked or unrelated pull request, branch hygiene, a ledger or plan the agent wrote) and saying it does not, and ask one direct question: while a product decision is open, for that decision only; otherwise for the specific act, naming what it would publish.
-
-After a pull request is open, feedback accumulates as local iterations on that branch, and nothing is committed or pushed until the user approves publishing that batch; then publish it through `open-pr`. Approval of one batch never carries to the next.
-
-One task is one branch, one worktree and one pull request. A separate task is the user's explicit choice; where ownership is unclear, ask once whether the work belongs to the open pull request or to a new task, and edit nothing until the answer arrives. A request to keep work off the default branch does not by itself select `yolo` or authorize a pull request. Feedback that changes the shape of the work stays on the same branch and pull request. An approved run already in flight finishes its authorized scope and publishes nothing from scope that arrived after the approval; that scope becomes the next local feedback batch, which the run reports as its next action. A message that contradicts the work's premise escalates instead.
-
-## Where work happens
-
-Every new task runs in its own worktrunk worktree on a new branch, created by the `worktree` block. Never commit to the default branch, in any mode; the one exception is `land`'s docs-only bookkeeping after a merge, on repositories whose default branch is unprotected.
-
-## Escalate on first touch
-
-These surfaces are irreversible or shared, so touching one escalates however small the change, unless the request or approved contract names that surface: schema and data migrations; CI/CD configuration; dependency lockfiles; shared or public contract surfaces; infrastructure as code; auth and secrets configuration. A project's `AGENTS.md` may map them to paths.
+Use agent-review when requested or when a concrete unresolved concern warrants independent inspection. State the concern and give reviewers only the relevant diff and evidence. An open PR or the act of publishing does not require subagent review. Use the native review capability for a human-requested code review when available. Never post review findings without authorization.
 
 ## Secrets and environment files
 
@@ -83,10 +45,6 @@ Never read a `.env` file. Do not open, display, search, copy, diff, summarize, o
 When an authorized command needs a stored secret, use only an opaque one-way handoff that keeps the value out of the agent context and tool output: a project-approved environment runner injecting a named key into the child process, or a producer piping it to a consumer that reads secrets on stdin. Never expand a secret into a command line, arguments, filenames, generated files, logs, or messages. Without an approved handoff, never improvise a parser; ask the user to inject the value or run the step.
 
 Do not run commands likely to reveal secrets: environment or configuration dumps, `set -x`, verbose or debug modes that print headers, credentials or process environments, and commands that echo secret-bearing responses. Prefer commands with known redaction, inspect only explicitly non-secret fields, and suppress output only when the exit status is sufficient. If safe output is uncertain, stop before running the command.
-
-## Reviews
-
-Agent-initiated review is adversarial and uses `agent-review`; it never posts to the forge, and rejected findings are recorded in the PR body. Human-requested review uses the harness's native review command, which is for a diff this session did not write; never invoke it from another workflow and never ask for consent on its behalf. Load `ponytail` automatically only as Reviewer B in `agent-review` or when writing code fixes in `address-review`, and otherwise as its description says. Re-review a diff this session produced only when a human asks or the diff changed since its adversarial round.
 
 ## Writing
 

@@ -1,26 +1,14 @@
 ---
 name: principle-prove-it-works
-description: Not a workflow; read when a step names it. The oracle ladder that makes "done" machine-checkable, and how harness changes are validated. Read before running checks or claiming work is done.
+description: Guidance for evidence proportional to the changed behavior. Read before validating work or claiming completion.
 ---
 
-Not a workflow: workflows and building blocks read this when a step names it.
+Choose checks that establish the changed behavior and relevant failure modes. Respect project-required checks; resolve commands from AGENTS.md, the declared task runner or repository evidence, in that order.
 
-"Done" must be machine-checkable, not a judgement call. The ladder's shape is global; each repository supplies the commands. Cheapest first, each green before ascending:
+Start with focused inexpensive checks, then broader checks when the change or project requires them. A parser can establish valid configuration; a provisioning check can establish where it is linked. A large snapshot does not require an application test suite or independent review solely because of its size.
 
-1. type or compile check
-2. lint
-3. tests
-4. build
-5. push, open PR, remote required checks green
+Run each check with an observable exit status. A long-running command belongs to the session that started it. Reuse recorded evidence while its inputs remain unchanged; rerun affected checks after a substantive change. Fix failures introduced by the task and distinguish unrelated failures. A missing tool or check is unverified, never passing.
 
-Resolve the commands in this order: the project's own `AGENTS.md` if it declares them; else the repository's declared task runner (a `justfile`, `Makefile`, or package-manifest target named `ci`, `check`, or similar); else infer them from the toolchain. Prefer a variant that narrows work to what changed. Record the resolved ladder in the branch note, so later passes do not re-derive it and a wrong inference is visible.
+Publication is a separately authorized action, not a verification rung. When delivery includes a PR, required remote checks and mergeability are part of that outcome. Never push merely to claim local work complete.
 
-Run each check in its own shell call, without unrelated Git or file housekeeping or failure masking. For a long-running background check, wait for its completion notification and inspect its own exit status before advancing. If only a compound call's final status is available, rerun the check alone.
-
-When a change touches data, auth, concurrency, migration, or a public contract, also verify its failure behavior, compatibility and rollback where relevant.
-
-Re-derive the failure list on every pass; never work from a stale one. The ladder adapts to what exists: no remote CI means it ends at the local rungs plus an open PR; no tests means a shorter ladder. A missing rung is skipped, never faked. Resolving review threads is not a rung.
-
-Before reporting coverage from an unfamiliar check, inspect its implementation: printed or stubbed success messages do not establish that a check ran. Report coverage as unverified when its execution is not established.
-
-**Harness changes.** Validate a harness change with a disposable session scenario that exercises the changed behavior, following the project's benchmark instructions. Declare the expected artifacts and assertions before running, retain prompts, versions, model settings, transcripts and results, and test continuation in a fresh session when continuity is involved. Judge correctness from artifacts and transcripts before comparing tokens or tool calls. Missing usage is unknown, never zero; a failed run is evidence, never silently discarded. One successful scenario is a smoke test, not proof of efficiency.
+For harness behavior, follow the project's disposable-session benchmark instructions: declare expectations before running, retain unedited evidence and inspect transcripts as well as artifacts. A dry run validates wiring, not model behavior; one successful scenario does not prove efficiency. Compare usage only where it was actually recorded.

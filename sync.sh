@@ -118,6 +118,7 @@ check_macos() {
   linked "$HOME/.zshrc"                         "$DOTFILES/zsh/.zshrc"
   # linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"  # skipped with the full neovim setup
   linked "$HOME/.config/browser-router/config.json" "$DOTFILES/macos/browser-router.json"
+  linked "$HOME/Library/Application Support/com.pais.handy/settings_store.json" "$DOTFILES/macos/handy/settings_store.json"
   linked "$HOME/.docker/config.json"            "$DOTFILES/docker/config.json"
   linked "$HOME/.ssh/config"                    "$DOTFILES/.ssh/config"
   linked "$HOME/.claude/settings.json"          "$DOTFILES/claude/settings.json"
@@ -161,7 +162,7 @@ check_macos() {
   [ -f "$HOME/.hushlogin" ] && ok "~/.hushlogin exists" || bad "~/.hushlogin missing"
 
   group "non-interactive shells resolve the tools"
-  for c in rg nvim claude codex; do
+  for c in rg nvim mise claude codex; do
     # USER as launchd, sshd and terminals set it: nix-darwin's PATH names /etc/profiles/per-user/$USER/bin.
     if env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c"; else bad "zsh -c cannot find $c"; fi
     if env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
@@ -193,7 +194,7 @@ check_linux() {
   if v=$(nix --version 2>&1) && ! grep -qi determinate <<<"$v"; then ok "upstream Nix: $v"; else bad "not upstream Nix: $v"; fi
 
   group "declared tools"
-  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv opencode openspec; do runs "$c"; done
+  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv mise opencode openspec; do runs "$c"; done
   if opencode --version 2>/dev/null | grep -q 'v2\.'; then ok "OpenCode is v2"; else bad "OpenCode is not v2 ($(opencode --version 2>&1 | head -1))"; fi
 
   # Skipped with the full neovim setup (nix/home/common.nix).
@@ -251,7 +252,7 @@ check_linux() {
 
   group "non-interactive shells resolve the tools"
   # This is the shell an agent hook or a tool running a command gets: no rc file beyond what these read.
-  for c in rg nvim wt codex claude; do
+  for c in rg nvim wt mise codex claude; do
     if bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
     # `ssh host command` runs a non-login, non-interactive bash, which reads only ~/.bashrc, up to its interactive guard.
     if env -i HOME="$HOME" bash -c ". ~/.bashrc >/dev/null 2>&1; command -v $c" >/dev/null 2>&1; then ok "a non-login bash sourcing ~/.bashrc finds $c"; else bad "~/.bashrc does not put $c on PATH before its interactive guard"; fi

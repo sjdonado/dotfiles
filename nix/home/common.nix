@@ -54,6 +54,7 @@ in
     bun
     pnpm
     uv
+    mise
 
     # Agent harnesses and their tools. Claude Code and Codex are not packages: the agentClis step installs them.
     (callPackage ../pkgs/opencode.nix { }) # v2; nixpkgs still has v1

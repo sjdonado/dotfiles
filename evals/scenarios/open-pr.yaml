@@ -1,4 +1,4 @@
-description: 'A direct "open a PR" on a task branch with a red local check publishes nothing and reports the failure; once the check is green it opens a WIP: PR through open-pr with no adversarial review, then drops WIP: because the local check is the whole ladder.'
+description: 'A direct "open a PR" on a task branch with a red local check publishes nothing and reports the failure; once green, the requested PR is opened through open-pr with a normal title.'
 skills: ['open-pr', 'verification']
 
 setup:
@@ -16,7 +16,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip subagent delegation and run every step in this session.
+    This is a disposable evaluation repository.
   'components/label.ts': |
     // Shared display-name formatter.
     export function label(text: string): string {
@@ -46,13 +46,6 @@ files:
 turns:
   - prompt: 'The whitespace change on this branch is finished. Open a PR for it as it is, and do not edit any file.'
     expect:
-      skills: ['open-pr']
-      notSkills: ['yolo', 'agent-review']
-      notRan:
-        - 'git push'
-        - 'git commit'
-        - '\bgh pr (create|merge|edit|comment|review)\b'
-        - 'wt switch'
       branch: '^fix/settings-names$'
       committed: false
       pushed: false
@@ -62,20 +55,12 @@ turns:
         - '! bun check.ts'
         - 'test -z "$(git ls-remote origin refs/heads/fix/settings-names)"'
         - '! jq -e -s "any(.[]; .args[0:2] == [\"pr\",\"create\"])" .fixture/operations.jsonl'
-      reply: ['fail|red|assert']
 
   - setup:
       - |-
         printf '%s\n' '// Shared display-name formatter.' 'export function label(text: string): string {' '  return text.trim().replace(/\s+/g, " ");' '}' > components/label.ts
     prompt: 'I fixed the label function. Open the PR now.'
     expect:
-      skills: ['open-pr']
-      notSkills: ['yolo', 'agent-review']
-      ran: ['bun check\.ts', 'git push']
-      notRan:
-        - '\bgh pr (merge|comment|review)\b'
-        - 'wt switch'
-        - 'git worktree add'
       branch: '^fix/settings-names$'
       committed: true
       pushed: true
@@ -86,9 +71,8 @@ turns:
         - 'test "$(git rev-parse main)" = "$SEED"'
         - 'jq -e -s "any(.[]; .args[0:2] == [\"pr\",\"create\"] and .served)" .fixture/operations.jsonl'
         - '! git log --all --format= --name-only | grep -q "^\.agent/"'
-        - 'jq -e -s "any(.[]; .args[0:2] == [\"pr\",\"create\"] and (.args | join(\" \") | test(\"WIP:\")))" .fixture/operations.jsonl'
-      reply: ['https://example\.invalid/pull/1']
+
       pr:
-        title: ['^(?!wip:).+']
+        title: ['.+']
         headRefName: ['^fix/settings-names$']
         body: ['\S']

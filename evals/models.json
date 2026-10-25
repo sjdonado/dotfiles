@@ -1,4 +1,0 @@
-[
-  { "label": "sol-medium", "model": "gpt-6.1-sol", "thinking": "medium" },
-  { "label": "luna-medium", "model": "gpt-6-luna", "thinking": "medium" }
-]

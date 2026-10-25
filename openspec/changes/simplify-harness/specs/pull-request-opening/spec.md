@@ -2,46 +2,46 @@
 
 ## Purpose
 
-Defines how a pull request is opened or refreshed, in one place that any workflow or a direct request can use, so every pull request gets the same gates, prose and lifecycle.
+Publishes a requested change with scoped authority and relevant evidence while preserving the existing pull request's human context.
 
 ## ADDED Requirements
 
-### Requirement: One skill opens and refreshes pull requests
-Committing, pushing, opening a pull request, refreshing an existing pull request's title and body, and the `WIP:` title lifecycle SHALL be performed by a single `open-pr` skill. `yolo` SHALL use it for its publication step, and a direct request such as "open a PR" SHALL enter it.
+### Requirement: Publication follows scoped authorization
+A direct request to open or update a PR SHALL authorize the necessary commits, push and PR refresh for that scope. Local implementation, plan approval, passing checks and PR existence SHALL NOT grant publication authority. The agent SHALL NOT require a separate workflow or ledger acceptance for an already authorized diff.
 
-#### Scenario: Direct request
-- **WHEN** the user asks to open a pull request for the current branch
-- **THEN** the agent enters `open-pr` without running `yolo`
+#### Scenario: Direct PR request
+- **WHEN** the user asks to open a PR for a clear current diff
+- **THEN** the agent uses open-pr without requiring yolo or independent review
 
-#### Scenario: From yolo
-- **WHEN** `yolo` reaches its publication step
-- **THEN** it publishes through `open-pr`
+#### Scenario: Local feedback only
+- **WHEN** the user requests local feedback changes without authorizing publication
+- **THEN** the agent finishes them locally and reports the result without appending a publication question
 
-### Requirement: Opening a pull request needs an agreement and green local checks
-`open-pr` SHALL publish only when the agreement required for publication holds for the diff being published. A direct request that names the pull request counts as that agreement for the branch's current diff, unless the branch note holds an iteration ledger with an open acceptance question, which `open-pr` SHALL ask about once before publishing. Before pushing, `open-pr` SHALL run the local rungs of the oracle ladder and SHALL NOT publish while any of them fails.
+### Requirement: Publication uses appropriate check evidence
+Before committing, pushing or creating a PR, the relevant required local checks SHALL pass. When PR delivery is requested, the agent SHALL complete required remote checks and assess mergeability. Current evidence SHALL be reusable while its inputs remain unchanged.
 
-#### Scenario: Red local check
-- **WHEN** the user asks to open a pull request and a local check fails
-- **THEN** no commit is pushed and no pull request is opened, and the failure is reported
+#### Scenario: Known failing check
+- **WHEN** a requested publication has a relevant local check failure
+- **THEN** the agent fixes an authorized defect before publishing, or reports the failure and publishes nothing
 
-#### Scenario: Default branch
-- **WHEN** the current branch is the repository's default branch
-- **THEN** `open-pr` publishes nothing and says a task branch is needed
+#### Scenario: No edits permitted
+- **WHEN** a user requests publication as-is and prohibits edits but a required check fails
+- **THEN** the agent reports the failure without editing or publishing the failing change
 
-### Requirement: Pull request prose explains the change
-A pull request body SHALL explain the problem, the resulting behavior and the verification, following the repository's template or recent merged pull requests when no template exists. When a change spans several components, a flow across processes, or a state machine, the body SHALL include a mermaid diagram of it. A change a reader understands from its prose alone SHALL NOT get a diagram.
-
-#### Scenario: Complex change
-- **WHEN** the diff changes how three or more components interact
-- **THEN** the pull request body contains a mermaid diagram of that interaction
+### Requirement: PR presentation serves the reader
+The PR SHALL use a normal title or a draft when requested, without automatic temporary title markers. Its body SHALL explain the problem, behavior, actual verification and meaningful limitations, preserving human context and issue links when refreshed.
 
 #### Scenario: Simple change
-- **WHEN** the diff is a single-file fix
-- **THEN** the pull request body contains no diagram
+- **WHEN** a small change is published
+- **THEN** the PR explains the change and checks without a mandatory diagram or temporary WIP title
 
-### Requirement: The WIP marker tracks the checks
-A new pull request SHALL be opened as a normal pull request whose title starts with `WIP:`, unless the user asked for a draft. The marker SHALL be removed only after every resolved check and the mergeability check are green.
+#### Scenario: Existing PR
+- **WHEN** authorized feedback is pushed to an existing PR
+- **THEN** its description is updated in place and existing human context and issue links are preserved
 
-#### Scenario: Checks still running
-- **WHEN** a pull request has just been opened and its required checks are running
-- **THEN** its title starts with `WIP:`
+### Requirement: Delivery never merges
+PR delivery SHALL stop at the requested outcome or a concrete blocker and SHALL NOT merge the pull request.
+
+#### Scenario: Checks green
+- **WHEN** all requested checks and mergeability are green
+- **THEN** the agent reports completion without merging

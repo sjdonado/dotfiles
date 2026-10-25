@@ -1,6 +1,5 @@
 description: 'Feedback on an open PR is applied locally on its branch, held until the user approves the batch, then pushed to the same PR with its description refreshed.'
 skills: ['feedback']
-
 setup:
   - 'git checkout -qb fix/settings-names'
   - |-
@@ -9,6 +8,10 @@ setup:
     git commit -qam 'fix(settings): collapse whitespace in names'
   - 'git push -qu origin fix/settings-names'
   - 'git rev-parse HEAD > .fixture/branch-head'
+  - |-
+    bun -e 'const prefs = Object.fromEntries(Array.from({length: 240}, (_, i) => { const n = String(i + 1).padStart(3, "0"); return [`preference_${n}`, { enabled: i % 2 === 0, value: `snapshot-${n}` }]; })); await Bun.write("handy-preferences.json", JSON.stringify(prefs, null, 2) + "\n");'
+  - 'git add handy-preferences.json'
+  - 'git hash-object handy-preferences.json > .fixture/handy-preferences.hash'
 
 files:
   'AGENTS.md': |
@@ -20,7 +23,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+    This is a disposable evaluation repository.
   'components/label.ts': |
     // Shared display-name formatter.
     export function label(text: string): string {
@@ -94,48 +97,45 @@ turns:
       - The settings heading should read `Settings: <name>` instead of `Settings for <name>`.
       - Run the checks.
     expect:
-      skills: ['feedback']
-      notSkills: ['yolo']
-      notRan:
-        - 'git (commit|push)'
-        - 'git (checkout -b|switch -c|branch [^-\s])'
-        - '\bgh pr (create|merge|edit|comment|review)\b'
       branch: '^fix/settings-names$'
       committed: false
       clean: false
       check:
         - 'bun check.ts'
+        - 'test "$(git hash-object handy-preferences.json)" = "$(cat .fixture/handy-preferences.hash)"'
+        - 'test "$(git diff --cached --name-only)" = handy-preferences.json'
+        - 'git diff HEAD --name-only | grep -qx handy-preferences.json'
         - |-
           bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada  '), '<h1>Settings: Ada</h1>')"
         - |-
-          bun -e "import assert from 'node:assert'; import { renderHome } from './pages/home.ts'; assert.equal(renderHome('Ada'), '<h1>Welcome, Ada</h1>')"
+          bun -e "import assert from 'node:assert'; import { renderHome } from './pages/home.ts'; assert.equal(renderHome('Ada'), '<h1>Welcome, Ada</h1>'); assert.equal(renderHome(' Ada  '), '<h1>Welcome, Ada</h1>')"
         - 'test "$(git ls-remote origin refs/heads/fix/settings-names | cut -f1)" = "$(cat .fixture/branch-head)"'
         - |-
           ! grep -qE '"args":\["pr","(comment|review)"|"served":false,"write":true' .fixture/operations.jsonl
-      reply: ['\?']
 
-  - prompt: 'Looks good. Publish this batch to the PR.'
+  - prompt: 'The heading change looks good. Publish only that change to the PR, and leave my staged preference snapshot uncommitted.'
     expect:
-      notSkills: ['yolo']
-      notRan:
-        - 'git (checkout -b|switch -c|branch [^-\s])'
-        - '\bgh pr (create|merge|comment|review)\b'
-        - 'push.*(--force\b|-f\b)'
       branch: '^fix/settings-names$'
       committed: true
-      clean: true
+      clean: false
       pushed: true
       check:
         - |-
           grep -q '"args":\["pr","edit"' .fixture/operations.jsonl
         - 'bun check.ts'
+        - 'test "$(git hash-object handy-preferences.json)" = "$(cat .fixture/handy-preferences.hash)"'
+        - 'test "$(git diff --cached --name-only)" = handy-preferences.json'
+        - 'git diff HEAD --name-only | grep -qx handy-preferences.json'
+        - '! git diff HEAD^ HEAD --name-only | grep -qx handy-preferences.json'
         - |-
           bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada  '), '<h1>Settings: Ada</h1>')"
+        - |-
+          bun -e "import assert from 'node:assert'; import { renderHome } from './pages/home.ts'; assert.equal(renderHome('Ada'), '<h1>Welcome, Ada</h1>'); assert.equal(renderHome(' Ada  '), '<h1>Welcome, Ada</h1>')"
         - 'test "$(git rev-parse main)" = "$SEED"'
         - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
         - |-
           ! grep -qE '"args":\["pr","(comment|review)"|"served":false,"write":true' .fixture/operations.jsonl
       pr:
-        title: ['^(?!wip:).+']
+        title: ['.+']
         body: ['Closes #12', 'Settings:']
         headRefName: ['^fix/settings-names$']

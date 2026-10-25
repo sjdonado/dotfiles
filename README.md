@@ -52,6 +52,8 @@ A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`
 - To change the primary account: move it to the front of the list, then run `setup.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
 - To remove an account: drop it from the list and sync from the primary account before deleting the macOS account.
 
+Handy's preferences are tracked in `macos/handy/settings_store.json`, linked to `~/Library/Application Support/com.pais.handy/settings_store.json` for each account. Close Handy before the first sync installs the link. Afterward, changes made in Handy update the tracked file: quit Handy, review, commit and push the preferences, then close Handy in the other account before pulling and reopening it. The shared `onboarding_completed` flag starts false and Handy saves it back to the shared file when onboarding finishes, so onboarding completion carries across accounts; use Handy's model settings to download the selected model separately in each account. Models, recordings, history and macOS microphone and Accessibility permissions remain local to each account. The settings file also holds post-processing API keys; keep those empty in the tracked configuration.
+
 zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to cd into a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. On Linux the login shell stays POSIX for Coder, interactive terminals exec zsh, and home-manager's `~/.zshrc` sources the same `zsh/.zshrc`.
 
 ### Tool versions
@@ -85,7 +87,7 @@ opencode mcp auth <server>
 
 OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and the ios-simulator MCP server enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
 
-Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` also remains available for login and evals.
+Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` remains available for interactive use. Harness benchmarks use direct gpt-6-luna subagents; see `evals/README.md`.
 
 When experimenting with Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow the terminal's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
 

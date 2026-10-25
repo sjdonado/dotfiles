@@ -1,45 +1,12 @@
 ---
 name: verification
-description: Drive a change's checks to green and report back, in a subagent or in the current session. Runs the oracle ladder, fixes what the change broke, and returns a verdict. Use when a workflow needs its checks run, so verification is attributable and can sit on a cheaper tier than the session orchestrating it.
+description: Run checks appropriate to a change, fix failures it introduced and report evidence. Short checks can run in the current session.
 ---
 
-# Verification
+Establish whether the requested behavior works using principle-prove-it-works and the project's required checks. Delegate only when the work benefits from a separate worker (principle-delegate-down-a-tier).
 
-Running checks and chasing their failures is mechanical work against a settled contract. It is the other half of what a run spends outside implementation, and until it has a name it is indistinguishable from every other subagent, so nobody can say what verification costs. This skill gives it one, the way `agent-review` names the review half.
+A delegated verifier receives the diff or branch, authoritative requirements or their path, resolved check commands and known unrelated failures. Give no implementation rationale. A small change does not need a new contract document to run a check.
 
-It is the natural place for a cheaper tier: the contract is fixed, the oracle is machine-checkable, and success is not a judgement call.
+Run focused checks, then broader checks when required. Fix failures introduced by the task without redesigning it or absorbing unrelated changes. Do not activate a host, install tools or mutate external services solely to validate documentation. A command's completion is not evidence until its exit status and relevant assertions were inspected.
 
-## Invocation
-
-Run it in a subagent when delegation is worth it, or in the current session when it is not; either way it is this workflow, so the cost is attributable. Dispatched, it gets the work to verify and not the conversation. Give it, and nothing else:
-
-- the branch or diff under test, and the path where the contract lives: an OpenSpec change directory, the branch note whose Contract opens with Purpose, End state, and Key tasks, a task list, or a ticket. Pass the path, not a summary of it
-- the resolved oracle ladder if the caller already resolved it, so it is not re-derived
-- any check the caller already knows is failing for an unrelated reason
-
-Do not pass the implementation rationale. A verifier that knows why you believe the code is right will read a failure as noise.
-
-## What it does
-
-1. Resolve the ladder per `principle-prove-it-works` if it was not handed over. Record what was inferred.
-2. Ascend the ladder per `principle-prove-it-works`, re-deriving the failure list on every pass.
-3. Fix what this change broke. Auto-fix lint and format, rebase when the branch is behind its base, re-run provisioning on an install, cache or port failure, and re-run a flake once before counting it as an attempt, per `principle-stop-at-the-rabbit-hole`.
-4. Stop on a rabbit-hole trip, per `principle-stop-at-the-rabbit-hole`.
-
-## What it never does
-
-Redesign. A failing check is fixed at its cause inside the change's scope; a failure that can only be resolved by changing what the change is for is an escalation, not a repair. It also never commits to the default branch, never pushes, never opens or merges a pull request, and never touches a surface the shared policy says escalates on first touch unless the contract it was handed names that surface.
-
-Unrelated pre-existing failures are reported, not fixed. Absorbing them makes the diff unreviewable and hides whether this change is sound.
-
-## What it reports
-
-The caller needs a verdict it can act on without re-running anything:
-
-- each rung, with its command and its final state: green, still failing, or skipped because the project has no such rung
-- what was fixed to get there, in one line each
-- anything left red, with the failure output and what each attempt disproved
-- anything inferred rather than resolved from the project's instructions, so a wrong inference is visible
-- a rabbit-hole trip, if one happened, with the smallest next hypothesis
-
-A rung that cannot run is reported as unverified. Never as passing, and never quietly skipped.
+Report commands, final results, fixes and anything still unverified. Name inferred checks so their scope can be assessed. Do not commit, push, open a PR or start an independent review as part of verification.

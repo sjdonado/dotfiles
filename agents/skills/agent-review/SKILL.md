@@ -1,73 +1,17 @@
 ---
 name: agent-review
-description: Agent-initiated adversarial review of a diff before pushing. Spawns blind reviewers told to assume the code is wrong, then triages their findings. Use when a workflow needs to check its own work, not when a human asks for a review.
+description: Run focused independent review for a requested review or a concrete unresolved correctness, security or compatibility concern. Do not trigger from PR existence, publication or diff size.
 ---
 
-# Adversarial Review
+Use independent inspection when it can answer a specific question left unresolved by ordinary investigation and checks. Name that question before delegating. Do not invoke this skill merely because a workflow names review, a PR exists or a snapshot has many lines.
 
-Self-review that grades your own homework is worthless. This protocol removes the implementer's context from the reviewer so the diff has to defend itself.
+Choose the narrowest useful review. One reviewer is enough for one concern. Use two only when distinct concerns need independent perspectives; give each a separate question. Never choose reviewer count from file or line thresholds. When no independent reviewer tool is available, say so; self-inspection is not an independent review.
 
-## Invocation
+Reviewers are read-only and start without the implementer's conversation or rationale:
 
-Launch reviewers as read-only subagents, in parallel, each with a fresh context. Never pass the conversation history, the plan, your rationale, or a prior review round. Anchoring a reviewer on why you thought the code was right is exactly what makes the review useless.
+- For requirements coverage, pass the relevant diff and identifiable user requirements or the authoritative specification, verbatim. If those requirements are unclear, resolve them with the user rather than reviewing against an invented contract.
+- For bug finding, pass the relevant diff, the concrete concern and raw evidence needed to inspect it. Apply ponytail when a simpler implementation could preserve all required behavior; do not substitute stylistic preferences for bug finding.
 
-Scale to blast radius:
+Ask the reviewer to assume the relevant behavior is wrong, trace callers and failure paths, and return `path:line: severity: problem and fix`. Severity is bug, risk, nit or q. A clean result names what was checked and its limits. Reviewers never edit or post findings.
 
-- **One reviewer** when the diff is under roughly 50 changed lines, in a single file, and touches no data, auth, concurrency, migration, or public-contract surface. Use **Reviewer B**, and hand it the requirements too: on a small diff a missed requirement is usually visible in the diff itself, while a bug is not.
-- **Two reviewers** otherwise.
-- **Never more than two.** A third mostly re-finds what the first two found.
-
-## Reviewer A: does it do the job
-
-Give it the diff **and** the requirements, verbatim from their source. Nothing else. Take the requirements from the first of these that exists: the OpenSpec change's delta specs and `tasks.md`; else the branch note's Contract block, meaning its Purpose, End state, and Key tasks lines; else the ticket description and its comment thread. Never substitute a summary written for the occasion.
-
-> Assume this diff fails to do what the requirements say. Find where.
-
-Lenses: an unmet requirement; scope creep past what was asked; an edge case handled wrongly; a missing failure path; an error swallowed silently; a migration without a rollback; an auth or data-boundary change; a broken public contract; a check that would still pass if the logic it covers were deleted.
-
-## Reviewer B: is it wrong
-
-Apply the shared Reviewer B activation rule before reviewing the diff. Identify unnecessary complexity only when a concrete simpler alternative preserves all required behavior, error handling, security, accessibility, and verification. Do not replace the bug-finding pass with a simplicity pass.
-
-Give it **only** the diff. No requirements, no context, no ticket.
-
-> Assume this diff is wrong. Find the bug.
-
-Lenses: callers of every touched symbol not updated (grep them); sibling code paths left broken because a fix landed at one call site only; dead code and leftovers; `ponytail` violations, meaning a new abstraction with one user, a dependency for a few lines, or config for a constant; anything whose correctness depends on information not visible in the diff.
-
-## Reviewer output
-
-One line per finding:
-
-```
-path:Lline: <severity>: <problem>. <fix>.
-```
-
-Severity is one of:
-
-- `bug:` broken behaviour, will cause an incident
-- `risk:` works but fragile, meaning a race, a missing guard, or a swallowed error
-- `nit:` naming, style, micro-optimisation; the implementer may ignore it
-- `q:` a genuine question rather than a suggestion, and where an unsure reviewer belongs
-
-Name the symbol in backticks and give the fix, not "consider refactoring". Drop the throat-clearing entirely: no "I noticed that", no hedging, no restating what the line does. The exception is a security finding or an architectural disagreement, which needs its reasoning spelled out and cannot survive as one line.
-
-A reviewer that finds nothing must state what it checked and why the diff survives. "Looks good" is not a review; "clean" has to be falsifiable.
-
-Reviewers never edit files. Ever.
-
-## Triage, by the implementer
-
-For each finding, exactly one of:
-
-- **Fix it.** Resolve the finding without dropping agreed behavior or verification.
-- **Reject it.** With a specific reason, recorded in the PR body under `Rejected review findings`. A rejection you cannot justify in one line is a fix you are avoiding.
-- **Escalate it.** If it is a product decision, escalate it per `principle-decide-then-declare`.
-
-Fix a `nit:` only when the fix is smaller than the argument.
-
-## Loop cap
-
-At most two rounds. Round two re-reviews only the delta from your fixes.
-
-If round two raises a new blocking finding in code that round one's fixes touched, that is a rabbit-hole trip: stop and escalate rather than starting round three.
+Triage each finding: fix it, reject it with a specific evidence-based reason, or escalate a real product decision. Record consequential rejected findings in the existing task state and, when publishing, the PR body. Re-review only a substantive fix that needs independent inspection; do not restart review over an unchanged diff. If review keeps introducing new blocking concerns without resolving the original question, stop and explain the blocker.

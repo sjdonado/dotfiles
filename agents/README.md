@@ -1,205 +1,66 @@
 # AI agents
 
-Shared skills and instructions for Claude Code, Codex, and OpenCode.
+Shared instructions and skills for Claude Code, Codex and OpenCode. The harness provides capabilities that can be used independently; it does not require every task to follow a lifecycle.
 
-## Lifecycle
+## Everyday work
 
-```mermaid
-flowchart TD
-    subgraph INPUT["input"]
-        q["a question, a claim, a ticket, an error"] --> readonly["ask / research / triage
-        read-only; may feed create-ticket"]
-        idea["an idea worth documenting"] --> explore["openspec-explore"] --> propose["openspec-propose"]
-        propose --> change["openspec/changes/&lt;id&gt;/
-        grill-me and openspec-update-change refine it"]
-    end
+For a clear request, inspect the relevant code, make the change, run appropriate checks and report the result. A small config edit does not need a planning document, requirements ledger, new conversation or subagent review. Reuse the task's checkout and preserve unrelated edits.
 
-    subgraph STAGES["stages, each in the task's own worktrunk worktree"]
-        open["work whose requirements are open
-        DEFAULT ROUTE"] --> iteration["iteration
-        build a slice, local checks green,
-        owner tries it, fold feedback in;
-        no tests, no review, nothing pushed"]
-        iteration -->|owner wants a demo| poc["poc
-        runnable local demo, nothing pushed"]
-        poc -->|more rounds| iteration
-        iteration -.->|premise disproved: kill, record why| iteration
-        iteration -->|owner accepts the ledger| yolo
-        poc -->|owner accepts the ledger| yolo
-        change -->|approved| yolo["yolo
-        tests, verification, agent-review once,
-        then open-pr"]
-    end
+Choose capabilities as needed:
 
-    subgraph PUBLISH["publish"]
-        direct["&quot;open a PR&quot;"] --> openpr
-        yolo --> openpr["open-pr
-        local checks, commit, push, WIP: PR,
-        body with a diagram when it helps,
-        checks and mergeability green"]
-    end
+- `ask`, `research`, `triage`, `evidence` and `grill-me` investigate questions or assumptions.
+- `openspec-explore`, `openspec-propose` and `openspec-update-change` support work that benefits from a durable specification.
+- `worktree` creates isolation; `verification` establishes behavior; `agent-review` answers a concrete question through independent inspection; `open-pr` publishes an authorized change.
+- `git-bug` uses the non-interactive issue CLI. `handoff` preserves useful context for another session when requested.
+- `feedback`, `address-review` and `land` support follow-up edits, existing review threads and post-merge bookkeeping.
 
-    subgraph AFTER["after"]
-        openpr --> feedback["feedback
-        local batches, published through open-pr
-        once each batch is approved"]
-        openpr --> addressreview["address-review
-        review threads, red CI"]
-        feedback --> merge["human merges"]
-        addressreview --> merge
-        merge --> land["land
-        archive the change, close the note,
-        wt remove the worktree"]
-    end
-```
+## Optional recipes
 
-At any point `principle-stop-at-the-rabbit-hole` can stop a run, and touching a migration, CI config, lockfile, shared contract, infrastructure, or auth surface the request did not name escalates on first touch.
+`iteration` is a build-and-feedback loop, and `poc` leaves a runnable local demo. Neither is a prerequisite for ordinary implementation or publication.
 
-## Three kinds of skill
+`yolo` is explicitly selected autonomous delivery: "work independently until the PR is green" or "yolo this." It resolves routine decisions and failures until the agreed outcome is reached, stopping for genuine blockers or missing authority. Approving a plan settles the scope and starts the requested implementation; it does not silently select autonomous PR delivery. A direct "open a PR" uses `open-pr` without requiring yolo or independent review.
 
-```mermaid
-flowchart LR
-  policy["AGENTS.md<br/>routing + boundaries"]
+An existing PR identifies where the task lives. It does not force review, a fresh contract or repeated publication questions. Publication remains scoped to what the user authorized; an artifact or passing check cannot authorize an external write.
 
-  subgraph W[Workflows]
-    iteration --> poc --> yolo
-    iteration --> yolo
-    after["feedback · address-review · land"]
-    ro["ask · research · triage · grill-me"]
-  end
+## Checks and review
 
-  subgraph B[Building blocks]
-    wt[worktree]
-    ship["verification → agent-review → open-pr"]
-    ev[evidence]
-    misc["git-bug · handoff"]
-  end
+Select evidence for behavior and risk, respecting the project's required checks. Use the smallest reliable test that catches a meaningful defect. Configuration parsing and provisioning assertions can be sufficient for a local config change; a large snapshot is not itself a complex behavioral change.
 
-  pp["principle-*<br/>one rule each"]
-
-  policy --> W
-  policy --> B
-  iteration --> wt
-  yolo --> ship
-  after --> ship
-  ro --> ev
-  W -.->|named at the step| pp
-  B -.-> pp
-
-  classDef policyC fill:#fde68a,stroke:#b45309,color:#1f2937
-  classDef workflowC fill:#bfdbfe,stroke:#1d4ed8,color:#1f2937
-  classDef blockC fill:#bbf7d0,stroke:#15803d,color:#1f2937
-  classDef principleC fill:#e9d5ff,stroke:#7e22ce,color:#1f2937
-  class policy policyC
-  class iteration,poc,yolo,after,ro workflowC
-  class wt,ship,ev,misc blockC
-  class pp principleC
-  style W fill:#eff6ff,stroke:#1d4ed8
-  style B fill:#f0fdf4,stroke:#15803d
-```
-
-- **Principles** (`principle-*`): one rule each, whose description and first line say they are not workflows. A workflow names the principle at the step that needs it and the agent loads it, by path or as a skill. They carry no `disable-model-invocation` key, which this repository's frontmatter check (the Codex skill validator) rejects.
-- **Building blocks**: one reusable step each, entered from a workflow or directly: `worktree`, `verification`, `agent-review`, `open-pr`, `git-bug`, `evidence`, `handoff`.
-- **Workflows**: entry rule, ordered steps naming principles and blocks, and exit states: `iteration`, `poc`, `yolo`, `feedback`, `address-review`, `land`, `ask`, `research`, `triage`, `grill-me`, `create-ticket`, `harness-audit`, `harness-boostrap`.
-
-`AGENTS.md` keeps only routing and the rules that must hold on every turn (publication authority, secrets, where work happens, the surfaces that escalate on first touch, chat writing, links, MCP scope). A rule therefore lives in one place, and changing a block changes every workflow that uses it. `iteration` replaced `proto`.
+Run short checks in the current session. Delegate substantial independent work or a separate perspective when it adds value. An independent review needs a concrete question: one reviewer for one concern, two only when distinct concerns warrant independent perspectives. Neither PR existence, file count nor line count sets the review workload. Never describe self-inspection as independent review.
 
 ## Layout
 
-- `skills/` - Agent Skills loaded on demand by all three harnesses
-- `AGENTS.md` - global instructions, linked as Claude Code's `CLAUDE.md`, Codex's `AGENTS.md`, and OpenCode's `AGENTS.md`
+- `AGENTS.md`: shared boundaries, authority and a short capability index, linked into each harness.
+- `skills/`: independent building blocks, optional recipes and `principle-*` guidance. Load only what the current task needs.
+- Project `AGENTS.md`: concrete commands, paths, data sources and required checks.
 
-Skills provide both explicit and plain-language entry points. Each harness initially sees only skill names and descriptions, then loads a matching `SKILL.md` on demand, so moving the workflows does not add their full bodies to startup context.
+Principles own shared concerns such as evidence, tests, writing, continuity and delegation. Recipes refer to those concerns without restating their rules. Small self-contained edits need no durable note. Longer work reuses one existing task list, with an ignored branch note only when continuity helps.
 
-The setup scripts link the same skill directory into all three harnesses. There are no copied wrappers, custom subagent definitions, custom tools, or search plugins.
+## Provisioning and authentication
 
-Two routes reach an agreed contract, and `AGENTS.md` picks between them: the `openspec-*` skills when the reasoning is worth keeping after the PR merges, native plan mode otherwise, never both. A third path, `iteration`, is the default way into implementation whenever the contract is not settled: cheap rounds in the task's own worktree, validated by the local checks only, ending in a PoC, a ledger `yolo` consumes as its contract, or a killed premise. It never pushes; a PR comes only from `open-pr`, through `yolo` or a direct request.
+Nix links this directory into `~/.claude/skills` and `~/.agents/skills`, and links the shared policy into each harness. Configure account-bound MCP servers where their credentials live; global development tools belong in the shared harness configuration. The setup does not add an orchestration daemon or scheduler.
 
-`yolo` is the expensive run and is entered deliberately: the human asks for it, or the contract is pinned down by an accepted ledger, an approved change, an approved plan, or a specified ticket. Adversarial review runs there, once, over the whole diff, so rounds of feedback in `iteration` never pay for it.
-
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec and are tracked in `skills-lock.json` like any other upstream skill. They shell out to the `openspec` CLI, which the setup scripts install with bun. `release-openspec` is deliberately not installed: it releases the OpenSpec project itself. Only `openspec-explore`, `openspec-propose`, `openspec-update-change`, `openspec-verify-change`, `openspec-sync-specs` and `openspec-archive-change` are installed. `openspec-apply-change` is removed because implementation goes through `yolo`, which carries the checks, adversarial review, and `open-pr`. `openspec-new-change` and `openspec-continue-change` duplicate `openspec-propose` step by step, `openspec-ff-change` duplicates it outright, `openspec-bulk-archive-change` duplicates `land`, and `openspec-onboard` is a tutorial. Their descriptions loaded in every session and their bodies cost about 16k tokens when routed to. The hash-locked `openspec-propose` and `openspec-update-change` still suggest `/openspec-apply-change`, `/openspec-continue-change` and `/openspec-new-change`; they cannot be edited in place, so `AGENTS.md` states that implementation goes through `yolo` and those skills are not installed.
-
-`handoff` comes from https://github.com/mattpocock/skills and is slash-only (`disable-model-invocation: true`), so it never fires on its own: it compacts the conversation into a document in the OS temp directory, for a fresh agent to pick up. It is not in `AGENTS.md`'s routing table on purpose, since the useful moment to hand off is one only the human can judge.
-
-Agent-initiated review is adversarial: `agent-review` carries both the protocol and the finding format. The reference it used to make to `caveman-review` is gone, because the skill already wrote the format out itself and the plugin skill advertised the same trigger phrases as the native review command, which is where a review request belongs.
-
-Human-requested review uses that native command, never a workflow, and it is aimed at a diff the session did not write: an external pull request, or a branch inherited from elsewhere. Work produced in a session already passed `agent-review` before it was pushed, by reviewers deliberately denied the plan and the rationale, so pointing the native command at it again is a second opinion from a reviewer with strictly more anchoring and strictly less independence.
-
-The upstream `code-review` skill is gone: its auto-trigger phrases fired review outside the human-invoked path, and being hash-locked they could not be disabled in place. Review reaches the harness's native review command, and `AGENTS.md`'s routing prohibition is the control. The `caveman-*` skills and the caveman plugin are gone too: the plugin forced its own "full" chat mode at session start against the lite rule in `AGENTS.md`, and its `caveman-commit` skill existed only in Claude Code. The shared harness now states both rules itself, so every harness reads the same ones. The chat rule in `AGENTS.md`'s **Writing** and the commit rules in `principle-write-for-the-reader` adapt the useful parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef) at its "lite" level: the filler and hedging drop-list, short synonyms, exact quoting, the outcome-first pattern, the clarity exceptions for warnings and irreversible steps, and the commit subject and body rules. Its 72-column body wrap is left out, because `AGENTS.md`'s **Writing** forbids hard wraps.
-
-## Global versus project
-
-`AGENTS.md` holds contracts, shapes, classes, and protocols, and must stay project-agnostic. Concrete commands, paths, provisioning, and available data sources belong in each repository's own `AGENTS.md` and worktrunk project config. Where a project declares nothing, a workflow infers it and records what it inferred, so a wrong guess is visible rather than silent.
-
-This is what lets the same harness serve a large monorepo and a small side project in another language. A project with no telemetry, tracker, or CI degrades gracefully: runtime claims are marked unchecked, and the oracle ladder shortens rather than failing.
-
-## No orchestration layer
-
-Worktrees come from the `worktree` block (or `wty` by hand), and the model can spawn subagents itself, so parallelism and supervision are prompt-level concerns. There is deliberately no scheduler, daemon, queue tool, or fan-out script here: the loop lives in `AGENTS.md` and the skills.
-
-Where per-stream state is needed, worktrunk already provides it. CI and review state ride on its PR object (`ci.ci_status`, `ci.review_state`) via `wt list --full`; escalation and attempt counts live in its per-branch vars (`git config worktrunk.state.<branch>.vars.*`), which survive an agent restart because they are stored in `.git`. Vars are used rather than the activity marker, because a marker is rewritten on every prompt and would erase an escalation.
-
-Creating a stream needs no tooling of its own: `wty <branch> -- '<intent>'` makes a provisioned worktree and hands the terminal to an agent in one step.
-
-Do not enable the worktrunk Claude Code plugin: its `UserPromptSubmit` hook writes the same per-branch marker slot an escalation would use.
+Authenticate each harness independently with `claude`, `codex login` or `opencode auth login`. Use Claude Code directly for a Claude subscription; do not route its OAuth credentials through OpenCode. OpenCode configuration and provider choices are documented in `opencode/README.md`.
 
 ## Skill updates
 
-Upstream skills are tracked in `skills-lock.json`. The `.agents/skills` link exposes the existing shared skill directory to `skills.sh`; Claude Code and OpenCode continue loading that directory through their setup links.
-
-Add one with `--agent universal`, which is what resolves to the `.agents/skills` link. Any other agent id writes the skill body somewhere else in the repo instead: `--agent claude-code` drops a full copy into `.claude/skills/`, where this repo keeps only symlinks, so the copy would drift from `agents/skills` the moment either side is updated.
+Upstream skills are tracked in `skills-lock.json`. The `.agents/skills` link exposes this directory to skills.sh. Never edit a locked skill body in place; update it deliberately or change local policy without duplicating its body. Removing an upstream skill means removing its directory, lock entry and tracked `.claude/skills` link together.
 
 ```sh
 npx skills@1 add <owner>/<repo> --skill <name> --agent universal -y
 ln -s ../../.agents/skills/<name> .claude/skills/<name>
 ```
 
-The second line is bookkeeping this repo tracks: `.claude/skills/` holds a committed symlink per skills.sh-installed skill, and current versions of the CLI copy into an agent directory rather than linking, so adding one by hand keeps that set complete. Both harnesses already load the whole directory through the setup links, so the symlink changes nothing at runtime.
-
-Review upstream changes before committing them, then update project skills with:
+Use `--agent universal` so the body lands in the shared directory rather than a harness-specific copy. Review upstream changes before committing, and update with:
 
 ```sh
 npx skills@1 update --project --yes
 ```
 
-Neither command belongs in `setup.sh` or `sync.sh`. The scripts provision a machine from what is committed, and the skills are committed, so a fresh clone already has them: adding an update there would mean every provisioning run silently pulls new upstream instructions and rewrites the hashes nobody reviewed, which is the opposite of what the lock file is for. `skills experimental_install` restores from the lock and is equally unnecessary for the same reason. Updating is a deliberate act with a diff to read, like bumping a pinned flake input.
+Do not put skill updates in provisioning scripts: a switch uses reviewed committed instructions. `skills list` agent labels are cosmetic here because every harness loads the shared directory.
 
-`skills list` reports a skill's agents from its own bookkeeping, so one added with `--agent universal` does not list Claude Code. That field is cosmetic here: both harnesses load the whole directory through the setup links, not per skill.
+The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec. The installed set is explore, propose, update-change, verify-change, sync-specs and archive-change. Optional upstream commands mentioned by those skills may be absent; use the installed CLI's status and instructions instead of requiring another workflow. Never run openspec init as part of ordinary implementation.
 
-Never edit a locked skill body in place, or the next update will report drift or clobber the edit. A locked skill may only be deleted, along with its lock entry, or wrapped by local policy in `AGENTS.md`.
+`handoff` comes from https://github.com/mattpocock/skills and remains explicitly invoked. `agent-review`, `verification`, `evidence` and `grill-me` are locally maintained. Chat and commit writing rules adapt parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef), without its forced chat mode or prose wrapping.
 
-Deleting the body and leaving the entry is worse than leaving both: the entry is the instruction to fetch, so the next update reinstalls the skill. That is how the `caveman-*` and `code-review` bodies came back months after being removed. Deleting a skill therefore means the directory, the lock entry, and the `.claude/skills` symlink together.
-
-`agent-review`, `verification`, `evidence`, and `grill-me` are maintained locally and are not in the lock file. `grill-me` was unlocked deliberately: its upstream body was a one-line pointer to a command that does not exist.
-
-There is no progress-tracking skill and no `AGENT_PROGRESS.md`. The ignored `.agent/<branch-key>.tasks.md` ledger is the unspecced counterpart to a change's `tasks.md`, not a second system: one list per line of work, and `land` removes it. Run state is derivable from cheaper sources that cannot go stale: the oracle ladder says what is still failing, `git log` says what landed, `wt config state vars` holds attempts and escalations in `.git`, and a `tasks.md` in an OpenSpec change directory carries the checklist for specced work.
-
-## Authentication
-
-Authenticate each harness independently:
-
-```sh
-claude
-codex login
-opencode auth login
-```
-
-Use Claude Code directly for a Claude Pro/Max subscription. Do not route its OAuth credentials through OpenCode.
-
-Use Codex for OpenAI models and OpenCode with OpenCode Zen for its curated non-OpenAI, non-Anthropic models. OpenCode defaults to the hosted Gemini 3.8 Flash model, which avoids local model memory pressure on a 16 GB laptop.
-
-Configure MCP servers manually in each harness. OpenCode's public configuration is tracked under `opencode/`; credentials and generated runtime state stay machine-local. See `opencode/README.md`.
-
-OpenCode documentation:
-
-https://opencode.ai/docs/config/
-
-https://opencode.ai/docs/mcp-servers/
-
-Claude Code documentation:
-
-https://code.claude.com/docs/en/mcp
-
-OpenCode Zen documentation:
-
-https://opencode.ai/docs/zen/
+Harness behavior is verified through the repository's disposable session scenarios, not by instruction wording alone. See the root AGENTS.md for the dry run, paid behavioral run and transcript-review commands.

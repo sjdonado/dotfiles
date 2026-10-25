@@ -1,5 +1,5 @@
-description: 'Happy path: with no issue the agent proposes a branch name and waits, iterates in its own worktree with feedback, then ships it with yolo through open-pr and flags the side effect on the other page.'
-skills: ['iteration', 'worktree', 'yolo', 'open-pr']
+description: 'A clear task that asks for isolation gets a routine branch name without a confirmation loop, then user feedback reuses that branch without notes, review, or publication.'
+skills: ['worktree']
 core: true
 
 setup:
@@ -15,7 +15,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+    This is a disposable evaluation repository.
   'components/label.ts': |
     // Shared display-name formatter.
     export function label(text: string): string {
@@ -43,16 +43,8 @@ files:
     console.log("check passed");
 
 turns:
-  - prompt: 'Names on the settings page look messy when people paste them with extra spaces, tabs or newlines. Clean them up but keep their casing. I am not sure yet what blank names should show, so let me try something first.'
+  - prompt: 'Names on the settings page look messy when people paste them with extra spaces, tabs or newlines. Clean them up but keep their casing, check the change, and work on an isolated task branch so I can review it afterward.'
     expect:
-      skills: ['iteration', 'worktree']
-      notSkills: ['yolo', 'open-pr']
-      notRan:
-        - 'wt switch'
-        - 'git (commit|push)'
-        - 'git (checkout -b|switch -c|branch [^-\s])'
-        - 'git worktree add'
-        - '\bgh pr (create|merge|edit|comment|review)\b'
       branch: '^main$'
       committed: false
       clean: true
@@ -60,104 +52,28 @@ turns:
         - 'git diff --quiet "$SEED"'
         - 'test "$(git rev-parse main)" = "$SEED"'
         - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
-        - 'test ! -e .agent/main.md'
-        - 'test "$(git worktree list | wc -l)" -eq 1'
-        - 'test -z "$(git branch --format="%(refname:short)" | grep -v "^main$")"'
-      reply: ['fix/|feat/|refactor/', '\?']
+        - 'test "$(git worktree list | wc -l)" -eq 2'
+        - |-
+          branches="$(git branch --format='%(refname:short)' | grep -v '^main$')"; test "$(printf '%s\n' "$branches" | wc -l | tr -d ' ')" -eq 1
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" branch --show-current)" != main
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings(' Ada \\t\\n Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+
       pr: false
 
-  - prompt: 'Use fix/settings-names. Go ahead and try it.'
+  - prompt: 'I tried it and it looks right. Also make blank or whitespace-only names show Untitled.'
     expect:
-      notSkills: ['yolo', 'open-pr']
-      ran: ['wt switch --create', '\bbun\b']
-      notRan:
-        - 'git (commit|push)'
-        - 'git (checkout -b|switch -c|branch [^-\s])'
-        - 'git worktree add'
-        - '\bgh pr (create|merge|edit|comment|review)\b'
       branch: '^main$'
       committed: false
       clean: true
       check:
         - 'git diff --quiet "$SEED"'
-        - 'test "$(git rev-parse main)" = "$SEED"'
-        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
-        - 'test ! -e .agent/main.md'
-        - 'git rev-parse --verify -q refs/heads/fix/settings-names'
+        - 'test "$(git worktree list | wc -l)" -eq 2'
         - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" branch --show-current)" = fix/settings-names
+          branches="$(git branch --format='%(refname:short)' | grep -v '^main$')"; test "$(printf '%s\n' "$branches" | wc -l | tr -d ' ')" -eq 1
         - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$W" != "$(git rev-parse --show-toplevel)" && test "$(dirname "$W")" = "$(dirname "$(git rev-parse --show-toplevel)")"
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" status --porcelain | wc -l)" -gt 0
         - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && files="$({ git ls-files --others --exclude-standard; git diff --name-only "$SEED"; })"; ! printf "%s\n" "$files" | grep -qE "\.(test|spec)\.|(^|/)(__tests__|tests?)/" && test -z "$(printf "%s\n" "$files" | grep -vE "^(components|pages)/|^$")"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada \\t  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; f="$W/.agent/fix%2Fsettings-names.md"; grep -q Purpose "$f" && grep -q 'End state' "$f" && grep -q 'Key tasks' "$f" && grep -q '\[[ x]\]' "$W/.agent/fix%2Fsettings-names.tasks.md"
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('   '), '<h1>Settings for Untitled</h1>'); assert.equal(renderSettings(' Ada  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
       pr: false
-
-  - prompt: 'I tried it and it looks right. Blank or whitespace-only names should show Untitled.'
-    expect:
-      notSkills: ['yolo', 'open-pr']
-      ran: ['\bbun\b']
-      notRan:
-        - 'git (commit|push)'
-        - 'git (checkout -b|switch -c|branch [^-\s])'
-        - 'git worktree add'
-        - '\bgh pr (create|merge|edit|comment|review)\b'
-        - 'wt switch --create'
-      branch: '^main$'
-      committed: false
-      clean: true
-      check:
-        - 'git diff --quiet "$SEED"'
-        - 'test "$(git rev-parse main)" = "$SEED"'
-        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
-        - 'test ! -e .agent/main.md'
-        - 'git rev-parse --verify -q refs/heads/fix/settings-names'
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" branch --show-current)" = fix/settings-names
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$W" != "$(git rev-parse --show-toplevel)" && test "$(dirname "$W")" = "$(dirname "$(git rev-parse --show-toplevel)")"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && files="$({ git ls-files --others --exclude-standard; git diff --name-only "$SEED"; })"; ! printf "%s\n" "$files" | grep -qE "\.(test|spec)\.|(^|/)(__tests__|tests?)/" && test -z "$(printf "%s\n" "$files" | grep -vE "^(components|pages)/|^$")"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('   '), '<h1>Settings for Untitled</h1>'); assert.equal(renderSettings(' Ada  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
-      pr: false
-      reply: ['\?']
-
-  - prompt: 'That is the whole scope and I accept it: settings names collapse whitespace and keep casing, blank names show Untitled, proven by bun check.ts. Yolo it and open the PR.'
-    expect:
-      skills: ['yolo', 'open-pr']
-      ran: ['bun check\.ts', 'git push']
-      notRan:
-        - 'wt switch --create'
-        - 'git worktree add'
-      branch: '^main$'
-      committed: false
-      clean: true
-      check:
-        - 'git diff --quiet "$SEED"'
-        - 'test "$(git rev-parse main)" = "$SEED"'
-        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
-        - 'test ! -e .agent/main.md'
-        - 'git rev-parse --verify -q refs/heads/fix/settings-names'
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" branch --show-current)" = fix/settings-names && test -z "$(git -C "$W" status --porcelain)"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$(git -C "$W" rev-parse HEAD)" != "$SEED" && test "$(git ls-remote origin refs/heads/fix/settings-names | cut -f1)" = "$(git -C "$W" rev-parse HEAD)"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && git diff "$SEED" HEAD | grep -qE "^\+.*\b(assert|expect)\b"
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts
-        - |-
-          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('   '), '<h1>Settings for Untitled</h1>'); assert.equal(renderSettings(' Ada  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
-        - '! git log --all --format= --name-only | grep -q "^\.agent/"'
-      reply: ['https://example\.invalid/pull/1']
-      pr:
-        title: ['^(?!wip:).+']
-        body: ['manual verification[\s\S]*settings', 'manual verification[\s\S]*home']

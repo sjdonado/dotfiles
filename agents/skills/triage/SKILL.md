@@ -26,7 +26,7 @@ Steps:
 
 3. Run the kill query before reading any code. Load and follow the `evidence` skill: is this still happening, does any real user reach it, is the slow path ever called. A kill result ends the triage at a one-paragraph report, which is the cheapest possible outcome, so it comes before the most expensive step, not after. Skip any capability the project has not configured, and say so rather than inventing a number.
 
-4. Investigate the relevant code to ground the analysis. Cite evidence as `path:line`. Delegate the code recon to native read-only subagents by default, so the file contents stay out of this context and only `path:line` plus mechanism come back; read directly only when the item already names the file. Then confirm or refute the root-cause hypothesis with at most two further evidence queries.
+4. Investigate the relevant code to ground the analysis. Cite evidence as `path:line`. Read directly for a focused investigation; delegate substantial independent reconnaissance when it adds value (principle-delegate-down-a-tier). Then confirm or refute the root-cause hypothesis with at most two further evidence queries.
 
 5. Only now, if something load-bearing is still unresolved, stop and ask per `principle-decide-then-declare`. Most vague symptoms resolve into a stack trace and a `path:line`, so asking before investigating wastes a round trip. Batch every question into one stop, each carrying its evidence.
 
@@ -34,7 +34,7 @@ Steps:
    - **Summary**: one line, what the item asks plus your read of it.
    - **Evidence ledger**: a table of claim, prediction, verdict (confirmed, refuted, or no data), number, and link. A refuted claim gets its own line saying what changed as a result.
    - **Findings**: for a bug, the root-cause mechanism with `path:line` and a confidence of confirmed, likely, or unclear. Confidence is derived from the ledger, not asserted: confirmed requires either a code-level proof or a confirming production number. For a feature or adjustment, where it fits and what it touches.
-   - **Options**: genuinely viable approaches, scaled to the stakes: two for a small fix or adjustment, three or four only when there is a real architectural fork. For each: what changes, **Pros**, **Cons**, risk and blast radius. Do not invent alternatives to fill the count.
+   - **Options**: genuinely viable approaches, scaled to the actual design choices. For each: what changes, **Pros**, **Cons**, risk and blast radius. Do not invent alternatives to fill the count.
    - **Recommendation**: preferred option and why. If uncertain, state the exact open questions instead.
    - **Plan brief**, the handoff contract for plan mode:
      - Implementation contract: the recommended option in one paragraph.
@@ -42,6 +42,6 @@ Steps:
      - Verification concerns: what a plan must prove, and how.
      - Open questions: each with its evidence, the options, your default, and the cost of the default being wrong.
 
-7. Hand off. If the harness is already in plan mode, do not stop and do not restate: continue directly into the plan using the plan brief as its basis, and present it for approval. Otherwise stop and say that entering plan mode with this brief is the next step. Never implement from this workflow.
+7. Hand off. If the harness is already in plan mode, do not stop and do not restate: continue directly into the plan using the plan brief as its basis, and present it for approval. Otherwise return the brief; a formal plan is optional when further design work would help. Never implement from this workflow.
 
 Constraints: no code edits, no file writes, no commits. If unclear after investigating, say so and list what is needed.

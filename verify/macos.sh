@@ -51,6 +51,12 @@ assert_config() {
   for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
     if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
   done
+  handy="Library/Application Support/com.pais.handy/settings_store.json"
+  if [ "$(f ".links[\"$handy\"] // empty")" = "$repo/macos/handy/settings_store.json" ]; then
+    ok "Handy settings link into this account's repository"
+  else
+    bad "Handy settings do not link into this account's repository"
+  fi
 
   group "setup steps"
   for step in codexConfig batCache pss agentClis retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
@@ -95,7 +101,7 @@ assert_config() {
 
   group "packages"
   echo "  info $(f '.packages | length') packages in the home profile"
-  for p in neovim opencode pi-coding-agent; do
+  for p in mise neovim opencode pi-coding-agent; do
     if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
   done
   # Installed by the agentClis step instead, so T3 Code can update them.
