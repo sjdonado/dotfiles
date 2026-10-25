@@ -30,7 +30,7 @@ Without publication authorization, finish the requested local work and report it
 
 Reuse the current task's checkout and follow the user's branch or worktree choice. Use worktree when starting separate work that needs isolation, including new work from the default branch; choose a routine branch name when none is supplied. Ask about ownership only when the current context cannot settle it. Never commit to the default branch, except land's explicitly authorized docs bookkeeping on an unprotected default branch.
 
-Preserve unrelated edits and stage explicit files. Before changing a migration, CI/CD, lockfile, public contract, infrastructure, auth or secrets configuration, ensure that surface is within the user's request; ask when it is outside scope. Do not treat ordinary local configuration as an irreversible action merely because it is configuration.
+Preserve unrelated edits and staged changes. Inspect the full index before committing. If unrelated changes are staged, commit only the intended paths with `git commit --only -- <paths>` so they cannot enter the commit; leave the unrelated index entries intact. Before changing a migration, CI/CD, lockfile, public contract, infrastructure, auth or secrets configuration, ensure that surface is within the user's request; ask when it is outside scope. Do not treat ordinary local configuration as an irreversible action merely because it is configuration.
 
 ## Verification and review
 

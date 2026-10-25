@@ -26,7 +26,8 @@ The checkout is disposable and `gh` refuses unsupported operations. No real forg
 
 | Scenario | Focus |
 | --- | --- |
-| `happy-path` | Iteration, worktree selection, feedback and an explicitly bounded independent run |
+| `dotfiles-setup` | Handy preferences and mise on the current branch, then a scoped commit beside staged editor settings |
+| `happy-path` | Isolated local implementation and feedback on the same task branch |
 | `iteration-gate` | Keep open scope local and ask the unresolved question |
 | `plan-approval` | Approval to implement does not imply publication |
 | `yolo-bounded` | Bounded request through a PR |

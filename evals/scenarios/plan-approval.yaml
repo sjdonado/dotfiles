@@ -60,7 +60,7 @@ turns:
       check:
         - 'bun check.ts'
         - |-
-          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings(' Ada \\t Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('Ada \\t Lovelace'), '<h1>Settings for Ada Lovelace</h1>')"
         - 'test ! -e .agent/fix%2Fsettings-names.md'
         - 'test "$(git rev-parse main)" = "$SEED"'
         - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'

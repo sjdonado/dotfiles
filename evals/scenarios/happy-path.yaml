@@ -1,6 +1,5 @@
 description: 'A clear task that asks for isolation gets a routine branch name without a confirmation loop, then user feedback reuses that branch without notes, review, or publication.'
 skills: ['worktree']
-core: true
 
 setup:
   - 'git remote set-head origin main'
