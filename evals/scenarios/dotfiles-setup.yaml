@@ -45,7 +45,7 @@ files:
 
 turns:
   - prompt: |-
-      I want Handy to use the same settings in every account on this laptop, shared through git pull like the existing configs. My exported settings are in .fixture/handy-settings.json. Keep this on the current work-in-progress branch. Add the preferences and their macOS link, and install mise with Nix for both platforms. Keep the configuration lean and modular. Check the change without switching this machine.
+      I want Handy to use the same settings in every account on this laptop, shared through git pull like the existing configs. My exported settings are in .fixture/handy-settings.json. Keep this on the current work-in-progress branch. Add the preferences and their macOS link, and install mise with Nix for both platforms. Keep the configuration lean and modular. Document in README.md how to sync Handy settings between accounts. Check the change without switching this machine.
     expect:
       branch: '^feat/work-in-progress$'
       committed: false
@@ -67,6 +67,19 @@ turns:
       files:
         'README.md': 'Handy'
 
+  - prompt: 'Before committing, make the README instructions explicit: quit Handy before committing its settings and before pulling in another account; explain that models, recordings and permissions stay local to each account.'
+    expect:
+      branch: '^feat/work-in-progress$'
+      committed: false
+      clean: false
+      pr: false
+      check:
+        - 'test "$(git hash-object zed/settings.json)" = "$(cat .fixture/editor.hash)"'
+        - 'test "$(git diff --cached --name-only)" = zed/settings.json'
+        - 'cmp .fixture/handy-settings.json macos/handy/settings_store.json'
+      files:
+        'README.md': 'Handy'
+
   - prompt: 'Looks good. Commit only the Handy and mise setup change. Leave my staged editor preferences alone.'
     expect:
       branch: '^feat/work-in-progress$'
@@ -82,4 +95,5 @@ turns:
         - 'git ls-files --error-unmatch macos/handy/settings_store.json >/dev/null'
         - 'git diff HEAD^ HEAD --name-only | grep -qx nix/home/common.nix'
         - 'git diff HEAD^ HEAD --name-only | grep -qx nix/home/darwin.nix'
+        - 'git diff HEAD^ HEAD --name-only | grep -qx README.md'
         - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'

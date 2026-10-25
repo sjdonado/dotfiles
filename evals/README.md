@@ -39,3 +39,5 @@ The checkout is disposable and `gh` refuses unsupported operations. No real forg
 | `risk-review-selection` | Recognize when independent review is warranted |
 
 `gh.ts` is the local forge substitute used by these fixtures. It serves a seeded PR and records supported operations in `.fixture/operations.jsonl`.
+
+For `dotfiles-setup`, read the resulting README before accepting the run: it must explain per-account clones, saving and quitting Handy before committing and pushing, closing Handy before pulling and reopening in another account, and the account-local models and permissions. The file assertion locates the Handy section; the parent assesses whether those instructions are usable.
