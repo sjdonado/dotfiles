@@ -56,14 +56,16 @@
       "gcloud-cli"
       "google-chrome"
       "granola"
+      # Offline speech-to-text dictation.
+      "handy"
       "helium-browser"
       "icon-composer"
       "imageoptim"
       "linear"
       # Local meeting transcription and dictation.
       "muesli"
-      "ngrok"
       "nordvpn"
+      "notion"
       "orbstack"
       "raycast"
       "rockxy"

@@ -188,8 +188,6 @@ setup_linux() {
     1. Authenticate OpenCode and its MCP servers: opencode auth login; opencode mcp auth <server>
        Claude Code and Codex log in on first start.
     2. Copy any private .env values and SSH keys by hand.
-
-  Connect from your local terminal: herdr --remote <user>@<this-host>
 NOTE
 }
 

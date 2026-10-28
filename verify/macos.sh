@@ -35,6 +35,7 @@ assert_config() {
       users = builtins.attrNames c.home-manager.users;
       accounts = builtins.filter (u: builtins.substring 0 7 u != \"_nixbld\") (builtins.attrNames c.users.users);
       primary = c.system.primaryUser;
+      shells = c.environment.etc.shells.text or \"\";
       userDefaults = builtins.toJSON hm.targets.darwin.defaults;
     }") || { echo "evaluation failed"; exit 1; }
   f() { jq -r "$1" <<<"$facts"; }
@@ -51,9 +52,15 @@ assert_config() {
   for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
     if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
   done
+  handy="Library/Application Support/com.pais.handy/settings_store.json"
+  if [ "$(f ".links[\"$handy\"] // empty")" = "$repo/macos/handy/settings_store.json" ]; then
+    ok "Handy settings link into this account's repository"
+  else
+    bad "Handy settings do not link into this account's repository"
+  fi
 
   group "setup steps"
-  for step in codexConfig batCache pss retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
+  for step in codexConfig batCache pss agentClis retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
     if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
   done
 
@@ -66,6 +73,7 @@ assert_config() {
   group "system settings"
   system="$(f .system)"
   if grep -q 'UserShell /bin/zsh' <<<"$system"; then ok "activation sets zsh as the login shell"; else bad "activation does not set /bin/zsh as UserShell"; fi
+  if f .shells | grep -qx /bin/zsh; then ok "/etc/shells is written and lists /bin/zsh"; else bad "nix-darwin writes no /etc/shells (environment.shells is empty)"; fi
   for want in AppleShowAllExtensions AppleShowAllFiles; do
     if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
   done
@@ -95,15 +103,19 @@ assert_config() {
 
   group "packages"
   echo "  info $(f '.packages | length') packages in the home profile"
-  for p in neovim opencode codex claude-code pi-coding-agent; do
+  for p in mise neovim opencode pi-coding-agent; do
     if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
+  done
+  # Installed by the agentClis step instead, so T3 Code can update them.
+  for p in codex claude-code; do
+    if f '.packages[]' | grep -q "^$p-[0-9]"; then bad "$p is a Nix package"; else ok "$p is not a Nix package"; fi
   done
 
 
   if [ "${CHECK_PACKAGES:-0}" = 1 ]; then
     group "packages: available, prebuilt, no collisions"
-    # Built on the machine by design: this repository's own packages (nix/pkgs, the `only` wrappers), claude-code (unfree, so Hydra never builds it; its build is a download), python environments (a directory of links), and home-manager's generated files.
-    LOCAL='^(opencode|codex|gawk|gsed|telnet|claude-code|python3-[0-9.]+-env|home-manager|hm-session-vars\.sh|home-configuration-reference-manpage|dummy-xdg-mime-dirs[0-9])(-[0-9]|$)'
+    # Built on the machine by design: this repository's own packages (nix/pkgs, the `only` wrappers), python environments (a directory of links), and home-manager's generated files.
+    LOCAL='^(opencode|gawk|gsed|telnet|python3-[0-9.]+-env|home-manager|hm-session-vars\.sh|home-configuration-reference-manpage|dummy-xdg-mime-dirs[0-9])(-[0-9]|$)'
 
     # name, every output a profile installs, and whether it evaluates at all.
     describe='ps: map (p: let o = builtins.tryEval (map (n: (p.${n} or p).outPath) (p.meta.outputsToInstall or [ "out" ])); in { name = p.name or "?"; ok = o.success; outs = if o.success then o.value else []; }) ps'

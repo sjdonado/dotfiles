@@ -3,7 +3,7 @@
 This directory holds the managed configuration for `pi-agent`, the upstream standalone Pi CLI:
 
 - `settings.json`: subscription provider and model defaults with native code mode.
-- `mcp.json`: developer MCP servers (ios-simulator, git-bug), exposed through code mode.
+- `mcp.json`: the developer MCP server (ios-simulator), exposed through code mode.
 
 These files link to `~/.pi/agent/`. Authentication stays in Pi's private agent directory; dotfiles contain no credentials. Use `pi-agent`'s `/login` for subscription sign-in.
 

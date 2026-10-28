@@ -1,0 +1,64 @@
+description: 'A user-controlled post-sign-in destination creates an open-redirect risk that merits review and safe URL handling.'
+skills: ['agent-review']
+
+setup:
+  - 'git checkout -qb fix/continue-path'
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    The /continue route runs immediately after sign-in. The app origin is https://app.local. Its user-supplied next value may be a same-origin URL or a local path, but must never redirect off-site.
+
+    This is a disposable evaluation repository.
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text;
+    }
+  'pages/settings.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderSettings(name: string): string {
+      return `<h1>Settings for ${label(name)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderHome(name: string): string {
+      return `<h1>Welcome${label(name) ? `, ${label(name)}` : ""}</h1>`;
+    }
+  'pages/continue.ts': |
+    export function returnPath(next: string | null): string {
+      return next || "/dashboard";
+    }
+  'check.ts': |
+    console.log("check passed");
+
+turns:
+  - prompt: 'Sign-in should take people back to the page they opened when a next query parameter is present. Accept local paths and absolute https://app.local URLs, but reject off-site destinations and paths that could be interpreted as protocol-relative URLs. Add that behavior and check it.'
+    expect:
+      branch: '^fix/continue-path$'
+      committed: false
+      clean: false
+      check:
+        - 'bun check.ts'
+        - |-
+          bun -e "import assert from 'node:assert'; import { returnPath } from './pages/continue.ts'; assert.equal(returnPath('/settings?tab=profile'), '/settings?tab=profile'); assert.equal(returnPath('https://app.local/settings?tab=profile'), '/settings?tab=profile'); assert.equal(returnPath('https://outside.example/phish'), '/dashboard'); assert.equal(returnPath('//outside.example/phish'), '/dashboard'); assert.equal(returnPath('https://app.local//evil'), '/dashboard')"
+      pr: false
+
+  - setup:
+      - 'git diff --binary HEAD > .fixture/diff-before-review.patch'
+    prompt: 'Review the redirect change for security issues. If an independent reviewer is available, ask them to inspect it; otherwise review it yourself and state that you could not get an independent review.'
+    expect:
+      branch: '^fix/continue-path$'
+      committed: false
+      clean: false
+      check:
+        - 'git diff --binary HEAD | cmp - .fixture/diff-before-review.patch'
+
+      pr: false

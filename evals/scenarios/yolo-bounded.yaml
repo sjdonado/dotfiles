@@ -1,5 +1,8 @@
-description: 'A fully bounded request goes straight to yolo: task branch, commits, push, one PR that adds an assertion and whose manual verification names the side-effect page.'
+description: 'An explicit request to work independently through a green PR selects a persistent run, uses a routine task branch, and opens one PR after the local checks pass.'
 skills: ['yolo']
+
+setup:
+  - 'git remote set-head origin main'
 
 files:
   'AGENTS.md': |
@@ -11,7 +14,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+    This is a disposable evaluation repository.
   'components/label.ts': |
     // Shared display-name formatter.
     export function label(text: string): string {
@@ -40,28 +43,29 @@ files:
 
 turns:
   - prompt: |-
-      On the settings page, names should trim their ends and collapse inner runs of whitespace to one space, keeping casing. That is the whole scope. Acceptance: bun check.ts passes and renderSettings('  Ada \t Lovelace ') returns <h1>Settings for Ada Lovelace</h1>. Ship it as a PR.
+      On the settings page, names should trim their ends and collapse inner runs of whitespace to one space, keeping casing. That is the whole scope. Work independently until this is a green PR. Acceptance: bun check.ts passes and renderSettings('  Ada \t Lovelace ') returns <h1>Settings for Ada Lovelace</h1>. Ship it as a PR.
     expect:
-      skills: ['yolo']
-      notSkills: ['proto']
-      ran: ['bun check\.ts']
-      branch: '^(?!main$).+'
-      committed: true
+      branch: '^main$'
+      committed: false
       clean: true
-      pushed: true
       check:
-        - 'git diff "$SEED" HEAD | grep -qE "^\+.*\b(assert|expect)\b"'
-        - 'bun check.ts'
-        - |-
-          bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada \\t Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+        - 'git diff --quiet "$SEED"'
         - 'test "$(git rev-parse main)" = "$SEED"'
         - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
-        - '! git log --all --format= --name-only | grep -q "^\.agent/"'
         - |-
-          ls .agent/*.tasks.md | grep -qv '/main\.'
-      reply: ['https://example\.invalid/pull/1']
-      files:
-        '.agent/main.md': false
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; test "$W" != "$(git rev-parse --show-toplevel)" && test "$(dirname "$W")" = "$(dirname "$(git rev-parse --show-toplevel)")"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; B="$(git -C "$W" branch --show-current)"; test "$B" != main && test -z "$(git -C "$W" status --porcelain)"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; B="$(git -C "$W" branch --show-current)"; test "$B" != main && test "$(git -C "$W" rev-parse HEAD)" != "$SEED" && test "$(git ls-remote origin "refs/heads/$B" | cut -f1)" = "$(git -C "$W" rev-parse HEAD)"
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun check.ts
+        - |-
+          W="$(git worktree list --porcelain | awk '/^worktree /{p=substr($0,10)} /^branch refs\/heads\/main$/{next} /^branch /{print p}' | head -1)"; test -n "$W"; cd "$W" && bun -e "import assert from 'node:assert'; import { renderSettings } from './pages/settings.ts'; assert.equal(renderSettings('  Ada \\t  Lovelace '), '<h1>Settings for Ada Lovelace</h1>')"
+
+        - |-
+          jq -e '.body | (contains("\\n\\n") | not)' .fixture/pr.json >/dev/null
+
       pr:
-        title: ['^(?!wip:).+']
-        body: ['manual verification[\s\S]*settings', 'manual verification[\s\S]*home']
+        title: ['.+']
+        body: ['[Ss]ettings', '(trim|collapse|whitespace)', 'bun check\.ts']

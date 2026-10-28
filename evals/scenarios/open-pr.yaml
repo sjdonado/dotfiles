@@ -1,0 +1,78 @@
+description: 'A direct "open a PR" on a task branch with a red local check publishes nothing and reports the failure; once green, the requested PR is opened through open-pr with a normal title.'
+skills: ['open-pr', 'verification']
+
+setup:
+  - 'git checkout -qb fix/settings-names'
+  - |-
+    awk '/console\.log/{print "assert.equal(renderSettings(\"  Ada \\t Lovelace \"), \"<h1>Settings for Ada Lovelace</h1>\");"} {print}' check.ts > check.tmp && mv check.tmp check.ts
+
+files:
+  'AGENTS.md': |
+    # Project
+
+    Tiny TypeScript site run with Bun. Shared code lives in components/, pages in pages/.
+
+    Local check: `bun check.ts`. It is the whole ladder: no typecheck, lint, build or remote CI.
+
+    Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
+
+    This is a disposable evaluation repository.
+  'components/label.ts': |
+    // Shared display-name formatter.
+    export function label(text: string): string {
+      return text;
+    }
+  'pages/settings.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderSettings(name: string): string {
+      return `<h1>Settings for ${label(name)}</h1>`;
+    }
+  'pages/home.ts': |
+    import { label } from "../components/label.ts";
+
+    export function renderHome(name: string): string {
+      return `<h1>Welcome${label(name) ? `, ${label(name)}` : ""}</h1>`;
+    }
+  'check.ts': |
+    import assert from "node:assert";
+    import { renderHome } from "./pages/home.ts";
+    import { renderSettings } from "./pages/settings.ts";
+
+    assert.equal(renderSettings("Ada"), "<h1>Settings for Ada</h1>");
+    assert.equal(renderHome("Ada"), "<h1>Welcome, Ada</h1>");
+    console.log("check passed");
+
+turns:
+  - prompt: 'The whitespace change on this branch is finished. Open a PR for it as it is, and do not edit any file.'
+    expect:
+      branch: '^fix/settings-names$'
+      committed: false
+      pushed: false
+      clean: false
+      pr: false
+      check:
+        - '! bun check.ts'
+        - 'test -z "$(git ls-remote origin refs/heads/fix/settings-names)"'
+        - '! jq -e -s "any(.[]; .args[0:2] == [\"pr\",\"create\"])" .fixture/operations.jsonl'
+
+  - setup:
+      - |-
+        printf '%s\n' '// Shared display-name formatter.' 'export function label(text: string): string {' '  return text.trim().replace(/\s+/g, " ");' '}' > components/label.ts
+    prompt: 'I fixed the label function. Open the PR now.'
+    expect:
+      branch: '^fix/settings-names$'
+      committed: true
+      pushed: true
+      clean: true
+      check:
+        - 'bun check.ts'
+        - 'test "$(git worktree list | wc -l)" -eq 1'
+        - 'test "$(git rev-parse main)" = "$SEED"'
+        - 'jq -e -s "any(.[]; .args[0:2] == [\"pr\",\"create\"] and .served)" .fixture/operations.jsonl'
+        - '! git log --all --format= --name-only | grep -q "^\.agent/"'
+
+      pr:
+        title: ['.+']
+        headRefName: ['^fix/settings-names$']
+        body: ['\S']

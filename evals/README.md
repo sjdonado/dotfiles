@@ -1,75 +1,43 @@
-# Harness evals
+# Harness benchmarks
 
-End-to-end sessions that show whether a change to the harness (agents/AGENTS.md, a skill) or a change of model alters what an agent actually does. A scenario is one real multi-turn conversation with a coding agent in a disposable repository, written entirely as YAML.
-
-## Layout
-
-- `scenarios/<name>.yaml`: one scenario. YAML keeps file contents, prompts and shell checks readable: a literal block (`|`) holds code as written at its own indentation, the way a GitHub Actions `run:` step does, and single-quoted regexes need no doubled backslashes. A one-line check that contains a single quote is a `|-` block, so it reads exactly as the shell runs it.
-  - `skills` names the skills the scenario exercises, so `--skill` can select it. `core: true` puts it in the default paid run.
-  - `files` seeds the repository. Its `AGENTS.md` is appended to the live `agents/AGENTS.md`, and every skill under `agents/skills/` is installed. Files under `.fixture/` (forge state such as `pr.json`) and `.agent/` (branch notes) are ignored by git, never committed.
-  - `setup` is optional shell run after the seed is pushed, for state the files cannot express, such as a pushed task branch.
-  - `turns` is the conversation: each turn has a `prompt`, an optional `setup` run before it (for example, the PR merging between turns), and the `expect`ed behavior once the agent finishes.
-- `models.json`: the models every scenario runs against.
-- `run.ts`: seeds the repository with a local bare `origin`, runs each turn through `pi-agent` in one persistent session, and evaluates the expectations. It is the only code that interprets scenarios.
-- `gh.ts`: the forge substitute on `PATH` as `gh`. It serves one pull request from `.fixture/pr.json`: `pr create|view|list|edit|checks`, `repo view`, and through `gh api` its `reviewThreads` (GraphQL or REST), replies inside a thread (recorded in `replies`) and branch protection. It refuses everything else, including top-level PR comments and reviews, and logs every call to `.fixture/operations.jsonl`.
-
-## Scenarios
-
-| Scenario | Skills | Proves |
-| --- | --- | --- |
-| `happy-path` (core) | proto, yolo | Prototype on the default branch without writing tests, fold in feedback, then yolo to one PR that adds an assertion and whose manual verification names the side-effect page. |
-| `proto-gate` | proto | A request for a PR with part of its scope open stays local, writes no test file, and asks the open question. |
-| `yolo-bounded` | yolo | A fully bounded request goes straight to a task branch and a PR that adds an assertion. |
-| `feedback` | feedback | Feedback on an open PR stays local until the batch is approved, then goes to the same branch and PR. |
-| `address-review` | address-review | Legit thread fixed, wrong thread rejected, resolved thread ignored; replies only inside threads and only after approval. |
-| `land` | land | No closure while the PR is open; after merge the note is archived and the task list deleted, with nothing published. |
-| `ask` | ask | A question is answered read-only with `path:line` evidence. |
-
-Not covered: skills that need a tracker MCP (`create-ticket`), production telemetry (`evidence`, `triage`), or subagents (`agent-review`, `verification` in a subagent). The scenarios tell the agent to skip agent-review and delegation. The previous 20-case matrix (`evals/harness/`, removed) also covered these, which have no scenario yet: an earlier PR approval not authorizing a new publication (gate-precedent), an agent-written ledger not authorizing one (gate-self-authored), herdr worktree selection (workspace-default, workspace-requested), continuation in a fresh session (recoverable, unrecoverable, handoff), `harness-boostrap` audit and setup, Reviewer B activation, and the OpenCode managed preview shell. Add one back as a scenario when a change touches its rule.
-
-## Expectations
-
-All patterns are case-insensitive regular expressions. Each key is optional.
-
-| Key | Passes when |
-| --- | --- |
-| `skills` / `notSkills` | the agent read (or never read) that skill's `SKILL.md` during the turn |
-| `ran` / `notRan` | some successful Bash command matched (or no command matched) |
-| `branch` | the current branch matches |
-| `committed` | HEAD moved during the turn, or did not |
-| `pushed` | `origin` has the current branch at HEAD, or does not |
-| `clean` | `git status --porcelain` is empty, or is not |
-| `check` | each shell command exits 0 in the repository; `$SEED` holds the seed commit |
-| `files` | each file exists and matches, or is absent when the value is `false` |
-| `pr` | `false` means no PR; otherwise every pattern matches its PR field (`title`, `body`, `headRefName`, ...) |
-| `reply` | the agent's final message matches |
-
-Behavior is proved by `check` commands that run the code, and by outcomes such as branches, pushes and the PR. Judge prose quality and reasoning from the transcript, not from a growing set of patterns.
+Each `scenarios/<name>.yaml` is a benchmark fixture: it defines a disposable repository, the conversation prompts, and deterministic outcomes to inspect after each turn. Run the prompts with native Luna subagents from the parent session. The fixture does not start agents, score their reasoning, or infer skill reads from tool traces.
 
 ## Commands
 
-Free:
+From the repository root:
 
-```
-bun run.ts --list
-bun run.ts --dry-run
-```
-
-A dry run validates every scenario's shape, seeds its repository and evaluates each turn against the seed. Expect failures: it proves the wiring, not the behavior.
-
-Paid, only when explicitly authorized:
-
-```
-bun run.ts --run                         # core scenarios only, every model
-bun run.ts --run --skill feedback        # every scenario that exercises one skill
-bun run.ts --run --all                   # the full eval
-bun run.ts --run --filter land --model sol-medium
+```sh
+bun evals/run.ts list
+bun evals/run.ts prepare yolo-bounded /tmp/yolo-bounded
+bun evals/run.ts check yolo-bounded /tmp/yolo-bounded 1
 ```
 
-After a change to one skill, run `--skill <name>`. After a change to `agents/AGENTS.md` or a model change, run `--all`. `--list` and `--dry-run` take the same selectors and default to every scenario.
+`prepare` writes the fixture into an empty requested directory, creates a local bare `origin`, installs the current shared agent instructions and skills under `.agents/skills`, applies scenario setup, records the turn 1 baseline, and prints its prompt. Choose a fresh directory for each independent run. The fake `gh` command is at `.fixture/bin/gh`; give the subagent this environment when invoking it:
 
-Each `--run` writes an ignored `results-*/` directory: per scenario and model, every turn's transcript and stderr, the Pi session, the final repository with its `origin`, and `result.json` with the input hash, Pi version, usage and every expectation. A failed turn stops the scenario, because later turns build on it.
+```sh
+PATH="$PWD/.fixture/bin:$PATH" GH_HOST=example.invalid
+```
 
-## Reading results
+Run the printed prompt with a Luna subagent. For each subsequent turn, call `begin <scenario> <directory> <turn>` exactly once to apply its setup, record the pre-turn commit and print its prompt, then run `check <scenario> <directory> <turn>` after the subagent finishes. `prepare` begins turn 1 automatically. The checker evaluates only declared repository state: branch, commits relative to that turn's baseline, pushes, files, PR fixture fields and shell assertions. It cannot check which skills were read, commands used, or quality of the agent's explanation. Inspect the conversation yourself for those properties. Keep the prompt text and outcome assertions separate from the subagent's assessment; the agent should not see expected results while working.
 
-Compare pass rate per model and per scenario, then token usage among passing runs. Never pool models. A provider error is not an assertion failure. Read the transcript of every failure before changing the harness: when the expectation was wrong, fix the scenario.
+The checkout is disposable and `gh` refuses unsupported operations. No real forge is configured. The scenario fixtures may contain their own detailed checks in `expect.check`; these execute from the prepared repository with `$SEED` set to the initial commit. `begin` is required for every turn after turn 1, including turns without a `setup` block.
+
+## Scenarios
+
+| Scenario | Focus |
+| --- | --- |
+| `dotfiles-setup` | Handy preferences and mise on the current branch, then a scoped commit beside staged editor settings |
+| `happy-path` | Isolated local implementation and feedback on the same task branch |
+| `iteration-gate` | Keep open scope local and ask the unresolved question |
+| `plan-approval` | Approval to implement does not imply publication |
+| `yolo-bounded` | Bounded request through a PR |
+| `open-pr` | Resolve a failing check before opening a PR |
+| `feedback` | Batch local feedback and leave unrelated staged work untouched |
+| `address-review` | Triage review threads and publish only after approval |
+| `land` | Close out only after merge |
+| `ask` | Answer a bounded question read-only |
+| `risk-review-selection` | Recognize when independent review is warranted |
+
+`gh.ts` is the local forge substitute used by these fixtures. It serves a seeded PR and records supported operations in `.fixture/operations.jsonl`.
+
+For `dotfiles-setup`, read the resulting README before accepting the run: it must explain per-account clones, saving and quitting Handy before committing and pushing, closing Handy before pulling and reopening in another account, and the account-local models and permissions. The file assertion locates the Handy section; the parent assesses whether those instructions are usable.

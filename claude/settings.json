@@ -21,20 +21,6 @@
     "defaultMode": "bypassPermissions"
   },
   "model": "opus",
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "f=\"$HOME/.claude/hooks/herdr-agent-state.sh\"; [ -f \"$f\" ] && bash \"$f\" session || true",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "sh \"$HOME/.config/dotfiles/claude/statusline.sh\"",

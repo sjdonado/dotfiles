@@ -158,6 +158,7 @@ in
   ];
 
   home.file = {
+    "Library/Application Support/com.pais.handy/settings_store.json" = live "macos/handy/settings_store.json";
     # OrbStack supplies the docker client and links its own buildx and compose into ~/.docker/cli-plugins.
     ".docker/config.json" = live "docker/config.json";
     ".ssh/config" = live ".ssh/config";

@@ -39,3 +39,7 @@ Edits `agents/AGENTS.md` (routing entry conditions, planning, continuity, approv
 Behavioral acceptance governs whether this change can be called validated: these are agent instructions, so `bench/measure verify --behavior` applies per `bench/README.md`, and that is a paid batch the user must authorize. The earlier estimate of 14 sessions plus the existing matrix is stale, because the feedback and publication scope changed after it was written; the batch is recomputed in `design.md` and spent only on explicit authorization.
 
 Two existing changes are context rather than substitutes. `default-yolo-and-session-tasks` merged as PR #9 and is unarchived, with its tasks 4.1, 4.3, 4.4, 4.8, 4.9, 5.1, and 5.2 still open. `improve-harness-effectiveness` is unarchived with its own behavioral acceptance open. Both compete for the same session budget.
+
+## Superseded (2026-10-18)
+
+The `simplify-harness` change restructures the harness into principles, building blocks and thin workflows; its requirements that make `yolo` the only scoped publication exception and that route uncertain work to `proto` are superseded: `open-pr` is a second exception for a direct request that names a pull request, and uncertain work routes to `iteration`. This change's PR merged; it stays unarchived until its open tasks are judged done or obsolete.

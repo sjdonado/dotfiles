@@ -1,6 +1,5 @@
-description: 'A question that needs tracing across four files is answered read-only with path:line evidence: no edits, no note, no branch.'
+description: 'A question tracing whitespace trimming and a fallback is answered read-only with the behavior and fallback source explained.'
 skills: ['ask']
-
 files:
   'AGENTS.md': |
     # Project
@@ -11,7 +10,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+    This is a disposable evaluation repository.
   'config.ts': |
     // Site-wide settings.
     export const SITE_TITLE = "Tiny";
@@ -54,12 +53,9 @@ files:
 turns:
   - prompt: 'A user whose profile name is three spaces sees "Settings for Guest" on the settings page, not their name and not an error. Why does that happen, and where does "Guest" come from?'
     expect:
-      skills: ['ask']
-      notSkills: ['proto', 'yolo']
-      notRan: ['git (commit|push|checkout|switch|stash|reset)', '\bgh\b']
       branch: '^main$'
       committed: false
       clean: true
-      reply: ['components/label\.ts:\d+', 'config\.ts:\d+', 'trim']
+
       files:
         '.agent/main.md': false

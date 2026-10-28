@@ -3,7 +3,7 @@ name: create-ticket
 description: Draft a clear, scoped ticket from a request or research findings, then create it via the tracker MCP after confirmation. Use for "create a ticket for this", "file this", "make an issue".
 ---
 
-Turn the user's request into a well-formed tracker ticket. Draft first, create only after the user confirms, per `AGENTS.md`, **Publication authority**.
+Turn the user's request into a well-formed tracker ticket. Draft first, create only after the user confirms, per the shared policy's Publication authority. Write the ticket per `principle-write-for-the-reader`.
 
 Resolve the effective input:
 

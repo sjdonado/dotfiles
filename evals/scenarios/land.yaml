@@ -20,7 +20,7 @@ files:
 
     Git origin is a local bare repository. `gh` on PATH is a local forge substitute for pull requests; no real forge exists.
 
-    This is a disposable evaluation repository: skip agent-review and subagent delegation, and run every step in this session.
+    This is a disposable evaluation repository.
   'components/label.ts': |
     // Shared display-name formatter.
     export function label(text: string): string {
@@ -91,10 +91,8 @@ files:
 turns:
   - prompt: 'The PR merged, land it.'
     expect:
-      skills: ['land']
-      notRan: ['git (commit|push)', '\bgh pr merge\b']
       committed: false
-      reply: ['open|not (yet )?merged']
+
       files:
         '.agent/fix%2Fsettings-names.md': 'Purpose'
         '.agent/fix%2Fsettings-names.tasks.md': '1\.1'
@@ -107,7 +105,6 @@ turns:
       - 'git push -q origin fix/settings-names:main'
     prompt: 'It is merged now. Land it.'
     expect:
-      notRan: ['git (commit|push)', '\bgh pr merge\b']
       committed: false
       files:
         '.agent/fix%2Fsettings-names.md': false

@@ -118,6 +118,7 @@ check_macos() {
   linked "$HOME/.zshrc"                         "$DOTFILES/zsh/.zshrc"
   # linked "$HOME/.config/nvim"                   "$DOTFILES/nvim"  # skipped with the full neovim setup
   linked "$HOME/.config/browser-router/config.json" "$DOTFILES/macos/browser-router.json"
+  linked "$HOME/Library/Application Support/com.pais.handy/settings_store.json" "$DOTFILES/macos/handy/settings_store.json"
   linked "$HOME/.docker/config.json"            "$DOTFILES/docker/config.json"
   linked "$HOME/.ssh/config"                    "$DOTFILES/.ssh/config"
   linked "$HOME/.claude/settings.json"          "$DOTFILES/claude/settings.json"
@@ -129,6 +130,7 @@ check_macos() {
 
   group "system settings"
   if [ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" = /bin/zsh ]; then ok "login shell is /bin/zsh"; else bad "login shell is $(dscl . -read "$HOME" UserShell)"; fi
+  if grep -qx /bin/zsh /etc/shells 2>/dev/null; then ok "/etc/shells lists /bin/zsh"; else bad "/etc/shells is missing or does not list /bin/zsh"; fi
   # Homebrew and the app bundles other accounts installed belong to the primary account (the first in this Mac's list in flake.nix), so they survive the removal of any other account.
   # $primary is read from flake.nix below, before any check runs.
   if ! id -u "$primary" >/dev/null 2>&1; then
@@ -161,23 +163,37 @@ check_macos() {
   [ -f "$HOME/.hushlogin" ] && ok "~/.hushlogin exists" || bad "~/.hushlogin missing"
 
   group "non-interactive shells resolve the tools"
-  for c in rg nvim claude codex; do
+  for c in rg nvim mise claude codex; do
     # USER as launchd, sshd and terminals set it: nix-darwin's PATH names /etc/profiles/per-user/$USER/bin.
     if env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c"; else bad "zsh -c cannot find $c"; fi
     if env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
   done
-  # A login, interactive zsh is what a new terminal gets (a herdr pane runs the same ~/.zshrc without the login part): ~/.zshrc must leave the Nix profiles ahead of Homebrew (nix-homebrew's brew shellenv runs before it) and set the interactive environment.
+  # A login, interactive zsh is what a new terminal gets (an editor's terminal runs the same ~/.zshrc without the login part): ~/.zshrc must leave the Nix profiles ahead of Homebrew (nix-homebrew's brew shellenv runs before it) and set the interactive environment.
   zsh_env=$(env -i HOME="$HOME" USER="$(id -un)" TERM=xterm /bin/zsh -lic 'printf "%s|%s|%s|%s\n" "$(command -v rg)" "$EDITOR" "$(command -v brew)" "$PATH"' </dev/null 2>/dev/null | tail -1)
   case "${zsh_env%%|*}" in /etc/profiles/per-user/*|/run/current-system/*|"$HOME"/.nix-profile/*) ok "zsh resolves rg from a Nix profile (${zsh_env%%|*})" ;; *) bad "zsh resolves rg to '${zsh_env%%|*}', not a Nix profile" ;; esac
   [ "$(echo "$zsh_env" | cut -d'|' -f2)" = nvim ] && ok "zsh sets EDITOR=nvim" || bad "zsh does not set EDITOR=nvim"
   [ -n "$(echo "$zsh_env" | cut -d'|' -f3)" ] && ok "zsh finds brew" || bad "zsh cannot find brew"
   case ":$(echo "$zsh_env" | cut -d'|' -f4):" in *":$HOME/.local/bin:"*) ok "zsh has ~/.local/bin on PATH" ;; *) bad "zsh lacks ~/.local/bin on PATH" ;; esac
 
-  group "agents come from Nix"
-  # GUI apps look in ~/.local/bin with the PATH they launched with, so both the PATH lookup and that directory have to reach the Nix build, not a curl-installed copy.
-  for c in claude codex; do
-    case "$(readlink -f "$(command -v "$c")")" in /nix/store/*) ok "$c on PATH is the Nix build" ;; *) bad "$c on PATH resolves to $(readlink -f "$(command -v "$c")")" ;; esac
-    case "$(readlink -f "$HOME/.local/bin/$c")" in /nix/store/*) ok "~/.local/bin/$c is the Nix build" ;; *) bad "~/.local/bin/$c resolves to $(readlink -f "$HOME/.local/bin/$c" 2>&1)" ;; esac
+  check_agents
+}
+
+check_agents() {
+  group "agents update themselves"
+  # T3 Code's update button runs `claude update` or `codex update`, which work only on the vendors' own installs; GUI apps look in ~/.local/bin, so the PATH lookup and that directory both have to reach them.
+  for c in claude:"$HOME/.local/share/claude/" codex:"$HOME/.codex/packages/standalone/"; do
+    name=${c%%:*} home=${c#*:}
+    case "$(readlink -f "$(command -v "$name")")" in "$home"*) ok "$name on PATH is its own install" ;; *) bad "$name on PATH resolves to $(readlink -f "$(command -v "$name")"), not under $home" ;; esac
+    case "$(readlink -f "$HOME/.local/bin/$name")" in "$home"*) ok "~/.local/bin/$name is its own install" ;; *) bad "~/.local/bin/$name resolves to $(readlink -f "$HOME/.local/bin/$name" 2>&1), not under $home" ;; esac
+    if v=$("$HOME/.local/bin/$name" --version 2>&1 </dev/null); then ok "$name runs: $(printf '%s' "$v" | head -1 | cut -c1-50)"; else bad "$name does not run: $(printf '%s' "$v" | head -1 | cut -c1-80)"; fi
+    # Linux: processes that never read the shell files find the same install through /usr/local/bin (nix/home/linux.nix).
+    if [ "$(uname)" = Linux ]; then
+      if [ -w /usr/local/bin ] || sudo -n true 2>/dev/null; then
+        case "$(readlink -f "/usr/local/bin/$name")" in "$home"*) ok "/usr/local/bin/$name is its own install" ;; *) bad "/usr/local/bin/$name resolves to $(readlink -f "/usr/local/bin/$name" 2>&1), not under $home" ;; esac
+      else
+        printf '  skip /usr/local/bin/%s: not writable and sudo needs a password\n' "$name"
+      fi
+    fi
   done
 }
 
@@ -187,7 +203,7 @@ check_linux() {
   if v=$(nix --version 2>&1) && ! grep -qi determinate <<<"$v"; then ok "upstream Nix: $v"; else bad "not upstream Nix: $v"; fi
 
   group "declared tools"
-  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv claude codex opencode openspec; do runs "$c"; done
+  for c in git zsh mosh python3 pip wget rg fd bat fzf jq nvim wt node bun pnpm uv mise opencode openspec; do runs "$c"; done
   if opencode --version 2>/dev/null | grep -q 'v2\.'; then ok "OpenCode is v2"; else bad "OpenCode is not v2 ($(opencode --version 2>&1 | head -1))"; fi
 
   # Skipped with the full neovim setup (nix/home/common.nix).
@@ -244,8 +260,8 @@ check_linux() {
   if bat --list-themes 2>/dev/null | grep -q '^GitHub-Dark'; then ok "bat resolves the GitHub-Dark theme from its cache"; else bad "bat cache lacks GitHub-Dark"; fi
 
   group "non-interactive shells resolve the tools"
-  # This is the shell an agent hook or a herdr pane running a command gets: no rc file beyond what these read.
-  for c in rg nvim wt codex claude; do
+  # This is the shell an agent hook or a tool running a command gets: no rc file beyond what these read.
+  for c in rg nvim wt mise codex claude; do
     if bash -lc "command -v $c" >/dev/null 2>&1; then ok "login bash finds $c"; else bad "login bash cannot find $c"; fi
     # `ssh host command` runs a non-login, non-interactive bash, which reads only ~/.bashrc, up to its interactive guard.
     if env -i HOME="$HOME" bash -c ". ~/.bashrc >/dev/null 2>&1; command -v $c" >/dev/null 2>&1; then ok "a non-login bash sourcing ~/.bashrc finds $c"; else bad "~/.bashrc does not put $c on PATH before its interactive guard"; fi
@@ -257,11 +273,7 @@ check_linux() {
     # zsh comes from the Nix profile (Ubuntu has none), so it is named by path: env -i leaves no PATH to find it with.
     if env -i HOME="$HOME" "$HOME/.nix-profile/bin/zsh" -c "command -v $c" >/dev/null 2>&1; then ok "zsh -c finds $c (via ~/.zshenv)"; else bad "zsh -c cannot find $c"; fi
   done
-  if [ "$(env -i HOME="$HOME" bash -lc 'command -v claude')" = "$HOME/.nix-profile/bin/claude" ]; then
-    ok "claude resolves to the Nix profile, ahead of ~/.local/bin"
-  else
-    bad "claude resolves to $(env -i HOME="$HOME" bash -lc 'command -v claude'), not the Nix profile"
-  fi
+  check_agents
   # An interactive terminal execs zsh, whose ~/.zshrc sources zsh/.zshrc: the wtc alias is defined only there.
   if env -i HOME="$HOME" TERM=dumb "$HOME/.nix-profile/bin/zsh" -ic 'alias wtc >/dev/null && whence rg nvim >/dev/null' </dev/null >/dev/null 2>&1; then ok "interactive zsh runs zsh/.zshrc and finds rg and nvim"; else bad "interactive zsh does not run zsh/.zshrc or cannot find rg or nvim"; fi
 

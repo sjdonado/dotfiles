@@ -1,0 +1,99 @@
+description: 'The observed Handy and mise request stays on the current branch, uses per-account repository links and shared Nix packages, and preserves staged editor settings when the user later asks for a scoped commit.'
+skills: ['feedback', 'verification']
+
+setup:
+  - 'git checkout -qb feat/work-in-progress'
+  - |-
+    bun -e 'await Bun.write("zed/settings.json", JSON.stringify({theme: "dark", ...Object.fromEntries(Array.from({length: 240}, (_, i) => [`editor_preference_${i}`, i % 2 === 0]))}, null, 2) + "\n"); await Bun.write(".fixture/handy-settings.json", JSON.stringify({language: "en", selected_model: "small", onboarding_completed: false, post_process_api_keys: {}, ...Object.fromEntries(Array.from({length: 180}, (_, i) => [`preference_${i}`, i]))}, null, 2) + "\n");'
+  - 'git add zed/settings.json'
+  - 'git hash-object zed/settings.json > .fixture/editor.hash'
+
+files:
+  'AGENTS.md': |
+    # Dotfiles project
+
+    nix/home/common.nix declares packages for macOS and Linux. nix/home/darwin.nix declares macOS links. Its dotfiles.live helper links each account to its own repository checkout. App preferences belong under macos/<app>/. README.md explains how to apply and share changes.
+
+    Check changed Nix files with `nix-instantiate --parse <path> >/dev/null`, JSON with `jq empty <path>`, and evaluate modules when their resulting values matter. Never activate a host switch as validation. The dotfiles.live argument has the shape `path: { source = "${accountHome}/.config/dotfiles/${path}"; }`.
+
+    Current Handy 0.9.8 preferences have been exported to .fixture/handy-settings.json. Its application store is ~/Library/Application Support/com.pais.handy/settings_store.json and its saves follow symlinks. Models, recordings and permissions are account-local. No access to the real app or host home is needed.
+
+    This is a disposable repository. Git origin is a local bare repository and gh on PATH is an offline fixture. All work must stay in this repository; never contact a real forge.
+  'nix/home/common.nix': |
+    { pkgs, ... }:
+    {
+      home.packages = with pkgs; [ git jq ];
+    }
+  'nix/home/darwin.nix': |
+    { dotfiles, ... }:
+    let
+      inherit (dotfiles) live;
+    in
+    {
+      home.file = {
+        ".zshrc" = live "zsh/.zshrc";
+      };
+    }
+  'zsh/.zshrc': |
+    export EDITOR=zed
+  'zed/settings.json': |
+    { "theme": "light" }
+  'README.md': |
+    # Personal dotfiles
+
+    Each account has its own clone at ~/.config/dotfiles. Nix links managed preferences into that clone. Apply changes with the existing sync command after reviewing the declaration. Do not install tools with imperative package-manager commands.
+
+turns:
+  - prompt: |-
+      I want Handy to use the same settings in every account on this laptop, shared through git pull like the existing configs. My exported settings are in .fixture/handy-settings.json. Keep this on the current work-in-progress branch. Add the preferences and their macOS link, and install mise with Nix for both platforms. Keep the configuration lean and modular. Document in README.md how to sync Handy settings between accounts. Check the change without switching this machine.
+    expect:
+      branch: '^feat/work-in-progress$'
+      committed: false
+      clean: false
+      pr: false
+      check:
+        - 'test "$(git worktree list | wc -l)" -eq 1'
+        - 'cmp .fixture/handy-settings.json macos/handy/settings_store.json'
+        - 'jq -e ''.post_process_api_keys | all(. == "")'' macos/handy/settings_store.json'
+        - 'nix-instantiate --parse nix/home/common.nix >/dev/null && nix-instantiate --parse nix/home/darwin.nix >/dev/null'
+        - |-
+          nix-instantiate --eval --strict --json --expr '(import ./nix/home/common.nix { pkgs = { git = "git"; jq = "jq"; mise = "mise"; }; }).home.packages' | jq -e 'sort == ["git", "jq", "mise"]'
+        - |-
+          for accountHome in /Users/primary /Users/second; do nix-instantiate --eval --strict --json --expr "(import ./nix/home/darwin.nix { dotfiles.live = path: { source = \"$accountHome/.config/dotfiles/\" + path; }; }).home.file.\"Library/Application Support/com.pais.handy/settings_store.json\".source" | jq -e --arg target "$accountHome/.config/dotfiles/macos/handy/settings_store.json" '. == $target' || exit 1; done
+        - 'test "$(git hash-object zed/settings.json)" = "$(cat .fixture/editor.hash)"'
+        - 'test "$(git diff --cached --name-only)" = zed/settings.json'
+        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
+        - 'test ! -e .agent/feat%2Fwork-in-progress.md'
+      files:
+        'README.md': 'Handy'
+
+  - prompt: 'Before committing, make the README instructions explicit: quit Handy before committing its settings and before pulling in another account; explain that models, recordings and permissions stay local to each account.'
+    expect:
+      branch: '^feat/work-in-progress$'
+      committed: false
+      clean: false
+      pr: false
+      check:
+        - 'test "$(git hash-object zed/settings.json)" = "$(cat .fixture/editor.hash)"'
+        - 'test "$(git diff --cached --name-only)" = zed/settings.json'
+        - 'cmp .fixture/handy-settings.json macos/handy/settings_store.json'
+      files:
+        'README.md': 'Handy'
+
+  - prompt: 'Looks good. Commit only the Handy and mise setup change. Leave my staged editor preferences alone.'
+    expect:
+      branch: '^feat/work-in-progress$'
+      committed: true
+      pushed: false
+      clean: false
+      pr: false
+      check:
+        - 'test "$(git hash-object zed/settings.json)" = "$(cat .fixture/editor.hash)"'
+        - 'test "$(git diff --cached --name-only)" = zed/settings.json'
+        - '! git diff HEAD^ HEAD --name-only | grep -qx zed/settings.json'
+        - 'test -z "$(git log --all --reflog --format= --name-only "$SEED".. -- zed/settings.json)"'
+        - 'git ls-files --error-unmatch macos/handy/settings_store.json >/dev/null'
+        - 'git diff HEAD^ HEAD --name-only | grep -qx nix/home/common.nix'
+        - 'git diff HEAD^ HEAD --name-only | grep -qx nix/home/darwin.nix'
+        - 'git diff HEAD^ HEAD --name-only | grep -qx README.md'
+        - 'test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$SEED"'
