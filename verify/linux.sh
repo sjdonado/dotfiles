@@ -36,7 +36,7 @@ run() { docker exec -u dev -w /home/dev "$CID" bash -lc "$1"; }
 echo "==> preparing a bare Ubuntu box (curl, sudo, one user)"
 # Only what the box cannot start without: anything more here is something setup.sh is no longer proven to install.
 docker exec "$CID" bash -c 'apt-get update -qq && apt-get install -y -qq --no-install-recommends curl ca-certificates sudo >/dev/null && useradd -m -s /bin/bash dev && echo "dev ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/dev && chmod 440 /etc/sudoers.d/dev' >/dev/null
-# A base image's own claude, as Coder's ships in /usr/local/bin: sync.sh's agent check fails unless the self-updating install in ~/.local/bin comes first on PATH.
+# A base image's own claude, as Coder's ships in /usr/local/bin: sync.sh's agent check fails unless the self-updating install in ~/.local/bin comes first on PATH and the switch replaces this copy with a link to it.
 docker exec "$CID" bash -c 'printf "#!/bin/sh\necho 0.0.0\n" > /usr/local/bin/claude && chmod 755 /usr/local/bin/claude'
 
 echo "==> copying the working tree in (secrets stay on the host)"

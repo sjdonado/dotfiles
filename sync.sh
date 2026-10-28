@@ -186,6 +186,14 @@ check_agents() {
     case "$(readlink -f "$(command -v "$name")")" in "$home"*) ok "$name on PATH is its own install" ;; *) bad "$name on PATH resolves to $(readlink -f "$(command -v "$name")"), not under $home" ;; esac
     case "$(readlink -f "$HOME/.local/bin/$name")" in "$home"*) ok "~/.local/bin/$name is its own install" ;; *) bad "~/.local/bin/$name resolves to $(readlink -f "$HOME/.local/bin/$name" 2>&1), not under $home" ;; esac
     if v=$("$HOME/.local/bin/$name" --version 2>&1 </dev/null); then ok "$name runs: $(printf '%s' "$v" | head -1 | cut -c1-50)"; else bad "$name does not run: $(printf '%s' "$v" | head -1 | cut -c1-80)"; fi
+    # Linux: processes that never read the shell files find the same install through /usr/local/bin (nix/home/linux.nix).
+    if [ "$(uname)" = Linux ]; then
+      if [ -w /usr/local/bin ] || sudo -n true 2>/dev/null; then
+        case "$(readlink -f "/usr/local/bin/$name")" in "$home"*) ok "/usr/local/bin/$name is its own install" ;; *) bad "/usr/local/bin/$name resolves to $(readlink -f "/usr/local/bin/$name" 2>&1), not under $home" ;; esac
+      else
+        printf '  skip /usr/local/bin/%s: not writable and sudo needs a password\n' "$name"
+      fi
+    fi
   done
 }
 

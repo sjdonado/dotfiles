@@ -3,7 +3,7 @@
 # Environment goes in the files a shell reads however it was started (~/.profile for login sh and bash, ~/.zshenv for every zsh), plus the top of ~/.bashrc, which runs before its interactive guard. An agent hook, a tool running a command and `ssh host command` read nothing else.
 #
 # The login shell stays POSIX: Coder runs its agent and metadata scripts through it, so interactive terminals exec into zsh instead, which runs zsh/.zshrc, the same interactive setup macOS uses.
-{ pkgs, ... }:
+{ lib, pkgs, dotfiles, ... }:
 let
   environment = ''
     # dotfiles: tools on PATH. The Nix profile comes from the daemon's profile script, which /etc/profile only runs for login shells.
@@ -65,4 +65,17 @@ in
     # zsh/.zshrc runs compinit itself.
     enableCompletion = false;
   };
+
+  # Claude Code and Codex for every process on the box, not only shells that read the files above: /usr/local/bin/<tool> links to the self-updating install in ~/.local/bin, replacing a base image's own copy (Coder's ships a stale claude there). Needs passwordless sudo, which Coder workspaces have; without it the step says it skipped.
+  home.activation.agentCliLinks = dotfiles.step "agent-cli-links" ''
+    export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+    if [ -w /usr/local/bin ]; then as=""; elif sudo -n true 2>/dev/null; then as="sudo -n"; else
+      echo "dotfiles: skipped agent-cli-links: /usr/local/bin is not writable and sudo needs a password"
+      exit 0
+    fi
+    for tool in claude codex; do
+      [ -e "$HOME/.local/bin/$tool" ] || continue
+      [ "$(readlink /usr/local/bin/$tool 2>/dev/null || true)" = "$HOME/.local/bin/$tool" ] || $as ln -sfn "$HOME/.local/bin/$tool" /usr/local/bin/$tool
+    done
+  '' // { after = [ "linkGeneration" "agentClis" ]; };
 }
