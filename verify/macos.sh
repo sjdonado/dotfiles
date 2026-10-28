@@ -35,6 +35,7 @@ assert_config() {
       users = builtins.attrNames c.home-manager.users;
       accounts = builtins.filter (u: builtins.substring 0 7 u != \"_nixbld\") (builtins.attrNames c.users.users);
       primary = c.system.primaryUser;
+      shells = c.environment.etc.shells.text or \"\";
       userDefaults = builtins.toJSON hm.targets.darwin.defaults;
     }") || { echo "evaluation failed"; exit 1; }
   f() { jq -r "$1" <<<"$facts"; }
@@ -72,6 +73,7 @@ assert_config() {
   group "system settings"
   system="$(f .system)"
   if grep -q 'UserShell /bin/zsh' <<<"$system"; then ok "activation sets zsh as the login shell"; else bad "activation does not set /bin/zsh as UserShell"; fi
+  if f .shells | grep -qx /bin/zsh; then ok "/etc/shells is written and lists /bin/zsh"; else bad "nix-darwin writes no /etc/shells (environment.shells is empty)"; fi
   for want in AppleShowAllExtensions AppleShowAllFiles; do
     if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
   done

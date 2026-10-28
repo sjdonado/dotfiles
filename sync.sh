@@ -130,6 +130,7 @@ check_macos() {
 
   group "system settings"
   if [ "$(dscl . -read "$HOME" UserShell | awk '{print $2}')" = /bin/zsh ]; then ok "login shell is /bin/zsh"; else bad "login shell is $(dscl . -read "$HOME" UserShell)"; fi
+  if grep -qx /bin/zsh /etc/shells 2>/dev/null; then ok "/etc/shells lists /bin/zsh"; else bad "/etc/shells is missing or does not list /bin/zsh"; fi
   # Homebrew and the app bundles other accounts installed belong to the primary account (the first in this Mac's list in flake.nix), so they survive the removal of any other account.
   # $primary is read from flake.nix below, before any check runs.
   if ! id -u "$primary" >/dev/null 2>&1; then
