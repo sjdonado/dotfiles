@@ -30,6 +30,7 @@ printf 'coder ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/coder
 mkdir -p /home/coder/.config/dotfiles
 tar -C /home/coder/.config/dotfiles -xzf /tmp/dotfiles.tgz
 chown -R coder:coder /home/coder/.config/dotfiles
+su - coder -c 'git -C /home/coder/.config/dotfiles init -q'
 su - coder -c '/home/coder/.config/dotfiles/setup.sh --linux'
 su - coder -c '/home/coder/.config/dotfiles/sync.sh --check'
 first=$(find /home/coder -name '*.pre-shell' -print | sort | sha256sum)
