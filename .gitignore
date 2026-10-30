@@ -13,6 +13,7 @@ martillo/init.lua
 
 core
 core.*
+!/lib/core.sh
 
 __pycache__/
 *.py[cod]

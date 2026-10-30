@@ -1,4 +1,4 @@
-# Interactive zsh. On macOS it is the login shell and this file is linked to ~/.zshrc by nix/home/darwin.nix; nix-darwin's /etc/zshenv has already put the Nix profiles first on PATH by the time this runs. On Linux, home-manager's ~/.zshrc sources it (nix/home/linux.nix).
+# Interactive zsh. On macOS this file is linked to ~/.zshrc. On Linux the managed ~/.zshrc sources it.
 
 # Locale
 export LC_CTYPE=en_US.UTF-8
@@ -21,11 +21,15 @@ export BAT_THEME_LIGHT=GitHub-Light
 # Custom man pages, ahead of the default search path (the trailing colon keeps it).
 export MANPATH="$HOME/.config/dotfiles/man:${MANPATH}"
 
-# After the Nix profiles, so a leftover Homebrew formula or a curl-installed binary never shadows a declared tool. typeset -U drops duplicates, keeping the first.
+# Direct package and vendor paths. typeset -U drops duplicates, keeping the first.
 typeset -U path
-path+=("$HOME/.local/bin" "$HOME/.opencode/bin" /opt/homebrew/bin /opt/homebrew/sbin "$HOME/.bun/bin" "$PNPM_HOME" "$HOME/go/bin" "$HOME/.cargo/bin" "$HOME/Library/Android/sdk/platform-tools")
+if [[ "$OSTYPE" == darwin* ]]; then
+  path=(/opt/homebrew/bin /opt/homebrew/sbin "$HOME/.local/bin" "$HOME/.opencode/bin" "$PNPM_HOME" "$HOME/go/bin" "$HOME/.cargo/bin" "$HOME/Library/Android/sdk/platform-tools" $path)
+else
+  path=("$HOME/.local/bin" "$HOME/.opencode/bin" "$PNPM_HOME" "$HOME/go/bin" "$HOME/.cargo/bin" $path)
+fi
 
-# Completion. /etc/zshrc leaves it to this file (nix/darwin/system.nix): -u accepts the completion directories the primary account owns (Homebrew's), which every other account would otherwise be asked about at each start.
+# -u accepts completion directories the primary account owns, which avoids a prompt in other accounts.
 autoload -Uz compinit && compinit -u
 autoload -Uz bashcompinit && bashcompinit
 
@@ -83,6 +87,3 @@ source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 (( $+commands[rbenv] )) && eval "$(rbenv init - --no-rehash zsh)"
 [[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
-
-# Last, so nothing above (OrbStack, rbenv, cargo, the sourced env files) can put a Homebrew or curl-installed copy ahead of a declared tool: the Nix profiles move back to the front, in nix-darwin's order.
-path=("$HOME/.nix-profile/bin" "/etc/profiles/per-user/$USER/bin" /run/current-system/sw/bin /nix/var/nix/profiles/default/bin $path)

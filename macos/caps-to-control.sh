@@ -6,12 +6,8 @@
 # happens below the application layer, so it holds everywhere, including the
 # terminal and full-screen apps.
 #
-# hidutil state is volatile: it does not survive a logout or reboot, which is why
-# com.local.KeyRemapping.plist runs this at every login rather than once at setup.
+# hidutil state is volatile; the KeyRemapping launch agent restores it at login.
 #
-# This exists as a script rather than as hidutil arguments in the plist so Login
-# Items, which names a background item after the executable it launches, shows
-# caps-to-control.sh instead of a bare "hidutil".
 set -eu
 
 exec /usr/bin/hidutil property --set \
