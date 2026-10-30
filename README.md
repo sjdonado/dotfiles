@@ -1,112 +1,86 @@
-> Blazingly Fast Development Setup 🚀
+# Dotfiles
 
-## Getting started
+Shell provisioning for macOS and Ubuntu. macOS uses Homebrew for conventional packages. Linux uses apt plus explicit guarded installers. Nix, home-manager, nix-darwin, mise, and Linuxbrew are not required.
 
-1. Clone this repo into `~/.config/dotfiles`
+## Setup and sync
 
-### Bootstrap
-
-The whole workspace is declared in `flake.nix` and `nix/`: packages, GUI apps, links into this repository, macOS settings and the setup steps that are not packages. Every install, change and upgrade goes through that declaration. Nothing is installed with `brew`, `mise`, `npm -g`, `go install` or a curl installer by hand.
-
-- Set up a machine: `./setup.sh`, on macOS or on any Linux distribution (NixOS is not needed). It installs Nix, and on macOS the Xcode command line tools, if they are missing, then runs the first switch: nix-darwin with the configuration for this Mac's hostname (`darwinConfigurations` in `flake.nix`), or home-manager on Linux. The platform comes from `uname`; `--macos` or `--linux` forces it. Every step skips itself when already done, so it also repairs a Mac whose Nix was reinstalled. On a Linux box without the clone: `curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/setup.sh | bash`, which clones this repository first.
-- Apply a change to the declaration: `~/.config/dotfiles/sync.sh`. It switches (`nix run .#sync`), then checks the result: declared tools run, links resolve into this repository, settings hold, and non-interactive shells find the tools. Nix reads this repository as a git flake, so a new file must be staged (`git add`) before a sync sees it.
-- Upgrade everything: `~/.config/dotfiles/sync.sh --upgrade`. It updates every pinned input in `flake.lock` (nixpkgs, home-manager, nix-darwin, nix-homebrew and each Homebrew tap), switches and checks. Review and commit the `flake.lock` diff.
-- Check without changing anything: `~/.config/dotfiles/sync.sh --check`. To see what a switch would run without running it: `nix run ~/.config/dotfiles#sync -- --dry-run` (`#upgrade` takes it too).
-- Verify a change before it reaches a machine: `verify/linux.sh` provisions a throwaway Ubuntu container with `setup.sh` and checks it with `sync.sh`, and `verify/macos.sh` evaluates or builds the macOS configuration without applying it. See `verify/README.md`.
-
-### Where things are declared
-
-| what | where |
-| --- | --- |
-| command-line tools on both platforms, links, setup steps | `nix/home/common.nix` |
-| shell files on Linux (`~/.profile`, `~/.bashrc`, `~/.zshenv`, `~/.zshrc`) | `nix/home/linux.nix` |
-| macOS command-line tools, launch agents, macOS setup steps | `nix/home/darwin.nix` |
-| macOS defaults, login shell, Nix settings | `nix/darwin/system.nix` |
-| casks, the Homebrew formulas Nix lacks, taps (App Store apps are listed there, commented out) | `nix/darwin/homebrew.nix` |
-| tools packaged here from their upstream binaries | `nix/pkgs/` |
-| `sync` and `upgrade` | `nix/apps.nix` |
-
-### Day to day
-
-The repository is the source of truth. Configs reach it through live links, and everything else through `nix/` and a sync.
-
-- Edit a config without a sync. Every tracked config (`~/.zshrc` on macOS, Zed, `~/.gitconfig`, Claude Code's `settings.json`, OpenCode) is a link into this clone, so editing the file here or through its link is the same edit, and the tool reads it on its next start. Tools that write their own settings (Zed, OpenCode's `kv.json`, Pi) write into the repository, so their changes show up in `git status`. Commit them like code.
-- Change what is installed or linked through `nix/`, then run `~/.config/dotfiles/sync.sh`. That covers a tool, an app, a new config link, a macOS setting or a setup step.
-  - A command-line tool: find its nixpkgs name with `nix search nixpkgs <name>`, then add it to `home.packages` in `nix/home/darwin.nix` (macOS only) or `nix/home/common.nix` (both platforms).
-  - Only when nixpkgs lacks it: add it to `brews` in `nix/darwin/homebrew.nix`. A formula from a third-party tap also needs the tap, as a flake input in `flake.nix` and an entry in `nix-homebrew.taps`.
-  - A GUI app: add its cask to `casks` in `nix/darwin/homebrew.nix`. GUI apps stay casks even when nixpkgs packages them, because casks install real bundles into /Applications, which Launch Services, Spotlight and Raycast index.
-  - Removing works the same way: the sync uninstalls Homebrew formulas and casks the file does not list (`cleanup = "uninstall"`), but never deletes their app data.
-- Do not run `brew install` or `brew tap` by hand, from any account. Homebrew has one writer: the sync, which runs `brew` as the primary user, who owns `/opt/homebrew`. A formula installed by hand is uninstalled by the next sync, the taps are a read-only link to the pinned inputs, and `brew update` is disabled.
-- Upgrade with `~/.config/dotfiles/sync.sh --upgrade` and commit the `flake.lock` diff.
-- Files Nix builds change only through `nix/` and a sync. `~/.local/bin/claude` and `~/.local/bin/codex` are the exception: their own installers put them there and they update themselves (T3 Code's update button runs `claude update` and `codex update`); the sync only installs whichever is missing.
-- An app that saves by replacing a file (an atomic save) turns its link into a regular file, which then stops tracking the repository. `sync.sh --check` reports it as "is not a link", and the next sync restores the link and keeps the replaced file as `<path>.pre-nix`.
-
-### More than one account on a Mac
-
-A Mac has one nix-darwin system, so every account on it is listed in `flake.nix`, in the `darwin [ ... ]` list for the Mac's hostname. Any number of accounts works the same way; this setup is used with two. The first is the primary account: it owns Nix's setup, Homebrew and the system settings, and `setup.sh` and the switch run only from it (from another account, `sync.sh` only checks), so removing any other account leaves the Mac working. One sync applies the configuration to every listed account.
-
-- Every account has its own clone at `~/.config/dotfiles`, and its links point into that clone. A config change reaches another account when that account runs `git pull`, with no sync.
-- A sync applies the declaration from the primary account's clone, so `git pull` there first.
-- Packages live once in the shared `/nix/store`, readable by every account, which is why secrets stay outside Nix. `sudo nix-collect-garbage -d` frees what no account's generation still uses.
-- To add an account: add it to the list in `flake.nix`, clone this repository into its `~/.config/dotfiles` on the same branch, then run `sync.sh` from the primary account, which switches and checks every listed account. The sync sets its login shell to zsh.
-- To change the primary account: move it to the front of the list, then run `setup.sh` once from it. It hands `/opt/homebrew`, and the app bundles other accounts installed in `/Applications`, to the new primary account; the sync refuses to run until it has.
-- To remove an account: drop it from the list and sync from the primary account before deleting the macOS account.
-
-Handy's preferences are tracked in `macos/handy/settings_store.json`, linked to `~/Library/Application Support/com.pais.handy/settings_store.json` for each account. Close Handy before the first sync installs the link. Afterward, changes made in Handy update the tracked file: quit Handy, review, commit and push the preferences, then close Handy in the other account before pulling and reopening it. The shared `onboarding_completed` flag starts false and Handy saves it back to the shared file when onboarding finishes, so onboarding completion carries across accounts; use Handy's model settings to download the selected model separately in each account. Models, recordings, history and macOS microphone and Accessibility permissions remain local to each account. The settings file also holds post-processing API keys; keep those empty in the tracked configuration.
-
-zsh is every account's login shell. Its interactive setup (PATH order, `EDITOR`, the bat themes, the `wt*` aliases, ctrl+f to cd into a repository) is `zsh/.zshrc`, linked to `~/.zshrc`. On Linux the login shell stays POSIX for Coder, interactive terminals exec zsh, and home-manager's `~/.zshrc` sources the same `zsh/.zshrc`.
-
-### Tool versions
-
-`flake.lock` pins every input, so two machines switched from the same commit get the same versions. Most tools come from nixpkgs-unstable. OpenCode comes from its upstream release binary, in `nix/pkgs/`, because nixpkgs still has v1. Claude Code and Codex are not pinned: the sync runs their own installers once and they update themselves, so T3 Code can update them. Two macOS tools come from Homebrew formulas, because nixpkgs lacks them: `browser-router` and `cliclick`. `gcloud-cli`'s six formula dependencies are listed too, because cleanup keeps the dependencies of listed formulas but not of casks. Homebrew itself is pinned by nix-homebrew, and every tap is a flake input, so a cask version moves only when `flake.lock` does. The exception is casks that update themselves (1Password, Chrome, Slack, Zed): they can move ahead of the pin between switches.
-
-Homebrew kept some versions off PATH (keg-only) because they share command names with the default version. Those are linked under `~/.local/opt/` instead: `jdk11`, `jdk17`, `llvm`, `openssl-4`, `zig-0_15`. GNU tools that would shadow the macOS ones keep Homebrew's names: `gsed`, `gawk`, the `g`-prefixed coreutils, and `telnet` alone from inetutils.
-
-### Manual steps
-
-The sync cannot do these. Everything else is declared.
-
-- Choose default apps by hand, in each account: a file's Get Info, then Open with, then Change All. `duti` exits successfully but changes nothing on macOS 26 and later, so `macos/default-apps.duti` records the intent only.
-- Install App Store apps by hand from the App Store. Their IDs stay listed, commented out, under `masApps` in `nix/darwin/homebrew.nix`; uncommenting them makes the sync install them, which needs an App Store sign-in.
-- Open `~/Applications/BrowserRouter.app` once and accept it as the default browser.
-- The Safari web apps (Gmail, Calendar, Google Meet) are created in Safari with File > Add to Dock. BrowserRouter routes to them by the IDs Safari generates, so a new web app needs its ID updated in `macos/browser-router.json`.
-- Claude Code URL Handler is created by Claude Code, and Safari is part of macOS.
-- Secrets and logins, in each account: `.env` values, SSH keys and tool logins (OpenCode providers and MCP servers, Claude Code, Codex, `gh`).
-- On a Linux box without systemd (a container or a typical Coder workspace), nothing restarts the Nix daemon after a restart. Run `setup.sh` again, which Coder does on workspace start.
-
-### Agent harness
-
-OpenCode is the primary agent for daily work. Claude Code, Codex, and Pi remain installed for experiments. The agents share skills and global instructions from `agents/`; the sync links the managed configuration into each harness.
-
-Authenticate OpenCode's provider with `/connect` or the CLI. The configured MCP server (ios-simulator) starts automatically; authenticate any server that requires it:
+Clone this repository to `~/.config/dotfiles`, then run:
 
 ```sh
-opencode auth login
-opencode mcp auth <server>
+./setup.sh
 ```
 
-OpenCode defaults to hosted GPT-6.1 Sol through OpenAI, with native code mode, background shell jobs, built-in Terminals, animations, and the ios-simulator MCP server enabled at startup. LSP, automatic formatters, and snapshots are disabled. See `opencode/README.md` for setup and `agents/README.md` for harness details.
-
-Experimental harness setup is documented in `agents/README.md` and `pi/README.md`. `pi-agent` remains available for interactive use. Harness benchmarks use direct gpt-6-luna subagents; see `evals/README.md`.
-
-When experimenting with Codex, select the built-in `ansi` syntax theme with `/theme`. It uses the terminal's ANSI palette, so syntax colors follow the terminal's live dark/light theme switch instead of staying pinned to a dark or light TextMate theme.
-
-### Text editor
-
-The editor is Zed, used with T3 Code. Neovim is installed plain, without `nvim/`, as `$EDITOR` for git. The full Neovim setup (the configuration in `nvim/`, its language servers and formatters, lazygit and tree-sitter) is commented out in `nix/home/common.nix`, ready to restore by uncommenting it and syncing.
-
-### Default browser
-
-Links are routed by [BrowserRouter](https://github.com/sjdonado/browser-router), its own repository now rather than a folder in here: it is the system default browser, matches every link against regexes and hands it to the browser that rule names. Nothing resident, no UI. Config reference and measured footprint are in that README.
-
-What is local to this setup: the rules live at `macos/browser-router.json`, linked to `~/.config/browser-router/config.json`, so a routing change is a commit rather than a machine-local edit. Local dev servers and Cloudflare previews go to Helium. Linear links go to the Linear app. Gmail, Calendar and Google Meet go to their Safari web apps. Everything else goes to a Safari tab. The sync links that config, installs the app from the `sjdonado/tap` formula built from source, and registers the bundle with LaunchServices.
-
-Making it the *default* browser is a system prompt, and so is letting it control Safari the first time. Neither can be answered by a script, which is why the sync stops at registration: the bundle is built and registered by then, and answering that prompt is the one step left.
+The platform comes from `uname`. `--macos` and `--linux` assert the expected platform. Linux can also bootstrap without an existing clone:
 
 ```sh
-open ~/Applications/BrowserRouter.app
+curl -fsSL https://raw.githubusercontent.com/sjdonado/dotfiles/main/setup.sh | bash
 ```
 
-### Happy hacking!
+Day-to-day commands:
 
-<img width="200" alt="image" src="https://media.tenor.com/y2JXkY1pXkwAAAAM/cat-computer.gif">
+```sh
+./sync.sh             # apply, then check
+./sync.sh --upgrade   # update package sources and packages, apply, then check
+./sync.sh --check     # read-only host checks
+```
+
+macOS packages and applications are declared in `Brewfile`. Ubuntu packages are in `packages/linux-apt.txt`; pinned or vendor-managed Linux tools are documented in `packages/linux-installers.tsv`. Links, platform behavior, and installers live under `lib/`. Add or remove packages in those declarations, then run `sync.sh`.
+
+Normal macOS sync disables Homebrew auto-update. Upgrade is explicit. Cleanup uses `brew bundle cleanup --force`, never `--zap`, and is enabled only during the completed migration or when `DOTFILES_BREW_CLEANUP=1` is set deliberately.
+
+Claude Code and Codex are vendor-managed exceptions so their self-update support and T3 Code integration continue to work. Sync installs either CLI only when its expected vendor target is missing.
+
+## Multiple macOS accounts
+
+`hosts/macos.sh` maps a hostname to its accounts. The first account is the primary account and the only account allowed to install packages, change shared machine state, upgrade, clean up, or migrate. Other accounts can run `sync.sh --check` only.
+
+Each account has its own clone at `~/.config/dotfiles`. A primary-account sync invokes the other account's `sync.sh` from that clone so every link resolves into the owning account's checkout. All account checkouts must be on the same commit before Nix removal.
+
+To add an account, add it to `hosts/macos.sh`, clone this repository into that account's `~/.config/dotfiles`, and sync from the primary account. To remove an account, remove it from the host declaration and sync before deleting the macOS account.
+
+## Migrating an existing Nix Mac
+
+The migration is staged and recoverable until Nix itself is removed:
+
+```sh
+./verify/macos.sh
+./sync.sh --migrate-from-nix
+./sync.sh --uninstall-nix
+```
+
+`--migrate-from-nix` applies shell provisioning, checks every account, replaces the Nix-owned Homebrew launcher and immutable tap links with an official Homebrew checkout, preserves Cellar, Caskroom, applications, and user data, checks every account again, and records evidence for the exact working tree. It stops with Nix still installed.
+
+`--uninstall-nix` requires that evidence and repeats every-account checks before invoking `/nix/nix-installer uninstall`. The uninstaller asks for administrator authentication. After removal it enables non-zapping Homebrew cleanup and checks every account without Nix, mise, or Linuxbrew paths.
+
+Before Nix removal, rollback uses the existing Nix generation or the retained `.pre-shell` and Homebrew-link backups. After removal, rollback requires reinstalling Nix and checking out the pre-removal commit.
+
+## Verification
+
+```sh
+./verify/macos.sh
+./verify/linux.sh --platform linux/arm64
+./verify/linux.sh --platform linux/amd64
+```
+
+The macOS check is non-mutating and uses temporary fixtures. Linux provisions a bare Ubuntu container twice. See `verify/README.md`.
+
+## Managed configuration
+
+Tracked configuration is linked into each account's home. An unmanaged destination is preserved once as `<path>.pre-shell`; a correct link is a no-op. `sync.sh --check` requires links to resolve into this checkout rather than merely comparing file contents.
+
+Handy's preferences are tracked in `macos/handy/settings_store.json`. Models, recordings, history, and macOS permissions remain local to each account. Keep API keys empty in the tracked file.
+
+The editor is Zed with T3 Code. Neovim remains installed as the terminal editor. BrowserRouter is installed from `sjdonado/tap`, copied to `~/Applications`, registered with Launch Services, and configured from `macos/browser-router.json`.
+
+## Manual steps
+
+- Authenticate Claude Code, Codex, OpenCode, `gh`, and MCP servers in each account.
+- Keep `.env` values, SSH keys, and other secrets outside provisioning.
+- Install App Store applications manually.
+- Choose default file applications manually when macOS ignores `duti`.
+- Open `~/Applications/BrowserRouter.app` once and accept the default-browser prompt.
+- After fully removing Tailscale, remove any remaining VPN configuration and Keychain entries manually.
+
+## Agent harness
+
+OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness experiments and benchmarks are documented in `agents/README.md`, `pi/README.md`, and `evals/README.md`.

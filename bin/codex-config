@@ -49,7 +49,7 @@ HEADER = """# Codex CLI settings shared across machines.
 #
 # `codex-config apply` writes these keys into the local file, preserving
 # everything else; `codex-config capture` brings changes made in the Codex TUI
-# back into this file. Every switch runs apply (codexConfig, nix/home/common.nix).
+# back into this file. Every sync runs this apply command.
 """
 
 

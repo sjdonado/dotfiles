@@ -1,0 +1,30 @@
+name: provisioning
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  macos-preflight:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: verify/macos.sh
+
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: verify/linux.sh --platform "${{ matrix.platform }}"

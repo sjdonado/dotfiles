@@ -1,200 +1,132 @@
 #!/usr/bin/env bash
-# The fast macOS check: evaluate the darwin configuration and assert what a switch would apply, without applying it. Nothing on this Mac changes.
-#
-#   verify/macos.sh
-#
-# With Nix on this Mac it builds the system closure first (no activation); without Nix it evaluates inside a Linux container, where nothing can be built for macOS. Either way it then checks every package of the macOS and both Linux profiles against cache.nixos.org: it must exist, be prebuilt (so a switch downloads instead of compiling), and provide no file another package provides. After a switch, `sync.sh --check` asserts this Mac itself.
-#
-# HOST_CONFIG and USER_CONFIG select another configuration (default: this Mac's hostname, the user running the check). The same script runs inside the container to assert (VERIFY_STAGE=assert).
+# Non-mutating macOS preflight. All fixture writes stay under a temporary HOME.
 set -euo pipefail
 
-HOST="${HOST_CONFIG:-$(scutil --get LocalHostName 2>/dev/null || hostname -s)}"
-USER_NAME="${USER_CONFIG:-$(id -un)}"
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+PASS=0 FAIL=0 UNVERIFIED=0
+ok() { printf '  ok   %s\n' "$1"; PASS=$((PASS + 1)); }
+bad() { printf '  FAIL %s\n' "$1" >&2; FAIL=$((FAIL + 1)); }
+skip() { printf '  skip %s\n' "$1"; UNVERIFIED=$((UNVERIFIED + 1)); }
 
-# The assertions, run from a flake root with nix, jq and curl on PATH.
-assert_config() {
-  set +e
-  PASS=0 FAIL=0
-  ok()    { printf '  ok   %s\n' "$1"; PASS=$((PASS+1)); }
-  bad()   { printf '  FAIL %s\n' "$1"; FAIL=$((FAIL+1)); }
-  group() { printf '\n== %s\n' "$1"; }
+printf '== shell syntax\n'
+for file in "$ROOT/setup.sh" "$ROOT/sync.sh" "$ROOT"/lib/*.sh "$ROOT"/hosts/*.sh "$ROOT"/macos/*.sh; do
+  if bash -n "$file"; then ok "${file#"$ROOT/"}"; else bad "${file#"$ROOT/"}"; fi
+done
 
-  # One evaluation, everything the assertions read. A live link's target is visible in the command that creates it.
-  facts=$(nix eval --json ".#darwinConfigurations.\"$HOST\".config" --apply "c: let
-      hm = c.home-manager.users.$USER_NAME;
-      files = hm.home.file;
-      target = f: let m = builtins.match \"ln -s '?([^' ]*)'? .*\" (f.source.buildCommand or \"\"); in if m == null then null else builtins.head m;
-    in {
-      links = builtins.listToAttrs (map (f: { name = f.target; value = target f; }) (builtins.attrValues files));
-      activation = builtins.attrNames hm.home.activation;
-      agents = builtins.mapAttrs (n: a: a.config.ProgramArguments) hm.launchd.agents;
-      system = builtins.concatStringsSep \"\n\" (map (s: s.text or \"\") (builtins.attrValues c.system.activationScripts));
-      brew = { inherit (c.homebrew) brews casks masApps taps; inherit (c.homebrew.onActivation) cleanup upgrade autoUpdate; };
-      nixHomebrew = { inherit (c.nix-homebrew) enable autoMigrate mutableTaps; taps = builtins.attrNames c.nix-homebrew.taps; };
-      packages = map (p: p.name) hm.home.packages;
-      users = builtins.attrNames c.home-manager.users;
-      accounts = builtins.filter (u: builtins.substring 0 7 u != \"_nixbld\") (builtins.attrNames c.users.users);
-      primary = c.system.primaryUser;
-      shells = c.environment.etc.shells.text or \"\";
-      userDefaults = builtins.toJSON hm.targets.darwin.defaults;
-    }") || { echo "evaluation failed"; exit 1; }
-  f() { jq -r "$1" <<<"$facts"; }
+printf '\n== declarations\n'
+if awk -F'"' '/^(tap|brew|cask) / { key=$1 FS $2; if (seen[key]++) exit 1 }' "$ROOT/Brewfile"; then ok 'Brewfile has no duplicate declarations'; else bad 'Brewfile has duplicate declarations'; fi
+if HOMEBREW_NO_AUTO_UPDATE=1 brew bundle list --all --file "$ROOT/Brewfile" >/dev/null; then ok 'Homebrew parses every declaration'; else bad 'Homebrew cannot parse Brewfile'; fi
+if awk 'NF && $1 !~ /^#/ { if (seen[$1]++) exit 1 }' "$ROOT/packages/linux-apt.txt"; then ok 'Linux apt list has no duplicates'; else bad 'Linux apt list has duplicates'; fi
 
-  group "live links into the repository"
-  repo="/Users/$USER_NAME/.config/dotfiles"
-  while IFS=$'\t' read -r name target; do
-    [ "$target" = null ] && continue
-    rel="${target#"$repo"/}"
-    if [ "$rel" = "$target" ]; then bad "$name links outside the repository: $target"
-    elif [ -e "$rel" ]; then ok "~/$name -> $rel"
-    else bad "~/$name -> $rel, which does not exist in the tree"; fi
-  done < <(f '.links | to_entries[] | [.key, (.value // "null")] | @tsv')
-  for want in .gitconfig .ssh/config .docker/config.json .zshrc .config/browser-router/config.json .claude/settings.json .codex/AGENTS.md .config/opencode/opencode.json .pi/agent/settings.json; do
-    if [ "$(f ".links[\"$want\"] // empty")" ]; then :; else bad "no live link declared for ~/$want"; fi
-  done
-  handy="Library/Application Support/com.pais.handy/settings_store.json"
-  if [ "$(f ".links[\"$handy\"] // empty")" = "$repo/macos/handy/settings_store.json" ]; then
-    ok "Handy settings link into this account's repository"
-  else
-    bad "Handy settings do not link into this account's repository"
-  fi
+. "$ROOT/lib/core.sh"
+. "$ROOT/hosts/macos.sh"
+. "$ROOT/lib/links.sh"
+. "$ROOT/lib/installers.sh"
+. "$ROOT/lib/macos.sh"
+. "$ROOT/lib/linux.sh"
+. "$ROOT/lib/migration.sh"
 
-  group "setup steps"
-  for step in codexConfig batCache pss agentClis retireOldAgents keyboardLayouts browserRouter defaultApps appShortcuts envFile; do
-    if f '.activation[]' | grep -qx "$step"; then ok "activation step $step"; else bad "activation step $step missing"; fi
-  done
+printf '\n== host and account guard\n'
+fixture_host=$(macos_hosts | sed -n '1p')
+fixture_primary=$(macos_primary_for_host "$fixture_host")
+fixture_secondary=$(macos_accounts_for_host "$fixture_host" | sed -n '2p')
+if [ -n "$fixture_primary" ] && [ -n "$fixture_secondary" ] && [ "$(macos_accounts_for_host "$fixture_host" | wc -l | tr -d ' ')" -ge 2 ]; then ok 'known host returns primary and account list'; else bad 'known host parsing'; fi
+if macos_accounts_for_host unknown >/dev/null 2>&1; then bad 'unknown host was accepted'; else ok 'unknown host is rejected'; fi
+if DOTFILES_HOST="$fixture_host" DOTFILES_CURRENT_USER="$fixture_secondary" require_macos_primary >/dev/null 2>&1; then bad 'secondary account passed mutation guard'; else ok 'secondary account cannot mutate'; fi
+if DOTFILES_HOST="$fixture_host" DOTFILES_CURRENT_USER="$fixture_primary" require_macos_primary >/dev/null 2>&1; then ok 'primary account passes mutation guard'; else bad 'primary account rejected'; fi
+if HOME="${TMPDIR:-/tmp}" DOTFILES="$ROOT" DOTFILES_HOST="$fixture_host" SUDO_USER="$fixture_secondary" "$ROOT/sync.sh" --user-only >/dev/null 2>&1; then bad 'secondary account reached internal user apply'; else ok 'secondary account cannot invoke internal user apply'; fi
+if "$ROOT/setup.sh" --linux >/dev/null 2>&1; then bad 'mismatched setup platform was accepted'; else ok 'mismatched setup platform stops before mutation'; fi
 
-  group "launch agents"
-  for agent in KeyRemapping:macos/caps-to-control.sh TMExcludeDev:macos/tm-exclude-dev.sh; do
-    name="${agent%%:*}" script="${agent#*:}"
-    if [ "$(f ".agents.$name[0]")" = "$repo/$script" ] && [ -x "$script" ]; then ok "$name runs $script"; else bad "$name does not run $script"; fi
-  done
+printf '\n== fixtures\n'
+TEMP_HOME=$(mktemp -d)
+trap 'rm -rf "$TEMP_HOME"' EXIT
+HOME=$TEMP_HOME DOTFILES=$ROOT DOTFILES_PREFLIGHT=1
+export HOME DOTFILES DOTFILES_PREFLIGHT
+mkdir -p "$HOME/.config"
+printf 'keep me\n' > "$HOME/.gitconfig"
+apply_common_links
+apply_macos_links
+first=$(find "$HOME" -type l | sort | while read -r link; do printf '%s=%s\n' "${link#"$HOME/"}" "$(readlink "$link")"; done)
+apply_common_links
+apply_macos_links
+second=$(find "$HOME" -type l | sort | while read -r link; do printf '%s=%s\n' "${link#"$HOME/"}" "$(readlink "$link")"; done)
+if [ "$first" = "$second" ]; then ok 'second link application changes no targets'; else bad 'link application is not idempotent'; fi
+if [ "$(cat "$HOME/.gitconfig.pre-shell")" = 'keep me' ]; then ok 'unmanaged destination gets one backup'; else bad 'link backup missing'; fi
+if check_link_registry "$(common_link_registry)" && check_link_registry "$(macos_link_registry)"; then ok 'all links resolve into this checkout'; else bad 'declared link check'; fi
+if apply_generated_user_state && [ -f "$HOME/.codex/config.toml" ]; then ok 'generated user state is present'; else bad 'generated user state'; fi
 
-  group "system settings"
-  system="$(f .system)"
-  if grep -q 'UserShell /bin/zsh' <<<"$system"; then ok "activation sets zsh as the login shell"; else bad "activation does not set /bin/zsh as UserShell"; fi
-  if f .shells | grep -qx /bin/zsh; then ok "/etc/shells is written and lists /bin/zsh"; else bad "nix-darwin writes no /etc/shells (environment.shells is empty)"; fi
-  for want in AppleShowAllExtensions AppleShowAllFiles; do
-    if f .userDefaults | grep -q "$want"; then ok "home-manager sets $want for each user"; else bad "$want is not a per-user default"; fi
-  done
-  # Every account the configuration declares gets the same home configuration, the primary one included.
-  if [ "$(f '.accounts | sort | join(",")')" = "$(f '.users | sort | join(",")')" ]; then ok "home-manager configures every declared account ($(f '.accounts | length'))"; else bad "declared accounts ($(f '.accounts | join(" ")')) differ from home-manager users ($(f '.users | join(" ")'))"; fi
-  if f '.users[]' | grep -qx "$(f .primary)"; then ok "the primary account has a home configuration"; else bad "the primary account has no home configuration"; fi
+trace="$TEMP_HOME/installers"
+DOTFILES_INSTALL_TRACE=$trace
+export DOTFILES_INSTALL_TRACE
+install_vendor_agent_clis
+if [ "$(sort "$trace" | paste -sd, -)" = claude,codex ]; then ok 'missing vendor CLIs select only their installers'; else bad 'vendor installer selection'; fi
+mkdir -p "$HOME/.local/share/claude/bin" "$HOME/.codex/packages/standalone/bin"
+touch "$HOME/.local/share/claude/bin/claude" "$HOME/.codex/packages/standalone/bin/codex"
+ln -sfn "$HOME/.local/share/claude/bin/claude" "$HOME/.local/bin/claude"
+ln -sfn "$HOME/.codex/packages/standalone/bin/codex" "$HOME/.local/bin/codex"
+: > "$trace"
+install_vendor_agent_clis
+if [ ! -s "$trace" ]; then ok 'existing vendor CLIs are retained'; else bad 'existing vendor CLIs selected reinstall'; fi
 
-  group "Homebrew, driven by the switch"
-  [ "$(f .nixHomebrew.enable)" = true ] && [ "$(f .nixHomebrew.autoMigrate)" = true ] && ok "nix-homebrew owns and adopts /opt/homebrew" || bad "nix-homebrew is not adopting /opt/homebrew"
-  [ "$(f .nixHomebrew.mutableTaps)" = false ] && ok "taps are read-only flake inputs" || bad "taps are mutable"
-  [ "$(f '[.brew.taps[].name] | sort | join(",")')" = "$(f '.nixHomebrew.taps | sort | join(",")')" ] && ok "homebrew.taps equals the pinned taps" || bad "homebrew.taps differs from the pinned taps"
-  [ "$(f .brew.autoUpdate)" = false ] && ok "no tap fetch during the switch" || bad "autoUpdate is on"
-  [ "$(f .brew.upgrade)" = true ] && ok "installed items move to the pinned versions" || bad "upgrade is off"
-  echo "  info cleanup = $(f .brew.cleanup)"
-  cov=openspec/changes/provision-with-nix/coverage.tsv
-  if [ -f "$cov" ]; then
-    before=$FAIL
-    while IFS=$'\t' read -r _ item declared _; do
-      case "$declared" in
-        "cask "*) c="${declared#cask }"; f '.brew.casks[] | (.name? // .)' | grep -qx "$c" || f '.brew.casks[] | (.name? // .)' | grep -q "/$c$" || bad "cask $c is in coverage.tsv but not declared" ;;
-        "masApps "*) [ "$(f ".brew.masApps[\"$item\"] // empty")" = "${declared#masApps }" ] || bad "App Store app $item is in coverage.tsv but not declared" ;;
-        "Homebrew formula "*) f '.brew.brews[] | (.name? // .)' | grep -qx "${declared#Homebrew formula }" || bad "formula ${declared#Homebrew formula } is in coverage.tsv but not declared" ;;
-      esac
-    done < <(tail -n +2 "$cov")
-    [ "$FAIL" = "$before" ] && ok "every cask, formula and App Store app in coverage.tsv is declared ($(f '.brew.casks | length') casks, $(f '.brew.brews | length') formulas, $(f '.brew.masApps | length') App Store apps)"
-  fi
+apply_macos_launch_agents
+for plist in "$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist" "$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"; do
+  if plutil -lint "$plist" >/dev/null && ! grep -q '__.*__' "$plist"; then ok "$(basename "$plist")"; else bad "$(basename "$plist")"; fi
+done
+skip 'launch agents were rendered but not loaded'
 
-  group "packages"
-  echo "  info $(f '.packages | length') packages in the home profile"
-  for p in mise neovim opencode pi-coding-agent; do
-    if f '.packages[]' | grep -q "^$p-[0-9]"; then ok "$p declared"; else bad "$p not declared"; fi
-  done
-  # Installed by the agentClis step instead, so T3 Code can update them.
-  for p in codex claude-code; do
-    if f '.packages[]' | grep -q "^$p-[0-9]"; then bad "$p is a Nix package"; else ok "$p is not a Nix package"; fi
-  done
+printf '\n== Homebrew behavior\n'
+fake_brew="$TEMP_HOME/brew"
+brew_trace="$TEMP_HOME/brew-trace"
+# shellcheck disable=SC2016
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "$BREW_TRACE"\n' > "$fake_brew"
+chmod +x "$fake_brew"
+DOTFILES_BREW=$fake_brew BREW_TRACE=$brew_trace
+export DOTFILES_BREW BREW_TRACE
+apply_homebrew apply
+DOTFILES_BREW=$fake_brew BREW_TRACE=$brew_trace DOTFILES_BREW_CLEANUP=1 apply_homebrew upgrade
+if grep -q '^bundle install --no-upgrade' "$brew_trace" && grep -q '^update$' "$brew_trace" && grep -q '^upgrade$' "$brew_trace" && grep -q '^bundle cleanup --force' "$brew_trace" && ! grep -q -- '--zap' "$brew_trace"; then ok 'apply, upgrade, and non-zapping cleanup order'; else bad 'Homebrew command trace'; fi
+unset DOTFILES_BREW BREW_TRACE
 
+fixture="$TEMP_HOME/homebrew-fixture" source_checkout="$TEMP_HOME/homebrew-source" backup="$TEMP_HOME/homebrew-backup"
+mkdir -p "$fixture/bin" "$fixture/Library" "$fixture/Cellar/kept/1.0" "$fixture/Caskroom/kept/1.0" "$source_checkout/bin" "$source_checkout/Library/Homebrew" "$source_checkout/.git"
+printf '#!/bin/sh\nexit 0\n' > "$source_checkout/bin/brew"
+chmod +x "$source_checkout/bin/brew"
+ln -s /nix/store/fake-brew/bin/brew "$fixture/bin/brew"
+ln -s /nix/store/fake-brew/Library/Homebrew "$fixture/Library/Homebrew"
+ln -s /nix/store/fake-taps "$fixture/Library/Taps"
+touch "$fixture/Cellar/kept/1.0/sentinel" "$fixture/Caskroom/kept/1.0/sentinel"
+if detach_homebrew_files "$fixture" "$source_checkout" "$backup" && [ -f "$fixture/Cellar/kept/1.0/sentinel" ] && [ -f "$fixture/Caskroom/kept/1.0/sentinel" ]; then ok 'Homebrew detachment preserves Cellar and Caskroom'; else bad 'Homebrew detachment fixture'; fi
 
-  if [ "${CHECK_PACKAGES:-0}" = 1 ]; then
-    group "packages: available, prebuilt, no collisions"
-    # Built on the machine by design: this repository's own packages (nix/pkgs, the `only` wrappers), python environments (a directory of links), and home-manager's generated files.
-    LOCAL='^(opencode|gawk|gsed|telnet|python3-[0-9.]+-env|home-manager|hm-session-vars\.sh|home-configuration-reference-manpage|dummy-xdg-mime-dirs[0-9])(-[0-9]|$)'
+printf '\n== migration gates\n'
+migration_trace="$TEMP_HOME/migration-trace"
+(
+  require_macos_primary() { return 0; }
+  migration_commit() { printf 'fixture\n'; }
+  remove_retired_macos_software() { return 0; }
+  apply_macos_machine() { return 0; }
+  check_all_macos_accounts() { return 1; }
+  detach_homebrew_from_nix() { printf 'detached\n' >> "$migration_trace"; }
+  run_nix_migration_until_uninstall_gate
+) >/dev/null 2>&1 || true
+if [ ! -e "$migration_trace" ]; then ok 'failed account check makes detachment unreachable'; else bad 'migration continued after failed check'; fi
+if uninstall_nix_after_migration_gate >/dev/null 2>&1; then bad 'uninstall passed without recorded evidence'; else ok 'Nix uninstall requires evidence from the same tree'; fi
 
-    # name, every output a profile installs, and whether it evaluates at all.
-    describe='ps: map (p: let o = builtins.tryEval (map (n: (p.${n} or p).outPath) (p.meta.outputsToInstall or [ "out" ])); in { name = p.name or "?"; ok = o.success; outs = if o.success then o.value else []; }) ps'
+printf '\n== Linux shell fixture\n'
+linux_home="$TEMP_HOME/linux-home"
+mkdir -p "$linux_home"
+ln -s /nix/store/old-profile "$linux_home/.profile"
+HOME=$linux_home
+export HOME
+apply_common_links
+apply_linux_shells
+linux_first=$(shasum "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc")
+apply_linux_shells
+linux_second=$(shasum "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc")
+if [ "$linux_first" = "$linux_second" ]; then ok 'Linux shell blocks are idempotent'; else bad 'Linux shell blocks changed twice'; fi
+if [ -L "$HOME/.profile.pre-shell" ] && [ ! -L "$HOME/.profile" ]; then ok 'Nix-managed shell file is replaced with a backup'; else bad 'Nix-managed shell replacement'; fi
+for file in "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc"; do
+  if grep -qE '(/nix|\.nix-profile|mise|linuxbrew)' "$file"; then bad "forbidden Linux path in $file"; fi
+done
 
-    check() {
-      local label=$1 attr=$2 tmp
-      tmp=$(mktemp -d)
-      printf '\n== %s\n' "$label"
-      if ! nix eval --impure --json "$attr" --apply "$describe" > "$tmp/pkgs.json" 2> "$tmp/err"; then
-        echo "  FAIL the package list does not evaluate: $(tail -3 "$tmp/err")"; FAIL=$((FAIL+1)); return
-      fi
-      local n=0 local_n=0
-      while IFS=$'\t' read -r name ok outs; do
-        n=$((n+1))
-        if [ "$ok" != true ]; then echo "  FAIL $name does not evaluate for this platform"; FAIL=$((FAIL+1)); continue; fi
-        if [[ "$name" =~ $LOCAL ]]; then local_n=$((local_n+1)); echo "  local $name"; continue; fi
-        for out in $outs; do
-          h=$(basename "$out" | cut -d- -f1)
-          if ! curl -sf --compressed "https://cache.nixos.org/$h.ls" > "$tmp/$h.ls"; then
-            echo "  FAIL $name: $out is not on cache.nixos.org, so a switch would build it"; FAIL=$((FAIL+1)); continue
-          fi
-          # Every regular file and symlink below the top level, as "path<TAB>package". A profile ignores nix-support/, and a top-level symlink (lib -> ...) is merged as a directory.
-          jq -r --arg pkg "$name" '
-            paths(objects | select(.type? == "regular" or .type? == "symlink"))
-            | map(select(. != "root" and . != "entries"))
-            | select(length > 1 and .[0] != "nix-support")
-            | "/" + join("/") + "\t" + $pkg
-          ' "$tmp/$h.ls" >> "$tmp/files"
-        done
-      done < <(jq -r '.[] | [.name, (.ok|tostring), (.outs|join(" "))] | @tsv' "$tmp/pkgs.json")
-      echo "  $n packages evaluate; $local_n built locally; the rest are prebuilt on cache.nixos.org"
-      # A path two packages both provide fails the profile build.
-      local dups
-      dups=$(sort -u "$tmp/files" 2>/dev/null | cut -f1 | sort | uniq -d)
-      if [ -n "$dups" ]; then
-        while read -r p; do
-          echo "  FAIL collision on $p: $(grep -F "$p	" "$tmp/files" | cut -f2 | sort -u | paste -sd, -)"
-        done <<< "$dups"
-        FAIL=$((FAIL+1))
-      else
-        echo "  ok   no two packages provide the same file"
-      fi
-      rm -rf "$tmp"
-    }
-    check "macOS home profile" ".#darwinConfigurations.\"$HOST\".config.home-manager.users.$USER_NAME.home.packages"
-    # The Linux profiles too: verify/linux.sh builds them, but would compile a package missing from the cache without saying so.
-    check "Linux aarch64 home profile" .#homeConfigurations.linux-aarch64.config.home.packages
-    check "Linux x86_64 home profile" .#homeConfigurations.linux-x86_64.config.home.packages
-  fi
-
-  printf '\n%s passed, %s failed\n' "$PASS" "$FAIL"
-  [ "$FAIL" -eq 0 ]
-}
-
-if [ "${VERIFY_STAGE:-}" = assert ]; then
-  assert_config
-  exit
-fi
-
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# The files the git flake sees (git's index, with working-tree contents). `path:` puts everything it is given into the world-readable /nix/store, so ignored files (secrets, eval transcripts) must not be among them.
-tree() { git -C "$ROOT" ls-files --cached | while IFS= read -r f; do if [ -e "$ROOT/$f" ] || [ -L "$ROOT/$f" ]; then printf '%s\n' "$f"; fi; done; }
-
-if command -v nix >/dev/null 2>&1; then
-  # The real path: macOS puts $TMPDIR under /var, a symlink to /private/var, and nix 2.34 refuses a flake path through a symlink.
-  STAGE="$(cd "$(mktemp -d)" && pwd -P)"
-  trap 'rm -rf "$STAGE"' EXIT
-  tree | rsync -a --files-from=- "$ROOT/" "$STAGE/"
-  echo "==> building darwinConfigurations.$HOST (no activation)"
-  nix build --no-link "path:$STAGE#darwinConfigurations.\"$HOST\".system"
-  cd "$STAGE"
-  VERIFY_STAGE=assert CHECK_PACKAGES=1 HOST_CONFIG="$HOST" USER_CONFIG="$USER_NAME" nix shell --inputs-from . nixpkgs#jq nixpkgs#curl -c bash verify/macos.sh
-else
-  echo "==> no Nix on this Mac: evaluating in a container (nothing is built)"
-  tree | COPYFILE_DISABLE=1 tar --no-xattrs --no-fflags -C "$ROOT" -T - -cf - |
-    docker run --rm -i -e HOST_CONFIG="$HOST" -e USER_CONFIG="$USER_NAME" -e USER=check -e HOME=/home/check nixos/nix:2.28.3 bash -euo pipefail -c '
-      printf "experimental-features = nix-command flakes\n" >> /etc/nix/nix.conf
-      mkdir -p /src && tar -C /src -xf - && cd /src
-      nix eval --raw ".#darwinConfigurations.\"$HOST_CONFIG\".system.drvPath" >/dev/null
-      VERIFY_STAGE=assert CHECK_PACKAGES=1 exec nix shell --inputs-from . nixpkgs#jq nixpkgs#curl -c bash verify/macos.sh
-    '
-fi
+printf '\n%s passed, %s failed, %s unverified\n' "$PASS" "$FAIL" "$UNVERIFIED"
+[ "$FAIL" -eq 0 ]
