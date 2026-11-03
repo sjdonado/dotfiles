@@ -152,8 +152,27 @@ run_nix_migration_until_uninstall_gate() {
   verify_homebrew_independence || return 1
   check_all_macos_accounts || return 1
   record_migration_evidence || return 1
-  printf '\nShell provisioning and Homebrew detachment passed. Nix is still installed.\n'
-  printf 'Run sync.sh --uninstall-nix from this exact commit to remove Nix.\n'
+  printf '\nShell provisioning and Homebrew detachment passed.\n'
+  printf 'Run sync.sh --uninstall-nix from this exact commit to remove Nix or resume finalization.\n'
+}
+
+nix_mount_table() { /sbin/mount; }
+
+nix_store_removed() {
+  local root=${1:-/nix} entries mounts
+  mounts=$(nix_mount_table) || return 1
+  if awk -v root="$root" '$3 == root { found=1 } END { exit !found }' <<<"$mounts"; then
+    printf 'Nix volume is still mounted at %s\n' "$root" >&2
+    return 1
+  fi
+  if [ -L "$root" ] || { [ -e "$root" ] && [ ! -d "$root" ]; }; then
+    printf 'unexpected Nix path remains: %s\n' "$root" >&2
+    return 1
+  fi
+  if [ -d "$root" ]; then
+    entries=$(find "$root" -mindepth 1 -maxdepth 1 -print -quit) || return 1
+    [ -z "$entries" ] || { printf 'Nix files remain under %s\n' "$root" >&2; return 1; }
+  fi
 }
 
 uninstall_nix_after_migration_gate() {
@@ -164,9 +183,16 @@ uninstall_nix_after_migration_gate() {
   [ -n "$expected" ] && [ "$actual" = "$expected" ] || { printf 'no passing migration evidence for this commit\n' >&2; return 1; }
   check_all_macos_accounts || return 1
   uninstaller=/nix/nix-installer
-  [ -x "$uninstaller" ] || { printf 'Nix installer uninstaller is missing: %s\n' "$uninstaller" >&2; return 1; }
-  "$uninstaller" uninstall
-  [ ! -e /nix ] || { printf '/nix still exists after uninstall\n' >&2; return 1; }
+  if [ -x "$uninstaller" ]; then
+    if [ -x /run/current-system/sw/bin/darwin-uninstaller ]; then
+      sudo /run/current-system/sw/bin/darwin-uninstaller || return 1
+      check_all_macos_accounts || return 1
+    fi
+    "$uninstaller" uninstall || return 1
+  else
+    note 'Nix installer is absent; checking whether removal already completed'
+  fi
+  nix_store_removed || return 1
   DOTFILES_BREW_CLEANUP=1 apply_homebrew apply || return 1
   check_all_macos_accounts || return 1
   printf '%s\n' "$actual" > "$HOME/.local/state/dotfiles/nix-migration-complete"

@@ -50,9 +50,11 @@ The migration is staged and recoverable until Nix itself is removed:
 
 Before running the migration, update every declared account's checkout to the same candidate commit. The migration reports mismatches without pulling or switching a checkout.
 
-`--migrate-from-nix` checks account checkout revisions before mutation, replaces the Nix-owned Homebrew launcher and immutable tap links with an official Homebrew checkout, applies shell provisioning, checks every account, and records evidence for the exact working tree. Homebrew detachment precedes package installation because the Nix-managed taps are read-only. Cellar, Caskroom, applications, and user data are preserved. Failed prerequisites stop dependent steps, and Nix remains installed.
+`--migrate-from-nix` checks account checkout revisions before mutation, replaces the Nix-owned Homebrew launcher and immutable tap links with an official Homebrew checkout, applies shell provisioning, checks every account, and records evidence for the exact working tree. Homebrew detachment precedes package installation because the Nix-managed taps are read-only. Cellar, Caskroom, applications, and user data are preserved. Failed prerequisites stop dependent steps. This stage never removes Nix.
 
-`--uninstall-nix` requires that evidence and repeats every-account checks before invoking `/nix/nix-installer uninstall`. The uninstaller asks for administrator authentication. After removal it enables non-zapping Homebrew cleanup and checks every account without Nix, mise, or Linuxbrew paths.
+`--uninstall-nix` requires that evidence and repeats every-account checks. It first runs the installed nix-darwin uninstaller when present, checks every account again, then invokes `/nix/nix-installer uninstall`. The uninstallers ask for administrator authentication. After removal it enables non-zapping Homebrew cleanup and checks every account without Nix, mise, or Linuxbrew paths.
+
+An empty, unmounted `/nix` directory may remain until reboot and does not mean Nix is still installed. Remaining files or a mounted Nix volume block completion. If Nix removal succeeded but finalization failed, update every account to the same corrected candidate, rerun `--migrate-from-nix` to apply and verify its links, then rerun `--uninstall-nix`. With no installer present, the latter verifies removal and resumes cleanup and account checks.
 
 Before Nix removal, rollback uses the existing Nix generation or the retained `.pre-shell` and Homebrew-link backups. After removal, rollback requires reinstalling Nix and checking out the pre-removal commit.
 

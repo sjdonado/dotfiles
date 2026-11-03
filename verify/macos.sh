@@ -55,6 +55,12 @@ if [ "$first" = "$second" ]; then ok 'second link application changes no targets
 if [ "$(cat "$HOME/.gitconfig.pre-shell")" = 'keep me' ]; then ok 'unmanaged destination gets one backup'; else bad 'link backup missing'; fi
 if [ -f "$HOME/.hushlogin" ] && [ ! -L "$HOME/.hushlogin" ] && [ "$(readlink "$HOME/.hushlogin.pre-shell")" = /nix/store/old-home-files/.hushlogin ]; then ok 'Nix hushlogin link is backed up and replaced with a writable file'; else bad 'Nix hushlogin replacement'; fi
 if check_link_registry "$(common_link_registry)" && check_link_registry "$(macos_link_registry)"; then ok 'all links resolve into this checkout'; else bad 'declared link check'; fi
+mkdir -p "$TEMP_HOME/former-profile"
+ln -s "$ROOT/git/.gitconfig" "$TEMP_HOME/former-profile/gitconfig"
+ln -s "$TEMP_HOME/former-profile/gitconfig" "$HOME/proxy-link"
+if check_link_registry 'git/.gitconfig|proxy-link' >/dev/null 2>&1; then bad 'indirect profile link was accepted'; else ok 'profile-mediated link is rejected even when its final target is correct'; fi
+managed_link "$ROOT/git/.gitconfig" "$HOME/proxy-link"
+if [ "$(readlink "$HOME/proxy-link")" = "$(dotfiles_realpath "$ROOT/git/.gitconfig")" ] && [ -L "$HOME/proxy-link.pre-shell" ]; then ok 'indirect profile link is replaced with a direct link and backed up'; else bad 'indirect profile link replacement'; fi
 if apply_generated_user_state && [ -f "$HOME/.codex/config.toml" ]; then ok 'generated user state is present'; else bad 'generated user state'; fi
 
 trace="$TEMP_HOME/installers"
@@ -167,6 +173,22 @@ if [ "$(paste -sd, "$migration_trace")" = detach,retire,apply,check ]; then ok '
 ) >/dev/null 2>&1 || true
 if [ ! -s "$migration_trace" ]; then ok 'package installation failure stops user application'; else bad 'failed package installation was ignored'; fi
 if uninstall_nix_after_migration_gate >/dev/null 2>&1; then bad 'uninstall passed without recorded evidence'; else ok 'Nix uninstall requires evidence from the same tree'; fi
+
+removal_fixture="$TEMP_HOME/nix-removal"
+mkdir -p "$removal_fixture"
+(
+  nix_mount_table() { printf '\n'; }
+  nix_store_removed "$removal_fixture"
+) && ok 'empty unmounted Nix mount point is accepted' || bad 'empty Nix mount point rejected'
+(
+  nix_mount_table() { printf '\n'; }
+  nix_store_removed "$removal_fixture/absent"
+) && ok 'absent Nix path is accepted' || bad 'absent Nix path rejected'
+mkdir -p "$removal_fixture/store"
+if (nix_mount_table() { printf '\n'; }; nix_store_removed "$removal_fixture") >/dev/null 2>&1; then bad 'remaining Nix store was accepted'; else ok 'remaining Nix files block completion'; fi
+rmdir "$removal_fixture/store"
+if (nix_mount_table() { printf 'device on %s (apfs)\n' "$removal_fixture"; }; nix_store_removed "$removal_fixture") >/dev/null 2>&1; then bad 'mounted Nix volume was accepted'; else ok 'mounted Nix volume blocks completion even when empty'; fi
+if (nix_mount_table() { return 1; }; nix_store_removed "$removal_fixture") >/dev/null 2>&1; then bad 'mount inspection failure was accepted'; else ok 'mount inspection failure blocks completion'; fi
 
 printf '\n== Linux shell fixture\n'
 linux_home="$TEMP_HOME/linux-home"

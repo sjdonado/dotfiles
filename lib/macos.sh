@@ -216,7 +216,7 @@ check_macos_state() {
   for item in rg nvim wt node bun pnpm uv opencode openspec bootdev pss claude codex; do
     command_path=$(command -v "$item" 2>/dev/null || true)
     [ -n "$command_path" ] || { printf 'command missing: %s\n' "$item" >&2; status=1; continue; }
-    if [ ! -d /nix ]; then
+    if [ ! -d /nix/store ]; then
       case "$(dotfiles_realpath "$command_path" 2>/dev/null || printf '%s' "$command_path")" in
         /nix/*|*/.nix-profile/*|*/.local/share/mise/*|/home/linuxbrew/*) printf 'forbidden command path: %s -> %s\n' "$item" "$command_path" >&2; status=1 ;;
       esac

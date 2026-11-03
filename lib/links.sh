@@ -6,7 +6,7 @@ managed_link() {
   local source=$1 destination=$2 backup
   source=$(dotfiles_realpath "$source") || return 1
   mkdir -p "$(dirname "$destination")" || return 1
-  if [ -L "$destination" ] && [ "$(dotfiles_realpath "$destination" 2>/dev/null || true)" = "$source" ]; then
+  if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$source" ]; then
     return 0
   fi
   if [ -e "$destination" ] || [ -L "$destination" ]; then
@@ -105,7 +105,7 @@ check_link_registry() {
     [ -n "$source" ] || continue
     actual=$(dotfiles_realpath "$HOME/$destination" 2>/dev/null || true)
     expected=$(dotfiles_realpath "$DOTFILES/$source")
-    if [ "$actual" != "$expected" ] || [ ! -L "$HOME/$destination" ]; then
+    if [ "$actual" != "$expected" ] || [ ! -L "$HOME/$destination" ] || [ "$(readlink "$HOME/$destination")" != "$expected" ]; then
       printf 'not linked: %s -> %s\n' "$HOME/$destination" "$DOTFILES/$source" >&2
       status=1
     fi
