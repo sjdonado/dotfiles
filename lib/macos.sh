@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+
+macos_host_name() {
+  if [ -n "${DOTFILES_HOST:-}" ]; then printf '%s\n' "$DOTFILES_HOST"; return; fi
+  /usr/sbin/scutil --get LocalHostName
+}
+
+macos_load_accounts() {
+  local host=${1:-$(macos_host_name)}
+  local account
+  MACOS_ACCOUNTS=()
+  while IFS= read -r account; do
+    [ -n "$account" ] && MACOS_ACCOUNTS+=("$account")
+  done < <(macos_accounts_for_host "$host")
+  [ "${#MACOS_ACCOUNTS[@]}" -gt 0 ] || return 1
+  MACOS_PRIMARY=${MACOS_ACCOUNTS[0]}
+}
+
+require_macos_primary() {
+  macos_load_accounts || { printf 'unknown macOS host: %s\n' "$(macos_host_name)" >&2; return 1; }
+  if [ "${DOTFILES_CURRENT_USER:-$(id -un)}" != "$MACOS_PRIMARY" ]; then
+    printf 'Only the primary account may change shared macOS state. Run setup.sh for this account or sync.sh --check to verify it.\n' >&2
+    return 1
+  fi
+}
+
+macos_brew() {
+  if [ -n "${DOTFILES_BREW:-}" ]; then printf '%s\n' "$DOTFILES_BREW"
+  elif [ -x /opt/homebrew/bin/brew ]; then printf '%s\n' /opt/homebrew/bin/brew
+  elif have brew; then command -v brew
+  else return 1
+  fi
+}
+
+ensure_homebrew() {
+  local installer
+  macos_brew >/dev/null 2>&1 && return 0
+  installer=$(mktemp)
+  curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o "$installer"
+  NONINTERACTIVE=1 /bin/bash "$installer"
+  rm -f "$installer"
+  macos_brew >/dev/null
+}
+
+apply_homebrew() {
+  local mode=$1 brew
+  ensure_homebrew || return 1
+  brew=$(macos_brew) || return 1
+  if [ "$mode" = upgrade ]; then
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" update || return 1
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" upgrade || return 1
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --file "$DOTFILES/Brewfile" || return 1
+  else
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --no-upgrade --file "$DOTFILES/Brewfile" || return 1
+  fi
+  if [ "${DOTFILES_BREW_CLEANUP:-0}" = 1 ]; then
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle cleanup --force --file "$DOTFILES/Brewfile"
+  fi
+}
+
+apply_macos_defaults() {
+  defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+  defaults write com.apple.finder AppleShowAllFiles -bool true
+  "$DOTFILES/macos/app-shortcuts.sh"
+}
+
+render_launch_agent() {
+  local template=$1 destination=$2 placeholder=$3 replacement=$4 placeholder2=${5:-} replacement2=${6:-} temporary
+  mkdir -p "$(dirname "$destination")" "$HOME/Library/Logs"
+  temporary=$(mktemp "$destination.XXXXXX")
+  if [ -n "$placeholder2" ]; then
+    sed -e "s|$placeholder|$replacement|g" -e "s|$placeholder2|$replacement2|g" "$template" > "$temporary"
+  else
+    sed "s|$placeholder|$replacement|g" "$template" > "$temporary"
+  fi
+  plutil -lint "$temporary" >/dev/null
+  if [ -f "$destination" ] && cmp -s "$temporary" "$destination"; then
+    rm -f "$temporary"
+  else
+    mv -f "$temporary" "$destination"
+  fi
+}
+
+apply_macos_launch_agents() {
+  local uid key_agent tm_agent
+  uid=$(id -u)
+  key_agent="$HOME/Library/LaunchAgents/com.local.KeyRemapping.plist"
+  tm_agent="$HOME/Library/LaunchAgents/com.local.TMExcludeDev.plist"
+  render_launch_agent "$DOTFILES/macos/com.local.KeyRemapping.plist" "$key_agent" __CAPS_TO_CONTROL_SCRIPT__ "$DOTFILES/macos/caps-to-control.sh"
+  render_launch_agent "$DOTFILES/macos/com.local.TMExcludeDev.plist" "$tm_agent" __TM_EXCLUDE_SCRIPT__ "$DOTFILES/macos/tm-exclude-dev.sh" __TM_LOG__ "$HOME/Library/Logs/dotfiles-time-machine-exclusions.log"
+  if [ "${DOTFILES_PREFLIGHT:-0}" = 1 ]; then
+    unverified "launch agents rendered in preflight"
+  elif launchctl print "gui/$uid" >/dev/null 2>&1; then
+    launchctl bootout "gui/$uid" "$key_agent" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" "$key_agent"
+    launchctl bootout "gui/$uid" "$tm_agent" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" "$tm_agent"
+  else
+    unverified "launch agents rendered but this account has no GUI session"
+  fi
+}
+
+apply_browser_router() {
+  local source=/opt/homebrew/opt/browser-router/BrowserRouter.app destination="$HOME/Applications/BrowserRouter.app"
+  [ -d "$source" ] || { unverified "BrowserRouter formula is not installed"; return 0; }
+  mkdir -p "$HOME/Applications"
+  if [ ! -d "$destination" ] || ! cmp -s "$source/Contents/MacOS/BrowserRouter" "$destination/Contents/MacOS/BrowserRouter"; then
+    rm -rf "$destination"
+    cp -R "$source" "$destination"
+  fi
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$destination"
+}
+
+apply_macos_user() {
+  install_macos_user_tools || return 1
+  apply_common_links || return 1
+  apply_macos_links || return 1
+  managed_link /opt/homebrew/opt/openjdk@11 "$HOME/.local/opt/jdk11" || return 1
+  managed_link /opt/homebrew/opt/openjdk@17 "$HOME/.local/opt/jdk17" || return 1
+  managed_link /opt/homebrew/opt/llvm "$HOME/.local/opt/llvm" || return 1
+  managed_link /opt/homebrew/opt/openssl@4 "$HOME/.local/opt/openssl-4" || return 1
+  managed_link /opt/homebrew/opt/zig@0.15 "$HOME/.local/opt/zig-0_15" || return 1
+  apply_generated_user_state || return 1
+  mkdir -p "$HOME/Library/Keyboard Layouts" || return 1
+  if [ -d "$DOTFILES/macos/ukelele" ]; then cp -Rp "$DOTFILES/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/"; fi
+  apply_browser_router || return 1
+  if [ -d /Applications/Zed.app ]; then
+    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Zed.app
+  fi
+  if have duti; then duti "$DOTFILES/macos/default-apps.duti" || true; fi
+  apply_macos_launch_agents || return 1
+  apply_macos_defaults || return 1
+  if type retire_nix_home_agents >/dev/null 2>&1; then retire_nix_home_agents || return 1; fi
+}
+
+apply_macos() {
+  local mode=$1 current account declared=0
+  macos_load_accounts || { printf 'unknown macOS host\n' >&2; return 1; }
+  current=${DOTFILES_CURRENT_USER:-$(id -un)}
+  for account in "${MACOS_ACCOUNTS[@]}"; do
+    [ "$account" != "$current" ] || declared=1
+  done
+  [ "$declared" = 1 ] || { printf 'current account is not declared for this macOS host\n' >&2; return 1; }
+  if [ "$current" = "$MACOS_PRIMARY" ]; then
+    apply_macos_machine "$mode"
+  else
+    [ "$mode" = apply ] || { require_macos_primary; return 1; }
+    note 'Applying this account only; shared packages are managed by the primary account.'
+    apply_macos_user
+  fi
+}
+
+apply_macos_machine() {
+  local mode=$1 account shell
+  require_macos_primary || return 1
+  apply_homebrew "$mode" || return 1
+  grep -qx /bin/zsh /etc/shells || printf '%s\n' /bin/zsh | sudo tee -a /etc/shells >/dev/null
+  for account in "${MACOS_ACCOUNTS[@]}"; do
+    if ! id -u "$account" >/dev/null 2>&1; then warn "$account is declared but has no macOS account"; continue; fi
+    shell=$(dscl . -read "/Users/$account" UserShell 2>/dev/null | awk '{print $2}')
+    if [ "$shell" != /bin/zsh ]; then sudo dscl . -create "/Users/$account" UserShell /bin/zsh || return 1; fi
+  done
+  for account in "${MACOS_ACCOUNTS[@]}"; do
+    if [ "$account" = "$(id -un)" ]; then
+      apply_macos_user || return 1
+    else
+      sudo -H -u "$account" env DOTFILES="/Users/$account/.config/dotfiles" "/Users/$account/.config/dotfiles/sync.sh" --user-only || return 1
+    fi
+  done
+}
+
+check_macos_packages() {
+  local brew item formulas casks prefix target canonical status=0
+  brew=$(macos_brew) || return 1
+  prefix=$("$brew" --prefix) || return 1
+  prefix=$(dotfiles_realpath "$prefix") || return 1
+  # Unnamed inventory reads installed receipts without resolving formula API metadata.
+  formulas=$(HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 "$brew" list --formula --full-name -1) || return 1
+  casks=$(HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 "$brew" list --cask -1) || return 1
+  while read -r item; do
+    [ -n "$item" ] || continue
+    grep -Fxq -- "$item" <<<"$formulas" && continue
+    # Core aliases such as libjpeg have opt links to their installed canonical keg.
+    case "$item" in
+      */*) ;;
+      *)
+        target=$(dotfiles_realpath "$prefix/opt/$item" 2>/dev/null || true)
+        case "$target" in
+          "$prefix/Cellar/"*)
+            canonical=${target#"$prefix/Cellar/"}
+            canonical=${canonical%%/*}
+            [ -d "$target" ] && grep -Fxq -- "$canonical" <<<"$formulas" && continue
+            ;;
+        esac
+        ;;
+    esac
+    printf 'formula missing: %s\n' "$item" >&2
+    status=1
+  done < <(sed -n 's/^brew "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
+  while read -r item; do
+    [ -n "$item" ] || continue
+    grep -Fxq -- "$item" <<<"$casks" || { printf 'cask missing: %s\n' "$item" >&2; status=1; }
+  done < <(sed -n 's/^cask "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
+  return "$status"
+}
+
+check_macos_state() {
+  local status=0 item stray command_path primary_uid app app_uid
+  macos_load_accounts || return 1
+  [ "$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')" = /bin/zsh ] || { printf 'login shell is not /bin/zsh\n' >&2; status=1; }
+  check_link_registry "$(common_link_registry)" || status=1
+  check_link_registry "$(macos_link_registry)" || status=1
+  [ -f "$HOME/.codex/config.toml" ] || { printf 'generated Codex config is missing\n' >&2; status=1; }
+  [ -f "$HOME/.hushlogin" ] || { printf '.hushlogin is missing\n' >&2; status=1; }
+  [ -d "$HOME/Applications/BrowserRouter.app" ] || { printf 'BrowserRouter app is missing\n' >&2; status=1; }
+  if [ -d "$DOTFILES/macos/ukelele" ]; then
+    for item in "$DOTFILES/macos/ukelele/"*; do [ -e "$HOME/Library/Keyboard Layouts/$(basename "$item")" ] || { printf 'keyboard layout missing: %s\n' "$(basename "$item")" >&2; status=1; }; done
+  fi
+  for item in jdk11:openjdk@11 jdk17:openjdk@17 llvm:llvm openssl-4:openssl@4 zig-0_15:zig@0.15; do
+    [ "$(dotfiles_realpath "$HOME/.local/opt/${item%%:*}" 2>/dev/null || true)" = "$(dotfiles_realpath "/opt/homebrew/opt/${item#*:}" 2>/dev/null || true)" ] || { printf 'keg link missing: %s\n' "${item%%:*}" >&2; status=1; }
+  done
+  [ ! -e /opt/homebrew/.managed_by_nix_darwin ] || { printf 'Homebrew Nix-management marker remains; rerun sync.sh --migrate-from-nix from the primary account\n' >&2; status=1; }
+  check_macos_packages || status=1
+  [ "$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)" = 1 ] || { printf 'AppleShowAllExtensions is not set\n' >&2; status=1; }
+  [ "$(defaults read com.apple.finder AppleShowAllFiles 2>/dev/null)" = 1 ] || { printf 'AppleShowAllFiles is not set\n' >&2; status=1; }
+  stray=$(find /opt/homebrew ! -user "$MACOS_PRIMARY" ! -user root -print -quit 2>/dev/null || true)
+  [ -z "$stray" ] || { printf 'foreign Homebrew owner: %s\n' "$stray" >&2; status=1; }
+  primary_uid=$(id -u "$MACOS_PRIMARY")
+  for app in /Applications/*.app; do
+    [ -e "$app" ] || continue
+    app_uid=$(stat -f %u "$app")
+    if [ "$app_uid" -ge 501 ] && [ "$app_uid" != "$primary_uid" ]; then printf 'foreign application owner: %s\n' "$app" >&2; status=1; fi
+  done
+  for item in rg nvim wt node bun pnpm uv opencode openspec bootdev pss claude codex; do
+    command_path=$(command -v "$item" 2>/dev/null || true)
+    [ -n "$command_path" ] || { printf 'command missing: %s\n' "$item" >&2; status=1; continue; }
+    if [ ! -d /nix/store ]; then
+      case "$(dotfiles_realpath "$command_path" 2>/dev/null || printf '%s' "$command_path")" in
+        /nix/*|*/.nix-profile/*|*/.local/share/mise/*|/home/linuxbrew/*) printf 'forbidden command path: %s -> %s\n' "$item" "$command_path" >&2; status=1 ;;
+      esac
+    fi
+  done
+  opencode --version 2>/dev/null | grep -qE '(^| )v?2\.' || { printf 'OpenCode is not v2\n' >&2; status=1; }
+  bat --list-themes 2>/dev/null | grep -q '^GitHub-Dark' || { printf 'bat theme cache is missing GitHub-Dark\n' >&2; status=1; }
+  env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c 'command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'clean zsh cannot resolve required tools\n' >&2; status=1; }
+  env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc 'command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'login bash cannot resolve required tools\n' >&2; status=1; }
+  for item in KeyRemapping TMExcludeDev; do
+    [ -f "$HOME/Library/LaunchAgents/com.local.$item.plist" ] || { printf 'launch agent missing: %s\n' "$item" >&2; status=1; }
+    if launchctl print "gui/$(id -u)" >/dev/null 2>&1 && ! launchctl print "gui/$(id -u)/com.local.$item" >/dev/null 2>&1; then printf 'launch agent is not loaded: %s\n' "$item" >&2; status=1; fi
+  done
+  return "$status"
+}

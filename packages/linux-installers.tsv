@@ -1,0 +1,10 @@
+command	source	version	architectures	note
+node	https://deb.nodesource.com/setup_22.x	22.x	aarch64,x86_64	Adds the NodeSource apt repository, then installs nodejs through apt.
+bun	https://bun.sh/install	1.4.4	aarch64,x86_64	Installs directly into ~/.local/bin without adding a shell block.
+pnpm	npm:pnpm	12.15.0	aarch64,x86_64	Installs under ~/.local after Node is available.
+uv	https://astral.sh/uv/0.13.6/install.sh	0.13.6	aarch64,x86_64	Uses UV_INSTALL_DIR and does not edit PATH.
+opencode	https://opencode.ai/v2/install	2.2.0	aarch64,x86_64	The upstream installer explicitly supports linux-arm64 and linux-x64 and does not edit PATH.
+openspec	npm:@fission-ai/openspec	1.15.0	aarch64,x86_64	Installs under ~/.local after Node is available.
+worktrunk	https://github.com/max-sixty/worktrunk/releases/download/v0.81.0/worktrunk-installer.sh	0.81.0	aarch64,x86_64	Pinned upstream installer with both Linux musl archives; installs under ~/.local.
+claude	https://claude.ai/install.sh	vendor current	aarch64,x86_64	Vendor-managed installation retained for self-update support.
+codex	https://chatgpt.com/codex/install.sh	vendor current	aarch64,x86_64	Vendor-managed installation retained for self-update support.

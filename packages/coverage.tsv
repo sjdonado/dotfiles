@@ -1,0 +1,18 @@
+surface	final owner	declaration	migration disposition
+macOS formulas	Homebrew	Brewfile	Every active formula from the Nix macOS and common package lists is declared; dropped historical items remain absent.
+macOS casks	Homebrew	Brewfile	Every active cask is declared except tailscale-app, which is explicitly removed with zap during migration.
+macOS taps	Homebrew	Brewfile	Only taps required by declared formulas remain.
+macOS keg-only tools	Homebrew plus live links	Brewfile and lib/macos.sh	openjdk@11, openjdk@17, llvm, openssl@4, and zig@0.15 retain their ~/.local/opt compatibility paths.
+shared configuration	live links	lib/links.sh	All active home-manager destinations are registered; obsolete Nix-generated links are replaced with one backup.
+macOS defaults	shell	lib/macos.sh	Finder defaults, app shortcuts, default-app intent, BrowserRouter registration, and login shells are applied per owning scope.
+macOS agents	launchd	lib/macos.sh and macos/*.plist	The key-remapping and Time Machine agents replace the home-manager agents.
+generated user state	shell	lib/installers.sh	Codex shared configuration and the bat theme cache are generated after links.
+Claude Code	vendor installer	lib/installers.sh	Retained as vendor-managed for self-update and T3 Code.
+Codex	vendor installer	lib/installers.sh	Retained as vendor-managed for self-update and T3 Code.
+macOS App Store apps	manual	README.md	Authentication-bound installation stays manual.
+Ubuntu base packages	apt	packages/linux-apt.txt	All distribution-owned packages are declared once.
+Linux Node	NodeSource apt repository	lib/installers.sh and packages/linux-installers.tsv	Node 22 supports both declared architectures.
+Linux user tools	guarded upstream installers	lib/installers.sh and packages/linux-installers.tsv	Bun, pnpm, uv, OpenCode v2, OpenSpec, and Worktrunk have explicit versions and both architectures.
+Linux shells	managed shell blocks	lib/linux.sh	PATH, git identity, core limits, and interactive zsh handoff replace Nix and mise startup state.
+Nix declarations	removed	migration history only	flake.nix, flake.lock, and nix/ are deleted after the shell declaration is complete.
+mise declarations	removed	migration history only	No runtime manager or shim directory remains.

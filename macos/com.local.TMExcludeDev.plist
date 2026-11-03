@@ -8,7 +8,7 @@
        running this through `sh -c` listed it as a bare "sh" with no hint of what
        it does. The script has its own shebang and is executable, so naming it
        directly makes the row read tm-exclude-dev.sh. launchd does not expand
-       $HOME, which is what the shell was for, so macos.sh substitutes the real
+       $HOME, which is what the shell was for, so provisioning substitutes the real
        path when it installs this file. -->
   <key>ProgramArguments</key>
   <array>
@@ -24,8 +24,8 @@
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/tmp/tm-exclude-dev.log</string>
+  <string>__TM_LOG__</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/tm-exclude-dev.log</string>
+  <string>__TM_LOG__</string>
 </dict>
 </plist>

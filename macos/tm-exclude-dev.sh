@@ -35,7 +35,7 @@ done_status() { [ -t 2 ] && printf '\r\033[K' >&2 || :; }
 # Build one OR'd name predicate: \( -name a -o -name b -o ... \)
 set --
 for pat in $PATTERNS; do
-  [ "$#" -eq 0 ] && set -- -name "$pat" || set -- "$@" -o -name "$pat"
+  if [ "$#" -eq 0 ]; then set -- -name "$pat"; else set -- "$@" -o -name "$pat"; fi
 done
 
 for root in $ROOTS; do
@@ -44,7 +44,7 @@ for root in $ROOTS; do
   # Single pass: -prune stops descent at the first match, so we never walk
   # INTO node_modules et al. looking for other patterns.
   find "$root" -maxdepth 6 -type d \( "$@" \) -prune 2>/dev/null | while read -r dir; do
-    status "checking ${dir#$HOME/}"
+    status "checking ${dir#"$HOME"/}"
     if ! tmutil isexcluded "$dir" 2>/dev/null | grep -q '\[Excluded\]'; then
       done_status
       tmutil addexclusion "$dir" && echo "excluded: $dir"
