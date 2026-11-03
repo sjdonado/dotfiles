@@ -46,12 +46,12 @@ install_linux_node() {
 }
 
 install_macos_user_tools() {
-  install_vendor_agent_clis
-  if ! have bootdev; then GOBIN="$HOME/.local/bin" go install github.com/bootdotdev/bootdev@latest; fi
+  install_vendor_agent_clis || return 1
+  if ! have bootdev; then GOBIN="$HOME/.local/bin" go install github.com/bootdotdev/bootdev@latest || return 1; fi
   if ! have pss; then curl -fsSL https://raw.githubusercontent.com/sjdonado/pi-skin-sjdonado/main/install.sh | sh; fi
 }
 
 apply_generated_user_state() {
-  env DOTFILES="$DOTFILES" "$DOTFILES/bin/codex-config" apply >/dev/null
+  env DOTFILES="$DOTFILES" "$DOTFILES/bin/codex-config" apply >/dev/null || return 1
   if have bat; then bat cache --build >/dev/null; fi
 }

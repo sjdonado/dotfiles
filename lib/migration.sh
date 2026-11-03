@@ -11,14 +11,16 @@ detach_homebrew_files() {
   local prefix=$1 source=$2 backup=$3 relative path
   [ -x "$source/bin/brew" ] || { printf 'invalid Homebrew source checkout: %s\n' "$source" >&2; return 1; }
   [ -d "$source/Library/Homebrew" ] || { printf 'Homebrew source lacks Library/Homebrew\n' >&2; return 1; }
-  mkdir -p "$backup"
+  mkdir -p "$backup" || return 1
   for relative in bin/brew Library/Homebrew Library/Taps; do
     path="$prefix/$relative"
     if [ -L "$path" ]; then
       homebrew_path_is_nix_link "$path" || { printf 'refusing to replace non-Nix link: %s\n' "$path" >&2; return 1; }
-      mkdir -p "$backup/$(dirname "$relative")"
-      cp -P "$path" "$backup/$relative"
-      rm -f "$path"
+      mkdir -p "$backup/$(dirname "$relative")" || return 1
+      if [ ! -e "$backup/$relative" ] && [ ! -L "$backup/$relative" ]; then
+        cp -P "$path" "$backup/$relative" || return 1
+      fi
+      rm -f "$path" || return 1
     elif [ -e "$path" ] && [ "$relative" != Library/Taps ]; then
       printf 'refusing to replace unexpected real path: %s\n' "$path" >&2
       return 1
@@ -41,6 +43,25 @@ verify_homebrew_independence() {
 
 migration_commit() {
   git -C "$DOTFILES" rev-parse HEAD
+}
+
+check_macos_account_checkouts() {
+  local expected account checkout actual status=0
+  expected=$(migration_commit) || return 1
+  macos_load_accounts || return 1
+  for account in "${MACOS_ACCOUNTS[@]}"; do
+    checkout="/Users/$account/.config/dotfiles"
+    if [ "$account" = "$(id -un)" ]; then
+      actual=$(git -C "$checkout" rev-parse HEAD 2>/dev/null || true)
+    else
+      actual=$(sudo -H -u "$account" git -C "$checkout" rev-parse HEAD 2>/dev/null || true)
+    fi
+    if [ "$actual" != "$expected" ]; then
+      printf 'Account checkout at %s must be updated to %s before migration (current: %s).\n' "$checkout" "$expected" "${actual:-unavailable}" >&2
+      status=1
+    fi
+  done
+  return "$status"
 }
 
 migration_fingerprint() {
@@ -82,22 +103,22 @@ record_migration_evidence() {
 
 detach_homebrew_from_nix() {
   local temporary source backup tap brew
-  require_macos_primary
+  require_macos_primary || return 1
   if ! homebrew_path_is_nix_link /opt/homebrew/bin/brew; then
     verify_homebrew_independence /opt/homebrew/bin/brew
     return
   fi
-  temporary=$(mktemp -d)
+  temporary=$(mktemp -d) || return 1
   source="$temporary/brew"
   backup="$HOME/.local/state/dotfiles/homebrew-nix-links"
-  git clone --depth 1 https://github.com/Homebrew/brew "$source"
-  detach_homebrew_files /opt/homebrew "$source" "$backup"
+  /usr/bin/git clone --depth 1 https://github.com/Homebrew/brew "$source" || { rm -rf "$temporary"; return 1; }
+  detach_homebrew_files /opt/homebrew "$source" "$backup" || { rm -rf "$temporary"; return 1; }
   brew=/opt/homebrew/bin/brew
   while read -r tap; do
     [ -n "$tap" ] || continue
-    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" tap "$tap"
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" tap "$tap" || { rm -rf "$temporary"; return 1; }
   done < <(sed -n 's/^tap "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
-  verify_homebrew_independence "$brew"
+  verify_homebrew_independence "$brew" || { rm -rf "$temporary"; return 1; }
   rm -rf "$temporary"
 }
 
@@ -123,11 +144,11 @@ remove_retired_macos_software() {
 run_nix_migration_until_uninstall_gate() {
   require_macos_primary || return 1
   migration_commit >/dev/null || return 1
+  check_macos_account_checkouts || return 1
+  detach_homebrew_from_nix || return 1
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.local/bin:$HOME/.opencode/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
   remove_retired_macos_software || return 1
   apply_macos_machine apply || return 1
-  check_all_macos_accounts || return 1
-  detach_homebrew_from_nix || return 1
-  apply_homebrew apply || return 1
   verify_homebrew_independence || return 1
   check_all_macos_accounts || return 1
   record_migration_evidence || return 1

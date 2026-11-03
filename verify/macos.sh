@@ -44,6 +44,7 @@ HOME=$TEMP_HOME DOTFILES=$ROOT DOTFILES_PREFLIGHT=1
 export HOME DOTFILES DOTFILES_PREFLIGHT
 mkdir -p "$HOME/.config"
 printf 'keep me\n' > "$HOME/.gitconfig"
+ln -s /nix/store/old-home-files/.hushlogin "$HOME/.hushlogin"
 apply_common_links
 apply_macos_links
 first=$(find "$HOME" -type l | sort | while read -r link; do printf '%s=%s\n' "${link#"$HOME/"}" "$(readlink "$link")"; done)
@@ -52,6 +53,7 @@ apply_macos_links
 second=$(find "$HOME" -type l | sort | while read -r link; do printf '%s=%s\n' "${link#"$HOME/"}" "$(readlink "$link")"; done)
 if [ "$first" = "$second" ]; then ok 'second link application changes no targets'; else bad 'link application is not idempotent'; fi
 if [ "$(cat "$HOME/.gitconfig.pre-shell")" = 'keep me' ]; then ok 'unmanaged destination gets one backup'; else bad 'link backup missing'; fi
+if [ -f "$HOME/.hushlogin" ] && [ ! -L "$HOME/.hushlogin" ] && [ "$(readlink "$HOME/.hushlogin.pre-shell")" = /nix/store/old-home-files/.hushlogin ]; then ok 'Nix hushlogin link is backed up and replaced with a writable file'; else bad 'Nix hushlogin replacement'; fi
 if check_link_registry "$(common_link_registry)" && check_link_registry "$(macos_link_registry)"; then ok 'all links resolve into this checkout'; else bad 'declared link check'; fi
 if apply_generated_user_state && [ -f "$HOME/.codex/config.toml" ]; then ok 'generated user state is present'; else bad 'generated user state'; fi
 
@@ -102,13 +104,38 @@ migration_trace="$TEMP_HOME/migration-trace"
 (
   require_macos_primary() { return 0; }
   migration_commit() { printf 'fixture\n'; }
+  check_macos_account_checkouts() { return 1; }
   remove_retired_macos_software() { return 0; }
   apply_macos_machine() { return 0; }
-  check_all_macos_accounts() { return 1; }
   detach_homebrew_from_nix() { printf 'detached\n' >> "$migration_trace"; }
   run_nix_migration_until_uninstall_gate
 ) >/dev/null 2>&1 || true
-if [ ! -e "$migration_trace" ]; then ok 'failed account check makes detachment unreachable'; else bad 'migration continued after failed check'; fi
+if [ ! -e "$migration_trace" ]; then ok 'outdated account checkout stops migration before detachment'; else bad 'migration continued with an outdated account checkout'; fi
+(
+  require_macos_primary() { return 0; }
+  migration_commit() { printf 'fixture\n'; }
+  check_macos_account_checkouts() { return 0; }
+  detach_homebrew_from_nix() { printf 'detach\n' >> "$migration_trace"; }
+  remove_retired_macos_software() { printf 'retire\n' >> "$migration_trace"; }
+  apply_macos_machine() { printf 'apply\n' >> "$migration_trace"; }
+  verify_homebrew_independence() { return 0; }
+  check_all_macos_accounts() { printf 'check\n' >> "$migration_trace"; return 1; }
+  record_migration_evidence() { printf 'evidence\n' >> "$migration_trace"; }
+  run_nix_migration_until_uninstall_gate
+) >/dev/null 2>&1 || true
+if [ "$(paste -sd, "$migration_trace")" = detach,retire,apply,check ]; then ok 'Homebrew detaches before package installation and failed host checks block evidence'; else bad 'migration dependency order'; fi
+: > "$migration_trace"
+(
+  require_macos_primary() { return 0; }
+  ensure_homebrew() { return 0; }
+  macos_brew() { printf '/usr/bin/false\n'; }
+  MACOS_ACCOUNTS=("$(id -un)")
+  dscl() { printf 'UserShell: /bin/zsh\n'; }
+  sudo() { printf 'sudo\n' >> "$migration_trace"; return 1; }
+  apply_macos_user() { printf 'user\n' >> "$migration_trace"; }
+  apply_macos_machine apply
+) >/dev/null 2>&1 || true
+if [ ! -s "$migration_trace" ]; then ok 'package installation failure stops user application'; else bad 'failed package installation was ignored'; fi
 if uninstall_nix_after_migration_gate >/dev/null 2>&1; then bad 'uninstall passed without recorded evidence'; else ok 'Nix uninstall requires evidence from the same tree'; fi
 
 printf '\n== Linux shell fixture\n'

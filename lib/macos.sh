@@ -47,11 +47,11 @@ apply_homebrew() {
   ensure_homebrew || return 1
   brew=$(macos_brew) || return 1
   if [ "$mode" = upgrade ]; then
-    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" update
-    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" upgrade
-    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --file "$DOTFILES/Brewfile"
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" update || return 1
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" upgrade || return 1
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --file "$DOTFILES/Brewfile" || return 1
   else
-    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --no-upgrade --file "$DOTFILES/Brewfile"
+    HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle install --no-upgrade --file "$DOTFILES/Brewfile" || return 1
   fi
   if [ "${DOTFILES_BREW_CLEANUP:-0}" = 1 ]; then
     HOMEBREW_NO_AUTO_UPDATE=1 "$brew" bundle cleanup --force --file "$DOTFILES/Brewfile"
@@ -112,42 +112,42 @@ apply_browser_router() {
 }
 
 apply_macos_user() {
-  install_macos_user_tools
-  apply_common_links
-  apply_macos_links
-  managed_link /opt/homebrew/opt/openjdk@11 "$HOME/.local/opt/jdk11"
-  managed_link /opt/homebrew/opt/openjdk@17 "$HOME/.local/opt/jdk17"
-  managed_link /opt/homebrew/opt/llvm "$HOME/.local/opt/llvm"
-  managed_link /opt/homebrew/opt/openssl@4 "$HOME/.local/opt/openssl-4"
-  managed_link /opt/homebrew/opt/zig@0.15 "$HOME/.local/opt/zig-0_15"
-  apply_generated_user_state
-  mkdir -p "$HOME/Library/Keyboard Layouts"
+  install_macos_user_tools || return 1
+  apply_common_links || return 1
+  apply_macos_links || return 1
+  managed_link /opt/homebrew/opt/openjdk@11 "$HOME/.local/opt/jdk11" || return 1
+  managed_link /opt/homebrew/opt/openjdk@17 "$HOME/.local/opt/jdk17" || return 1
+  managed_link /opt/homebrew/opt/llvm "$HOME/.local/opt/llvm" || return 1
+  managed_link /opt/homebrew/opt/openssl@4 "$HOME/.local/opt/openssl-4" || return 1
+  managed_link /opt/homebrew/opt/zig@0.15 "$HOME/.local/opt/zig-0_15" || return 1
+  apply_generated_user_state || return 1
+  mkdir -p "$HOME/Library/Keyboard Layouts" || return 1
   if [ -d "$DOTFILES/macos/ukelele" ]; then cp -Rp "$DOTFILES/macos/ukelele/"* "$HOME/Library/Keyboard Layouts/"; fi
-  apply_browser_router
+  apply_browser_router || return 1
   if [ -d /Applications/Zed.app ]; then
     /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Zed.app
   fi
   if have duti; then duti "$DOTFILES/macos/default-apps.duti" || true; fi
-  apply_macos_launch_agents
-  apply_macos_defaults
-  if type retire_nix_home_agents >/dev/null 2>&1; then retire_nix_home_agents; fi
+  apply_macos_launch_agents || return 1
+  apply_macos_defaults || return 1
+  if type retire_nix_home_agents >/dev/null 2>&1; then retire_nix_home_agents || return 1; fi
 }
 
 apply_macos_machine() {
   local mode=$1 account shell
-  require_macos_primary
-  apply_homebrew "$mode"
+  require_macos_primary || return 1
+  apply_homebrew "$mode" || return 1
   grep -qx /bin/zsh /etc/shells || printf '%s\n' /bin/zsh | sudo tee -a /etc/shells >/dev/null
   for account in "${MACOS_ACCOUNTS[@]}"; do
     if ! id -u "$account" >/dev/null 2>&1; then warn "$account is declared but has no macOS account"; continue; fi
     shell=$(dscl . -read "/Users/$account" UserShell 2>/dev/null | awk '{print $2}')
-    if [ "$shell" != /bin/zsh ]; then sudo dscl . -create "/Users/$account" UserShell /bin/zsh; fi
+    if [ "$shell" != /bin/zsh ]; then sudo dscl . -create "/Users/$account" UserShell /bin/zsh || return 1; fi
   done
   for account in "${MACOS_ACCOUNTS[@]}"; do
     if [ "$account" = "$(id -un)" ]; then
-      apply_macos_user
+      apply_macos_user || return 1
     else
-      sudo -H -u "$account" env DOTFILES="/Users/$account/.config/dotfiles" "/Users/$account/.config/dotfiles/sync.sh" --user-only
+      sudo -H -u "$account" env DOTFILES="/Users/$account/.config/dotfiles" "/Users/$account/.config/dotfiles/sync.sh" --user-only || return 1
     fi
   done
 }

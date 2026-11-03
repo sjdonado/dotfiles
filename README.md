@@ -48,7 +48,9 @@ The migration is staged and recoverable until Nix itself is removed:
 ./sync.sh --uninstall-nix
 ```
 
-`--migrate-from-nix` applies shell provisioning, checks every account, replaces the Nix-owned Homebrew launcher and immutable tap links with an official Homebrew checkout, preserves Cellar, Caskroom, applications, and user data, checks every account again, and records evidence for the exact working tree. It stops with Nix still installed.
+Before running the migration, update every declared account's checkout to the same candidate commit. The migration reports mismatches without pulling or switching a checkout.
+
+`--migrate-from-nix` checks account checkout revisions before mutation, replaces the Nix-owned Homebrew launcher and immutable tap links with an official Homebrew checkout, applies shell provisioning, checks every account, and records evidence for the exact working tree. Homebrew detachment precedes package installation because the Nix-managed taps are read-only. Cellar, Caskroom, applications, and user data are preserved. Failed prerequisites stop dependent steps, and Nix remains installed.
 
 `--uninstall-nix` requires that evidence and repeats every-account checks before invoking `/nix/nix-installer uninstall`. The uninstaller asks for administrator authentication. After removal it enables non-zapping Homebrew cleanup and checks every account without Nix, mise, or Linuxbrew paths.
 

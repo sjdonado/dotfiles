@@ -4,17 +4,17 @@ DOTFILES=${DOTFILES:-$HOME/.config/dotfiles}
 
 managed_link() {
   local source=$1 destination=$2 backup
-  source=$(dotfiles_realpath "$source")
-  mkdir -p "$(dirname "$destination")"
+  source=$(dotfiles_realpath "$source") || return 1
+  mkdir -p "$(dirname "$destination")" || return 1
   if [ -L "$destination" ] && [ "$(dotfiles_realpath "$destination" 2>/dev/null || true)" = "$source" ]; then
     return 0
   fi
   if [ -e "$destination" ] || [ -L "$destination" ]; then
     backup="$destination.pre-shell"
     if [ ! -e "$backup" ] && [ ! -L "$backup" ]; then
-      mv "$destination" "$backup"
+      mv "$destination" "$backup" || return 1
     else
-      rm -f "$destination"
+      rm -f "$destination" || return 1
     fi
   fi
   ln -s "$source" "$destination"
@@ -77,18 +77,25 @@ apply_link_registry() {
   local registry=$1 source destination
   while IFS='|' read -r source destination; do
     [ -n "$source" ] || continue
-    managed_link "$DOTFILES/$source" "$HOME/$destination"
+    managed_link "$DOTFILES/$source" "$HOME/$destination" || return 1
   done <<<"$registry"
 }
 
 apply_common_links() {
-  apply_link_registry "$(common_link_registry)"
-  managed_directory_files "$DOTFILES/bin" "$HOME/.local/bin"
+  apply_link_registry "$(common_link_registry)" || return 1
+  managed_directory_files "$DOTFILES/bin" "$HOME/.local/bin" || return 1
   managed_directory_files "$DOTFILES/bat/themes" "$HOME/.config/bat/themes"
 }
 
 apply_macos_links() {
-  apply_link_registry "$(macos_link_registry)"
+  apply_link_registry "$(macos_link_registry)" || return 1
+  if [ -L "$HOME/.hushlogin" ]; then
+    if [ ! -e "$HOME/.hushlogin.pre-shell" ] && [ ! -L "$HOME/.hushlogin.pre-shell" ]; then
+      mv "$HOME/.hushlogin" "$HOME/.hushlogin.pre-shell" || return 1
+    else
+      rm "$HOME/.hushlogin" || return 1
+    fi
+  fi
   touch "$HOME/.hushlogin"
 }
 
