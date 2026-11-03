@@ -3,7 +3,12 @@
 set -euo pipefail
 
 DOTFILES_REPO=https://github.com/sjdonado/dotfiles
-DOTFILES=${DOTFILES:-$HOME/.config/dotfiles}
+if [ -z "${DOTFILES:-}" ]; then
+  script_dir=$(cd "$(dirname "${BASH_SOURCE[0]:-./setup.sh}")" && pwd)
+  if [ -n "${BASH_SOURCE[0]:-}" ] && [ -e "$script_dir/.git" ] && [ -f "$script_dir/sync.sh" ]; then DOTFILES=$script_dir
+  else DOTFILES=$HOME/.config/dotfiles
+  fi
+fi
 want=
 
 usage() { printf 'usage: setup.sh [--macos | --linux]\n'; }
@@ -23,12 +28,12 @@ case "$(uname -s)" in
 esac
 [ -z "$want" ] || [ "$want" = "$platform" ] || { printf 'this machine is %s, not %s\n' "$platform" "$want" >&2; exit 2; }
 
-if [ "$platform" = linux ] && [ ! -d "$DOTFILES/.git" ]; then
+if [ "$platform" = linux ] && [ ! -e "$DOTFILES/.git" ]; then
   if ! command -v git >/dev/null 2>&1; then
     sudo apt-get update -y
     sudo apt-get install -y git ca-certificates
   fi
   git clone "$DOTFILES_REPO" "$DOTFILES"
 fi
-[ -d "$DOTFILES/.git" ] || { printf 'clone %s to %s first\n' "$DOTFILES_REPO" "$DOTFILES" >&2; exit 1; }
+[ -e "$DOTFILES/.git" ] || { printf 'clone %s to %s first\n' "$DOTFILES_REPO" "$DOTFILES" >&2; exit 1; }
 exec "$DOTFILES/sync.sh"

@@ -58,7 +58,7 @@ An empty, unmounted `/nix` directory may remain until reboot and does not mean N
 
 Before Nix removal, rollback uses the existing Nix generation or the retained `.pre-shell` and Homebrew-link backups. After removal, rollback requires reinstalling Nix and checking out the pre-removal commit.
 
-Existing Linux installations using Nix do not yet have a supported migration command. The migration flags above are macOS-only. Fresh Ubuntu provisioning is tested in containers; replacing an existing Nix environment is not. Keep Nix installed until standalone replacements and shell startup have been verified independently.
+On existing Ubuntu installations, `setup.sh --linux` installs standalone replacements with a clean PATH, preserves Nix-linked user tools and shell files as backups, and upgrades OpenCode v1 to v2. Setup and sync use their own checkout, including Coder checkouts outside `~/.config/dotfiles`. Setup does not uninstall Nix or remove system startup hooks. Keep Nix installed until standalone tool paths and shell startup pass verification; the migration and uninstall flags above remain macOS-only.
 
 ## Verification
 
