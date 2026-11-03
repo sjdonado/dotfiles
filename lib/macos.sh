@@ -152,8 +152,43 @@ apply_macos_machine() {
   done
 }
 
+check_macos_packages() {
+  local brew item formulas casks prefix target canonical status=0
+  brew=$(macos_brew) || return 1
+  prefix=$("$brew" --prefix) || return 1
+  prefix=$(dotfiles_realpath "$prefix") || return 1
+  # Unnamed inventory reads installed receipts without resolving formula API metadata.
+  formulas=$(HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 "$brew" list --formula --full-name -1) || return 1
+  casks=$(HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 "$brew" list --cask -1) || return 1
+  while read -r item; do
+    [ -n "$item" ] || continue
+    grep -Fxq -- "$item" <<<"$formulas" && continue
+    # Core aliases such as libjpeg have opt links to their installed canonical keg.
+    case "$item" in
+      */*) ;;
+      *)
+        target=$(dotfiles_realpath "$prefix/opt/$item" 2>/dev/null || true)
+        case "$target" in
+          "$prefix/Cellar/"*)
+            canonical=${target#"$prefix/Cellar/"}
+            canonical=${canonical%%/*}
+            [ -d "$target" ] && grep -Fxq -- "$canonical" <<<"$formulas" && continue
+            ;;
+        esac
+        ;;
+    esac
+    printf 'formula missing: %s\n' "$item" >&2
+    status=1
+  done < <(sed -n 's/^brew "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
+  while read -r item; do
+    [ -n "$item" ] || continue
+    grep -Fxq -- "$item" <<<"$casks" || { printf 'cask missing: %s\n' "$item" >&2; status=1; }
+  done < <(sed -n 's/^cask "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
+  return "$status"
+}
+
 check_macos_state() {
-  local status=0 brew item stray command_path primary_uid app app_uid
+  local status=0 item stray command_path primary_uid app app_uid
   macos_load_accounts || return 1
   [ "$(dscl . -read "$HOME" UserShell 2>/dev/null | awk '{print $2}')" = /bin/zsh ] || { printf 'login shell is not /bin/zsh\n' >&2; status=1; }
   check_link_registry "$(common_link_registry)" || status=1
@@ -167,15 +202,7 @@ check_macos_state() {
   for item in jdk11:openjdk@11 jdk17:openjdk@17 llvm:llvm openssl-4:openssl@4 zig-0_15:zig@0.15; do
     [ "$(dotfiles_realpath "$HOME/.local/opt/${item%%:*}" 2>/dev/null || true)" = "$(dotfiles_realpath "/opt/homebrew/opt/${item#*:}" 2>/dev/null || true)" ] || { printf 'keg link missing: %s\n' "${item%%:*}" >&2; status=1; }
   done
-  brew=$(macos_brew) || return 1
-  while read -r item; do
-    [ -n "$item" ] || continue
-    "$brew" list --formula "$item" >/dev/null 2>&1 || { printf 'formula missing: %s\n' "$item" >&2; status=1; }
-  done < <(sed -n 's/^brew "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
-  while read -r item; do
-    [ -n "$item" ] || continue
-    "$brew" list --cask "$item" >/dev/null 2>&1 || { printf 'cask missing: %s\n' "$item" >&2; status=1; }
-  done < <(sed -n 's/^cask "\([^"]*\)".*/\1/p' "$DOTFILES/Brewfile")
+  check_macos_packages || status=1
   [ "$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)" = 1 ] || { printf 'AppleShowAllExtensions is not set\n' >&2; status=1; }
   [ "$(defaults read com.apple.finder AppleShowAllFiles 2>/dev/null)" = 1 ] || { printf 'AppleShowAllFiles is not set\n' >&2; status=1; }
   stray=$(find /opt/homebrew ! -user "$MACOS_PRIMARY" ! -user root -print -quit 2>/dev/null || true)

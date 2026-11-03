@@ -89,6 +89,36 @@ DOTFILES_BREW=$fake_brew BREW_TRACE=$brew_trace DOTFILES_BREW_CLEANUP=1 apply_ho
 if grep -q '^bundle install --no-upgrade' "$brew_trace" && grep -q '^update$' "$brew_trace" && grep -q '^upgrade$' "$brew_trace" && grep -q '^bundle cleanup --force' "$brew_trace" && ! grep -q -- '--zap' "$brew_trace"; then ok 'apply, upgrade, and non-zapping cleanup order'; else bad 'Homebrew command trace'; fi
 unset DOTFILES_BREW BREW_TRACE
 
+printf '\n== installed package checks\n'
+package_fixture="$TEMP_HOME/package-check"
+mkdir -p "$package_fixture/opt" "$package_fixture/Cellar/jpeg/1"
+ln -s ../Cellar/jpeg/1 "$package_fixture/opt/libjpeg"
+printf 'brew "example/tap/tool"\nbrew "libjpeg"\ncask "example-app"\n' > "$package_fixture/Brewfile"
+(
+  DOTFILES=$package_fixture
+  macos_brew() { printf 'fixture_brew\n'; }
+  fixture_brew() {
+    case "$*" in
+      --prefix) printf '%s\n' "$package_fixture" ;;
+      'list --formula --full-name -1') printf 'example/tap/tool\njpeg\n' ;;
+      'list --cask -1') printf 'example-app\n' ;;
+      *) return 1 ;;
+    esac
+  }
+  check_macos_packages
+) && ok 'installed inventories preserve tap names and accept installed aliases' || bad 'installed inventory check'
+(
+  DOTFILES=$package_fixture
+  macos_brew() { printf 'fixture_brew\n'; }
+  fixture_brew() { printf 'unrelated-package\n'; }
+  ! check_macos_packages
+) >/dev/null 2>&1 && ok 'missing installed packages fail the inventory check' || bad 'package drift was accepted'
+(
+  DOTFILES=$package_fixture
+  macos_brew() { printf '/usr/bin/false\n'; }
+  ! check_macos_packages
+) && ok 'failed inventory command fails the package check' || bad 'inventory failure was ignored'
+
 fixture="$TEMP_HOME/homebrew-fixture" source_checkout="$TEMP_HOME/homebrew-source" backup="$TEMP_HOME/homebrew-backup"
 mkdir -p "$fixture/bin" "$fixture/Library" "$fixture/Cellar/kept/1.0" "$fixture/Caskroom/kept/1.0" "$source_checkout/bin" "$source_checkout/Library/Homebrew" "$source_checkout/.git"
 printf '#!/bin/sh\nexit 0\n' > "$source_checkout/bin/brew"
