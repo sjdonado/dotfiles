@@ -5,7 +5,7 @@ set -euo pipefail
 DOTFILES_REPO=https://github.com/sjdonado/dotfiles
 if [ -z "${DOTFILES:-}" ]; then
   script_dir=$(cd "$(dirname "${BASH_SOURCE[0]:-./setup.sh}")" && pwd)
-  if [ -e "$script_dir/.git" ]; then DOTFILES=$script_dir
+  if [ -n "${BASH_SOURCE[0]:-}" ] && [ -e "$script_dir/.git" ] && [ -f "$script_dir/sync.sh" ]; then DOTFILES=$script_dir
   else DOTFILES=$HOME/.config/dotfiles
   fi
 fi

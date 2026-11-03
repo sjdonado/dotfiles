@@ -17,7 +17,7 @@ docker info >/dev/null 2>&1 || { printf 'Docker is unavailable\n' >&2; exit 1; }
 
 archive=$(mktemp)
 trap 'rm -f "$archive"' EXIT
-git -C "$ROOT" ls-files | sed -E '\|(^|/)\.env($|\.)|d; /^\.ssh\/private\.conf$/d' | tar -C "$ROOT" -T - -czf "$archive"
+git -C "$ROOT" ls-files | awk '!/(^|\/)\.env($|\.)/ && $0 != ".ssh/private.conf"' | tar -C "$ROOT" -T - -czf "$archive"
 args=(run --rm -i -v "$archive:/tmp/dotfiles.tgz:ro")
 [ -z "$platform" ] || args+=(--platform "$platform")
 docker "${args[@]}" ubuntu:24.04 bash -s -- < <(cat <<'CONTAINER'
