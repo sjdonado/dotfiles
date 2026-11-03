@@ -8,7 +8,7 @@ Nix now adds more operational complexity than value to this personal workspace: 
 
 - **BREAKING** Remove Nix, nix-darwin, home-manager, flake inputs, Nix packages, and mise from workspace provisioning.
 - Make a normal Homebrew `Brewfile` the macOS declaration for command-line packages, taps, and GUI casks.
-- Keep one configured primary macOS account as the only account allowed to install, update, clean up, or change machine-wide state. Other accounts can run read-only checks.
+- Keep one configured primary macOS account as the only account allowed to install shared packages, update, clean up, or change machine-wide state. Other declared accounts can apply per-user tools and configuration and run their own checks.
 - Rebuild `setup.sh` and `sync.sh` as idempotent shell entry points that apply packages, links, macOS settings, launch agents, and guarded setup steps without Nix.
 - Provision Linux with distribution packages where adequate and explicit vendor or release installers for required tools that the distribution does not supply adequately. Do not install Linuxbrew or a runtime manager.
 - Preserve the vendor-managed Claude Code and Codex installations required by their self-update commands and T3 Code integration.

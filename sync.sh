@@ -40,7 +40,7 @@ case "$mode:$platform" in
   check:macos) check_macos_state || fail 'macOS host check' ;;
   check:linux) check_linux_state || fail 'Linux host check' ;;
   *:macos)
-    apply_macos_machine "$mode" || fail 'macOS apply'
+    apply_macos "$mode" || fail 'macOS apply'
     check_macos_state || fail 'macOS host check'
     ;;
   *:linux)

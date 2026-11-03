@@ -32,7 +32,7 @@
 
 ## 5. Sync and Outcome Verification
 
-- [ ] 5.1 Rebuild `sync.sh` with apply, `--upgrade`, and read-only `--check` modes while preserving secondary-account check-only behavior; verify argument handling and command traces for every platform and account role.
+- [ ] 5.1 Rebuild `sync.sh` with apply, `--upgrade`, and read-only `--check` modes while allowing declared secondary accounts to apply only their own user state; verify argument handling and command traces for every platform and account role.
 - [ ] 5.2 Implement declaration-driven command, package, link, generated-file, settings, agent, ownership, and shell checks; verify fixtures fail for a broken command, copied configuration, package drift, foreign owner, missing agent, and incorrect shell state.
 - [ ] 5.3 Add explicit independence checks for Nix stores and profiles, mise directories and shims, and Linuxbrew; verify each forbidden-path fixture fails with the offending command or path.
 - [x] 5.4 Rewrite `verify/linux.sh` to provision a disposable Ubuntu environment twice on `aarch64` and `x86_64`; verify both runs report passed, failed, and unverified counts and prove no duplicate block or additional backup.

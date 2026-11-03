@@ -46,13 +46,17 @@ The macOS declaration SHALL identify one primary account. Only that account SHAL
 - **WHEN** the configured primary account runs setup or sync on macOS
 - **THEN** the requested machine mutations are allowed to proceed
 
-#### Scenario: Another account runs setup
-- **WHEN** any other account runs macOS setup
-- **THEN** the script exits before changing anything and names the configured primary account
+#### Scenario: Another declared account runs setup
+- **WHEN** another declared account runs macOS setup
+- **THEN** the script applies only that account's per-user tools and configuration without changing shared machine state
 
-#### Scenario: Another account runs sync
-- **WHEN** any other account runs macOS sync without an upgrade request
-- **THEN** no mutation occurs and only that account's read-only checks run
+#### Scenario: Another declared account runs sync
+- **WHEN** another declared account runs macOS sync without an upgrade request
+- **THEN** only that account's user-level declaration is applied and its host checks run
+
+#### Scenario: Another account requests shared changes
+- **WHEN** another declared account requests an upgrade or migration, or an undeclared account runs setup
+- **THEN** the script rejects the request before applying changes
 
 ### Requirement: One macOS sync configures every declared account
 The primary account's macOS sync SHALL apply the user-level declaration to every account listed for the Mac, using each account's own home and dotfiles checkout, then SHALL verify every listed account.

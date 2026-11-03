@@ -71,7 +71,7 @@ Alternative considered: put every agent CLI in Homebrew or apt. Rejected because
 
 ### 5. Separate machine application from per-user application
 
-`setup.sh` and `sync.sh` resolve the macOS host declaration and check the current account before any mutating function. The primary account may run machine application. Any other account is limited to `sync.sh --check` for itself.
+`setup.sh` and `sync.sh` resolve the macOS host declaration and check the current account before any mutating function. The primary account may run machine application. Other declared accounts may apply their own per-user configuration through setup or sync, and run `sync.sh --check` for themselves. Shared upgrades and migration remain restricted to the primary account. Undeclared accounts cannot apply setup.
 
 Machine application runs once from the primary checkout: Homebrew, cleanup, ownership repair, system defaults, and other shared state. User application runs once per declared account through that account's own checkout and home directory. It installs links, generated user files, per-user defaults, launch agents, keyboard layouts, BrowserRouter registration, application bindings, and agent configuration. The primary process invokes the account's own user entry point with `sudo -H -u <account>` so links resolve into that account's clone.
 

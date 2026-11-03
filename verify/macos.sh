@@ -37,6 +37,25 @@ if DOTFILES_HOST="$fixture_host" DOTFILES_CURRENT_USER="$fixture_primary" requir
 if HOME="${TMPDIR:-/tmp}" DOTFILES="$ROOT" DOTFILES_HOST="$fixture_host" SUDO_USER="$fixture_secondary" "$ROOT/sync.sh" --user-only >/dev/null 2>&1; then bad 'secondary account reached internal user apply'; else ok 'secondary account cannot invoke internal user apply'; fi
 if "$ROOT/setup.sh" --linux >/dev/null 2>&1; then bad 'mismatched setup platform was accepted'; else ok 'mismatched setup platform stops before mutation'; fi
 
+printf '\n== account application routing\n'
+account_trace=$(mktemp)
+(
+  apply_macos_machine() { printf 'machine:%s\n' "$1" >> "$account_trace"; }
+  apply_macos_user() { printf 'user\n' >> "$account_trace"; }
+  export DOTFILES_HOST="$fixture_host"
+  DOTFILES_CURRENT_USER="$fixture_secondary" apply_macos apply >/dev/null || exit 1
+  DOTFILES_CURRENT_USER="$fixture_primary" apply_macos apply >/dev/null || exit 1
+  DOTFILES_CURRENT_USER="$fixture_primary" apply_macos upgrade >/dev/null || exit 1
+  if DOTFILES_CURRENT_USER="$fixture_secondary" apply_macos upgrade >/dev/null 2>&1; then exit 1; fi
+  if DOTFILES_CURRENT_USER=undeclared-fixture-account apply_macos apply >/dev/null 2>&1; then exit 1; fi
+) && account_routing_status=0 || account_routing_status=1
+if [ "$account_routing_status" = 0 ] && [ "$(cat "$account_trace")" = "$(printf 'user\nmachine:apply\nmachine:upgrade')" ]; then
+  ok 'secondary setup applies only user state; shared upgrades and undeclared accounts remain blocked'
+else
+  bad 'account application routing'
+fi
+rm -f "$account_trace"
+
 printf '\n== fixtures\n'
 TEMP_HOME=$(mktemp -d)
 trap 'rm -rf "$TEMP_HOME"' EXIT
@@ -45,7 +64,10 @@ export HOME DOTFILES DOTFILES_PREFLIGHT
 mkdir -p "$HOME/.config"
 printf 'keep me\n' > "$HOME/.gitconfig"
 ln -s /nix/store/old-home-files/.hushlogin "$HOME/.hushlogin"
+mkdir -p "$HOME/.config/bat/themes"
+ln -s /nix/store/old-theme "$HOME/.config/bat/themes/GitHub-Dark.tmTheme"
 apply_common_links
+if [ ! -L "$HOME/.config/bat/themes/GitHub-Dark.tmTheme.pre-shell" ] && find "$HOME/.local/state/dotfiles" -name GitHub-Dark.tmTheme.pre-shell -type l | grep -q .; then ok 'theme backups are preserved outside the bat theme scan'; else bad 'bat theme backup relocation'; fi
 apply_macos_links
 first=$(find "$HOME" -type l | sort | while read -r link; do printf '%s=%s\n' "${link#"$HOME/"}" "$(readlink "$link")"; done)
 apply_common_links
@@ -132,8 +154,10 @@ chmod +x "$source_checkout/bin/brew"
 ln -s /nix/store/fake-brew/bin/brew "$fixture/bin/brew"
 ln -s /nix/store/fake-brew/Library/Homebrew "$fixture/Library/Homebrew"
 ln -s /nix/store/fake-taps "$fixture/Library/Taps"
+touch "$fixture/.managed_by_nix_darwin"
 touch "$fixture/Cellar/kept/1.0/sentinel" "$fixture/Caskroom/kept/1.0/sentinel"
 if detach_homebrew_files "$fixture" "$source_checkout" "$backup" && [ -f "$fixture/Cellar/kept/1.0/sentinel" ] && [ -f "$fixture/Caskroom/kept/1.0/sentinel" ]; then ok 'Homebrew detachment preserves Cellar and Caskroom'; else bad 'Homebrew detachment fixture'; fi
+if [ ! -e "$fixture/.managed_by_nix_darwin" ] && [ -f "$fixture/.managed_by_nix_darwin.pre-shell" ]; then ok 'Homebrew detachment retires the Nix-management marker'; else bad 'Homebrew Nix-management marker remains'; fi
 
 printf '\n== migration gates\n'
 migration_trace="$TEMP_HOME/migration-trace"

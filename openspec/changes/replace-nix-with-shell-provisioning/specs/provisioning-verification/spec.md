@@ -59,7 +59,7 @@ Host and disposable checks SHALL fail when a required command, shell path, manag
 - **THEN** verification fails and identifies the dependency
 
 ### Requirement: macOS account boundary is verified
-The verification SHALL prove that the configured primary account is the only macOS account that can mutate packages or machine state and that each declared account receives and passes its own user-level checks.
+The verification SHALL prove that the configured primary account is the only macOS account that can mutate shared packages or machine state and that each declared account receives and passes its own user-level checks.
 
 #### Scenario: Primary account checks the Mac
 - **WHEN** the primary account runs host verification

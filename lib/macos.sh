@@ -19,7 +19,7 @@ macos_load_accounts() {
 require_macos_primary() {
   macos_load_accounts || { printf 'unknown macOS host: %s\n' "$(macos_host_name)" >&2; return 1; }
   if [ "${DOTFILES_CURRENT_USER:-$(id -un)}" != "$MACOS_PRIMARY" ]; then
-    printf 'Only the primary account may change shared macOS state. Run sync.sh --check from this account.\n' >&2
+    printf 'Only the primary account may change shared macOS state. Run setup.sh for this account or sync.sh --check to verify it.\n' >&2
     return 1
   fi
 }
@@ -133,6 +133,23 @@ apply_macos_user() {
   if type retire_nix_home_agents >/dev/null 2>&1; then retire_nix_home_agents || return 1; fi
 }
 
+apply_macos() {
+  local mode=$1 current account declared=0
+  macos_load_accounts || { printf 'unknown macOS host\n' >&2; return 1; }
+  current=${DOTFILES_CURRENT_USER:-$(id -un)}
+  for account in "${MACOS_ACCOUNTS[@]}"; do
+    [ "$account" != "$current" ] || declared=1
+  done
+  [ "$declared" = 1 ] || { printf 'current account is not declared for this macOS host\n' >&2; return 1; }
+  if [ "$current" = "$MACOS_PRIMARY" ]; then
+    apply_macos_machine "$mode"
+  else
+    [ "$mode" = apply ] || { require_macos_primary; return 1; }
+    note 'Applying this account only; shared packages are managed by the primary account.'
+    apply_macos_user
+  fi
+}
+
 apply_macos_machine() {
   local mode=$1 account shell
   require_macos_primary || return 1
@@ -202,6 +219,7 @@ check_macos_state() {
   for item in jdk11:openjdk@11 jdk17:openjdk@17 llvm:llvm openssl-4:openssl@4 zig-0_15:zig@0.15; do
     [ "$(dotfiles_realpath "$HOME/.local/opt/${item%%:*}" 2>/dev/null || true)" = "$(dotfiles_realpath "/opt/homebrew/opt/${item#*:}" 2>/dev/null || true)" ] || { printf 'keg link missing: %s\n' "${item%%:*}" >&2; status=1; }
   done
+  [ ! -e /opt/homebrew/.managed_by_nix_darwin ] || { printf 'Homebrew Nix-management marker remains; rerun sync.sh --migrate-from-nix from the primary account\n' >&2; status=1; }
   check_macos_packages || status=1
   [ "$(defaults read NSGlobalDomain AppleShowAllExtensions 2>/dev/null)" = 1 ] || { printf 'AppleShowAllExtensions is not set\n' >&2; status=1; }
   [ "$(defaults read com.apple.finder AppleShowAllFiles 2>/dev/null)" = 1 ] || { printf 'AppleShowAllFiles is not set\n' >&2; status=1; }

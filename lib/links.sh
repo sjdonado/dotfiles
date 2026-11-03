@@ -82,9 +82,18 @@ apply_link_registry() {
 }
 
 apply_common_links() {
+  local backup backup_directory=
   apply_link_registry "$(common_link_registry)" || return 1
   managed_directory_files "$DOTFILES/bin" "$HOME/.local/bin" || return 1
-  managed_directory_files "$DOTFILES/bat/themes" "$HOME/.config/bat/themes"
+  managed_directory_files "$DOTFILES/bat/themes" "$HOME/.config/bat/themes" || return 1
+  for backup in "$HOME/.config/bat/themes/"*.pre-shell; do
+    [ -e "$backup" ] || [ -L "$backup" ] || continue
+    if [ -z "$backup_directory" ]; then
+      mkdir -p "$HOME/.local/state/dotfiles" || return 1
+      backup_directory=$(mktemp -d "$HOME/.local/state/dotfiles/bat-backups.XXXXXX") || return 1
+    fi
+    mv "$backup" "$backup_directory/" || return 1
+  done
 }
 
 apply_macos_links() {

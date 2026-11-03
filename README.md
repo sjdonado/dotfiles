@@ -32,7 +32,7 @@ Claude Code and Codex are vendor-managed exceptions so their self-update support
 
 ## Multiple macOS accounts
 
-`hosts/macos.sh` maps a hostname to its accounts. The first account is the primary account and the only account allowed to install packages, change shared machine state, upgrade, clean up, or migrate. Other accounts can run `sync.sh --check` only.
+`hosts/macos.sh` maps a hostname to its accounts. The first account is the primary account and the only account allowed to install shared packages, change shared machine state, upgrade, clean up, or migrate. Other declared accounts can run `setup.sh` or `sync.sh` to install their per-user tools and configuration, and `sync.sh --check` to verify their state. Shared packages must already be installed by the primary account.
 
 Each account has its own clone at `~/.config/dotfiles`. A primary-account sync invokes the other account's `sync.sh` from that clone so every link resolves into the owning account's checkout. All account checkouts must be on the same commit before Nix removal.
 
@@ -57,6 +57,8 @@ Before running the migration, update every declared account's checkout to the sa
 An empty, unmounted `/nix` directory may remain until reboot and does not mean Nix is still installed. Remaining files or a mounted Nix volume block completion. If Nix removal succeeded but finalization failed, update every account to the same corrected candidate, rerun `--migrate-from-nix` to apply and verify its links, then rerun `--uninstall-nix`. With no installer present, the latter verifies removal and resumes cleanup and account checks.
 
 Before Nix removal, rollback uses the existing Nix generation or the retained `.pre-shell` and Homebrew-link backups. After removal, rollback requires reinstalling Nix and checking out the pre-removal commit.
+
+Existing Linux installations using Nix do not yet have a supported migration command. The migration flags above are macOS-only. Fresh Ubuntu provisioning is tested in containers; replacing an existing Nix environment is not. Keep Nix installed until standalone replacements and shell startup have been verified independently.
 
 ## Verification
 

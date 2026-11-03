@@ -7,6 +7,13 @@ homebrew_path_is_nix_link() {
   case "$target" in /nix/store/*) return 0 ;; *) return 1 ;; esac
 }
 
+retire_homebrew_nix_marker() {
+  local marker="$1/.managed_by_nix_darwin"
+  if [ -e "$marker" ]; then
+    mv "$marker" "$marker.pre-shell" || return 1
+  fi
+}
+
 detach_homebrew_files() {
   local prefix=$1 source=$2 backup=$3 relative path
   [ -x "$source/bin/brew" ] || { printf 'invalid Homebrew source checkout: %s\n' "$source" >&2; return 1; }
@@ -26,7 +33,8 @@ detach_homebrew_files() {
       return 1
     fi
   done
-  /usr/bin/ditto "$source" "$prefix"
+  /usr/bin/ditto "$source" "$prefix" || return 1
+  retire_homebrew_nix_marker "$prefix"
 }
 
 verify_homebrew_independence() {
@@ -105,7 +113,8 @@ detach_homebrew_from_nix() {
   local temporary source backup tap brew
   require_macos_primary || return 1
   if ! homebrew_path_is_nix_link /opt/homebrew/bin/brew; then
-    verify_homebrew_independence /opt/homebrew/bin/brew
+    verify_homebrew_independence /opt/homebrew/bin/brew || return 1
+    retire_homebrew_nix_marker /opt/homebrew
     return
   fi
   temporary=$(mktemp -d) || return 1
