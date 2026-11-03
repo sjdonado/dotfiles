@@ -20,23 +20,52 @@ install_vendor_agent_clis() {
   esac
 }
 
+have_standalone_tool() {
+  local path
+  path=$(command -v "$1") || return 1
+  path=$(dotfiles_realpath "$path") || return 1
+  case "$path" in
+    /nix/*|*/.nix-profile/*|*/.local/state/nix/*|*/.local/share/mise/*|/home/linuxbrew/*) return 1 ;;
+  esac
+}
+
+retire_linux_nix_tool_links() {
+  local path target
+  for path in "$HOME/.local/bin/"* "$HOME/.opencode/bin/"*; do
+    [ -L "$path" ] || continue
+    target=$(dotfiles_realpath "$path" 2>/dev/null || readlink "$path")
+    case "$target" in
+      /nix/*|*/.nix-profile/*|*/.local/state/nix/*)
+        if [ ! -e "$path.pre-shell" ] && [ ! -L "$path.pre-shell" ]; then
+          mv "$path" "$path.pre-shell" || return 1
+        else
+          unlink "$path" || return 1
+        fi
+        ;;
+    esac
+  done
+}
+
 install_linux_user_tools() {
   mkdir -p "$HOME/.local/bin"
-  if ! have bun; then curl -fsSL https://bun.sh/install | BUN_INSTALL="$HOME/.local" SHELL=/bin/false bash -s -- bun-v1.4.4; fi
+  if ! have_standalone_tool bun; then curl -fsSL https://bun.sh/install | BUN_INSTALL="$HOME/.local" SHELL=/bin/false bash -s -- bun-v1.4.4 || return 1; fi
   export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
-  if ! have uv; then curl -LsSf https://astral.sh/uv/0.13.6/install.sh | env UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh; fi
-  if ! have pnpm; then npm install --global --prefix "$HOME/.local" pnpm@12.15.0; fi
-  if ! have opencode; then curl -fsSL https://opencode.ai/v2/install | bash -s -- --version 2.2.0 --no-modify-path; fi
-  if ! have openspec; then npm install --global --prefix "$HOME/.local" @fission-ai/openspec@1.15.0; fi
-  if ! have wt; then
+  if ! have_standalone_tool uv; then curl -LsSf https://astral.sh/uv/0.13.6/install.sh | env UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh || return 1; fi
+  if ! have_standalone_tool pnpm; then npm install --global --prefix "$HOME/.local" pnpm@12.15.0 || return 1; fi
+  if ! have_standalone_tool opencode || ! opencode --version 2>/dev/null | grep -qE '(^| )v?2\.'; then
+    curl -fsSL https://opencode.ai/v2/install | bash -s -- --version 2.2.0 --no-modify-path || return 1
+    managed_link "$HOME/.opencode/bin/opencode" "$HOME/.local/bin/opencode" || return 1
+  fi
+  if ! have_standalone_tool openspec; then npm install --global --prefix "$HOME/.local" @fission-ai/openspec@1.15.0 || return 1; fi
+  if ! have_standalone_tool wt; then
     curl -fsSL https://github.com/max-sixty/worktrunk/releases/download/v0.81.0/worktrunk-installer.sh \
-      | env CARGO_HOME="$HOME/.local" WORKTRUNK_NO_MODIFY_PATH=1 WORKTRUNK_DISABLE_UPDATE=1 sh
+      | env CARGO_HOME="$HOME/.local" WORKTRUNK_NO_MODIFY_PATH=1 WORKTRUNK_DISABLE_UPDATE=1 sh || return 1
   fi
 }
 
 install_linux_node() {
   local major=0 installer
-  if have node; then major=$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || printf '0'); fi
+  if have_standalone_tool node; then major=$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || printf '0'); fi
   [ "$major" -ge 22 ] && return 0
   installer=$(mktemp)
   curl -fsSL https://deb.nodesource.com/setup_22.x -o "$installer"

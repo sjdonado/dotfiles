@@ -63,31 +63,32 @@ replace_managed_block_top() {
 
 apply_linux_shells() {
   local environment identity interactive file
-  environment='export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
-unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
-ulimit -c 0'
+  printf -v environment '. %q' "$DOTFILES/shell/environment.sh"
   identity='unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL'
   interactive='if command -v zsh >/dev/null 2>&1 && [ -z "${EXECED_ZSH:-}" ] && [ -t 1 ]; then
   case $- in *i*) export EXECED_ZSH=1; exec zsh ;; esac
 fi'
-  for file in "$HOME/.profile" "$HOME/.zshenv"; do replace_managed_block "$file" environment "$environment"; done
-  replace_managed_block_top "$HOME/.bashrc" path 'export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"'
+  for file in "$HOME/.profile" "$HOME/.bash_profile" "$HOME/.zshenv"; do replace_managed_block "$file" environment "$environment"; done
+  replace_managed_block_top "$HOME/.bashrc" path "$environment"
   replace_managed_block "$HOME/.bashrc" interactive-zsh "$interactive"
-  replace_managed_block "$HOME/.zshrc" tracked-config '[ -f "$HOME/.config/dotfiles/zsh/.zshrc" ] && . "$HOME/.config/dotfiles/zsh/.zshrc"'
+  printf -v file '. %q' "$DOTFILES/zsh/.zshrc"
+  replace_managed_block "$HOME/.zshrc" tracked-config "$file"
   replace_managed_block "$HOME/.zshrc" git-identity "$identity"
 }
 
 apply_linux() {
-  install_linux_apt
-  install_linux_node
+  . "$DOTFILES/shell/environment.sh"
+  retire_linux_nix_tool_links || return 1
+  install_linux_apt || return 1
+  install_linux_node || return 1
   export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
-  install_linux_user_tools
-  install_vendor_agent_clis
-  apply_common_links
+  install_linux_user_tools || return 1
+  install_vendor_agent_clis || return 1
+  apply_common_links || return 1
   [ ! -x /usr/bin/fdfind ] || ln -sfn /usr/bin/fdfind "$HOME/.local/bin/fd"
   [ ! -x /usr/bin/batcat ] || ln -sfn /usr/bin/batcat "$HOME/.local/bin/bat"
-  apply_generated_user_state
-  apply_linux_shells
+  apply_generated_user_state || return 1
+  apply_linux_shells || return 1
   for tool in claude codex; do
     if [ -w /usr/local/bin ]; then ln -sfn "$HOME/.local/bin/$tool" "/usr/local/bin/$tool"
     elif sudo -n true 2>/dev/null; then sudo -n ln -sfn "$HOME/.local/bin/$tool" "/usr/local/bin/$tool"
@@ -98,13 +99,13 @@ apply_linux() {
 check_linux_state() {
   local status=0 command shell_command tracked_email
   for command in git zsh mosh python3 wget rg fd bat fzf jq nvim wt node npm bun pnpm uv opencode openspec claude codex; do
-    command -v "$command" >/dev/null 2>&1 || { printf 'command missing: %s\n' "$command" >&2; status=1; }
+    have_standalone_tool "$command" || { printf 'standalone command missing: %s\n' "$command" >&2; status=1; }
   done
   opencode --version 2>/dev/null | grep -qE '(^| )v?2\.' || { printf 'OpenCode is not v2\n' >&2; status=1; }
   check_link_registry "$(common_link_registry)" || status=1
   [ -f "$HOME/.codex/config.toml" ] || { printf 'generated Codex config is missing\n' >&2; status=1; }
   bat --list-themes 2>/dev/null | grep -q '^GitHub-Dark' || { printf 'bat theme cache is missing GitHub-Dark\n' >&2; status=1; }
-  for file in "$HOME/.profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc"; do
+  for file in "$HOME/.profile" "$HOME/.bash_profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc"; do
     if grep -qE '(/nix|\.nix-profile|mise|linuxbrew)' "$file"; then printf 'forbidden provisioning path in %s\n' "$file" >&2; status=1; fi
   done
   shell_command='command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null && command -v claude >/dev/null'

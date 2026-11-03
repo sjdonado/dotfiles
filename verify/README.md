@@ -10,3 +10,5 @@ verify/linux.sh --platform linux/amd64
 ```
 
 After applying on a real Mac, `sync.sh --check` verifies packages, links, settings, ownership, agents, commands, and shell independence. `sync.sh --migrate-from-nix` detaches Homebrew and records passing evidence. `sync.sh --uninstall-nix` accepts only evidence from the same working tree and checks every declared account before and after removal.
+
+The Linux container uses Coder's nested checkout path, applies setup twice, then repeats setup with a Nix-linked login profile and user tool plus an obsolete OpenCode v1 executable. It checks that standalone tools and clean login and non-interactive shells still work.

@@ -61,7 +61,13 @@ TEMP_HOME=$(mktemp -d)
 trap 'rm -rf "$TEMP_HOME"' EXIT
 HOME=$TEMP_HOME DOTFILES=$ROOT DOTFILES_PREFLIGHT=1
 export HOME DOTFILES DOTFILES_PREFLIGHT
-mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.nix-profile/bin"
+printf '#!/bin/sh\nexit 0\n' > "$HOME/.nix-profile/bin/uv"
+chmod +x "$HOME/.nix-profile/bin/uv"
+ln -s "$HOME/.nix-profile/bin/uv" "$HOME/.local/bin/uv"
+if PATH="$HOME/.local/bin:$PATH" have_standalone_tool uv; then bad 'Nix profile tool accepted as standalone'; else ok 'Nix profile tool is rejected as standalone'; fi
+retire_linux_nix_tool_links
+if [ ! -L "$HOME/.local/bin/uv" ] && [ -L "$HOME/.local/bin/uv.pre-shell" ]; then ok 'Nix tool link is backed up before standalone installation'; else bad 'Nix tool link retirement'; fi
 printf 'keep me\n' > "$HOME/.gitconfig"
 ln -s /nix/store/old-home-files/.hushlogin "$HOME/.hushlogin"
 mkdir -p "$HOME/.config/bat/themes"

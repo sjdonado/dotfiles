@@ -2,7 +2,7 @@
 # Apply, upgrade, check, or migrate the shell-managed workspace declaration.
 set -uo pipefail
 
-DOTFILES=${DOTFILES:-$HOME/.config/dotfiles}
+DOTFILES=${DOTFILES:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
 export DOTFILES
 . "$DOTFILES/lib/core.sh"
 . "$DOTFILES/hosts/macos.sh"
