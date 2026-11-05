@@ -12,7 +12,7 @@ Codex	vendor installer	lib/installers.sh	Retained as vendor-managed for self-upd
 macOS App Store apps	manual	README.md	Authentication-bound installation stays manual.
 Ubuntu base packages	apt	packages/linux-apt.txt	All distribution-owned packages are declared once.
 Linux Node	NodeSource apt repository	lib/installers.sh and packages/linux-installers.tsv	Node 22 supports both declared architectures.
-Linux user tools	guarded upstream installers	lib/installers.sh and packages/linux-installers.tsv	Bun, pnpm, uv, OpenCode v2, OpenSpec, and Worktrunk have explicit versions and both architectures.
+Linux user tools	guarded upstream installers	lib/installers.sh and packages/linux-installers.tsv	Bun, pnpm, uv, mise, OpenCode v2, OpenSpec, and Worktrunk have explicit versions and both architectures.
 Linux shells	managed shell blocks	lib/linux.sh	PATH, git identity, core limits, and interactive zsh handoff replace Nix and mise startup state.
 Nix declarations	removed	migration history only	flake.nix, flake.lock, and nix/ are deleted after the shell declaration is complete.
-mise declarations	removed	migration history only	No runtime manager or shim directory remains.
+mise executable	Homebrew on macOS; guarded upstream installer on Linux	Brewfile and lib/installers.sh	Available on PATH without making provisioning depend on mise-managed runtimes or shims.

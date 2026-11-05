@@ -1,0 +1,175 @@
+{
+  "release_microphone_while_idle": true,
+  "sound_effects": true,
+  "sound_effect_volume": 0.25,
+  "sound_theme": "soft",
+  "microphone": null,
+  "avoid_bluetooth_microphone": true,
+  "recording_audio_behavior": "duck",
+  "recording_duck_volume": 0.2,
+  "pause_browser_media": false,
+  "double_tap_lock": true,
+  "double_tap_only": false,
+  "shortcut_mode": "hold",
+  "dictation_hotkey": {
+    "keys": [
+      {
+        "modifier": "fn"
+      }
+    ]
+  },
+  "paste_last_hotkey": {
+    "keys": [
+      {
+        "modifier": "option",
+        "side": "any"
+      },
+      {
+        "modifier": "shift",
+        "side": "any"
+      },
+      {
+        "code": 9,
+        "label": "V"
+      }
+    ]
+  },
+  "raw_dictation_hotkey": null,
+  "second_dictation_hotkey": null,
+  "show_dock_icon": true,
+  "transcription": {
+    "model": "parakeet_unified_en",
+    "language": "en"
+  },
+  "transcription_device": "auto",
+  "transcription_recents": [
+    {
+      "model": "parakeet_unified_en",
+      "language": "en"
+    }
+  ],
+  "keyboard_model_switching": {
+    "enabled": false,
+    "mappings": {}
+  },
+  "dictation_processing": {
+    "default_mode": {
+      "name": "Global",
+      "applications": [],
+      "browser_hosts": [],
+      "replacements": [],
+      "transformations": [],
+      "post_processing": {
+        "enabled": false,
+        "prompt": "Rewrite the transcript into clear, natural text while preserving the speaker's intended meaning.",
+        "model": null,
+        "variant": null,
+        "deadline_seconds": 30
+      }
+    },
+    "modes": []
+  },
+  "history_retention": "week",
+  "meetings": {
+    "enabled": false,
+    "output_folder": null,
+    "summarize_with_apple_intelligence": true,
+    "summarize_with_opencode": false,
+    "show_recording_indicator": true,
+    "recording_indicator_corner": "top_right",
+    "providers": [],
+    "calendar": {
+      "connected": false,
+      "excluded_calendars": [],
+      "remind": true,
+      "lead_minutes": 1
+    }
+  },
+  "capture": {
+    "enabled": true,
+    "hotkey": {
+      "keys": [
+        {
+          "code": 96,
+          "label": "F5"
+        }
+      ]
+    },
+    "transcriber": "parakeet",
+    "folder": null,
+    "media_days": 7,
+    "bundle_days": 30,
+    "routing": {
+      "autoSend": "rules",
+      "undoWindowSec": null,
+      "sites": {},
+      "apps": {},
+      "servers": {},
+      "aliases": {},
+      "refusedRules": [],
+      "delivery": "steer",
+      "smartRouting": false,
+      "jevRouting": false,
+      "jev": null,
+      "jevApiKey": null,
+      "agentHost": null,
+      "agentOpencode": null,
+      "sendCaptures": true
+    },
+    "show_overlays_in_recordings": false,
+    "capsule_flow": "list"
+  },
+  "experimental": {
+    "hex_microphone": false,
+    "hex_microphone_mode": "muffled",
+    "hex_microphone_comfort_noise": true,
+    "hex_microphone_strength": 1.0
+  },
+  "labs": {
+    "live_text": false,
+    "live_chapters": false,
+    "playground": false,
+    "vocabulary_biasing": false,
+    "mouse_shortcuts": false,
+    "unload_idle": false,
+    "unload_idle_minutes": 15,
+    "restore_shortcut_default": false,
+    "keep_on_clipboard": false,
+    "copy_only": false,
+    "spoken_formatting": false,
+    "filler_words": false,
+    "subtitle_export": false,
+    "second_dictation_shortcut": false,
+    "smart_spacing": false,
+    "spoken_symbols": false,
+    "picker_sort_filter": false,
+    "sided_modifier_chords": false,
+    "tap_or_hold": false,
+    "benchmark_details": false,
+    "parakeet_ultra": false,
+    "standalone_special_keys": false,
+    "history_stats": false,
+    "recent_dictations": false,
+    "skip_pauses": false,
+    "stop_when_call_ends": false,
+    "output_fixes": false
+  },
+  "enable_on_launch": true,
+  "paste_with_shift": false,
+  "gnome_keyboard_shortcuts": false,
+  "share_dictation_shortcut": false,
+  "ui_language": null,
+  "indicator_position": "top",
+  "updates": {
+    "channel": null
+  },
+  "vocabulary_boost": "normal",
+  "migrations": [
+    "streaming-english-model",
+    "annotate-on-by-default",
+    "anomaly-hex-identity",
+    "meeting-retention-default",
+    "scrawl-capture-settings",
+    "scrawl-routing-settings"
+  ]
+}

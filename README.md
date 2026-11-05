@@ -1,6 +1,6 @@
 # Dotfiles
 
-Shell provisioning for macOS and Ubuntu. macOS uses Homebrew for conventional packages. Linux uses apt plus explicit guarded installers. Nix, home-manager, nix-darwin, mise, and Linuxbrew are not required.
+Shell provisioning for macOS and Ubuntu. macOS uses Homebrew for conventional packages. Linux uses apt plus explicit guarded installers. Mise is available globally through Homebrew on macOS and a pinned upstream installer on Linux. Provisioning does not depend on mise-managed runtimes or shims. Nix, home-manager, nix-darwin, and Linuxbrew are not required.
 
 ## Setup and sync
 
@@ -74,7 +74,7 @@ The macOS check is non-mutating and uses temporary fixtures. Linux provisions a 
 
 Tracked configuration is linked into each account's home. An unmanaged destination is preserved once as `<path>.pre-shell`; a correct link is a no-op. `sync.sh --check` requires links to resolve into this checkout rather than merely comparing file contents.
 
-Handy's preferences are tracked in `macos/handy/settings_store.json`. Models, recordings, history, and macOS permissions remain local to each account. Keep API keys empty in the tracked file.
+Hex's preferences are tracked in `macos/hex/settings.json` and linked to `~/Library/Application Support/hex/settings.json`. Quit Hex before committing and pushing settings, and quit it before pulling changes in another account, then reopen it. Each account uses its own clone. Models, recordings, history, local API credentials, and macOS permissions remain local to each account. Keep credential fields empty in the tracked settings file.
 
 The editor is Zed with T3 Code. Neovim remains installed as the terminal editor. BrowserRouter is installed from `sjdonado/tap`, copied to `~/Applications`, registered with Launch Services, and configured from `macos/browser-router.json`.
 
