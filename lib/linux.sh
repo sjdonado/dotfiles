@@ -98,9 +98,10 @@ apply_linux() {
 
 check_linux_state() {
   local status=0 command shell_command tracked_email
-  for command in git zsh mosh python3 wget rg fd bat fzf jq nvim wt node npm bun pnpm uv opencode openspec claude codex; do
+  for command in git zsh mosh python3 wget rg fd bat fzf jq nvim wt node npm bun pnpm uv mise opencode openspec claude codex; do
     have_standalone_tool "$command" || { printf 'standalone command missing: %s\n' "$command" >&2; status=1; }
   done
+  mise --version >/dev/null 2>&1 || { printf 'mise cannot run\n' >&2; status=1; }
   opencode --version 2>/dev/null | grep -qE '(^| )v?2\.' || { printf 'OpenCode is not v2\n' >&2; status=1; }
   check_link_registry "$(common_link_registry)" || status=1
   [ -f "$HOME/.codex/config.toml" ] || { printf 'generated Codex config is missing\n' >&2; status=1; }
@@ -108,9 +109,9 @@ check_linux_state() {
   for file in "$HOME/.profile" "$HOME/.bash_profile" "$HOME/.zshenv" "$HOME/.bashrc" "$HOME/.zshrc"; do
     if grep -qE '(/nix|\.nix-profile|mise|linuxbrew)' "$file"; then printf 'forbidden provisioning path in %s\n' "$file" >&2; status=1; fi
   done
-  shell_command='command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null && command -v claude >/dev/null'
+  shell_command='command -v rg >/dev/null && command -v wt >/dev/null && mise --version >/dev/null && command -v codex >/dev/null && command -v claude >/dev/null'
   env -i HOME="$HOME" USER="$(id -un)" PATH=/usr/bin:/bin bash -lc "$shell_command" >/dev/null 2>&1 || { printf 'login bash cannot resolve required tools\n' >&2; status=1; }
-  env -i HOME="$HOME" USER="$(id -un)" PATH=/usr/bin:/bin bash -c '. "$HOME/.bashrc"; command -v rg >/dev/null && command -v wt >/dev/null' >/dev/null 2>&1 || { printf 'non-login bash cannot resolve required tools\n' >&2; status=1; }
+  env -i HOME="$HOME" USER="$(id -un)" PATH=/usr/bin:/bin bash -c '. "$HOME/.bashrc"; command -v rg >/dev/null && command -v wt >/dev/null && mise --version >/dev/null' >/dev/null 2>&1 || { printf 'non-login bash cannot resolve required tools\n' >&2; status=1; }
   env -i HOME="$HOME" USER="$(id -un)" PATH=/usr/bin:/bin zsh -c "$shell_command" >/dev/null 2>&1 || { printf 'zsh cannot resolve required tools\n' >&2; status=1; }
   tracked_email=$(git config -f "$DOTFILES/git/.gitconfig" user.email)
   env HOME="$HOME" GIT_AUTHOR_EMAIL=injected@example.invalid bash -lc 'git var GIT_AUTHOR_IDENT' 2>/dev/null | grep -qF "<$tracked_email>" || { printf 'login bash does not use tracked git identity\n' >&2; status=1; }
