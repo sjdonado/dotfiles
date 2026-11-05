@@ -76,6 +76,8 @@ Tracked configuration is linked into each account's home. An unmanaged destinati
 
 Hex's preferences are tracked in `macos/hex/settings.json` and linked to `~/Library/Application Support/hex/settings.json`. Quit Hex before committing and pushing settings, and quit it before pulling changes in another account, then reopen it. Each account uses its own clone. Models, recordings, history, local API credentials, and macOS permissions remain local to each account. Keep credential fields empty in the tracked settings file.
 
+After pulling the Hex configuration into an account's clone for the first time, run `./sync.sh` in that account to create the preferences link. For later settings updates, quit Hex, run `git pull --ff-only` in that clone, and reopen Hex; the existing link picks up the changes without another sync. Commit and push settings changes from the account where they were made before pulling them elsewhere.
+
 The editor is Zed with T3 Code. Neovim remains installed as the terminal editor. BrowserRouter is installed from `sjdonado/tap`, copied to `~/Applications`, registered with Launch Services, and configured from `macos/browser-router.json`.
 
 ## Manual steps

@@ -137,18 +137,18 @@
     "keep_on_clipboard": false,
     "copy_only": false,
     "spoken_formatting": false,
-    "filler_words": false,
+    "filler_words": true,
     "subtitle_export": false,
     "second_dictation_shortcut": false,
     "smart_spacing": false,
-    "spoken_symbols": false,
+    "spoken_symbols": true,
     "picker_sort_filter": false,
     "sided_modifier_chords": false,
     "tap_or_hold": false,
     "benchmark_details": false,
     "parakeet_ultra": false,
     "standalone_special_keys": false,
-    "history_stats": false,
+    "history_stats": true,
     "recent_dictations": false,
     "skip_pauses": false,
     "stop_when_call_ends": false,
@@ -163,6 +163,20 @@
   "updates": {
     "channel": null
   },
+  "vocabulary": [
+    {
+      "term": "Worktree",
+      "sounds_like": [
+        "work tree"
+      ]
+    },
+    {
+      "term": "Autarc",
+      "sounds_like": [
+        "autark"
+      ]
+    }
+  ],
   "vocabulary_boost": "normal",
   "migrations": [
     "streaming-english-model",
