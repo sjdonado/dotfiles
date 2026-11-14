@@ -69,7 +69,6 @@ shell/environment.sh|.bash_profile
 docker/config.json|.docker/config.json
 .ssh/config|.ssh/config
 macos/browser-router.json|.config/browser-router/config.json
-macos/hex/settings.json|Library/Application Support/hex/settings.json
 EOF
 }
 

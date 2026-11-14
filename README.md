@@ -74,9 +74,7 @@ The macOS check is non-mutating and uses temporary fixtures. Linux provisions a 
 
 Tracked configuration is linked into each account's home. An unmanaged destination is preserved once as `<path>.pre-shell`; a correct link is a no-op. `sync.sh --check` requires links to resolve into this checkout rather than merely comparing file contents.
 
-Hex's preferences are tracked in `macos/hex/settings.json` and linked to `~/Library/Application Support/hex/settings.json`. Quit Hex before committing and pushing settings, and quit it before pulling changes in another account, then reopen it. Each account uses its own clone. Models, recordings, history, local API credentials, and macOS permissions remain local to each account. Keep credential fields empty in the tracked settings file. This is a live link, so Hex can write sensitive values into the repository: review the diff before every commit, including vocabulary, prompts, routing destinations, and any API-key fields. Do not commit private terms or credentials. Models and history are not tracked.
-
-After pulling the Hex configuration into an account's clone for the first time, run `./sync.sh` in that account to create the preferences link. For later settings updates, quit Hex, run `git pull --ff-only` in that clone, and reopen Hex; the existing link picks up the changes without another sync. Commit and push settings changes from the account where they were made before pulling them elsewhere.
+Hex is installed through Homebrew, but its settings remain local to each account under `~/Library/Application Support/hex/`. Dotfiles does not link or synchronize its preferences, vocabulary, credentials, models, or history. If an account still has the former settings symlink, quit Hex and replace that symlink with a copy of its target before pulling the removal; if already pulled, recover the local `settings.json.pre-shell` backup when available.
 
 The editor is Zed with T3 Code. Neovim remains installed as the terminal editor. BrowserRouter is installed from `sjdonado/tap`, copied to `~/Applications`, registered with Launch Services, and configured from `macos/browser-router.json`.
 
