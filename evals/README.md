@@ -35,6 +35,7 @@ The checkout is disposable and `gh` refuses unsupported operations. No real forg
 | `feedback` | Batch local feedback and leave unrelated staged work untouched |
 | `address-review` | Triage review threads and publish only after approval |
 | `land` | Close out only after merge |
+| `git-bug-numbering` | Project ticket prefix and remote closed-ticket number reservation without publication |
 | `ask` | Answer a bounded question read-only |
 | `risk-review-selection` | Recognize when independent review is warranted |
 

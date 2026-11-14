@@ -34,8 +34,19 @@
       }
     ]
   },
+  "cancel_hotkey": {
+    "keys": [
+      {
+        "code": 53,
+        "label": "Esc"
+      }
+    ]
+  },
   "raw_dictation_hotkey": null,
+  "typed_text_hotkey": null,
   "second_dictation_hotkey": null,
+  "extra_dictation_hotkeys": [],
+  "terminal_paste_hotkey": null,
   "show_dock_icon": true,
   "transcription": {
     "model": "parakeet_unified_en",
@@ -73,8 +84,7 @@
   "meetings": {
     "enabled": false,
     "output_folder": null,
-    "summarize_with_apple_intelligence": true,
-    "summarize_with_opencode": false,
+    "summaries": "mac",
     "show_recording_indicator": true,
     "recording_indicator_corner": "top_right",
     "providers": [],
@@ -95,6 +105,7 @@
         }
       ]
     },
+    "replay_hotkey": null,
     "transcriber": "parakeet",
     "folder": null,
     "media_days": 7,
@@ -127,6 +138,8 @@
   },
   "labs": {
     "live_text": false,
+    "failure_notices": false,
+    "live_typing": false,
     "live_chapters": false,
     "playground": false,
     "vocabulary_biasing": false,
@@ -136,15 +149,19 @@
     "restore_shortcut_default": false,
     "keep_on_clipboard": false,
     "copy_only": false,
+    "return_to_app": false,
     "spoken_formatting": false,
     "filler_words": true,
     "subtitle_export": false,
     "second_dictation_shortcut": false,
+    "more_dictation_shortcuts": false,
+    "terminal_paste_shortcut": false,
     "smart_spacing": false,
     "spoken_symbols": true,
     "picker_sort_filter": false,
     "sided_modifier_chords": false,
     "tap_or_hold": false,
+    "double_tap_modifiers": false,
     "benchmark_details": false,
     "parakeet_ultra": false,
     "standalone_special_keys": false,
@@ -152,7 +169,63 @@
     "recent_dictations": false,
     "skip_pauses": false,
     "stop_when_call_ends": false,
-    "output_fixes": false
+    "output_fixes": false,
+    "picker_active_first": false,
+    "model_in_place": false,
+    "picker_downloaded": false,
+    "section_key_alone": false,
+    "keep_recordings": false,
+    "settings_search": false,
+    "release_notes_link": false,
+    "hide_menu_bar_icon": false,
+    "quit_closes_window": false,
+    "caps_lock_dictation": false,
+    "caps_lock_light": "steady",
+    "appearance": false,
+    "appearance_theme": "system",
+    "movable_meeting_capsules": false,
+    "gnome_clipboard_restore": false,
+    "typed_text": false,
+    "meeting_notes_vocabulary": false,
+    "notch_indicator": false,
+    "meeting_finished_event": false,
+    "gnome_meeting_capsules": false,
+    "gnome_annotate": false,
+    "screenshots": false,
+    "follow_live_transcript": false,
+    "meeting_import": false,
+    "meeting_descriptive_filenames": false,
+    "meeting_notes_file": false,
+    "expire_meeting_audio": false,
+    "annotate_replay": false,
+    "more_call_apps": false,
+    "opencode_in_wsl": false,
+    "transcribe_files": false,
+    "api_processing": false,
+    "api_timestamps": false,
+    "speakers_only": false,
+    "app_model_switching": false,
+    "pause_menu": false
+  },
+  "screenshots": {
+    "hotkey": {
+      "keys": [
+        {
+          "modifier": "shift",
+          "side": "any"
+        },
+        {
+          "modifier": "command",
+          "side": "any"
+        },
+        {
+          "code": 21,
+          "label": "4"
+        }
+      ]
+    },
+    "record_hotkey": null,
+    "folder": null
   },
   "enable_on_launch": true,
   "paste_with_shift": false,
@@ -184,6 +257,7 @@
     "anomaly-hex-identity",
     "meeting-retention-default",
     "scrawl-capture-settings",
-    "scrawl-routing-settings"
+    "scrawl-routing-settings",
+    "meeting-summaries-choice"
   ]
 }

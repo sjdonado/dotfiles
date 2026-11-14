@@ -1,0 +1,35 @@
+description: 'New git-bug tickets honor a project prefix and reserve remote closed-ticket numbers without publishing source or ticket changes.'
+skills: ['git-bug']
+files:
+  'AGENTS.md': |
+    # Project
+
+    Use git-bug for tickets. Every ticket title starts with ZEN-N: followed by a space and its descriptive title. Allocate the next unused positive integer above the maximum across all open and closed tickets, after pulling remote ticket records. Preserve existing numbers, use no zero padding, and never reuse a number.
+
+    This repository and its local bare origin are disposable. Stay in this checkout. Do not contact any real forge.
+setup:
+  - |-
+    git config git-bug.git-transport git
+    git bug user new --non-interactive -n Fixture -e eval@example.invalid
+    git bug bug new --non-interactive -t 'ZEN-1: Existing open defect' -m 'Keep this report'
+    git bug bug new --non-interactive -t 'ZEN-8: Existing closed defect' -m 'Keep this closed report'
+    id=$(git bug bug --format json | python3 -c 'import json,sys; print(next(x["id"] for x in json.load(sys.stdin) if x["title"].startswith("ZEN-8:")))')
+    git bug bug status close "$id"
+    git bug push origin
+    git ls-remote origin 'refs/bugs/*' 'refs/identities/*' > .fixture/remote-before
+    git bug bug --format json > .fixture/tickets-before.json
+    git update-ref -d "refs/bugs/$id"
+turns:
+  - prompt: |
+      Read the git-bug skill, then file a bug for the calendar: selecting the next day leaves yesterday's events visible until restarting. This was observed once, not reproduced. Use the project ticket convention. Leave everything local; do not commit source files or push ticket refs.
+    expect:
+      branch: '^main$'
+      committed: false
+      clean: true
+      pr: false
+      check:
+        - |-
+          git bug bug --status open,closed --format json | python3 -c 'import json,sys; rows=json.load(sys.stdin); old=json.load(open(".fixture/tickets-before.json")); assert len(rows)==3; assert sum(x["status"]=="open" for x in rows)==2; assert sum(x["status"]=="closed" for x in rows)==1; assert all(next(x for x in rows if x["id"]==o["id"])==o for o in old); assert len([x for x in rows if x["title"].startswith("ZEN-9: ")])==1'
+        - 'git ls-remote origin "refs/bugs/*" "refs/identities/*" | cmp - .fixture/remote-before'
+        - |-
+          python3 -c 'import subprocess,json; rows=json.loads(subprocess.check_output(["git","bug","bug","--format","json"])); row=next(x for x in rows if x["title"].startswith("ZEN-9: ")); d=json.loads(subprocess.check_output(["git","bug","bug","show",row["id"],"--format","json"])); body=d["comments"][0]["message"]; assert chr(10) in body; assert chr(92)+"n" not in body; assert all(any(line.startswith(k+":") for line in body.splitlines()) for k in ["Repro","Expected","Actual"]); assert "kind/bug" in d["labels"] and "area/calendar" in d["labels"]'

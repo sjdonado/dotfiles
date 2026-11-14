@@ -11,7 +11,7 @@ Choose capabilities as needed:
 - `ask`, `research`, `triage`, `evidence` and `grill-me` investigate questions or assumptions.
 - `openspec-explore`, `openspec-propose` and `openspec-update-change` support work that benefits from a durable specification.
 - `worktree` creates isolation; `verification` establishes behavior; `agent-review` answers a concrete question through independent inspection; `open-pr` publishes an authorized change.
-- `git-bug` uses the non-interactive issue CLI. `handoff` preserves useful context for another session when requested.
+- `git-bug` uses the v0.12+ non-interactive issue CLI and native Git transport. New bug and feature titles use the project's `<PREFIX>-<N>: <title>` convention, allocating above the highest number across open and closed tickets after pulling remote records. `handoff` preserves useful context for another session when requested.
 - `feedback`, `address-review` and `land` support follow-up edits, existing review threads and post-merge bookkeeping.
 
 ## Optional recipes
