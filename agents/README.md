@@ -24,6 +24,8 @@ An existing PR identifies where the task lives. It does not force review, a fres
 
 ## Checks and review
 
+Use `HARNESS_CHECKS.md` as the manual checklist for instruction and skill changes. Select the relevant behaviors, exercise them when practical, and report observations and limitations. No eval runner is required.
+
 Select evidence for behavior and risk, respecting the project's required checks. Use the smallest reliable test that catches a meaningful defect. Configuration parsing and provisioning assertions can be sufficient for a local config change; a large snapshot is not itself a complex behavioral change.
 
 Run short checks in the current session. Delegate substantial independent work or a separate perspective when it adds value. An independent review needs a concrete question: one reviewer for one concern, two only when distinct concerns warrant independent perspectives. Neither PR existence, file count nor line count sets the review workload. Never describe self-inspection as independent review.

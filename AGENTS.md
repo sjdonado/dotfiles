@@ -6,7 +6,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 - agents/skills/: reusable skills in three kinds: `principle-*` (one rule each, never entered as a workflow), building blocks (one step each: worktree, verification, agent-review, open-pr, git-bug), and workflows that compose them (iteration, poc, yolo, feedback and the rest). agents/README.md explains the capabilities and optional recipes.
 - agents/AGENTS.md: shared boundaries and available capabilities, linked into each harness by `lib/links.sh`.
-- evals/: disposable benchmark scenarios with seed files, user prompts and parent-owned expectations. Benchmark through gpt-6-luna subagents, sending prompts in order and inspecting their actions and repository outcomes. evals/README.md describes preparation and checks. No Pi or OpenCode launcher is required. Results under results-*/ are ignored.
+- agents/HARNESS_CHECKS.md: manual behavioral checks for shared instructions and skills. Select checks for the decision being changed; record what was observed and what remains unverified.
 - openspec/changes/: proposed contracts and implementation tasks. Main specs describe merged work only.
 - Brewfile, packages/, hosts/, and lib/: the provisioning declaration. `Brewfile` owns macOS formulas and casks, `packages/` owns Linux packages and installer sources, `hosts/macos.sh` owns the Mac account list, and `lib/` owns links, installers, platform state, checks, and migration. `setup.sh` bootstraps; `sync.sh` applies, upgrades, checks, or migrates. Applying changes the host, so validate through `verify/` first.
 - verify/: one self-contained check per platform. `verify/linux.sh` provisions a throwaway Ubuntu container twice; `verify/macos.sh` runs a non-mutating fixture preflight. Real-host assertions live in `sync.sh --check`. `verify/README.md` explains each.
@@ -14,7 +14,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 ## Delegation
 
-Delegate substantial independent work when its benefit exceeds coordination cost; run short checks and edits in the current session. Mechanical eval fixture work and transcript review can use a model one tier below the orchestrator. Independent review is optional and stays at a capable tier when a concrete concern justifies it. The parent owns benchmark setup, prompt delivery and outcome assessment; the gpt-6-luna subagent performs the task.
+Delegate substantial independent work when its benefit exceeds coordination cost; run short checks and edits in the current session. Mechanical work and transcript review can use a model one tier below the orchestrator. Independent review is optional and stays at a capable tier when a concrete concern justifies it.
 
 ## Updating the harness
 
@@ -22,17 +22,17 @@ Start from an observed failure and name the decision that should change. Trace e
 
 Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
 
-Prove the behavior through the smallest existing disposable scenario that covers the decision. Add a new scenario or turn only for an observed gap, declare its expectations before running it, and keep prompts limited to the context the agent would actually receive. Prepare the fixture, run its prompts through a gpt-6-luna subagent and review its transcript and artifacts. Keep expectations outside the child prompt. Never edit generated run evidence.
+Use agents/HARNESS_CHECKS.md to select manual checks for the changed decision. Update a check when a concrete failure exposes a gap. Run selected checks in a disposable repository when they need writes; inspect the resulting behavior rather than treating a completed model turn as acceptance. Do not require a benchmark runner or a particular model.
 
 ## Verification
 
-Run checks from the repository root. For harness behavior, use direct gpt-6-luna subagents with disposable fixtures, as described in evals/README.md. Send only the live harness instructions, project context and current user prompt; retain later turns and expected outcomes in the parent. Inspect every tested turn before reporting acceptance. A provider failure is unverified, and a completed model turn is not proof of the expected behavior. Choose scenarios covering the changed decisions rather than requiring an entire matrix for every edit. No Pi or OpenCode benchmark dependency is needed.
+Run checks from the repository root. For harness behavior, use the manual checklist in agents/HARNESS_CHECKS.md and record the selected checks, observed result, and limitations. A checklist is a guide, not deterministic coverage. A provider failure or an unexercised check remains unverified. Choose checks covering the changed decisions rather than requiring the entire checklist for every edit.
 
 For an OpenSpec change: `openspec validate <change-id> --strict`. For a skill: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. Validate edited JSON with `python3 -m json.tool <path>`. These structural checks do not establish model behavior. No general application build or repository-wide test suite is declared. Checks must not deploy, expose secrets or modify external services merely to establish documentation accuracy.
 
 ### Verifying a setup change
 
-This is a different question from verifying a harness change, and the two are not interchangeable. A harness change alters how a model behaves, so it is judged by running sessions and reading transcripts, which is probabilistic and paid: that is the section above. A setup change alters what a machine ends up with, which is a deterministic question with a yes or no answer, so it is judged by provisioning a machine from nothing and asserting the result.
+This is a different question from verifying a harness change, and the two are not interchangeable. A harness change alters how a model behaves, so it is assessed through the selected manual checks and observed sessions described above. A setup change alters what a machine ends up with, which is a deterministic question with a yes or no answer, so it is judged by provisioning a machine from nothing and asserting the result.
 
 **Why it is checkable at all.** Provisioning is one declaration, applied by one command per platform, so a machine is reproduced rather than accumulated:
 

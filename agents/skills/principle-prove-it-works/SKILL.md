@@ -11,4 +11,4 @@ Run each check with an observable exit status. A long-running command belongs to
 
 Publication is a separately authorized action, not a verification rung. When delivery includes a PR, required remote checks and mergeability are part of that outcome. Never push merely to claim local work complete.
 
-For harness behavior, follow the project's disposable-session benchmark instructions: declare expectations before running, retain unedited evidence and inspect transcripts as well as artifacts. A dry run validates wiring, not model behavior; one successful scenario does not prove efficiency. Compare usage only where it was actually recorded.
+For harness behavior, follow the project's behavioral checklist or other declared verification guidance. State the expected decision before checking it, inspect the observed actions and results, and report unexercised behavior as unverified. A parser or checklist alone does not prove model behavior, and one successful session does not establish reliability or efficiency.

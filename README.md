@@ -74,7 +74,7 @@ The macOS check is non-mutating and uses temporary fixtures. Linux provisions a 
 
 Tracked configuration is linked into each account's home. An unmanaged destination is preserved once as `<path>.pre-shell`; a correct link is a no-op. `sync.sh --check` requires links to resolve into this checkout rather than merely comparing file contents.
 
-Hex's preferences are tracked in `macos/hex/settings.json` and linked to `~/Library/Application Support/hex/settings.json`. Quit Hex before committing and pushing settings, and quit it before pulling changes in another account, then reopen it. Each account uses its own clone. Models, recordings, history, local API credentials, and macOS permissions remain local to each account. Keep credential fields empty in the tracked settings file.
+Hex's preferences are tracked in `macos/hex/settings.json` and linked to `~/Library/Application Support/hex/settings.json`. Quit Hex before committing and pushing settings, and quit it before pulling changes in another account, then reopen it. Each account uses its own clone. Models, recordings, history, local API credentials, and macOS permissions remain local to each account. Keep credential fields empty in the tracked settings file. This is a live link, so Hex can write sensitive values into the repository: review the diff before every commit, including vocabulary, prompts, routing destinations, and any API-key fields. Do not commit private terms or credentials. Models and history are not tracked.
 
 After pulling the Hex configuration into an account's clone for the first time, run `./sync.sh` in that account to create the preferences link. For later settings updates, quit Hex, run `git pull --ff-only` in that clone, and reopen Hex; the existing link picks up the changes without another sync. Commit and push settings changes from the account where they were made before pulling them elsewhere.
 
@@ -91,4 +91,4 @@ The editor is Zed with T3 Code. Neovim remains installed as the terminal editor.
 
 ## Agent harness
 
-OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness experiments and benchmarks are documented in `agents/README.md`, `pi/README.md`, and `evals/README.md`.
+OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness guidance lives in `agents/README.md` and `pi/README.md`, with manual behavioral checks in `agents/HARNESS_CHECKS.md`.
