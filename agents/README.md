@@ -24,7 +24,7 @@ An existing PR identifies where the task lives. It does not force review, a fres
 
 ## Checks and review
 
-Use `HARNESS_CHECKS.md` as the manual checklist for instruction and skill changes. Select the relevant behaviors, exercise them when practical, and report observations and limitations. No eval runner is required.
+Read `checks.yaml` first for instruction and skill changes. It maps affected decisions to detailed Markdown area files and former eval scenarios. Load `checks/README.md` and only the selected area files, exercise the relevant checks when practical, and report observations and limitations. `HARNESS_CHECKS.md` remains a short compatibility entry point. No eval runner is required.
 
 Select evidence for behavior and risk, respecting the project's required checks. Use the smallest reliable test that catches a meaningful defect. Configuration parsing and provisioning assertions can be sufficient for a local config change; a large snapshot is not itself a complex behavioral change.
 

@@ -6,7 +6,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 - agents/skills/: reusable skills in three kinds: `principle-*` (one rule each, never entered as a workflow), building blocks (one step each: worktree, verification, agent-review, open-pr, git-bug), and workflows that compose them (iteration, poc, yolo, feedback and the rest). agents/README.md explains the capabilities and optional recipes.
 - agents/AGENTS.md: shared boundaries and available capabilities, linked into each harness by `lib/links.sh`.
-- agents/HARNESS_CHECKS.md: manual behavioral checks for shared instructions and skills. Select checks for the decision being changed; record what was observed and what remains unverified.
+- agents/checks.yaml: small area index for manual harness checks. Read it first, then agents/checks/README.md and only selected area files. agents/HARNESS_CHECKS.md is a compatibility entry point.
 - openspec/changes/: proposed contracts and implementation tasks. Main specs describe merged work only.
 - Brewfile, packages/, hosts/, and lib/: the provisioning declaration. `Brewfile` owns macOS formulas and casks, `packages/` owns Linux packages and installer sources, `hosts/macos.sh` owns the Mac account list, and `lib/` owns links, installers, platform state, checks, and migration. `setup.sh` bootstraps; `sync.sh` applies, upgrades, checks, or migrates. Applying changes the host, so validate through `verify/` first.
 - verify/: one self-contained check per platform. `verify/linux.sh` provisions a throwaway Ubuntu container twice; `verify/macos.sh` runs a non-mutating fixture preflight. Real-host assertions live in `sync.sh --check`. `verify/README.md` explains each.
@@ -22,11 +22,11 @@ Start from an observed failure and name the decision that should change. Trace e
 
 Write for execution, not explanation. Use one stable term per concept and express each rule as a trigger, required action, and stop condition or exception. Put the decisive instruction before the step it governs. Keep rationale only when it prevents a likely misreading; omit history, repeated summaries, decorative examples, and duplicated global policy from skills. Prefer deleting obsolete text to adding precedence prose. Spend tokens on irreversible boundaries, ownership, and machine-checkable outcomes.
 
-Use agents/HARNESS_CHECKS.md to select manual checks for the changed decision. Update a check when a concrete failure exposes a gap. Run selected checks in a disposable repository when they need writes; inspect the resulting behavior rather than treating a completed model turn as acceptance. Do not require a benchmark runner or a particular model.
+Read agents/checks.yaml first to select manual checks for the changed decision; load agents/checks/README.md and only the relevant area files and sections. Update a check when a concrete failure exposes a gap. Run selected checks in a disposable repository when they need writes; inspect the resulting behavior rather than treating a completed model turn as acceptance. Do not require a benchmark runner or a particular model.
 
 ## Verification
 
-Run checks from the repository root. For harness behavior, use the manual checklist in agents/HARNESS_CHECKS.md and record the selected checks, observed result, and limitations. A checklist is a guide, not deterministic coverage. A provider failure or an unexercised check remains unverified. Choose checks covering the changed decisions rather than requiring the entire checklist for every edit.
+Run checks from the repository root. For harness behavior, select areas through agents/checks.yaml, read only their check files plus the common guide, and record the selected checks, observed result, and limitations. A checklist is a guide, not deterministic coverage. A provider failure or an unexercised check remains unverified. Choose checks covering the changed decisions rather than requiring the entire checklist for every edit.
 
 For an OpenSpec change: `openspec validate <change-id> --strict`. For a skill: `uv run --with pyyaml python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py agents/skills/<name>` checks frontmatter only. Validate edited JSON with `python3 -m json.tool <path>`. These structural checks do not establish model behavior. No general application build or repository-wide test suite is declared. Checks must not deploy, expose secrets or modify external services merely to establish documentation accuracy.
 

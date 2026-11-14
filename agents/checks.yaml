@@ -1,0 +1,56 @@
+version: 1
+guide: checks/README.md
+selection:
+  - Read this index first; choose areas from the changed decision, not file count.
+  - Read the guide and only the selected area files and relevant sections.
+  - Include related areas only when their boundaries are affected.
+  - Record selected checks, observations, and unverified behavior; no runner or model is required.
+areas:
+  authority:
+    file: checks/authority.md
+    when: Read-only questions, plan approval, unresolved scope, or publication authority changes.
+    legacy_scenarios: [ask, plan-approval, iteration-gate]
+    sections: [read-only-question, plan-approval-is-local-implementation-authority, unresolved-behavior-blocks-publication-not-settled-local-work]
+    related: [publication, scope]
+  publication:
+    file: checks/publication.md
+    when: PR delivery, required-check gates, explicit autonomous delivery, or PR formatting changes.
+    legacy_scenarios: [open-pr, yolo-bounded]
+    sections: [required-local-check-gates-a-direct-pr-request, explicit-autonomous-delivery-through-a-green-pr]
+    related: [authority, scope]
+  scope:
+    file: checks/scope.md
+    when: Checkout ownership, local feedback, staged-edit preservation, or scoped publication changes.
+    legacy_scenarios: [happy-path, feedback]
+    sections: [isolated-followup, feedback-preservation]
+    related: [authority, publication, provisioning]
+  provisioning:
+    file: checks/provisioning.md
+    when: Managed settings, account-specific links, setup verification, or scoped configuration commits change.
+    legacy_scenarios: [dotfiles-setup]
+    sections: [account-local-settings-and-scoped-commit]
+    related: [scope, safeguards]
+  review:
+    file: checks/review.md
+    when: Review-thread handling, independent review, security-sensitive changes, or review-only requests change.
+    legacy_scenarios: [address-review, risk-review-selection]
+    sections: [review-thread-triage, security-redirect-review]
+    related: [authority, publication]
+  cleanup:
+    file: checks/cleanup.md
+    when: Merge confirmation, task-note cleanup, or OpenSpec archival behavior changes.
+    legacy_scenarios: [land]
+    sections: [merge-gated-cleanup]
+    related: [publication]
+  git-bug:
+    file: checks/git-bug.md
+    when: Ticket creation, numbering, retitles, synchronization, identities, or multiline reports change.
+    legacy_scenarios: [git-bug-numbering]
+    sections: [remote-closed-numbers-and-local-only-creation, prefix-and-numbering-variants]
+    related: [authority, safeguards]
+  safeguards:
+    file: checks/safeguards.md
+    when: Secret handling, proportional verification, media selection, or unavailable capabilities change.
+    legacy_scenarios: []
+    sections: [secret-boundaries, proportional-verification, media-selection, honest-review-and-capability-limits]
+    related: [review, provisioning]

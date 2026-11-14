@@ -89,4 +89,4 @@ The editor is Zed with T3 Code. Neovim remains installed as the terminal editor.
 
 ## Agent harness
 
-OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness guidance lives in `agents/README.md` and `pi/README.md`, with manual behavioral checks in `agents/HARNESS_CHECKS.md`.
+OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness guidance lives in `agents/README.md` and `pi/README.md`, with manual behavioral checks selected through `agents/checks.yaml`.
