@@ -11,7 +11,7 @@ Choose capabilities as needed:
 - `ask`, `research`, `triage`, `evidence` and `grill-me` investigate questions or assumptions.
 - `openspec-explore`, `openspec-propose` and `openspec-update-change` support work that benefits from a durable specification.
 - `worktree` creates isolation; `verification` establishes behavior; `agent-review` answers a concrete question through independent inspection; `open-pr` publishes an authorized change.
-- `git-bug` uses the non-interactive issue CLI. `handoff` preserves useful context for another session when requested.
+- `git-bug` uses the v0.12+ non-interactive issue CLI and native Git transport. New bug and feature titles use the project's `<PREFIX>-<N>: <title>` convention, allocating above the highest number across open and closed tickets after pulling remote records. `handoff` preserves useful context for another session when requested.
 - `feedback`, `address-review` and `land` support follow-up edits, existing review threads and post-merge bookkeeping.
 
 ## Optional recipes
@@ -23,6 +23,8 @@ Choose capabilities as needed:
 An existing PR identifies where the task lives. It does not force review, a fresh contract or repeated publication questions. Publication remains scoped to what the user authorized; an artifact or passing check cannot authorize an external write.
 
 ## Checks and review
+
+Read `checks.yaml` first for instruction and skill changes. It maps affected decisions to detailed Markdown area files and former eval scenarios. Load `checks/README.md` and only the selected area files, exercise the relevant checks when practical, and report observations and limitations. `HARNESS_CHECKS.md` remains a short compatibility entry point. No eval runner is required.
 
 Select evidence for behavior and risk, respecting the project's required checks. Use the smallest reliable test that catches a meaningful defect. Configuration parsing and provisioning assertions can be sufficient for a local config change; a large snapshot is not itself a complex behavioral change.
 

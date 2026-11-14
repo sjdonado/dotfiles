@@ -50,6 +50,7 @@ install_linux_user_tools() {
   mkdir -p "$HOME/.local/bin"
   if ! have_standalone_tool bun; then curl -fsSL https://bun.sh/install | BUN_INSTALL="$HOME/.local" SHELL=/bin/false bash -s -- bun-v1.4.4 || return 1; fi
   export PATH="$HOME/.local/bin:$HOME/.opencode/bin:$PATH"
+  if ! have_standalone_tool mise; then curl -fsSL https://mise.run | env MISE_INSTALL_PATH="$HOME/.local/bin/mise" MISE_VERSION=v2026.11.0 sh || return 1; fi
   if ! have_standalone_tool uv; then curl -LsSf https://astral.sh/uv/0.13.6/install.sh | env UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh || return 1; fi
   if ! have_standalone_tool pnpm; then npm install --global --prefix "$HOME/.local" pnpm@12.15.0 || return 1; fi
   if ! have_standalone_tool opencode || ! opencode --version 2>/dev/null | grep -qE '(^| )v?2\.'; then

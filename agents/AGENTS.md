@@ -34,6 +34,8 @@ Preserve unrelated edits and staged changes. Inspect the full index before commi
 
 ## Verification and review
 
+Include screenshots or a short screencast when they help explain or verify a visible behavior change. Skip media for changes it does not clarify. When attaching media, use the `gh` CLI with `--attach` and keep credentials, verification codes and private user data out of captures.
+
 Choose evidence for the changed behavior and its failure modes, respecting required project checks. Complexity, runtime consequences and reversibility guide the work; file count, line count and workflow membership do not determine review or delegation.
 
 Use agent-review when requested or when a concrete unresolved concern warrants independent inspection. State the concern and give reviewers only the relevant diff and evidence. An open PR or the act of publishing does not require subagent review. Use the native review capability for a human-requested code review when available. Never post review findings without authorization.

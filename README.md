@@ -1,6 +1,6 @@
 # Dotfiles
 
-Shell provisioning for macOS and Ubuntu. macOS uses Homebrew for conventional packages. Linux uses apt plus explicit guarded installers. Nix, home-manager, nix-darwin, mise, and Linuxbrew are not required.
+Shell provisioning for macOS and Ubuntu. macOS uses Homebrew for conventional packages. Linux uses apt plus explicit guarded installers. Mise is available globally through Homebrew on macOS and a pinned upstream installer on Linux. Provisioning does not depend on mise-managed runtimes or shims. Nix, home-manager, nix-darwin, and Linuxbrew are not required.
 
 ## Setup and sync
 
@@ -74,7 +74,7 @@ The macOS check is non-mutating and uses temporary fixtures. Linux provisions a 
 
 Tracked configuration is linked into each account's home. An unmanaged destination is preserved once as `<path>.pre-shell`; a correct link is a no-op. `sync.sh --check` requires links to resolve into this checkout rather than merely comparing file contents.
 
-Handy's preferences are tracked in `macos/handy/settings_store.json`. Models, recordings, history, and macOS permissions remain local to each account. Keep API keys empty in the tracked file.
+Hex is installed through Homebrew, but its settings remain local to each account under `~/Library/Application Support/hex/`. Dotfiles does not link or synchronize its preferences, vocabulary, credentials, models, or history. If an account still has the former settings symlink, quit Hex and replace that symlink with a copy of its target before pulling the removal; if already pulled, recover the local `settings.json.pre-shell` backup when available.
 
 The editor is Zed with T3 Code. Neovim remains installed as the terminal editor. BrowserRouter is installed from `sjdonado/tap`, copied to `~/Applications`, registered with Launch Services, and configured from `macos/browser-router.json`.
 
@@ -89,4 +89,4 @@ The editor is Zed with T3 Code. Neovim remains installed as the terminal editor.
 
 ## Agent harness
 
-OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness experiments and benchmarks are documented in `agents/README.md`, `pi/README.md`, and `evals/README.md`.
+OpenCode is the primary daily harness. Claude Code, Codex, and Pi remain available. Shared instructions and skills live under `agents/`; harness guidance lives in `agents/README.md` and `pi/README.md`, with manual behavioral checks selected through `agents/checks.yaml`.

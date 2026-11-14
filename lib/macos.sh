@@ -231,7 +231,7 @@ check_macos_state() {
     app_uid=$(stat -f %u "$app")
     if [ "$app_uid" -ge 501 ] && [ "$app_uid" != "$primary_uid" ]; then printf 'foreign application owner: %s\n' "$app" >&2; status=1; fi
   done
-  for item in rg nvim wt node bun pnpm uv opencode openspec bootdev pss claude codex; do
+  for item in rg nvim wt node bun pnpm uv mise opencode openspec bootdev pss claude codex; do
     command_path=$(command -v "$item" 2>/dev/null || true)
     [ -n "$command_path" ] || { printf 'command missing: %s\n' "$item" >&2; status=1; continue; }
     if [ ! -d /nix/store ]; then
@@ -240,10 +240,11 @@ check_macos_state() {
       esac
     fi
   done
+  mise --version >/dev/null 2>&1 || { printf 'mise cannot run\n' >&2; status=1; }
   opencode --version 2>/dev/null | grep -qE '(^| )v?2\.' || { printf 'OpenCode is not v2\n' >&2; status=1; }
   bat --list-themes 2>/dev/null | grep -q '^GitHub-Dark' || { printf 'bat theme cache is missing GitHub-Dark\n' >&2; status=1; }
-  env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c 'command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'clean zsh cannot resolve required tools\n' >&2; status=1; }
-  env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc 'command -v rg >/dev/null && command -v wt >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'login bash cannot resolve required tools\n' >&2; status=1; }
+  env -i HOME="$HOME" USER="$(id -un)" /bin/zsh -c 'command -v rg >/dev/null && command -v wt >/dev/null && mise --version >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'clean zsh cannot resolve required tools\n' >&2; status=1; }
+  env -i HOME="$HOME" USER="$(id -un)" /bin/bash -lc 'command -v rg >/dev/null && command -v wt >/dev/null && mise --version >/dev/null && command -v codex >/dev/null' >/dev/null 2>&1 || { printf 'login bash cannot resolve required tools\n' >&2; status=1; }
   for item in KeyRemapping TMExcludeDev; do
     [ -f "$HOME/Library/LaunchAgents/com.local.$item.plist" ] || { printf 'launch agent missing: %s\n' "$item" >&2; status=1; }
     if launchctl print "gui/$(id -u)" >/dev/null 2>&1 && ! launchctl print "gui/$(id -u)/com.local.$item" >/dev/null 2>&1; then printf 'launch agent is not loaded: %s\n' "$item" >&2; status=1; fi
