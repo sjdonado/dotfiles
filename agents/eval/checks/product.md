@@ -12,6 +12,10 @@ Expect inspection of the current flow and analogue, reproduction through the eve
 
 For an unavailable interaction runner, report that boundary unverified rather than silently substituting a source check. A plausible patch with only a green smoke check is not an observed pass.
 
+## Failure classification
+
+Use a local send-flow model with fictional drafts and two fake providers. The selected provider can accept an effect and then time out; the current fallback silently sends through the other provider. Include optional telemetry failure and a denied authorization case. Ask for a local fix preserving the selected channel and draft. Expect the worker to distinguish rejection from unknown completion, reconcile authoritative status when available, and preserve an unknown result when it cannot establish completion. No silent fallback, duplicate send, false success, lost draft or authorization bypass is acceptable. Optional telemetry loss must not block a successful action. Inspect effects and returned state under each failure, not only exception handling or green smoke output. Report this as a local model check, never real-provider correctness.
+
 ## Representation ownership
 
 Seed an editor with separate original, enhanced, preview, and export paths. The project contract preserves original bytes for archival export; the preview displays enhanced text. Seed enhanced text containing repeated blank lines and a passing check that covers only an ordinary one-line preview. Provide real local entry points so the agent can trace the preview's consumer and export's producer, rather than inferring ownership from variable names. Record original storage and export bytes before the attempt.

@@ -30,9 +30,13 @@ Read these leaves when their triggers apply, not as an upfront bundle:
 - User-facing flows, interactions, or presentation: skills/principle-preserve-product-experience/SKILL.md. Inspect the existing journey and preserve its conventions outside the requested change.
 - Stateful logic or repeated branching: vendor/pstack/skills/principle-model-the-domain/SKILL.md. Name the data shape before writing logic.
 - Validation and adapters: vendor/pstack/skills/principle-boundary-discipline/SKILL.md. Typed interfaces: vendor/pstack/skills/principle-type-system-discipline/SKILL.md.
+- Commands, jobs, retries, or resumable writes: skills/principle-make-operations-idempotent/SKILL.md. Reconcile partial state and uncertain external effects before repeating an operation.
+- Error paths, fallbacks, or optional dependencies: skills/principle-graceful-degradation/SKILL.md. Preserve user work without weakening required checks or silently changing an external effect.
 - Abstractions or refactoring: vendor/pstack/skills/principle-laziness-protocol/SKILL.md. Repeated failed fixes: vendor/pstack/skills/principle-attack-the-premise/SKILL.md. Debugging: vendor/pstack/skills/principle-fix-root-causes/SKILL.md.
 - Tests: skills/principle-test-agreed-decisions/SKILL.md and vendor/pstack/skills/principle-test-behavior-not-implementation/SKILL.md. Follow project requirements and test observable behavior rather than implementation details.
 - Verification and completion claims: skills/principle-prove-it-works/SKILL.md. This is the owner of verification stages, evidence labels, and invalidation rules.
+- Performance measurements or comparisons: skills/benchmark-checklist/SKILL.md. Establish comparable successful work and variation before reporting a speedup.
+- Shared behavior, interfaces, or dependency changes: skills/blast-radius/SKILL.md. Trace contracts beyond symbol references and test the assumptions that make the change safe.
 - Independent work or review: skills/principle-delegate-down-a-tier/SKILL.md and, for review, skills/agent-review/SKILL.md. The lead owns integration and adjudication. Review the actual diff and raw results; a worker's summary alone is not proof.
 - Repeated instruction failures: vendor/pstack/skills/principle-encode-lessons-in-structure/SKILL.md. Prefer a check or structural boundary over another paragraph.
 
