@@ -22,6 +22,8 @@ Use git-bug v0.12.0 or later. Run `git bug version` first; stop if it is missing
 
 Record the durable convention in the project's AGENTS.md: its prefix, the title pattern, and allocation from the maximum across open and closed tickets after pulling remote records. Compute the next number each time; do not keep a stale next-number counter in documentation. Bulk numbering or repair is a separate task requiring explicit scope; preserve all fields other than the authorized titles.
 
+**Implementation linkage.** For work on an existing ticket, retain its human title ID and actual entity ID. Use the human ID for a newly created branch under the shared policy and for the PR's `Resolves <ID>` line when its accepted scope is complete; use `Refs <ID>` with remaining scope for a partial slice. Do not allocate a new number, publish ticket refs or close a git-bug record merely to create a worktree or link a PR. GitHub does not close the local git-bug store from that text alone.
+
 **Commands.**
 
 | need | command |

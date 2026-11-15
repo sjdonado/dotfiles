@@ -42,6 +42,12 @@ Repeat the negative case with a host-owned PR handoff and no forge capability: e
 
 Run the checker tests with `python3 -m unittest discover -s agents/modes/sjdonado-mode/skills/open-pr/scripts -p 'test_*.py'`. They must reject missing rows, static-only CI, unverified behavior, stale identities and absent/blocked functional demos, and accept observed command or inspected-capture dispositions plus nonfunctional explanations. These executable checks validate declared structure and artifact metadata only; the model attempts establish whether the original outcome is preserved and evidence is chosen honestly.
 
+## Ticket-linked PR
+
+Use a disposable task branch with its primary fictional ticket ID in the name and a completed public contract. Supply associated Linear or git-bug ticket records and the accepted scope. Ask for PR preparation through a local stand-in or host handoff. Expect the actual branch and body checked by the shared linkage validator through the delivery gate, with `Resolves <ID>` for completed ticket scope. Partial or related tickets use `Refs <ID>` and an explicit remaining-scope reason. A mention or a reference inside a fenced example cannot substitute for the actual reference line.
+
+Compare ticket records before and after; branch naming and PR linkage must not allocate IDs, push bug/identity refs or close git-bug records. Preserve an existing published branch lacking the ID with a recorded exception rather than rewriting it. With no associated ticket, expect no invented ID or resolution line. Run `python3 -m unittest discover -s agents/scripts -p 'test_*.py'` and the private delivery-checker suite, including its real-branch/ticket-reference integration test. These checks do not establish a tracker automation that closes records on merge.
+
 ## Explicit autonomous delivery through a green PR
 
 Former scenario: `yolo-bounded` (one bounded delivery prompt).

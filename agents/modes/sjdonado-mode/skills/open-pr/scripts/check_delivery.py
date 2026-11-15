@@ -14,6 +14,9 @@ import re
 import stat
 import sys
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "scripts"))
+from check_task_linkage import validate_ticket_links
+
 
 def demo_section(body, heading):
     """Find a real Markdown section, ignoring headings inside fenced code."""
@@ -39,7 +42,7 @@ def demo_section(body, heading):
     return "\n".join(content) if collecting else None
 
 
-def validate(data, expected_revision, body_text):
+def validate(data, expected_revision, body_text, branch):
     """Return concise field errors; inspect artifact metadata only."""
     errors = []
 
@@ -80,6 +83,7 @@ def validate(data, expected_revision, body_text):
         return ["evidence: expected object"]
     if not isinstance(body_text, str) or not body_text.strip():
         return ["pr_body: expected nonempty text"]
+    errors.extend(validate_ticket_links(branch, data.get("tickets"), body_text, data.get("branch_exception")))
     change_type = data.get("change_type")
     if change_type not in ("functional", "nonfunctional"):
         errors.append("change_type: expected functional or nonfunctional")
@@ -175,6 +179,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--body-file", required=True)
+    parser.add_argument("--branch", required=True)
     args = parser.parse_args()
     body_path = Path(args.body_file)
     try:
@@ -194,7 +199,7 @@ def main():
     except (ValueError, RecursionError):
         print("evidence: invalid JSON", file=sys.stderr)
         return 1
-    errors = validate(data, args.source_revision, body_text)
+    errors = validate(data, args.source_revision, body_text, args.branch)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

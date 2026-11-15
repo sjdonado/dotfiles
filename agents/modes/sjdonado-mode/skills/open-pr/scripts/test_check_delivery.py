@@ -13,7 +13,7 @@ from check_delivery import validate as validate_record
 
 
 def validate(data, revision):
-    return validate_record(data, revision, "## Demo\nObserved fixture result.\n")
+    return validate_record(data, revision, "## Demo\nObserved fixture result.\n", "fix/fixture")
 
 
 SCRIPT = Path(__file__).with_name("check_delivery.py")
@@ -28,6 +28,7 @@ class DeliveryEvidenceTests(unittest.TestCase):
         self.artifact.write_text("Recorded runtime result\n")
         self.evidence = {
             "change_type": "functional",
+            "tickets": [],
             "source_revision": REVISION,
             "requirements": [{"id": "journey", "behavior": "User completes requested journey"}],
             "checks": [{
@@ -115,6 +116,7 @@ class DeliveryEvidenceTests(unittest.TestCase):
     def test_nonfunctional_needs_explanation_without_image(self):
         data = {
             "change_type": "nonfunctional", "source_revision": REVISION,
+            "tickets": [],
             "requirements": [], "checks": [],
             "demo": {"status": "not_applicable", "reason": "Documentation only", "source_revision": REVISION},
         }
@@ -156,7 +158,7 @@ class DeliveryEvidenceTests(unittest.TestCase):
         body = Path(self.directory.name) / "pr-body.md"
         body.write_text("## Demo\nObserved fixture result.\n")
         return subprocess.run(
-            [sys.executable, str(SCRIPT), "--source-revision", REVISION, "--body-file", str(body)],
+            [sys.executable, str(SCRIPT), "--source-revision", REVISION, "--body-file", str(body), "--branch", "fix/fixture"],
             input=content, text=True, capture_output=True, check=False,
         )
 
@@ -182,17 +184,30 @@ class DeliveryEvidenceTests(unittest.TestCase):
         for body in ("## Verification\nCI passed\n", "## Demo\n\n## Limits\nNone\n", "## Demo\n   \n## Limits\nNone\n",
                      "```markdown\n## Demo\nIllustrative only\n```\n", ""):
             with self.subTest(body=body):
-                self.assertTrue(validate_record(self.evidence, REVISION, body))
+                self.assertTrue(validate_record(self.evidence, REVISION, body, "fix/fixture"))
         self.evidence["demo"]["heading"] = "Demonstration"
-        self.assertEqual(validate_record(self.evidence, REVISION, "## Demonstration\nObserved result\n"), [])
+        self.assertEqual(validate_record(self.evidence, REVISION, "## Demonstration\nObserved result\n", "fix/fixture"), [])
 
     def test_environment_body_file_is_refused_without_reading(self):
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), "--source-revision", REVISION, "--body-file", ".env.private"],
+            [sys.executable, str(SCRIPT), "--source-revision", REVISION, "--body-file", ".env.private", "--branch", "fix/fixture"],
             input=json.dumps(self.evidence), text=True, capture_output=True, check=False,
         )
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stderr.strip(), "pr_body: unavailable or forbidden body file")
+
+    def test_delivery_cli_checks_actual_branch_and_ticket_resolution(self):
+        self.evidence["tickets"] = [{"id": "DEMO-7", "tracker": "git-bug", "relation": "resolves"}]
+        body = Path(self.directory.name) / "ticket-body.md"
+        body.write_text("## Demo\nObserved result.\n\nResolves DEMO-7\n")
+        args = [sys.executable, str(SCRIPT), "--source-revision", REVISION, "--body-file", str(body), "--branch", "fix/demo-7-work"]
+        result = subprocess.run(args, input=json.dumps(self.evidence), text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args[-1] = "fix/demo-70-work"
+        self.assertEqual(subprocess.run(args, input=json.dumps(self.evidence), text=True, capture_output=True).returncode, 1)
+        args[-1] = "fix/demo-7-work"
+        body.write_text("## Demo\nObserved result.\n\nMentions DEMO-7\n")
+        self.assertEqual(subprocess.run(args, input=json.dumps(self.evidence), text=True, capture_output=True).returncode, 1)
 
 
 if __name__ == "__main__":

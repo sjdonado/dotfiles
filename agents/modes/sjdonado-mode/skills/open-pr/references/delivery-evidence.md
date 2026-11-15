@@ -12,6 +12,7 @@ The JSON shape is:
 {
   "change_type": "functional",
   "source_revision": "tested-source-identity",
+  "tickets": [],
   "requirements": [
     {"id": "save-and-reopen", "behavior": "The requested entry point saves a value and shows it after reopening."}
   ],
@@ -41,7 +42,9 @@ The JSON shape is:
 
 Replace the illustrative values with observed evidence. Artifacts must be nonempty local files; never provide environment-secret files or private payloads. The checker inspects file metadata, not artifact contents, and never executes a recorded command or uploads a file. Inspect the actual outputs yourself and ensure the PR's references can be accessed by its reviewer or receiving host.
 
-Run `python3 <resolved-open-pr-directory>/scripts/check_delivery.py --source-revision <independently-derived-identity> --body-file <prepared-pr-body.md> < <temporary-evidence.json>`. Functional changes require nonempty requirements, exactly one executed runtime row per requirement, matching source identities and a demo disposition. The actual body must contain a nonempty Demo section; set `demo.heading` to the repository's equivalent heading when needed. A heading inside a fenced example does not count. Demo status `capture` requires an inspected artifact (`"inspected": true`); `command` requires its reproducible command and output artifact. `blocked` and `not_applicable` cannot pass for a functional change. Respect capture restrictions by choosing an appropriate nonvisual demonstration, not by omitting the required behavior.
+Run `python3 <resolved-open-pr-directory>/scripts/check_delivery.py --source-revision <independently-derived-identity> --branch <actual-task-branch> --body-file <prepared-pr-body.md> < <temporary-evidence.json>`. Derive the actual branch from Git rather than copying it from the evidence record. Include associated tickets as described in the shared policy's `task-linkage.md`, primary first, or `"tickets": []` when none is available. The shared checker validates the primary ticket token in the branch and each actual Resolves/Refs line; record a permitted branch exception instead of renaming an existing published branch.
+
+Functional changes require nonempty requirements, exactly one executed runtime row per requirement, matching source identities and a demo disposition. The actual body must contain a nonempty Demo section; set `demo.heading` to the repository's equivalent heading when needed. A heading inside a fenced example does not count. Demo status `capture` requires an inspected artifact (`"inspected": true`); `command` requires its reproducible command and output artifact. `blocked` and `not_applicable` cannot pass for a functional change. Respect capture restrictions by choosing an appropriate nonvisual demonstration, not by omitting the required behavior.
 
 Prose or configuration edits that change no functional behavior use `"change_type": "nonfunctional"`, empty requirements/checks, and a `demo` with `"status": "not_applicable"`, the source identity and a concrete reason. Classify from the requested change, not from the subset implemented; do not relabel unfinished functional work as documentation to bypass the gate.
 

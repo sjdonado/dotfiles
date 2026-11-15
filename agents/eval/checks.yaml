@@ -28,13 +28,13 @@ areas:
     file: checks/publication.md
     when: PR delivery, required-check gates, explicit autonomous delivery, or PR formatting changes.
     legacy_scenarios: [open-pr, yolo-bounded]
-    sections: [required-local-check-gates-a-direct-pr-request, promised-journey-gates-publication, explicit-autonomous-delivery-through-a-green-pr, body-validation-and-host-handoff]
+    sections: [required-local-check-gates-a-direct-pr-request, promised-journey-gates-publication, ticket-linked-pr, explicit-autonomous-delivery-through-a-green-pr, body-validation-and-host-handoff]
     related: [authority, scope]
   scope:
     file: checks/scope.md
     when: Checkout ownership, local feedback, staged-edit preservation, or scoped publication changes.
     legacy_scenarios: [happy-path, feedback]
-    sections: [isolated-followup, feedback-preservation, host-managed-isolation]
+    sections: [isolated-followup, feedback-preservation, host-managed-isolation, new-thread-ticket-workspace]
     related: [authority, publication, provisioning]
   provisioning:
     file: checks/provisioning.md

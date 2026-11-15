@@ -18,6 +18,16 @@ Without publication authority, finish local work and report it without adding a 
 
 Report observed results accurately. An unavailable check is unverified, never passing; self-inspection is not independent review. Do not claim an action occurred from a plan or a completed model turn.
 
+## Thread workspaces and ticket linkage
+
+For a requested new top-level T3 thread in a Git repository, bind a new worktree before the agent starts unless the user explicitly requests the root or an existing checkout. Reuse the current checkout for the current thread's follow-ups. A need for isolation alone does not authorize creating a new top-level thread.
+
+Before creating a branch, resolve the task's associated Linear or git-bug ticket from the supplied task and authoritative available records. Prefer the tracker's branch name when applicable; otherwise include the primary ticket's human ID as a delimited token, such as `fix/demo-7-save-flow`. Do not invent a ticket or choose an unrelated project ticket. With no available associated ticket, choose a routine descriptive branch. Honor an explicit user branch choice and preserve existing published task branches; record those exceptions rather than renaming them silently.
+
+Before a new-thread launch, follow `task-linkage.md` and run the sibling `scripts/check_task_linkage.py launch` against the proposed tool arguments and ticket context. Pass the validated launch arguments to T3. Do not use an inheriting batch launch or shell-created checkout to bypass isolation. Scratch and non-Git tasks need no Git worktree. This shared preflight does not activate development mode.
+
+When publishing ticket work, include `Resolves <ID>` for each ticket whose accepted scope is completed. Use `Refs <ID>` with the remaining scope or relationship for partial or related work. Use human ticket IDs in branches and PR text, retaining git-bug entity IDs for CLI operations. These references do not themselves close git-bug records or authorize ticket mutations.
+
 ## Secrets and environment files
 
 Never read a `.env` file. Do not open, display, search, copy, diff, summarize, or otherwise inspect `.env`, `.env.*`, or similarly named environment-secret files with any tool. Checking whether such a file exists is allowed; observing any value is not.
