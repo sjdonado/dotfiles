@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - run: verify/macos.sh
+      - run: setup/verify/macos.sh
 
   linux:
     strategy:
@@ -27,4 +27,4 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-      - run: verify/linux.sh --platform "${{ matrix.platform }}"
+      - run: setup/verify/linux.sh --platform "${{ matrix.platform }}"

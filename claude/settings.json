@@ -15,7 +15,6 @@
       "Bash(git worktree:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
-      "Bash(wt merge:*)",
       "Bash(gh pr merge:*)"
     ],
     "defaultMode": "bypassPermissions"
