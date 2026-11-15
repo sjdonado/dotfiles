@@ -6,6 +6,12 @@ selection:
   - Include related areas only when their boundaries are affected.
   - Record selected checks, observations, and unverified behavior; no runner or model is required.
 areas:
+  product:
+    file: checks/product.md
+    when: Existing product journeys, representation ownership, or evidence for interaction fixes change.
+    legacy_scenarios: []
+    sections: [original-interaction, representation-ownership]
+    related: [scope, safeguards]
   mode:
     file: checks/mode.md
     when: Explicit activation, personal-agent isolation, delegate propagation, task lifetime, or verification stages change.

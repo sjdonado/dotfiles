@@ -27,6 +27,7 @@ A request to iterate does not require another skill invocation. Keep the checkou
 Read these leaves when their triggers apply, not as an upfront bundle:
 
 - Routine decisions and unresolved intent: skills/principle-decide-then-declare/SKILL.md. Observe facts yourself; reserve questions for intent or authority that evidence cannot settle.
+- User-facing flows, interactions, or presentation: skills/principle-preserve-product-experience/SKILL.md. Inspect the existing journey and preserve its conventions outside the requested change.
 - Stateful logic or repeated branching: vendor/pstack/skills/principle-model-the-domain/SKILL.md. Name the data shape before writing logic.
 - Validation and adapters: vendor/pstack/skills/principle-boundary-discipline/SKILL.md. Typed interfaces: vendor/pstack/skills/principle-type-system-discipline/SKILL.md.
 - Abstractions or refactoring: vendor/pstack/skills/principle-laziness-protocol/SKILL.md. Repeated failed fixes: vendor/pstack/skills/principle-attack-the-premise/SKILL.md. Debugging: vendor/pstack/skills/principle-fix-root-causes/SKILL.md.
