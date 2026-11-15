@@ -8,9 +8,9 @@ selection:
 areas:
   product:
     file: checks/product.md
-    when: Existing product journeys, representation ownership, or evidence for interaction fixes change.
+    when: Existing product journeys, representation ownership, failure handling, or evidence for interaction fixes change.
     legacy_scenarios: []
-    sections: [original-interaction, representation-ownership]
+    sections: [original-interaction, representation-ownership, failure-classification]
     related: [scope, safeguards]
   mode:
     file: checks/mode.md
@@ -28,7 +28,7 @@ areas:
     file: checks/publication.md
     when: PR delivery, required-check gates, explicit autonomous delivery, or PR formatting changes.
     legacy_scenarios: [open-pr, yolo-bounded]
-    sections: [required-local-check-gates-a-direct-pr-request, explicit-autonomous-delivery-through-a-green-pr]
+    sections: [required-local-check-gates-a-direct-pr-request, explicit-autonomous-delivery-through-a-green-pr, body-validation-and-host-handoff]
     related: [authority, scope]
   scope:
     file: checks/scope.md
@@ -62,7 +62,7 @@ areas:
     related: [authority, safeguards]
   safeguards:
     file: checks/safeguards.md
-    when: Secret handling, proportional verification, media selection, or unavailable capabilities change.
+    when: Secret handling, proportional verification, media selection, benchmark validity, recovery safety, shared contracts, or unavailable capabilities change.
     legacy_scenarios: []
-    sections: [secret-boundaries, proportional-verification, media-selection, honest-review-and-capability-limits]
+    sections: [secret-boundaries, proportional-verification, media-selection, benchmark-validity, interruption-recovery, shared-contract-risks, honest-review-and-capability-limits]
     related: [review, provisioning]
