@@ -1,6 +1,6 @@
 # PR demo media
 
-Make the changed behavior easy to follow: show the starting state, the user's actions and the resulting UI. Prefer a short video for interactions or transitions; use screenshots for states that stand alone. This recipe applies when media helps explain the change, not to every PR.
+Make the changed behavior easy to follow: show the starting state, the user's actions and the resulting UI. Prefer a short video for interactions or transitions; use screenshots for states that stand alone. Open-pr requires a demo disposition for functional changes; this capture recipe applies when media demonstrates that behavior. A reproducible command can demonstrate a nonvisual contract. Capture restrictions do not waive verification of the promised behavior.
 
 ## Prepare
 
