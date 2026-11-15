@@ -1,0 +1,11 @@
+# Prefer repairable shell provisioning to a universal package abstraction
+
+The workspace first adopted Nix to replace scattered package declarations and setup scripts with one source of truth. That made packages, links, and activation steps explicit, but routine package changes and host recovery also acquired flake evaluation, daemon, store, and Homebrew-ownership concerns. For this personal setup, those operational costs outweighed exact historical reproducibility.
+
+The shell provisioning introduced in commit `4d60571` keeps source-specific declarations: Homebrew, Ubuntu packages, guarded upstream installers, and links, now grouped under `setup/`. `setup.sh` bootstraps and `sync.sh` applies or checks. This supersedes the Nix direction introduced in commit `165036e`; it does not restore the older shell scripts wholesale. A shared cross-platform package DSL was rejected because it would rebuild part of a package manager while hiding source-specific behavior.
+
+The useful Nix constraints survive: live links resolve into each account's own checkout, one primary account owns shared machine changes, application is idempotent, and checks assert actual commands and resulting state. Vendor-managed agent executables remain available for T3's provider integration. Mise was subsequently restored as a globally available tool, but provisioning does not rely on its runtime shims.
+
+The cost is weaker package rollback and moving Homebrew or apt versions. Explicit sources, guarded installers, disposable provisioning checks, and read-only host assertions compensate without claiming exact reproducibility. Nix removal remains a separate migration with preserved backups and verified account boundaries; replacing its declaration never proves a real host was migrated successfully. Current mechanics live in `setup/` and its README rather than in this record.
+
+Provisioning implementation, package declarations, host accounts, platform assets, and verification belong together under setup/. Keeping them beside application configuration made ownership harder to see. Root setup.sh and sync.sh remain stable entry points for existing commands, bootstrap URLs, and cross-account calls; application configurations stay in their root-level app directories. This changes organization, not account ownership, installation behavior, or permission to apply the setup.

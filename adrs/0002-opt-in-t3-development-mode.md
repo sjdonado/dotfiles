@@ -1,0 +1,11 @@
+# Put development procedure behind one explicit mode
+
+Earlier harness revisions made implementation, prototype promotion, review, and PR delivery separate named workflows. A small settings change could trigger branch-name confirmation, workflow selection, and independent reviews because routing and diff-size rules imposed the process. Plan approval and existing PRs also became ambiguous signals for publication. The simplification in commit `fe14352` removed those automatic transitions and made authority and evidence proportional to the task.
+
+This change takes the next step: `sjdonado-mode` is the single opt-in development entry point. Its private playbooks, local helpers, and selected public principles live outside skill discovery. Shared policy retains common safeguards and explicit activation, so a personal agent on the same machine does not inherit engineering procedure or development writing preferences merely by sharing configuration. Same-task feedback keeps the current mode and stage; a new task ends them unless explicitly invoked again.
+
+The mode chooses rigor from the promised outcome. Prototypes can defer expensive delivery checks while the design is moving and report ready to try. A fix or delivery claim requires evidence for the final accumulated behavior, including relevant failures and invalidated earlier checks. Activation selects how to work; a request for local work still grants no publication authority. An opened PR and a green PR have distinct stopping conditions, and neither permits merging.
+
+T3 Code now owns development orchestration, provider selection, task checkouts, and delegated work. Worktrunk is removed because a second checkout manager and its hooks duplicate that ownership. Claude and Codex executables may still be provider dependencies; keeping them installed does not make their standalone workflows the development interface. The tradeoff is reliance on T3 capabilities: an unavailable required operation must be reported, not silently replaced with a separate host or shell-managed conversation.
+
+This supersedes the separate yolo, feedback, review-repair, and iteration entry points. It does not establish performance parity with any earlier harness. Behavior is checked through selected disposable scenarios, and provider or host gaps remain explicit.

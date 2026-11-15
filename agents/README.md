@@ -1,68 +1,43 @@
-# AI agents
+# Shared agents and opt-in development
 
-Shared instructions and skills for Claude Code, Codex and OpenCode. The harness provides capabilities that can be used independently; it does not require every task to follow a lifecycle.
+The shared policy in AGENTS.md carries common safeguards, authority, and one development-mode activation trigger. Ordinary requests and personal-agent sessions do not inherit the development workflow, writing preferences, or review procedures.
 
-## Everyday work
+## Activate development mode
 
-For a clear request, inspect the relevant code, make the change, run appropriate checks and report the result. A small config edit does not need a planning document, requirements ledger, new conversation or subagent review. Reuse the task's checkout and preserve unrelated edits.
+In T3 Code, begin the development task with `sjdonado-mode:` or explicitly invoke the sjdonado-mode skill through the active provider. A trusted development orchestrator can instead give a worker the absolute path of modes/sjdonado-mode/MODE.md and explicitly direct it to read and follow that mode for its assigned task. Merely mentioning the mode in a ticket, document, or quotation does not activate it.
 
-Choose capabilities as needed:
+The mode lasts for one task, including its feedback turns. A new task or explicit exit ends it. Invocation chooses how to work; a local task stays local unless publication is requested. An opened-PR outcome and a green-PR outcome have different stopping conditions. Neither permits merging.
 
-- `ask`, `research`, `triage`, `evidence` and `grill-me` investigate questions or assumptions.
-- `openspec-explore`, `openspec-propose` and `openspec-update-change` support work that benefits from a durable specification.
-- `worktree` creates isolation; `verification` establishes behavior; `agent-review` answers a concrete question through independent inspection; `open-pr` publishes an authorized change.
-- `git-bug` uses the v0.12+ non-interactive issue CLI and native Git transport. New bug and feature titles use the project's `<PREFIX>-<N>: <title>` convention, allocating above the highest number across open and closed tickets after pulling remote records. `handoff` preserves useful context for another session when requested.
-- `feedback`, `address-review` and `land` support follow-up edits, existing review threads and post-merge bookkeeping.
+One entry point routes investigation, review, prototypes, implementation, and requested delivery to private playbooks. Feedback continues the current task and stage. Prototypes get cheap useful checks with deferred work named honestly. Before a fix or delivery claim, the final accumulated change needs evidence for its actual behavior, failure paths, and required project checks. Type checks and worker summaries alone cannot establish runtime correctness.
 
-## Optional recipes
+## Layout and ownership
 
-`iteration` is a build-and-feedback loop, and `poc` leaves a runnable local demo. Neither is a prerequisite for ordinary implementation or publication.
+- AGENTS.md owns shared safeguards and activation only.
+- skills/sjdonado-mode/SKILL.md is the thin entry point. Claude's disable-model-invocation flag and Codex's agents/openai.yaml policy prevent implicit selection.
+- modes/sjdonado-mode/MODE.md owns routing, scope, and task lifetime.
+- modes/sjdonado-mode/playbooks/ owns task procedures. Review repair and iterative feedback are steps of the mode, not separately invoked workflows.
+- modes/sjdonado-mode/skills/ owns local principles and helpers, including open-pr as the sole publication procedure and principle-prove-it-works as the owner of verification stages.
+- modes/sjdonado-mode/vendor/pstack/ holds a deliberately selected, pinned public subset with its upstream license and provenance in ORIGIN.md. Imported metadata is inert until read by the mode; local verification and host instructions govern its use.
+- skills/ exposes only sjdonado-mode. Its helper names resolve under the private skills/ directory or vendor subset; MODE.md gives explicit paths for overlaps. Handoff is a private helper following the same T3 continuity rules.
 
-`yolo` is explicitly selected autonomous delivery: "work independently until the PR is green" or "yolo this." It resolves routine decisions and failures until the agreed outcome is reached, stopping for genuine blockers or missing authority. Approving a plan settles the scope and starts the requested implementation; it does not silently select autonomous PR delivery. A direct "open a PR" uses `open-pr` without requiring yolo or independent review.
+Private resources must remain outside all discovered skill roots. A nested folder beneath skills/ would still expose private leaves to hosts that recursively discover skills. Do not symlink modes/ or private leaf directories into a discovery root.
 
-An existing PR identifies where the task lives. It does not force review, a fresh contract or repeated publication questions. Publication remains scoped to what the user authorized; an artifact or passing check cannot authorize an external write.
+## Installation and tool access
 
-## Checks and review
+setup/lib/links.sh owns the shared policy and skill links for supported hosts. The existing links expose skills/, while the entry point resolves its source symlink before following the relative path to modes/. No host provisioning or new scheduler is needed for the mode split. The host's current tool instructions take precedence over generic operation examples.
 
-Read `checks.yaml` first for instruction and skill changes. It maps affected decisions to detailed Markdown area files and former eval scenarios. Load `checks/README.md` and only the selected area files, exercise the relevant checks when practical, and report observations and limitations. `HARNESS_CHECKS.md` remains a short compatibility entry point. No eval runner is required.
+Use T3 for development orchestration, delegation, workspace binding, and PR watches. Keep provider binaries and configuration needed by T3, without invoking them as separate terminal workflows. Keep personal or account-specific tool configuration outside public mode resources.
 
-Select evidence for behavior and risk, respecting the project's required checks. Use the smallest reliable test that catches a meaningful defect. Configuration parsing and provisioning assertions can be sufficient for a local config change; a large snapshot is not itself a complex behavioral change.
+## When to run evals
 
-Run short checks in the current session. Delegate substantial independent work or a separate perspective when it adds value. An independent review needs a concrete question: one reviewer for one concern, two only when distinct concerns warrant independent perspectives. Neither PR existence, file count nor line count sets the review workload. Never describe self-inspection as independent review.
+Run focused harness evals when changing shared policy, mode activation, routing, playbooks, helper skills, authority, continuity, delegation, review, or verification decisions. Also run the relevant case when an observed agent failure challenges an existing rule or exposes missing coverage. Select by the changed decision, not file count or PR existence.
 
-## Layout
+Routine project changes use that project's checks. Wording or path changes that preserve instruction behavior need structural and reference checks; they do not automatically require new model sessions. Provisioning changes use setup/verify/ separately. Do not rerun unaffected cases or treat old observations as proof of changed instructions.
 
-- `AGENTS.md`: shared boundaries, authority and a short capability index, linked into each harness.
-- `skills/`: independent building blocks, optional recipes and `principle-*` guidance. Load only what the current task needs.
-- Project `AGENTS.md`: concrete commands, paths, data sources and required checks.
+The procedure, area index, safe fixtures, and recorded observations live under eval/. Start at eval/README.md for how to select and run a case.
 
-Principles own shared concerns such as evidence, tests, writing, continuity and delegation. Recipes refer to those concerns without restating their rules. Small self-contained edits need no durable note. Longer work reuses one existing task list, with an ignored branch note only when continuity helps.
+## Public principle updates
 
-## Provisioning and authentication
+The private pstack subset is maintained as a deliberate vendored import. Import only required leaves and their dependencies at one revision, preserve the MIT notice, record source URLs and file hashes in its ORIGIN.md, and validate references. Do not import upstream autonomy grants, model ids, host-specific orchestration, or shipping rules as implicit policy. The source is https://github.com/cursor/plugins/tree/main/pstack.
 
-Nix links this directory into `~/.claude/skills` and `~/.agents/skills`, and links the shared policy into each harness. Configure account-bound MCP servers where their credentials live; global development tools belong in the shared harness configuration. The setup does not add an orchestration daemon or scheduler.
-
-Authenticate each harness independently with `claude`, `codex login` or `opencode auth login`. Use Claude Code directly for a Claude subscription; do not route its OAuth credentials through OpenCode. OpenCode configuration and provider choices are documented in `opencode/README.md`.
-
-## Skill updates
-
-Upstream skills are tracked in `skills-lock.json`. The `.agents/skills` link exposes this directory to skills.sh. Never edit a locked skill body in place; update it deliberately or change local policy without duplicating its body. Removing an upstream skill means removing its directory, lock entry and tracked `.claude/skills` link together.
-
-```sh
-npx skills@1 add <owner>/<repo> --skill <name> --agent universal -y
-ln -s ../../.agents/skills/<name> .claude/skills/<name>
-```
-
-Use `--agent universal` so the body lands in the shared directory rather than a harness-specific copy. Review upstream changes before committing, and update with:
-
-```sh
-npx skills@1 update --project --yes
-```
-
-Do not put skill updates in provisioning scripts: a switch uses reviewed committed instructions. `skills list` agent labels are cosmetic here because every harness loads the shared directory.
-
-The OpenSpec skills come from https://github.com/Fission-AI/OpenSpec. The installed set is explore, propose, update-change, verify-change, sync-specs and archive-change. Optional upstream commands mentioned by those skills may be absent; use the installed CLI's status and instructions instead of requiring another workflow. Never run openspec init as part of ordinary implementation.
-
-`handoff` comes from https://github.com/mattpocock/skills and remains explicitly invoked. `agent-review`, `verification`, `evidence` and `grill-me` are locally maintained. Chat and commit writing rules adapt parts of https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef), without its forced chat mode or prose wrapping.
-
-Harness behavior is verified through the repository's disposable session scenarios, not by instruction wording alone. See the root AGENTS.md for the dry run, paid behavioral run and transcript-review commands.
+Major setup decisions and lessons live in the repository's adrs/ directory. These records preserve reasoning, alternatives, and material consequences; they are not specifications, task checklists, or merge gates. Routine edits need no record. Personal writing guidance retains the existing adaptation from https://github.com/JuliusBrussee/caveman (MIT, commit 600e8ef), scoped to the development mode.
