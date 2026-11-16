@@ -2,8 +2,8 @@
 """Check declared delivery evidence structure and local artifact metadata.
 
 This reads the supplied PR body but never executes commands or reads evidence
-artifacts, and cannot prove command
-execution, semantic coverage, or truthfulness of the declared evidence.
+artifacts or template contents, and cannot prove command execution, semantic
+coverage, template selection, or truthfulness of the declared evidence.
 Relative artifact paths are interpreted from the caller's working directory.
 """
 
@@ -18,11 +18,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "scripts"))
 from check_task_linkage import validate_ticket_links
 
 
-def demo_section(body, heading):
-    """Find a real Markdown section, ignoring headings inside fenced code."""
-    collecting, fence = False, None
-    content = []
-    for line in body.splitlines():
+FALLBACK_HEADINGS = ("Summary", "Reviewer notes", "Verification", "Demo")
+
+
+def markdown_sections(body):
+    """Parse headings outside comments/fences, retaining nested section content."""
+    lines = re.sub(r"<!--[\s\S]*?(?:-->|$)", "", body).splitlines()
+    headings, fence = [], None
+    for index, line in enumerate(lines):
         marker = re.match(r"^ {0,3}(`{3,}|~{3,})", line)
         if marker:
             token = marker.group(1)
@@ -33,13 +36,47 @@ def demo_section(body, heading):
         elif fence is None:
             title = re.match(r"^ {0,3}#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", line)
             if title:
-                if collecting:
-                    break
-                collecting = title.group(1).casefold() == heading.casefold()
-                continue
-        if collecting:
-            content.append(line)
-    return "\n".join(content) if collecting else None
+                level = len(line.lstrip().split(None, 1)[0])
+                headings.append((index, level, title.group(1).strip()))
+    sections = []
+    for index, (start, level, title) in enumerate(headings):
+        end = next((row[0] for row in headings[index + 1:] if row[1] <= level), len(lines))
+        sections.append((title.casefold(), start, "\n".join(lines[start + 1:end])))
+    return sections
+
+
+def meaningful_content(text):
+    """Reject empty Markdown shells and untouched placeholder-only sections."""
+    lines = []
+    for line in text.splitlines():
+        if re.match(r"^ {0,3}(?:`{3,}|~{3,}|#{1,6}[ \t])", line):
+            continue
+        if re.fullmatch(r"\s*[-*_]{3,}\s*", line):
+            continue
+        lines.append(line)
+    value = "\n".join(lines).strip(" \t\r\n*-_[]<>.!:")
+    return bool(value) and not re.fullmatch(r"(?i)(?:todo|tbd|placeholder|coming soon)", value)
+
+
+def demo_section(body, heading):
+    matches = [content for title, _, content in markdown_sections(body) if title == heading.casefold()]
+    return matches[0] if len(matches) == 1 else None
+
+
+def unfenced_text(text):
+    """Do not treat labels inside example code as verification statements."""
+    result, fence = [], None
+    for line in text.splitlines():
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+        elif fence is None:
+            result.append(line)
+    return "\n".join(result)
 
 
 def validate(data, expected_revision, body_text, branch):
@@ -57,25 +94,88 @@ def validate(data, expected_revision, body_text, branch):
         if not nonblank(obj.get("source_revision")) or obj["source_revision"] != expected_revision:
             errors.append(f"{location}.source_revision: must match expected revision")
 
-    def artifact(obj, location):
-        value = obj.get("artifact")
+    def artifact(obj, location, key="artifact"):
+        field = f"{location}.{key}"
+        value = obj.get(key)
         if not nonblank(value):
-            errors.append(f"{location}.artifact: expected nonblank local file path")
+            errors.append(f"{field}: expected nonblank local file path")
             return
         path = Path(value)
         if any(part.startswith(".env") for part in path.parts):
-            errors.append(f"{location}.artifact: environment-secret paths are forbidden")
+            errors.append(f"{field}: environment-secret paths are forbidden")
             return
         try:
             path = path.resolve()
             if any(part.startswith(".env") for part in path.parts):
-                errors.append(f"{location}.artifact: environment-secret paths are forbidden")
+                errors.append(f"{field}: environment-secret paths are forbidden")
                 return
             info = path.stat()
             if not stat.S_ISREG(info.st_mode) or info.st_size == 0:
-                errors.append(f"{location}.artifact: must be an existing nonempty file")
+                errors.append(f"{field}: must be an existing nonempty file")
         except (OSError, ValueError, RuntimeError):
-            errors.append(f"{location}.artifact: must be an existing nonempty local file")
+            errors.append(f"{field}: must be an existing nonempty local file")
+
+    def body_structure(functional):
+        body = data.get("body")
+        if not isinstance(body, dict):
+            errors.append("body: expected template selection object")
+            return
+        template = body.get("template")
+        if template == "fallback":
+            required = list(FALLBACK_HEADINGS)
+            summary_heading, verification_heading = "Summary", "Verification"
+            if isinstance(data.get("demo"), dict) and data["demo"].get("heading", "Demo") != "Demo":
+                errors.append("demo.heading: fallback template requires Demo")
+        elif template == "repository":
+            artifact(body, "body", "template_path")
+            required = body.get("required_headings")
+            summary_heading, verification_heading = body.get("summary_heading"), body.get("verification_heading")
+            if not isinstance(required, list) or not required or any(not nonblank(title) for title in required):
+                errors.append("body.required_headings: expected nonempty list of heading titles")
+                return
+            normalized = [title.strip().casefold() for title in required]
+            if len(set(normalized)) != len(normalized):
+                errors.append("body.required_headings: heading titles must be distinct")
+                return
+            if (not nonblank(summary_heading) or not nonblank(verification_heading)
+                    or summary_heading.strip().casefold() == verification_heading.strip().casefold()
+                    or summary_heading.strip().casefold() not in normalized
+                    or verification_heading.strip().casefold() not in normalized):
+                errors.append("body: distinct summary_heading and verification_heading must be required headings")
+                return
+            demo = data.get("demo")
+            demo_heading = demo.get("heading", "Demo") if isinstance(demo, dict) else "Demo"
+            if functional and (not nonblank(demo_heading) or demo_heading.strip().casefold() not in normalized):
+                errors.append("body.required_headings: functional demo heading must be required")
+        else:
+            errors.append("body.template: expected fallback or repository")
+            return
+
+        sections = markdown_sections(body_text)
+        required_titles = {heading.strip().casefold() for heading in required}
+        required_positions = [position for title, position, _ in sections if title in required_titles]
+
+        def own_content(position, content):
+            # A nested required section cannot fill an otherwise empty parent.
+            end = min((start for start in required_positions if start > position), default=None)
+            return "\n".join(content.splitlines()[:end - position - 1]) if end is not None else content
+
+        positions = []
+        for heading in required:
+            matches = [(position, content) for title, position, content in sections if title == heading.strip().casefold()]
+            if len(matches) != 1:
+                errors.append(f"pr_body: required section {heading!r} must occur exactly once")
+                continue
+            position, content = matches[0]
+            positions.append(position)
+            if not meaningful_content(own_content(position, content)):
+                errors.append(f"pr_body: required section {heading!r} is empty or a placeholder")
+        if positions != sorted(positions):
+            errors.append("pr_body: required sections are out of template order")
+        verification = [own_content(position, content) for title, position, content in sections if title == verification_heading.strip().casefold()]
+        label = re.compile(r"^[ \t]*(?:[-*+][ \t]+)?(?:\*\*)?(?:Executed|Static)(?:[ \t]*\([^\n)]*\))?(?:\*\*)?[ \t]*:(?:\*\*)?[ \t]*(\S[^\n]*)", re.I | re.M)
+        if len(verification) == 1 and not any(meaningful_content(match.group(1)) for match in label.finditer(unfenced_text(verification[0]))):
+            errors.append("pr_body: verification needs an Executed or Static label with an observed check result")
 
     if not nonblank(expected_revision):
         return ["expected_revision: expected nonblank string"]
@@ -89,6 +189,7 @@ def validate(data, expected_revision, body_text, branch):
         errors.append("change_type: expected functional or nonfunctional")
     functional = change_type == "functional"
     revision(data, "evidence")
+    body_structure(functional)
 
     requirements = data.get("requirements")
     if not isinstance(requirements, list):
@@ -160,7 +261,7 @@ def validate(data, expected_revision, body_text, branch):
         heading = demo.get("heading", "Demo")
         if not nonblank(heading):
             errors.append("demo.heading: expected nonblank heading")
-        elif not (demo_section(body_text, heading) or "").strip():
+        elif not meaningful_content(demo_section(body_text, heading) or ""):
             errors.append("pr_body: missing or empty demo section")
         if status in ("not_applicable", "blocked"):
             errors.append("demo.status: functional changes require capture or command")
@@ -204,7 +305,7 @@ def main():
         for error in errors:
             print(error, file=sys.stderr)
         return 1
-    print("Declared delivery evidence, demo section and artifact metadata are valid.")
+    print("Declared delivery evidence, PR body structure and artifact metadata are valid.")
     return 0
 
 

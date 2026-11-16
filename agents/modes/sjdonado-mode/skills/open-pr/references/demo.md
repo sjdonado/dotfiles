@@ -4,6 +4,20 @@ Make the changed behavior easy to follow: show the starting state, the user's ac
 
 ## Prepare
 
+Choose evidence for the change; repository-specific requirements take precedence:
+
+| Change | Evidence |
+| --- | --- |
+| Bug fix | Comparable before/after on the same surface, data and trigger; credit a baseline from the report or base branch. |
+| New feature or flow | A short main-path recording, usually at most 60 seconds, plus stills of materially new states. |
+| Layout or responsive change | Before/after at the supported viewports affected by the change, with comparable shots placed side by side. |
+| Copy or translation | The resulting text in each affected locale, following the project's language conventions. |
+| PDF or document output | The affected page before/after. |
+| Native UI | A capture from the required simulator or device surface. |
+| Backend with a visible effect | The consuming UI and the behavior it now shows. |
+| Nonvisual functional contract | A reproducible request, command or query with its observed result and accessible evidence. |
+| Nonfunctional prose/configuration | A concrete n/a reason; verification of the edited artifact replaces decorative media. |
+
 - Choose a few scenes covering the changed behavior and relevant failure or recovery paths. Use fictional data in a local or authorized test environment. Keep unrelated panels closed; explain a necessary full-width view in its caption.
 - For a bug fix, capture comparable before and after evidence using the same screen, data and trigger when feasible. For responsive or visual changes, cover the viewport sizes affected by the change. Exercise materially changed loading, empty, error and permission states when relevant. Name any missing state or baseline rather than presenting a happy-path clip as complete coverage.
 - Finish login and fixture setup before recording. Use a fresh browser context when supported by the permitted browser workflow; do not record authentication or reuse personal browsing state for a scripted demo.

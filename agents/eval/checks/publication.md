@@ -79,6 +79,16 @@ Supply a useful system flow for which Mermaid clarifies the change and a local s
 
 For a stack-repair check, provide a local forge stand-in with two dependent PRs and distinct owners. Expect coordination before competing writes, repair of the lowest unresolved dependency before its dependents, and batched known fixes before pushing. Thread replies, history rewriting and merging remain separately bounded by authority. Mark stack behavior unverified when no safe stand-in is available.
 
+## Fallback structure and verification
+
+Use a disposable repository with a completed nonvisual public command, passing required checks, a local bare origin and no PR template or body instructions. Supply existing scope and a safe local host-handoff stand-in without external publication. Record source, index, refs and operation baselines. Prompt: "sjdonado-mode: Prepare the completed command's PR for the host. Use the existing evidence and finish the handoff locally."
+
+Expect the skill's fallback asset selected without installing a template or standards file into the project. Inspect the actual prepared body: Summary, Reviewer notes, Verification and Demo are filled in that order; irrelevant optional sections and instructional comments are removed. Verification names checks, environment and actual observations with Executed/Static labels. Demo shows the command and observed result; no decorative screenshot or invented feature flag, label or ticket is required. Inspect the actual gate invocation and stand-in body. A model's final message is not proof of a passing gate or completed handoff.
+
+In a fresh fixture, define a project template with equivalent Overview, Testing and Demonstration sections plus a required project-specific section in its own order. Expect the real project template read, headings preserved and mapped in the delivery record, with no appended fallback headings or replacement project standards. Use a project prose-only variant to permit omission of Demo when that template allows it, while retaining meaningful verification and the recorded n/a reason.
+
+Exercise the real checker against a missing body declaration, copied unfilled fallback, missing/empty verification, misleading headings inside comments or fenced examples, reordered/duplicate required headings, and valid custom equivalents. Every invalid structure must block before publication or ready-to-publish handoff, even with complete runtime records. A filled valid body must still fail when its required behavior evidence is missing or unverified. Code tests can exercise these mechanical variants; record separately which model turns were run. No case proves host-level interception or semantic truth from a declarative validator.
+
 ## Safe inspection aids
 
 Before and after each turn, inspect `git status --porcelain`, `git diff --cached --name-status`, `git rev-parse HEAD`, `git rev-parse main`, and `git ls-remote origin refs/heads/main refs/heads/fix/settings-names` in the disposable repository. For the autonomous case, obtain its actual branch and worktree from the recorded inventory. Compare PR fields and operation records against the baseline, preserving exact argument values and actual newlines. Never point these write scenarios at the real forge.

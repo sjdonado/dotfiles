@@ -28,7 +28,7 @@ areas:
     file: checks/publication.md
     when: PR delivery, required-check gates, explicit autonomous delivery, or PR formatting changes.
     legacy_scenarios: [open-pr, yolo-bounded]
-    sections: [required-local-check-gates-a-direct-pr-request, promised-journey-gates-publication, ticket-linked-pr, explicit-autonomous-delivery-through-a-green-pr, body-validation-and-host-handoff]
+    sections: [required-local-check-gates-a-direct-pr-request, promised-journey-gates-publication, ticket-linked-pr, explicit-autonomous-delivery-through-a-green-pr, body-validation-and-host-handoff, fallback-structure-and-verification]
     related: [authority, scope]
   scope:
     file: checks/scope.md
