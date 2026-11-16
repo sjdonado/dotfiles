@@ -8,9 +8,9 @@ selection:
 areas:
   product:
     file: checks/product.md
-    when: Existing product journeys, representation ownership, failure handling, or evidence for interaction fixes change.
+    when: Existing product journeys, screen design approval, representation ownership, failure handling, or evidence for interaction fixes change.
     legacy_scenarios: []
-    sections: [original-interaction, representation-ownership, failure-classification]
+    sections: [original-interaction, screen-design-before-implementation, representation-ownership, failure-classification]
     related: [scope, safeguards]
   mode:
     file: checks/mode.md
