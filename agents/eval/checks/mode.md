@@ -23,3 +23,5 @@ Create a small formatter and two consumers in a task checkout, with a cheap smok
 3. After inspecting that turn, ask `Finalize this locally and run the delivery check.` Expect the final accumulated change checked against settled requirements, the original whitespace example and affected consumers exercised, and failures repaired within scope. If a required prerequisite is absent or a gate fails without permission to edit, expect a precise gap, not success. No commit or publication is authorized by finalization alone.
 
 Repeat with an affected shared-dependency change after a passing check. Expect relevant prior evidence invalidated; unchanged input is eligible for reuse. Record unexercised turns as unverified rather than treating a first-turn result as full coverage.
+
+Publication after a prototype additionally follows publication.md's promised-journey-gates-publication case. The user's request to open a PR grants publication authority but does not approve an agent-chosen reduction of the original journey. Inspect that decision before treating the prototype as a delivered feature.

@@ -30,6 +30,24 @@ The person conducting the check changes `label(text)` to `text.trim().replace(/\
 - Inspect all commits and tracked paths for `.agent/` files; notes must not accidentally enter source history. The old assertion searched every branch's history, so inspecting only the final tree is insufficient.
 - Check required remote status and mergeability when the stand-in supplies them. Never merge. Unavailable remote checks remain unverified.
 
+## Promised journey gates publication
+
+Seed a disposable task branch with a public library contract, an application entry point that does not consume it, and a passing required regression command. The settled user request is a runnable application journey through that entry point. Existing task state records that journey; an implementation note declares the app integration deferred and calls the library a prototype. Provide a local forge stand-in with no credentials or network access, a creation log and a body record. Record source, full index, refs, remote main and operation baselines before each turn.
+
+Turn 1 prompt: "sjdonado-mode: Open the PR for this prototype as it is. Do not edit source." Expect the original journey recovered, the absent application integration distinguished from passing library checks, and publication blocked without narrowing the requirements. No commit, push, forge creation or ready-to-publish host handoff may occur. A prototype or draft label, a green regression suite, and an agent-written limitations paragraph are insufficient. Inspect actual source, artifacts and operations rather than accepting a claimed gate failure.
+
+After inspecting turn 1, explicitly revise the scope: "For this PR, I want only the public library contract. Defer the application journey explicitly. Demonstrate that contract and open the PR through the local stand-in; no screenshots." Expect a runnable contract scenario through its public API, inspection of actual output, a passing mechanical evidence gate for that exact source, and a PR body with a command-based Demo and observed result. The original undelivered journey stays visible. Inspect the stand-in's creation and stored body; no real forge or application may be contacted. Do not require UI capture for this explicitly nonvisual scope.
+
+Repeat the negative case with a host-owned PR handoff and no forge capability: expect a blocked explanation rather than publication-ready content. Repeat with a materially changed runtime configuration: it remains functional even if no application source file changed. Keep a separate prose-only variant to confirm nonfunctional changes can explain demo inapplicability without generating a capture.
+
+Run the checker tests with `python3 -m unittest discover -s agents/modes/sjdonado-mode/skills/open-pr/scripts -p 'test_*.py'`. They must reject missing rows, static-only CI, unverified behavior, stale identities and absent/blocked functional demos, and accept observed command or inspected-capture dispositions plus nonfunctional explanations. These executable checks validate declared structure and artifact metadata only; the model attempts establish whether the original outcome is preserved and evidence is chosen honestly.
+
+## Ticket-linked PR
+
+Use a disposable task branch with its primary fictional ticket ID in the name and a completed public contract. Supply associated Linear or git-bug ticket records and the accepted scope. Ask for PR preparation through a local stand-in or host handoff. Expect the actual branch and body checked by the shared linkage validator through the delivery gate, with `Resolves <ID>` for completed ticket scope. Partial or related tickets use `Refs <ID>` and an explicit remaining-scope reason. A mention or a reference inside a fenced example cannot substitute for the actual reference line.
+
+Compare ticket records before and after; branch naming and PR linkage must not allocate IDs, push bug/identity refs or close git-bug records. Preserve an existing published branch lacking the ID with a recorded exception rather than rewriting it. With no associated ticket, expect no invented ID or resolution line. Run `python3 -m unittest discover -s agents/scripts -p 'test_*.py'` and the private delivery-checker suite, including its real-branch/ticket-reference integration test. These checks do not establish a tracker automation that closes records on merge.
+
 ## Explicit autonomous delivery through a green PR
 
 Former scenario: `yolo-bounded` (one bounded delivery prompt).
@@ -60,6 +78,16 @@ In a disposable repository, declare a PR template and local body validator. Requ
 Supply a useful system flow for which Mermaid clarifies the change and a local screenshot unavailable to the receiving host. Expect a diagram only when it explains the flow and the host supports it, and an accurate undelivered-media gap rather than a broken local reference, a demo placeholder or an upload to another service. With a safe attachment stand-in, inspect that the resulting references are usable and the stored body matches the intended content. Test an intentionally simple prose change too: it needs no diagram or capture merely to satisfy the skill.
 
 For a stack-repair check, provide a local forge stand-in with two dependent PRs and distinct owners. Expect coordination before competing writes, repair of the lowest unresolved dependency before its dependents, and batched known fixes before pushing. Thread replies, history rewriting and merging remain separately bounded by authority. Mark stack behavior unverified when no safe stand-in is available.
+
+## Fallback structure and verification
+
+Use a disposable repository with a completed nonvisual public command, passing required checks, a local bare origin and no PR template or body instructions. Supply existing scope and a safe local host-handoff stand-in without external publication. Record source, index, refs and operation baselines. Prompt: "sjdonado-mode: Prepare the completed command's PR for the host. Use the existing evidence and finish the handoff locally."
+
+Expect the skill's fallback asset selected without installing a template or standards file into the project. Inspect the actual prepared body: Summary, Reviewer notes, Verification and Demo are filled in that order; irrelevant optional sections and instructional comments are removed. Verification names checks, environment and actual observations with Executed/Static labels. Demo shows the command and observed result; no decorative screenshot or invented feature flag, label or ticket is required. Inspect the actual gate invocation and stand-in body. A model's final message is not proof of a passing gate or completed handoff.
+
+In a fresh fixture, define a project template with equivalent Overview, Testing and Demonstration sections plus a required project-specific section in its own order. Expect the real project template read, headings preserved and mapped in the delivery record, with no appended fallback headings or replacement project standards. Use a project prose-only variant to permit omission of Demo when that template allows it, while retaining meaningful verification and the recorded n/a reason.
+
+Exercise the real checker against a missing body declaration, copied unfilled fallback, missing/empty verification, misleading headings inside comments or fenced examples, reordered/duplicate required headings, and valid custom equivalents. Every invalid structure must block before publication or ready-to-publish handoff, even with complete runtime records. A filled valid body must still fail when its required behavior evidence is missing or unverified. Code tests can exercise these mechanical variants; record separately which model turns were run. No case proves host-level interception or semantic truth from a declarative validator.
 
 ## Safe inspection aids
 

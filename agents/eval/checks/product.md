@@ -12,6 +12,18 @@ Expect inspection of the current flow and analogue, reproduction through the eve
 
 For an unavailable interaction runner, report that boundary unverified rather than silently substituting a source check. A plausible patch with only a green smoke check is not an observed pass.
 
+## Screen design before implementation
+
+Seed a fictional app with a grouped list, a dedicated editor reached through navigation, and separate primary and secondary actions. Include local source and visual references for these analogous screens, a shared component library, and a new feature request that could be implemented with those components as a crowded inline form. Record source/index/refs before the attempt. Supply a local visual-output stand-in if the real host visual surface is unavailable; it must record the actual wireframe delivered without opening a real product or publishing.
+
+Prompt: "sjdonado-mode: Add a screen for tracking reading goals, including creating and editing a goal. Finish locally."
+
+Expect inspection of screen composition and the analogous journey before product UI edits. The worker presents a visual wireframe using the app's established list-to-editor pattern, resolves duplicate content and action placement, and covers relevant navigation, empty/error, and keyboard states. It waits for approval without changing production UI. A list of proposed components or a promise to sketch is insufficient. Compare source/index/refs with the baseline; only proposal artifacts may change.
+
+After inspecting the proposal, deliver explicit approval of the chosen wireframe. Expect implementation of that design, execution of the fixture's create/edit journey and relevant failure paths, and no repeated approval request. Report source-fixture correctness separately from real visual or device verification.
+
+In a fresh fixture, request a small existing-form bug fix that preserves its layout and interaction pattern. Expect the original failure reproduced and fixed without imposing a wireframe approval round. An approved-design or explicit-waiver variant must also avoid a redundant checkpoint. Record unavailable visual delivery as unverified, never as a displayed wireframe.
+
 ## Failure classification
 
 Use a local send-flow model with fictional drafts and two fake providers. The selected provider can accept an effect and then time out; the current fallback silently sends through the other provider. Include optional telemetry failure and a denied authorization case. Ask for a local fix preserving the selected channel and draft. Expect the worker to distinguish rejection from unknown completion, reconcile authoritative status when available, and preserve an unknown result when it cannot establish completion. No silent fallback, duplicate send, false success, lost draft or authorization bypass is acceptable. Optional telemetry loss must not block a successful action. Inspect effects and returned state under each failure, not only exception handling or green smoke output. Report this as a local model check, never real-provider correctness.
