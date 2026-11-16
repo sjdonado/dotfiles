@@ -34,3 +34,7 @@ See `agents/README.md` for mode usage, `agents/eval/checks.yaml` for manual harn
 ```
 
 macOS checks use temporary fixtures; Linux checks provision disposable containers. Details are in `setup/verify/README.md`.
+
+## Happy hacking!
+
+<img width="200" alt="Cat typing on a computer" src="https://media.tenor.com/y2JXkY1pXkwAAAAM/cat-computer.gif">
