@@ -28,6 +28,10 @@ Before a new-thread launch, follow `task-linkage.md` and run the sibling `script
 
 When publishing ticket work, include `Resolves <ID>` for each ticket whose accepted scope is completed. Use `Refs <ID>` with the remaining scope or relationship for partial or related work. Use human ticket IDs in branches and PR text, retaining git-bug entity IDs for CLI operations. These references do not themselves close git-bug records or authorize ticket mutations.
 
+## Simulators in T3
+
+For iOS simulator or Android emulator work on a Mac provisioned with SimLock, use `device_list` to find the SimLock host. Pass its host ID and the requested model's catalog ID to `device_open` for a new lease. Use an existing lease only if it appears in this thread's open devices. Confirm the lease's model and runtime, then use the returned thread-bound `agent-device` command. When done, return your specific SimLock lease with `device_close` using its host ID, lease device ID, and `shutdown: true`. If the pool, model, runtime, or requested pairing is unavailable, report the blocker before creating a simulator or emulator or using a local or physical device.
+
 ## Secrets and environment files
 
 Never read a `.env` file. Do not open, display, search, copy, diff, summarize, or otherwise inspect `.env`, `.env.*`, or similarly named environment-secret files with any tool. Checking whether such a file exists is allowed; observing any value is not.
