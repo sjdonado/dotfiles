@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><!-- TITLE --></title>
+  <style>
+    body {
+      max-width: 78rem;
+      margin: 1rem auto 2rem;
+      color: var(--foreground, #142840);
+      font: 1rem/1.4 system-ui, sans-serif;
+    }
+    h1, h2, h3, p { margin: 0 0 .5rem; }
+    section { margin-top: 1.75rem; }
+    h2 { border-bottom: 1px solid var(--border, #cbd5e1); padding-bottom: .35rem; }
+    .screenshots {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+      gap: 1rem .65rem;
+    }
+    figure { margin: 0; min-width: 0; }
+    img { display: block; width: 100%; height: auto; }
+    figcaption { margin-top: .4rem; font-size: .8rem; overflow-wrap: anywhere; }
+    h3 { font-size: .875rem; }
+    .context { color: var(--muted-foreground, #536579); font-size: .72rem; }
+    a { color: var(--primary, #175574); }
+    @media (max-width: 30rem) {
+      .screenshots { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem .45rem; }
+      figcaption { font-size: .75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><!-- HEADING --></h1>
+    <p><!-- SUMMARY --></p>
+    <p><a href="feature-map.json">Machine-readable screen and component map</a></p>
+  </header>
+  <main>
+    <!-- SCREENSHOTS -->
+  </main>
+</body>
+</html>

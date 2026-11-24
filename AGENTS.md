@@ -4,7 +4,7 @@ This repository provisions personal developer tools and maintains shared agent i
 
 ## Where things live
 
-- agents/skills/: the explicit-only sjdonado-mode entry point. agents/modes/sjdonado-mode/ owns private development playbooks, local helper skills, and pinned public principles outside discovery. agents/README.md explains activation and layout.
+- agents/skills/: standalone skills and the explicit-only sjdonado-mode entry point. agents/modes/sjdonado-mode/ owns private development playbooks, local helper skills, and pinned public principles outside discovery. agents/README.md explains activation and layout.
 - agents/AGENTS.md: shared boundaries and available capabilities, linked into each harness by `setup/lib/links.sh`.
 - agents/eval/: area-indexed manual harness evals and observations. agents/README.md explains when to run them; agents/eval/README.md owns the procedure.
 - adrs/: concise reasoning and learnings behind major setup decisions. Read relevant records before revisiting a decision; add a record only when the rationale is worth preserving, not for routine edits or task tracking.
