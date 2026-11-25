@@ -18,7 +18,7 @@ One entry point routes investigation, review, prototypes, implementation, and re
 - modes/sjdonado-mode/playbooks/ owns task procedures. Review repair and iterative feedback are steps of the mode, not separately invoked workflows.
 - modes/sjdonado-mode/skills/ owns local principles and helpers, including open-pr as the sole publication procedure and principle-prove-it-works as the owner of verification stages.
 - modes/sjdonado-mode/vendor/pstack/ holds a deliberately selected, pinned public subset with its upstream license and provenance in ORIGIN.md. Imported metadata is inert until read by the mode; local verification and host instructions govern its use.
-- skills/ exposes only sjdonado-mode. Its helper names resolve under the private skills/ directory or vendor subset; MODE.md gives explicit paths for overlaps. Handoff is a private helper following the same T3 continuity rules.
+- skills/ exposes the sjdonado-mode entry point and standalone skills such as feature-map. Mode helpers resolve under its private skills/ directory or vendor subset. MODE.md gives explicit paths for overlaps.
 
 Private resources must remain outside all discovered skill roots. A nested folder beneath skills/ would still expose private leaves to hosts that recursively discover skills. Do not symlink modes/ or private leaf directories into a discovery root.
 
